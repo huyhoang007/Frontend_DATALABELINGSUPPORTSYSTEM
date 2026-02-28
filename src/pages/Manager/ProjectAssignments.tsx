@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { datasetApi } from "../../api/datasetApi";
 import { userApi } from "../../api/userApi";
+import { assignmentApi } from "../../api/assignmentApi";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { ModalDialog } from "../../components/ui/Modal";
@@ -11,53 +12,30 @@ import {
 import { cn } from "../../utils/cn";
 
 /* ═══════════ Types ═══════════ */
-interface Task {
-    id: string;
-    projectId: string;
-    datasetId: string;
+interface Assignment {
+    assignmentId: number;
+    projectId: number;
+    projectName: string;
+    datasetId: number;
     datasetName: string;
-    annotatorId: string;
+    annotatorId: number;
     annotatorName: string;
-    reviewerId: string;
+    reviewerId: number;
     reviewerName: string;
-    status: "PENDING" | "IN_PROGRESS" | "COMPLETED";
+    status: string;
+    progress: number;
     createdAt: string;
 }
-
-/* ═══════════ localStorage ═══════════ */
-const tasksKey = (pid: string) => `dlss_project_tasks::${pid}`;
-
-function loadTasks(pid: string): Task[] {
-    try { return JSON.parse(localStorage.getItem(tasksKey(pid)) || "[]"); }
-    catch { return []; }
-}
-function saveTasks(pid: string, tasks: Task[]) {
-    localStorage.setItem(tasksKey(pid), JSON.stringify(tasks));
-}
-
-/* ═══════════ Mock data seed (fallback when API has no datasets) ═══════════ */
-const MOCK_DATASETS = [
-    { id: "ds-1", name: "Human_Batch_v1" },
-    { id: "ds-2", name: "Vehicle_Batch_v2" },
-    { id: "ds-3", name: "Animal_Batch_v1" },
-];
 
 /* ═══════════ Status badge styles ═══════════ */
 const STATUS_STYLES: Record<string, string> = {
     PENDING: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
     IN_PROGRESS: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+    SUBMITTED: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400",
+    APPROVED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+    REJECTED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
     COMPLETED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
 };
-
-/* ═══════════ Generate unique TASK-XXX id ═══════════ */
-function nextTaskId(tasks: Task[]): string {
-    let max = 0;
-    tasks.forEach((t) => {
-        const m = t.id.match(/^TASK-(\d+)$/);
-        if (m) max = Math.max(max, Number(m[1]));
-    });
-    return `TASK-${String(max + 1).padStart(3, "0")}`;
-}
 
 /* ═══════════ Component ═══════════ */
 export default function ProjectAssignments() {
@@ -74,16 +52,19 @@ export default function ProjectAssignments() {
     const [selAnnotator, setSelAnnotator] = useState("");
     const [selReviewer, setSelReviewer] = useState("");
     const [validation, setValidation] = useState("");
+    const [creating, setCreating] = useState(false);
 
     /* ── Loading states ── */
     const [loadingUsers, setLoadingUsers] = useState(true);
     const [usersError, setUsersError] = useState<string | null>(null);
 
-    /* ── Tasks ── */
-    const [tasks, setTasks] = useState<Task[]>([]);
+    /* ── Assignments from BE ── */
+    const [assignments, setAssignments] = useState<Assignment[]>([]);
+    const [loadingAssignments, setLoadingAssignments] = useState(true);
+    const [assignmentsError, setAssignmentsError] = useState<string | null>(null);
 
     /* ── View modal ── */
-    const [viewTask, setViewTask] = useState<Task | null>(null);
+    const [viewTask, setViewTask] = useState<Assignment | null>(null);
 
     /* ── Toast ── */
     const [toast, setToast] = useState("");
@@ -135,12 +116,11 @@ export default function ProjectAssignments() {
             }));
 
             applyUsers(mapped);
-            cacheUsers(mapped); // Cache for future 403 fallback
+            cacheUsers(mapped);
         } catch (err: any) {
             console.error("[ASSIGNMENTS_USERS] fetch error", err);
             const httpStatus = err?.status;
 
-            // Try localStorage cache as fallback
             const cached = loadCachedUsers();
             if (cached.length > 0) {
                 console.log("[ASSIGNMENTS_USERS] using cached users:", cached.length);
@@ -148,9 +128,7 @@ export default function ProjectAssignments() {
                 if (httpStatus === 403) {
                     setUsersError("API yêu cầu quyền ADMIN — đang dùng dữ liệu đã cache. Đăng nhập ADMIN để cập nhật.");
                 }
-                // If cache available and not 403, silently use cache
             } else {
-                // No cache, show real error
                 if (httpStatus === 403) {
                     setUsersError("GET /api/users yêu cầu quyền ADMIN. Đăng nhập ADMIN 1 lần để tải danh sách user, sau đó MANAGER có thể dùng cache.");
                 } else if (httpStatus === 401) {
@@ -166,69 +144,94 @@ export default function ProjectAssignments() {
         }
     }, []);
 
+    /* ── Fetch assignments from BE API ── */
+    const fetchAssignments = useCallback(async () => {
+        if (!pid) return;
+        setLoadingAssignments(true);
+        setAssignmentsError(null);
+        try {
+            const data: any = await assignmentApi.getAssignmentsByProject(Number(pid));
+            const arr = Array.isArray(data) ? data : (data?.content || data?.data || []);
+            console.log("[ASSIGNMENTS] loaded", arr.length, "assignments from API");
+            setAssignments(arr);
+        } catch (err: any) {
+            console.error("[ASSIGNMENTS] fetch error", err);
+            setAssignmentsError(err?.message || "Không thể tải danh sách assignment.");
+        } finally {
+            setLoadingAssignments(false);
+        }
+    }, [pid]);
+
     /* ── Load data on mount ── */
     useEffect(() => {
-        // Load persisted tasks
-        setTasks(loadTasks(pid));
-
-        // Datasets from API, fallback to mock
+        // Datasets from API
         if (pid) {
             datasetApi.getDatasetsByProject(Number(pid))
                 .then((data: any) => {
                     const arr = Array.isArray(data) ? data : (data?.content || []);
-                    setDatasets(arr.length > 0 ? arr.map((d: any) => ({
+                    setDatasets(arr.map((d: any) => ({
                         id: String(d.datasetId ?? d.id),
                         name: d.batchName ?? d.name ?? `Dataset ${d.datasetId ?? d.id}`,
-                    })) : MOCK_DATASETS);
+                    })));
                 })
-                .catch(() => setDatasets(MOCK_DATASETS));
-        } else {
-            setDatasets(MOCK_DATASETS);
+                .catch((err: any) => {
+                    console.error("[ASSIGNMENTS] datasets fetch error", err);
+                    setDatasets([]);
+                });
         }
 
-        // Users from real API (no mock fallback)
         fetchUsers();
-    }, [pid, fetchUsers]);
+        fetchAssignments();
+    }, [pid, fetchUsers, fetchAssignments]);
 
-    /* ── Create Task ── */
-    const handleCreate = () => {
+    /* ── Create Assignment via BE API ── */
+    const handleCreate = async () => {
         setValidation("");
         if (!selDataset) { setValidation("Please select a dataset"); return; }
         if (!selAnnotator) { setValidation("Please select an annotator"); return; }
         if (!selReviewer) { setValidation("Please select a reviewer"); return; }
 
-        const ds = datasets.find((d) => d.id === selDataset);
-        const ann = annotators.find((a) => a.id === selAnnotator);
-        const rev = reviewers.find((r) => r.id === selReviewer);
+        setCreating(true);
+        try {
+            const response: any = await assignmentApi.createAssignment(Number(pid), {
+                datasetId: Number(selDataset),
+                annotatorId: Number(selAnnotator),
+                reviewerId: Number(selReviewer),
+            });
+            console.log("[ASSIGNMENTS] created", response);
+            showToast(`Created Assignment #${response.assignmentId}`);
 
-        const newTask: Task = {
-            id: nextTaskId(tasks),
-            projectId: pid,
-            datasetId: selDataset,
-            datasetName: ds?.name || selDataset,
-            annotatorId: selAnnotator,
-            annotatorName: ann?.name || selAnnotator,
-            reviewerId: selReviewer,
-            reviewerName: rev?.name || selReviewer,
-            status: "PENDING",
-            createdAt: new Date().toISOString(),
-        };
+            // Refresh assignments list
+            await fetchAssignments();
 
-        const updated = [...tasks, newTask];
-        setTasks(updated);
-        saveTasks(pid, updated);
-        showToast(`Created ${newTask.id}`);
+            // Reset selects
+            setSelDataset("");
+            setSelAnnotator("");
+            setSelReviewer("");
+        } catch (err: any) {
+            console.error("[ASSIGNMENTS] create error", err);
+            setValidation(err?.message || "Không thể tạo assignment. Kiểm tra lại dữ liệu.");
+        } finally {
+            setCreating(false);
+        }
+    };
 
-        // Reset selects
-        setSelDataset("");
-        setSelAnnotator("");
-        setSelReviewer("");
+    /* ── Delete Assignment ── */
+    const handleDelete = async (assignmentId: number) => {
+        if (!confirm("Xóa assignment này?")) return;
+        try {
+            await assignmentApi.deleteAssignment(assignmentId);
+            showToast(`Deleted Assignment #${assignmentId}`);
+            await fetchAssignments();
+        } catch (err: any) {
+            showToast(err?.message || "Không thể xóa assignment.");
+        }
     };
 
     /* ── Status counts ── */
-    const pending = tasks.filter((t) => t.status === "PENDING").length;
-    const inProgress = tasks.filter((t) => t.status === "IN_PROGRESS").length;
-    const completed = tasks.filter((t) => t.status === "COMPLETED").length;
+    const pending = assignments.filter((t) => String(t.status).toUpperCase() === "PENDING").length;
+    const inProgress = assignments.filter((t) => String(t.status).toUpperCase() === "IN_PROGRESS").length;
+    const completed = assignments.filter((t) => ["APPROVED", "COMPLETED"].includes(String(t.status).toUpperCase())).length;
 
     /* ── Select style ── */
     const selectCls = "w-full rounded-lg border border-border bg-card text-foreground text-sm px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors appearance-none cursor-pointer";
@@ -256,7 +259,7 @@ export default function ProjectAssignments() {
                         <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Select Data</label>
                         <div className="relative">
                             <select className={selectCls} value={selDataset} onChange={(e) => setSelDataset(e.target.value)}>
-                                <option value="">— Choose dataset —</option>
+                                <option value="">{datasets.length === 0 ? "No datasets found" : "— Choose dataset —"}</option>
                                 {datasets.map((d) => (
                                     <option key={d.id} value={d.id}>{d.name}</option>
                                 ))}
@@ -323,36 +326,65 @@ export default function ProjectAssignments() {
 
                 {/* Create Task button */}
                 <div>
-                    <Button type="button" variant="primary" onClick={handleCreate}>
-                        <span className="material-symbols-outlined text-base mr-1">add</span>
-                        Create Task
+                    <Button type="button" variant="primary" onClick={handleCreate} disabled={creating}>
+                        {creating ? (
+                            <span className="material-symbols-outlined text-base mr-1 animate-spin">progress_activity</span>
+                        ) : (
+                            <span className="material-symbols-outlined text-base mr-1">add</span>
+                        )}
+                        {creating ? "Creating..." : "Create Task"}
                     </Button>
                 </div>
             </Card>
 
-            {/* ── Tasks Table ── */}
+            {/* ── Assignments Table ── */}
             <Card className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-[18px]">task_alt</span>
                         Assignment Tasks
                     </h3>
-                    {tasks.length > 0 && (
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                                <span className="w-2 h-2 rounded-full bg-yellow-400" />Pending: {pending}
+                    <div className="flex items-center gap-3">
+                        {assignments.length > 0 && (
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                    <span className="w-2 h-2 rounded-full bg-yellow-400" />Pending: {pending}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                    <span className="w-2 h-2 rounded-full bg-blue-400" />In Progress: {inProgress}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                    <span className="w-2 h-2 rounded-full bg-green-400" />Completed: {completed}
+                                </span>
+                            </div>
+                        )}
+                        <Button variant="ghost" size="sm" onClick={fetchAssignments} disabled={loadingAssignments}>
+                            <span className={cn("material-symbols-outlined text-base mr-1", loadingAssignments && "animate-spin")}>
+                                {loadingAssignments ? "progress_activity" : "refresh"}
                             </span>
-                            <span className="flex items-center gap-1">
-                                <span className="w-2 h-2 rounded-full bg-blue-400" />In Progress: {inProgress}
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <span className="w-2 h-2 rounded-full bg-green-400" />Completed: {completed}
-                            </span>
-                        </div>
-                    )}
+                            Refresh
+                        </Button>
+                    </div>
                 </div>
 
-                {tasks.length === 0 ? (
+                {/* Loading */}
+                {loadingAssignments && assignments.length === 0 && (
+                    <div className="flex items-center justify-center py-16">
+                        <span className="material-symbols-outlined text-3xl text-muted-foreground animate-spin mr-2">progress_activity</span>
+                        <span className="text-muted-foreground text-sm">Loading assignments...</span>
+                    </div>
+                )}
+
+                {/* Error */}
+                {assignmentsError && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-destructive/10 border border-destructive/20">
+                        <span className="material-symbols-outlined text-[16px] text-destructive">error</span>
+                        <p className="text-sm text-destructive flex-1">{assignmentsError}</p>
+                        <Button variant="ghost" size="sm" onClick={fetchAssignments}>Retry</Button>
+                    </div>
+                )}
+
+                {!loadingAssignments && assignments.length === 0 && !assignmentsError ? (
                     <div className="text-center py-16">
                         <span className="material-symbols-outlined text-5xl text-muted-foreground/40 mb-3 block">assignment</span>
                         <h4 className="text-base font-semibold text-foreground mb-1">No assignments yet</h4>
@@ -360,44 +392,66 @@ export default function ProjectAssignments() {
                             Select a dataset, annotator, and reviewer above, then click "Create Task" to assign work.
                         </p>
                     </div>
-                ) : (
+                ) : assignments.length > 0 && (
                     <>
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>TASK ID</TableHead>
+                                    <TableHead>ID</TableHead>
                                     <TableHead>DATA SOURCE</TableHead>
                                     <TableHead>ANNOTATOR</TableHead>
                                     <TableHead>REVIEWER</TableHead>
+                                    <TableHead>PROGRESS</TableHead>
                                     <TableHead>STATUS</TableHead>
                                     <TableHead className="text-right">ACTIONS</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {tasks.map((task) => (
-                                    <TableRow key={task.id}>
-                                        <TableCell className="font-mono font-medium text-sm">{task.id}</TableCell>
-                                        <TableCell>{task.datasetName}</TableCell>
-                                        <TableCell>{task.annotatorName}</TableCell>
-                                        <TableCell>{task.reviewerName}</TableCell>
-                                        <TableCell>
-                                            <span className={cn(
-                                                "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
-                                                STATUS_STYLES[task.status] || "bg-muted text-muted-foreground"
-                                            )}>
-                                                {task.status.replace("_", " ")}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <Button variant="ghost" size="sm" onClick={() => setViewTask(task)}>
-                                                <span className="material-symbols-outlined text-base mr-1">visibility</span>View
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                {assignments.map((task) => {
+                                    const status = String(task.status || "PENDING").toUpperCase();
+                                    return (
+                                        <TableRow key={task.assignmentId}>
+                                            <TableCell className="font-mono font-medium text-sm">#{task.assignmentId}</TableCell>
+                                            <TableCell>{task.datasetName || "—"}</TableCell>
+                                            <TableCell>{task.annotatorName || "—"}</TableCell>
+                                            <TableCell>{task.reviewerName || "—"}</TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full bg-primary rounded-full transition-all"
+                                                            style={{ width: `${task.progress || 0}%` }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-[10px] font-mono text-muted-foreground">{task.progress || 0}%</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <span className={cn(
+                                                    "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
+                                                    STATUS_STYLES[status] || "bg-muted text-muted-foreground"
+                                                )}>
+                                                    {status.replace("_", " ")}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex justify-end gap-1">
+                                                    <Button variant="ghost" size="sm" onClick={() => setViewTask(task)}>
+                                                        <span className="material-symbols-outlined text-base">visibility</span>
+                                                    </Button>
+                                                    {status === "PENDING" && (
+                                                        <Button variant="ghost" size="sm" onClick={() => handleDelete(task.assignmentId)} className="text-destructive hover:text-destructive">
+                                                            <span className="material-symbols-outlined text-base">delete</span>
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
                             </TableBody>
                         </Table>
-                        <p className="text-xs text-muted-foreground pt-2">Showing {tasks.length} task{tasks.length !== 1 ? "s" : ""}</p>
+                        <p className="text-xs text-muted-foreground pt-2">Showing {assignments.length} assignment{assignments.length !== 1 ? "s" : ""}</p>
                     </>
                 )}
             </Card>
@@ -406,19 +460,25 @@ export default function ProjectAssignments() {
             <ModalDialog
                 isOpen={!!viewTask}
                 onClose={() => setViewTask(null)}
-                title="Task Details"
+                title="Assignment Details"
                 actions={<Button variant="secondary" onClick={() => setViewTask(null)}>Close</Button>}
             >
                 {viewTask && (
                     <div className="space-y-3 text-sm">
-                        <div><span className="font-medium text-foreground">Task ID:</span> <span className="text-muted-foreground font-mono">{viewTask.id}</span></div>
-                        <div><span className="font-medium text-foreground">Data Source:</span> <span className="text-muted-foreground">{viewTask.datasetName}</span></div>
-                        <div><span className="font-medium text-foreground">Annotator:</span> <span className="text-muted-foreground">{viewTask.annotatorName}</span></div>
-                        <div><span className="font-medium text-foreground">Reviewer:</span> <span className="text-muted-foreground">{viewTask.reviewerName}</span></div>
+                        <div><span className="font-medium text-foreground">Assignment ID:</span> <span className="text-muted-foreground font-mono">#{viewTask.assignmentId}</span></div>
+                        <div><span className="font-medium text-foreground">Project:</span> <span className="text-muted-foreground">{viewTask.projectName || "—"}</span></div>
+                        <div><span className="font-medium text-foreground">Data Source:</span> <span className="text-muted-foreground">{viewTask.datasetName || "—"}</span></div>
+                        <div><span className="font-medium text-foreground">Annotator:</span> <span className="text-muted-foreground">{viewTask.annotatorName || "—"}</span></div>
+                        <div><span className="font-medium text-foreground">Reviewer:</span> <span className="text-muted-foreground">{viewTask.reviewerName || "—"}</span></div>
+                        <div><span className="font-medium text-foreground">Progress:</span> <span className="text-muted-foreground">{viewTask.progress || 0}%</span></div>
                         <div><span className="font-medium text-foreground">Status:</span>{" "}
-                            <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-xs font-medium", STATUS_STYLES[viewTask.status])}>{viewTask.status.replace("_", " ")}</span>
+                            <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-xs font-medium", STATUS_STYLES[String(viewTask.status).toUpperCase()])}>
+                                {String(viewTask.status || "").replace("_", " ")}
+                            </span>
                         </div>
-                        <div><span className="font-medium text-foreground">Created:</span> <span className="text-muted-foreground">{new Date(viewTask.createdAt).toLocaleString("vi-VN")}</span></div>
+                        {viewTask.createdAt && (
+                            <div><span className="font-medium text-foreground">Created:</span> <span className="text-muted-foreground">{new Date(viewTask.createdAt).toLocaleString("vi-VN")}</span></div>
+                        )}
                     </div>
                 )}
             </ModalDialog>
