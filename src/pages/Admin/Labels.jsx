@@ -1,0 +1,257 @@
+import React, { useState, useEffect } from 'react';
+import { labelApi } from '../../api/labelApi';
+import { useToast } from '../../context/ToastContext';
+
+export default function AdminLabels() {
+    const [labels, setLabels] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
+    const { addToast } = useToast();
+
+    // Form state - matches backend CreateLabelRequest DTO
+    const [newLabel, setNewLabel] = useState({
+        labelName: '',
+        colorCode: '#3b82f6',
+        labelType: 'OBJECT',
+        description: '',
+        shortcutKey: ''
+    });
+
+    // Fetch labels on mount
+    useEffect(() => {
+        fetchLabels();
+    }, []);
+
+    const fetchLabels = async () => {
+        setIsLoading(true);
+        try {
+            const data = await labelApi.getAllLabels();
+            setLabels(data || []);
+        } catch (error) {
+            console.error('Failed to fetch labels:', error);
+            // Don't show error toast if it's just empty
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleCreateLabel = async () => {
+        if (!newLabel.labelName || !newLabel.colorCode || !newLabel.labelType) {
+            addToast('Label name, color, and type are required', 'error');
+            return;
+        }
+
+        setIsCreating(true);
+        try {
+            await labelApi.createLabel({
+                labelName: newLabel.labelName,
+                colorCode: newLabel.colorCode,
+                labelType: newLabel.labelType,
+                description: newLabel.description || null,
+                shortcutKey: newLabel.shortcutKey || null
+            });
+            addToast('Label created successfully!', 'success');
+            setShowCreateModal(false);
+            setNewLabel({
+                labelName: '',
+                colorCode: '#3b82f6',
+                labelType: 'OBJECT',
+                description: '',
+                shortcutKey: ''
+            });
+            fetchLabels(); // Refresh list
+        } catch (error) {
+            addToast(error.message || 'Failed to create label', 'error');
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
+    const getLabelTypeColor = (type) => {
+        switch (type?.toUpperCase()) {
+            case 'OBJECT': return '#8b5cf6';
+            case 'CLASSIFICATION': return '#10b981';
+            case 'SEGMENTATION': return '#f59e0b';
+            default: return '#6b7280';
+        }
+    };
+
+    return (
+        <div className="flex h-screen bg-background">
+            <main className="flex-1 p-8 overflow-auto">
+                <div className="max-w-7xl mx-auto">
+                    <div className="mb-8 flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold text-foreground mb-2">
+                                🏷️ Label Management
+                            </h1>
+                            <p className="text-muted-foreground">
+                                Manage global label taxonomy
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setShowCreateModal(true)}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                        >
+                            ➕ Create Label
+                        </button>
+                    </div>
+
+                    {/* Labels List */}
+                    <div className="bg-card border border-border rounded-lg p-6">
+                        {isLoading ? (
+                            <div className="text-center text-muted-foreground py-12">
+                                <div className="text-4xl mb-4 animate-spin">⏳</div>
+                                <p>Loading labels...</p>
+                            </div>
+                        ) : labels.length === 0 ? (
+                            <div className="text-center text-muted-foreground py-12">
+                                <div className="text-6xl mb-4">🏷️</div>
+                                <p className="text-lg font-medium mb-2">No labels configured</p>
+                                <p className="text-sm">Click "Create Label" to add your first label</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {labels.map((label) => (
+                                    <div
+                                        key={label.labelId || label.id}
+                                        className="bg-background border border-border rounded-lg p-4 hover:border-blue-500/50 transition-colors"
+                                    >
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div
+                                                className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
+                                                style={{ backgroundColor: label.colorCode || '#3b82f6' }}
+                                            >
+                                                {label.shortcutKey || label.labelName?.[0]?.toUpperCase() || 'L'}
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="font-semibold text-foreground">{label.labelName}</h3>
+                                                <span
+                                                    className="text-xs px-2 py-0.5 rounded-full"
+                                                    style={{
+                                                        backgroundColor: `${getLabelTypeColor(label.labelType)}20`,
+                                                        color: getLabelTypeColor(label.labelType)
+                                                    }}
+                                                >
+                                                    {label.labelType}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {label.description && (
+                                            <p className="text-sm text-muted-foreground truncate">{label.description}</p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Create Label Modal */}
+                    {showCreateModal && (
+                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                            <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+                                <h2 className="text-xl font-bold text-foreground mb-4">Create New Label</h2>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                            Label Name <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={newLabel.labelName}
+                                            onChange={(e) => setNewLabel({ ...newLabel, labelName: e.target.value })}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
+                                            placeholder="e.g., Person, Vehicle, Animal"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                            Color Code <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="color"
+                                                value={newLabel.colorCode}
+                                                onChange={(e) => setNewLabel({ ...newLabel, colorCode: e.target.value })}
+                                                className="w-12 h-10 bg-background border border-border rounded-lg cursor-pointer"
+                                            />
+                                            <input
+                                                type="text"
+                                                value={newLabel.colorCode}
+                                                onChange={(e) => setNewLabel({ ...newLabel, colorCode: e.target.value })}
+                                                className="flex-1 px-3 py-2 bg-background border border-border rounded-lg text-foreground font-mono"
+                                                placeholder="#3b82f6"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                            Label Type <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            value={newLabel.labelType}
+                                            onChange={(e) => setNewLabel({ ...newLabel, labelType: e.target.value })}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
+                                        >
+                                            <option value="OBJECT">Object Detection</option>
+                                            <option value="CLASSIFICATION">Classification</option>
+                                            <option value="SEGMENTATION">Segmentation</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                            Shortcut Key (optional)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={newLabel.shortcutKey}
+                                            onChange={(e) => setNewLabel({ ...newLabel, shortcutKey: e.target.value.slice(0, 1).toUpperCase() })}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
+                                            placeholder="e.g., P"
+                                            maxLength={1}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                            Description (optional)
+                                        </label>
+                                        <textarea
+                                            value={newLabel.description}
+                                            onChange={(e) => setNewLabel({ ...newLabel, description: e.target.value })}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground resize-none"
+                                            placeholder="Brief description of this label"
+                                            rows={2}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 mt-6">
+                                    <button
+                                        onClick={() => setShowCreateModal(false)}
+                                        className="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-accent transition-colors"
+                                        disabled={isCreating}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleCreateLabel}
+                                        disabled={isCreating}
+                                        className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white rounded-lg font-medium transition-colors"
+                                    >
+                                        {isCreating ? 'Creating...' : 'Create'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </main>
+        </div>
+    );
+}

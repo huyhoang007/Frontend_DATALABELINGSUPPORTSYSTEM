@@ -1,0 +1,379 @@
+{
+  "meta": {
+    "name": "Data Labeling Support System",
+    "version": "1.0.0",
+    "source": "Stitch-derived UI contract",
+    "productType": "internal_productivity_tool",
+    "defaultTheme": "dark",
+    "scope": {
+      "platform": "desktop_web",
+      "responsive": "desktop_first"
+    }
+  },
+
+  "principles": {
+    "keywords": [
+      "utilitarian",
+      "professional",
+      "dense_but_readable",
+      "calm",
+      "system_first"
+    ],
+    "priorityOrder": [
+      "readability",
+      "speed_of_action",
+      "consistency",
+      "accessibility_baseline"
+    ],
+    "doNot": [
+      "marketing_style_gradients",
+      "flashy_animations",
+      "heavy_shadows",
+      "emoji_as_icons",
+      "inconsistent_radius",
+      "multiple_styles_same_meaning"
+    ]
+  },
+
+  "typography": {
+    "fontFamilies": {
+      "ui": "Inter",
+      "mono": "ui_mono"
+    },
+    "scalesPx": {
+      "h1": { "fontSize": 32, "lineHeight": 40, "weight": 800 },
+      "h2": { "fontSize": 24, "lineHeight": 32, "weight": 800 },
+      "h3": { "fontSize": 16, "lineHeight": 24, "weight": 700 },
+      "body": { "fontSize": 14, "lineHeight": 20, "weight": 500 },
+      "caption": { "fontSize": 12, "lineHeight": 16, "weight": 600 },
+      "micro": { "fontSize": 10, "lineHeight": 14, "weight": 600 }
+    },
+    "textRules": {
+      "uppercaseUseCases": [
+        "section_headers",
+        "status_badges",
+        "meta_labels",
+        "keyboard_shortcuts"
+      ],
+      "monoUseCases": [
+        "task_id",
+        "counters",
+        "shortcuts",
+        "technical_meta"
+      ],
+      "tracking": {
+        "default": "normal",
+        "uppercase": "wide"
+      }
+    }
+  },
+
+  "tokens": {
+    "spacingPx": [4, 8, 12, 16, 24, 32],
+    "radiusPx": {
+      "sm": 6,
+      "md": 8,
+      "lg": 12,
+      "xl": 16,
+      "pill": 9999
+    },
+    "borders": {
+      "widthPx": 1,
+      "useBordersOverShadows": true,
+      "dividerOpacity": "low"
+    },
+    "motion": {
+      "durationMs": { "fast": 150, "base": 200, "slow": 250 },
+      "easing": "ease-out",
+      "preferReducedMotion": true
+    }
+  },
+
+  "colors": {
+    "roleAccents": {
+      "annotator": { "primary": "#1fad93" },
+      "reviewer": { "primary": "#1fad93" },
+      "manager": { "primary": "#135bec" },
+      "admin": { "primary": "#135bec" }
+    },
+    "themes": {
+      "dark": {
+        "background": {
+          "base": ["#0b0e14", "#111318", "#17191c"],
+          "canvas": "#0b0e14"
+        },
+        "surface": {
+          "panel": ["#1c212b", "#232529", "#2F3237"],
+          "toolbar": "#111318"
+        },
+        "text": {
+          "primary": "#ffffff",
+          "secondary": "#9da6b9",
+          "muted": "#64748b"
+        },
+        "border": {
+          "base": ["#2d3544", "#3d514e"],
+          "muted": "rgba(255,255,255,0.08)"
+        }
+      },
+      "light": {
+        "background": {
+          "base": ["#f2f2f2", "#f6f6f8", "#ffffff"]
+        },
+        "surface": {
+          "panel": ["#ffffff", "#fafafa", "#f8fafc"]
+        },
+        "text": {
+          "primary": "#0f172a",
+          "secondary": "#475569",
+          "muted": "#64748b"
+        },
+        "border": {
+          "base": ["#e2e8f0", "#cbd5e1"]
+        }
+      }
+    },
+    "status": {
+      "TODO": { "intent": "neutral_or_success", "style": "chip_with_dot" },
+      "IN_PROGRESS": { "intent": "warning", "style": "chip_with_pulse_dot" },
+      "SUBMITTED": { "intent": "info", "style": "chip" },
+      "REJECTED": { "intent": "danger", "style": "chip_with_icon_or_left_border" },
+      "APPROVED": { "intent": "success", "style": "chip_with_dot" }
+    }
+  },
+
+  "icons": {
+    "system": "material_symbols_outlined",
+    "rules": {
+      "noEmojiIcons": true,
+      "defaultSizePx": 20,
+      "buttonIconSizePx": 18,
+      "tableIconSizePx": 16
+    }
+  },
+
+  "layout": {
+    "containers": {
+      "maxWidthPx": 1440,
+      "pagePaddingPx": 24
+    },
+    "patterns": {
+      "dataListPage": {
+        "structure": [
+          "sticky_header",
+          "page_heading",
+          "filter_bar",
+          "table_or_list",
+          "pagination"
+        ],
+        "table": {
+          "dense": true,
+          "stickyHeader": false,
+          "rowHover": {
+            "enabled": true,
+            "style": ["subtle_bg", "optional_left_accent_border"]
+          },
+          "rowActions": {
+            "visibility": "on_row_hover"
+          }
+        }
+      },
+      "workspace3Column": {
+        "columns": {
+          "left": { "widthPx": 288, "type": "navigation_or_list" },
+          "center": { "flex": true, "type": "canvas" },
+          "right": { "widthPx": 320, "type": "metadata_or_labels" }
+        },
+        "affordances": [
+          "floating_tool_toolbar",
+          "persistent_footer_actions",
+          "visible_shortcuts"
+        ]
+      },
+      "dashboardWithSidebar": {
+        "sidebar": { "widthPx": 256, "alwaysVisibleOnDesktop": true },
+        "content": ["top_header", "kpi_cards", "table_section"]
+      }
+    }
+  },
+
+  "components": {
+    "Button": {
+      "base": {
+        "textTransform": "uppercase",
+        "fontWeight": 700,
+        "radiusToken": "md",
+        "transition": { "durationMs": 200, "properties": ["background", "opacity", "color", "border"] }
+      },
+      "variants": {
+        "primary": { "fill": "solid", "textColor": "on_primary" },
+        "secondary": { "fill": "outline_or_dark", "textColor": "default" },
+        "ghost": { "fill": "transparent", "iconOnly": true },
+        "destructive": { "fill": "outline_or_solid", "intent": "danger" }
+      },
+      "states": {
+        "hover": { "style": ["opacity_down", "bg_subtle"] },
+        "active": { "transform": "scale(0.98)" },
+        "disabled": { "opacity": 0.5, "cursor": "not-allowed" },
+        "loading": { "leftSpinner": true, "keepLabel": true },
+        "focus": { "visibleRing": true, "ringUsesAccent": true }
+      }
+    },
+
+    "Input": {
+      "base": {
+        "heightPx": 40,
+        "radiusToken": "md",
+        "border": "thin",
+        "focus": { "ring": true, "borderColor": "accent" }
+      },
+      "variants": {
+        "default": {},
+        "search": { "leftIcon": "search", "clearButton": true }
+      },
+      "validation": {
+        "timing": ["on_blur", "on_submit"],
+        "errorMessage": { "placement": "below", "typography": "caption" }
+      }
+    },
+
+    "Table": {
+      "header": {
+        "typography": { "size": "micro", "uppercase": true, "tracking": "wide", "weight": 800 },
+        "background": "subtle_surface"
+      },
+      "row": {
+        "typography": { "size": "body" },
+        "hover": { "enabled": true, "style": ["subtle_bg", "optional_left_border_accent"] },
+        "actions": { "visibility": "hover" }
+      }
+    },
+
+    "BadgeStatus": {
+      "shape": "pill",
+      "typography": { "size": "micro", "uppercase": true, "weight": 900, "tracking": "wide" },
+      "content": {
+        "allowDot": true,
+        "allowIcon": true,
+        "noLongText": true
+      }
+    },
+
+    "SidebarNav": {
+      "activeItem": {
+        "usesAccent": true,
+        "background": "accent_10pct",
+        "textColor": "accent"
+      },
+      "item": {
+        "iconAndLabel": true,
+        "iconOnlyForbidden": true
+      }
+    },
+
+    "ModalDialog": {
+      "rules": {
+        "escCloses": true,
+        "focusTrap": true,
+        "primaryActionRight": true
+      },
+      "destructiveConfirm": { "required": true }
+    },
+
+    "Toast": {
+      "success": { "autoDismissMs": 3000 },
+      "error": { "autoDismissMs": 0 },
+      "stackLimit": 3
+    }
+  },
+
+  "flows": {
+    "taskStatusModel": ["TODO", "IN_PROGRESS", "SUBMITTED", "REJECTED", "APPROVED"],
+    "rules": {
+      "singleAccentPerScreen": true,
+      "rejectedRequiresComment": true,
+      "showRejectedCommentInlineInLists": true
+    }
+  },
+
+  "screens": {
+    "login": {
+      "pattern": "centered_card",
+      "theme": ["dark", "light"],
+      "components": ["Input", "Button"],
+      "notes": [
+        "minimal_branding",
+        "soft_background_blobs_allowed",
+        "no_dashboard_components"
+      ]
+    },
+
+    "annotator_task_list": {
+      "pattern": "dataListPage",
+      "accentRole": "annotator",
+      "keyUI": ["status_tabs", "search", "table", "inline_reject_comment"],
+      "actions": ["start", "continue", "fix_issues", "refresh"]
+    },
+
+    "annotator_workspace": {
+      "pattern": "workspace3Column",
+      "accentRole": "annotator",
+      "keyUI": [
+        "left_image_list_with_search",
+        "center_canvas_with_floating_toolbar",
+        "right_label_set_and_created_items",
+        "persistent_footer_actions",
+        "hotkeys_hint"
+      ],
+      "actions": ["save_draft", "submit_for_review"],
+      "interactionRules": {
+        "canvas": ["pan", "zoom", "bbox", "polygon"],
+        "hotkeysVisible": true
+      }
+    },
+
+    "reviewer_queue": {
+      "pattern": "dataListPage",
+      "accentRole": "reviewer",
+      "keyUI": ["kpi_summary", "filter_bar", "table_review_cta"],
+      "actions": ["review", "filter", "sort"]
+    },
+
+    "reviewer_review_screen": {
+      "pattern": "workspace3Column",
+      "accentRole": "manager",
+      "keyUI": [
+        "center_canvas_with_zoom_controls",
+        "approve_reject_bar_with_required_feedback_on_reject",
+        "right_guidelines_panel_with_tabs",
+        "keyboard_shortcuts_section"
+      ],
+      "actions": ["approve", "reject"],
+      "validation": {
+        "reject": {
+          "requires": ["error_type", "comment"],
+          "message": "Reject requires error type and feedback."
+        }
+      }
+    },
+
+    "manager_dashboard": {
+      "pattern": "dashboardWithSidebar",
+      "accentRole": "manager",
+      "keyUI": ["sidebar_nav", "kpi_cards", "projects_table", "hover_row_actions"],
+      "actions": ["create_project", "export_data", "view_details", "edit"]
+    }
+  },
+
+  "qaChecklist": [
+    "spacing_uses_4px_scale_only",
+    "one_accent_per_screen",
+    "hover_and_focus_visible",
+    "tables_have_consistent_row_hover",
+    "reject_requires_comment_and_error_type",
+    "no_emoji_icons",
+    "no_heavy_shadows",
+    "shortcuts_visible_in_workspace_or_footer",
+    "consistent_radius_tokens"
+  ]
+}

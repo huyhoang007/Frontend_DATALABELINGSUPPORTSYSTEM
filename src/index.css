@@ -1,0 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+
+  /* 
+  Token-based Theme System 
+  Using HSL values for Tailwind opacity support 
+  */
+  :root {
+    /* LIGHT MODE - Soft & Approachable */
+    /* Background: Very subtle cool gray #f8fafc */
+    --background: 210 40% 98%;
+
+    /* Foreground: Slate-800 #1e293b (Softer than pure black) */
+    --foreground: 215 25% 27%;
+
+    /* Card: Pure White #ffffff */
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 27%;
+
+    /* Popover: White */
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 27%;
+
+    /* Primary: Soft Indigo #6366f1 (Friendly accent) */
+    --primary: 239 84% 67%;
+    --primary-foreground: 210 40% 98%;
+
+    /* Secondary: Slate-100 #f1f5f9 */
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    /* Muted: Slate-100 #f1f5f9 */
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    /* Accent: Slate-100 #f1f5f9 */
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    /* Destructive: Soft Red #ef4444 */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* Border: Slate-200 #e2e8f0 (Subtle) */
+    --border: 214.3 31.8% 91.4%;
+    /* Input: Slate-200 #e2e8f0 */
+    --input: 214.3 31.8% 91.4%;
+    /* Ring: Indigo-400 #818cf8 */
+    --ring: 239 84% 67%;
+
+    --radius: 0.75rem;
+    /* Soft rounding (12px) */
+  }
+
+  .dark {
+    /* DARK MODE - Deep & Calm */
+    /* Background: Slate-950 #020617 (Deep warmth) */
+    --background: 222.2 84% 4.9%;
+
+    /* Foreground: Slate-50 #f8fafc */
+    --foreground: 210 40% 98%;
+
+    /* Card: Slate-900 #0f172a */
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    /* Popover: Slate-900 */
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Primary: Soft Indigo #6366f1 */
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    /* Secondary: Slate-800 #1e293b */
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* Muted: Slate-800 #1e293b */
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    /* Accent: Slate-800 #1e293b */
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    /* Destructive: Red-900/50 */
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* Border: Slate-800 #1e293b */
+    --border: 217.2 32.6% 17.5%;
+    /* Input: Slate-800 */
+    --input: 217.2 32.6% 17.5%;
+    /* Ring: Slate-400 */
+    --ring: 212.7 26.8% 83.9%;
+  }
+
+  body {
+    @apply font-sans antialiased text-foreground bg-background;
+  }
+}
+
+/* Material Symbols Rules */
+.material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 20;
+}
+
+/* Global Professional Polish */
+::selection {
+  background-color: rgba(59, 130, 246, 0.3);
+  color: #ffffff;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b0e14;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2d3544;
+  border-radius: 5px;
+  border: 2px solid #0b0e14;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
