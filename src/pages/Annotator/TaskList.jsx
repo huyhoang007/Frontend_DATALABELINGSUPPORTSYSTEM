@@ -2,40 +2,19 @@ import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/Table";
-import { BadgeStatus } from "../../components/ui/BadgeStatus";
 import { useAuth } from "../../context/AuthContext";
-import { userApi } from "../../api/userApi";
+import { annotationApi } from "../../api/annotationApi";
 
-/* ── Status tabs ── */
-const TABS = ["ALL", "PENDING", "IN_PROGRESS", "COMPLETED"];
+/* ── Status tabs matching BE statuses ── */
+const TABS = ["ALL", "PENDING", "IN_PROGRESS", "SUBMITTED", "APPROVED", "REJECTED", "COMPLETED"];
 
-/* ── Load ALL tasks from Manager Assignments localStorage ── */
-const TASKS_PREFIX = "dlss_project_tasks::";
-
-function loadAllAssignmentTasks() {
-    const all = [];
-    const seen = new Set();
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith(TASKS_PREFIX)) {
-            try {
-                const tasks = JSON.parse(localStorage.getItem(key) || "[]");
-                tasks.forEach((t) => {
-                    if (!seen.has(t.id)) {
-                        seen.add(t.id);
-                        all.push(t);
-                    }
-                });
-            } catch { /* skip bad JSON */ }
-        }
-    }
-    return all;
-}
-
-/* ── Status badge mapping ── */
+/* ── Status badge styles ── */
 const STATUS_STYLES = {
     PENDING: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
     IN_PROGRESS: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+    SUBMITTED: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400",
+    APPROVED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+    REJECTED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
     COMPLETED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
 };
 
@@ -45,96 +24,62 @@ export default function TaskList() {
     const [activeTab, setActiveTab] = React.useState("ALL");
     const [search, setSearch] = React.useState("");
 
-    const [tasks, setTasks] = React.useState([]);
+    const [assignments, setAssignments] = React.useState([]);
     const [loading, setLoading] = React.useState(true);
-    const [currentUserId, setCurrentUserId] = React.useState(null);
     const [error, setError] = React.useState(null);
 
-    /* ── Fetch current user ID + load tasks ── */
-    React.useEffect(() => {
-        let cancelled = false;
-
-        async function init() {
-            setLoading(true);
-            setError(null);
-
-            // 1. Get current user ID from API
-            let userId = null;
-            try {
-                const me = await userApi.getCurrentUser();
-                userId = String(me?.userId ?? me?.id ?? "");
-                if (!cancelled) setCurrentUserId(userId);
-                console.log("[ANNOTATOR_TASKS] currentUser", { userId, username: me?.username });
-            } catch (err) {
-                console.warn("[ANNOTATOR_TASKS] failed to get current user", err);
-                // Fallback: use username from auth context
-                userId = user?.username || "";
-                if (!cancelled) setCurrentUserId(userId);
+    /* ── Fetch assignments from real API ── */
+    const fetchAssignments = React.useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await annotationApi.getMyAssignments();
+            // apiClient returns response.data directly
+            const list = Array.isArray(data) ? data : (data?.content || data?.data || []);
+            console.log("[ANNOTATOR_TASKS] my-assignments from API:", list.length, list);
+            setAssignments(list);
+        } catch (err) {
+            console.error("[ANNOTATOR_TASKS] fetch error", err);
+            const status = err?.status;
+            if (status === 403) {
+                setError("Bạn không có quyền truy cập (yêu cầu role ANNOTATOR).");
+            } else if (status === 401) {
+                setError("Hết phiên đăng nhập — vui lòng đăng nhập lại.");
+            } else {
+                setError(err?.message || "Không thể tải danh sách nhiệm vụ.");
             }
-
-            // 2. Load all tasks from localStorage (Manager Assignments)
-            const allTasks = loadAllAssignmentTasks();
-            console.log("[ANNOTATOR_TASKS] all tasks from localStorage:", allTasks.length);
-
-            // 3. Filter tasks for this annotator
-            const myTasks = allTasks.filter((t) => {
-                const taskAnnotatorId = String(t.annotatorId || "");
-                const taskAnnotatorName = String(t.annotatorName || "").toLowerCase();
-                const userUsername = (user?.username || "").toLowerCase();
-                // Match by ID or by name/username
-                return taskAnnotatorId === userId
-                    || taskAnnotatorName === userUsername;
-            });
-
-            console.log("[ANNOTATOR_TASKS] my tasks:", myTasks.length, "userId:", userId);
-
-            if (!cancelled) {
-                setTasks(myTasks);
-                setLoading(false);
-            }
+            setAssignments([]);
+        } finally {
+            setLoading(false);
         }
+    }, []);
 
-        init();
-        return () => { cancelled = true; };
-    }, [user]);
-
-    /* ── Listen for storage changes (when Manager creates tasks in another tab) ── */
     React.useEffect(() => {
-        function onStorageChange(e) {
-            if (e.key && e.key.startsWith(TASKS_PREFIX)) {
-                // Reload tasks
-                const allTasks = loadAllAssignmentTasks();
-                const myTasks = allTasks.filter((t) => {
-                    const taskAnnotatorId = String(t.annotatorId || "");
-                    return taskAnnotatorId === currentUserId
-                        || String(t.annotatorName || "").toLowerCase() === (user?.username || "").toLowerCase();
-                });
-                setTasks(myTasks);
-            }
-        }
-        window.addEventListener("storage", onStorageChange);
-        return () => window.removeEventListener("storage", onStorageChange);
-    }, [currentUserId, user]);
+        fetchAssignments();
+    }, [fetchAssignments]);
 
     /* ── Filtering ── */
-    const filteredTasks = React.useMemo(() => {
-        return tasks.filter((task) => {
-            const matchesTab = activeTab === "ALL" || task.status === activeTab;
+    const filteredAssignments = React.useMemo(() => {
+        return assignments.filter((a) => {
+            const matchesTab = activeTab === "ALL" || (a.status || "").toUpperCase() === activeTab;
+            const q = search.toLowerCase();
             const matchesSearch =
-                (task.id || "").toLowerCase().includes(search.toLowerCase()) ||
-                (task.datasetName || "").toLowerCase().includes(search.toLowerCase()) ||
-                (task.reviewerName || "").toLowerCase().includes(search.toLowerCase());
+                String(a.assignmentId || "").includes(q) ||
+                (a.projectName || "").toLowerCase().includes(q) ||
+                (a.datasetName || "").toLowerCase().includes(q) ||
+                (a.reviewerName || "").toLowerCase().includes(q);
             return matchesTab && matchesSearch;
         });
-    }, [activeTab, search, tasks]);
+    }, [activeTab, search, assignments]);
 
-    const handleAction = (task) => {
-        navigate(`/annotator/task/${task.id}`);
+    const handleOpen = (assignment) => {
+        // Navigate using assignmentId (BE concept)
+        navigate(`/annotator/task/${assignment.assignmentId}`);
     };
 
-    /* ── Active task count ── */
-    const activeCount = tasks.filter((t) =>
-        ["PENDING", "IN_PROGRESS"].includes(t.status)
+    /* ── Active count ── */
+    const activeCount = assignments.filter((a) =>
+        ["PENDING", "IN_PROGRESS", "REJECTED"].includes((a.status || "").toUpperCase())
     ).length;
 
     return (
@@ -158,7 +103,7 @@ export default function TaskList() {
             {/* Controls */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
                 {/* Status Tabs */}
-                <div className="inline-flex p-1 bg-muted rounded-lg border border-border">
+                <div className="inline-flex p-1 bg-muted rounded-lg border border-border flex-wrap">
                     {TABS.map((tab) => (
                         <button
                             key={tab}
@@ -183,7 +128,7 @@ export default function TaskList() {
                     <input
                         type="text"
                         className="block w-full pl-10 pr-3 py-2 bg-muted border border-border rounded-lg text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-all"
-                        placeholder="Search by task ID, dataset, or reviewer..."
+                        placeholder="Search by project, dataset, or reviewer..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
@@ -203,6 +148,7 @@ export default function TaskList() {
                 <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-destructive/10 border border-destructive/20 mb-4">
                     <span className="material-symbols-outlined text-[16px] text-destructive">error</span>
                     <p className="text-sm text-destructive flex-1">{error}</p>
+                    <Button variant="ghost" size="sm" onClick={fetchAssignments} className="text-xs">Retry</Button>
                 </div>
             )}
 
@@ -212,63 +158,76 @@ export default function TaskList() {
                     <Table>
                         <TableHeader>
                             <TableRow className="hover:bg-transparent">
-                                <TableHead className="w-[100px]">TASK ID</TableHead>
-                                <TableHead>DATA SOURCE</TableHead>
+                                <TableHead className="w-[80px]">ID</TableHead>
+                                <TableHead>PROJECT</TableHead>
+                                <TableHead>DATASET</TableHead>
                                 <TableHead>REVIEWER</TableHead>
+                                <TableHead className="w-[100px]">PROGRESS</TableHead>
                                 <TableHead>STATUS</TableHead>
-                                <TableHead className="text-right">CREATED</TableHead>
                                 <TableHead className="text-right">ACTION</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredTasks.map((task) => (
-                                <TableRow key={task.id} onClick={() => handleAction(task)} className="group cursor-pointer hover:bg-muted/50">
-                                    <TableCell>
-                                        <span className="font-mono text-xs text-muted-foreground group-hover:text-foreground transition-colors">
-                                            {task.id}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell>
-                                        <span className="font-medium text-sm text-foreground">{task.datasetName || "—"}</span>
-                                    </TableCell>
-                                    <TableCell>
-                                        <span className="text-sm text-muted-foreground">{task.reviewerName || "—"}</span>
-                                    </TableCell>
-                                    <TableCell>
-                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${STATUS_STYLES[task.status] || "bg-muted text-muted-foreground"}`}>
-                                            {(task.status || "PENDING").replace("_", " ")}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <span className="text-muted-foreground text-xs font-mono">
-                                            {task.createdAt ? new Date(task.createdAt).toLocaleDateString("vi-VN") : "—"}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex justify-end gap-2">
-                                            {task.status === "PENDING" && (
-                                                <Button size="sm" variant="primary" className="h-7 text-xs px-3" onClick={(e) => { e.stopPropagation(); handleAction(task); }}>Start</Button>
-                                            )}
-                                            {task.status === "IN_PROGRESS" && (
-                                                <Button size="sm" variant="secondary" className="h-7 text-xs px-3 text-amber-600 border-amber-200 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400" onClick={(e) => { e.stopPropagation(); handleAction(task); }}>Continue</Button>
-                                            )}
-                                            {task.status === "COMPLETED" && (
-                                                <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={(e) => { e.stopPropagation(); handleAction(task); }}>
-                                                    <span className="material-symbols-outlined text-muted-foreground hover:text-foreground text-[20px]">visibility</span>
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            {filteredTasks.length === 0 && (
+                            {filteredAssignments.map((a) => {
+                                const status = (a.status || "PENDING").toUpperCase();
+                                return (
+                                    <TableRow key={a.assignmentId} onClick={() => handleOpen(a)} className="group cursor-pointer hover:bg-muted/50">
+                                        <TableCell>
+                                            <span className="font-mono text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+                                                #{a.assignmentId}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className="font-medium text-sm text-foreground">{a.projectName || "—"}</span>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className="text-sm text-muted-foreground">{a.datasetName || "—"}</span>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className="text-sm text-muted-foreground">{a.reviewerName || "—"}</span>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-primary rounded-full transition-all"
+                                                        style={{ width: `${a.progress || 0}%` }}
+                                                    />
+                                                </div>
+                                                <span className="text-[10px] font-mono text-muted-foreground">{a.progress || 0}%</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${STATUS_STYLES[status] || "bg-muted text-muted-foreground"}`}>
+                                                {status.replace("_", " ")}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex justify-end gap-2">
+                                                {["PENDING", "REJECTED"].includes(status) && (
+                                                    <Button size="sm" variant="primary" className="h-7 text-xs px-3" onClick={(e) => { e.stopPropagation(); handleOpen(a); }}>Start</Button>
+                                                )}
+                                                {status === "IN_PROGRESS" && (
+                                                    <Button size="sm" variant="secondary" className="h-7 text-xs px-3 text-amber-600 border-amber-200 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400" onClick={(e) => { e.stopPropagation(); handleOpen(a); }}>Continue</Button>
+                                                )}
+                                                {["SUBMITTED", "APPROVED", "COMPLETED"].includes(status) && (
+                                                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={(e) => { e.stopPropagation(); handleOpen(a); }}>
+                                                        <span className="material-symbols-outlined text-muted-foreground hover:text-foreground text-[20px]">visibility</span>
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                            {filteredAssignments.length === 0 && (
                                 <TableRow>
-                                    <TableCell className="text-center py-16 text-muted-foreground" colSpan={6}>
+                                    <TableCell className="text-center py-16 text-muted-foreground" colSpan={7}>
                                         <div className="flex flex-col items-center justify-center">
                                             <span className="material-symbols-outlined text-5xl text-muted-foreground/40 mb-3">assignment</span>
                                             <h4 className="text-base font-semibold text-foreground mb-1">Chưa có nhiệm vụ nào</h4>
                                             <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                                                Manager sẽ tạo task ở trang Assignments, khi có bạn sẽ thấy tại đây.
+                                                Manager sẽ phân công task cho bạn. Khi có task mới, bạn sẽ thấy tại đây.
                                             </p>
                                         </div>
                                     </TableCell>
@@ -279,10 +238,10 @@ export default function TaskList() {
                 </div>
             )}
 
-            {/* Task count */}
-            {!loading && tasks.length > 0 && (
+            {/* Count */}
+            {!loading && assignments.length > 0 && (
                 <p className="text-xs text-muted-foreground mt-3">
-                    Showing {filteredTasks.length} of {tasks.length} task{tasks.length !== 1 ? "s" : ""}
+                    Showing {filteredAssignments.length} of {assignments.length} assignment{assignments.length !== 1 ? "s" : ""}
                 </p>
             )}
         </div>
