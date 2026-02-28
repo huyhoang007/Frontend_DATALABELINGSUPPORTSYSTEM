@@ -168,21 +168,16 @@ export default function Workspace() {
         return labels;
     }, [workspace]);
 
-    // Fallback: if workspace labelGroups empty → fetch by projectId
+    // Fallback: if workspace labelGroups empty → fetch ALL active labels from BE
     React.useEffect(() => {
         if (labelsFromGroups.length > 0) {
-            setFallbackLabels([]); // not needed
+            setFallbackLabels([]); // workspace had labels, no fallback needed
             return;
         }
         if (!workspace) return; // workspace not loaded yet
 
-        const projectId = workspace.projectId ?? workspace.project?.projectId ?? workspace.project?.id;
         if (import.meta.env.DEV) {
-            console.log("[LABELS] groups empty → fallback. projectId =", projectId);
-        }
-        if (!projectId) {
-            console.warn("[LABELS] no projectId available for fallback");
-            return;
+            console.log("[LABELS] groups empty → fallback via GET /api/labels/active");
         }
 
         let cancelled = false;
@@ -190,8 +185,8 @@ export default function Workspace() {
 
         (async () => {
             try {
-                // Try labelApi.getLabelsByProject
-                const rawLabels = await import("../../api/labelApi").then(m => m.labelApi.getLabelsByProject(projectId));
+                // Call GET /api/labels/active — now accessible for ANNOTATOR role
+                const rawLabels = await apiClient.get("/api/labels/active");
                 if (cancelled) return;
 
                 if (import.meta.env.DEV) {
@@ -216,7 +211,7 @@ export default function Workspace() {
                 setFallbackLabels(labels);
             } catch (err) {
                 console.error("[LABELS] fallback fetch error:", err);
-                addToast?.({ type: "error", message: "Không tải được labels từ project" });
+                addToast?.({ type: "error", message: "Không tải được labels" });
             } finally {
                 if (!cancelled) setLabelsLoading(false);
             }
