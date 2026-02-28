@@ -25,6 +25,7 @@ import CreateLabel from "./pages/Manager/CreateLabel";
 import ManagerPolicies from "./pages/Manager/Policies";
 import UploadData from "./pages/Manager/UploadData";
 import ErrorTypes from "./pages/Manager/ErrorTypes";
+import ProjectErrors from "./pages/Manager/ProjectErrors";
 import CreateErrorType from "./pages/Manager/CreateErrorType";
 import ManagerTasks from "./pages/Manager/Tasks";
 import ExportData from "./pages/Manager/ExportData";
@@ -111,6 +112,7 @@ function App() {
                 <Route path="labels/new" element={<ProjectCreateLabel />} />
                 <Route path="assignments" element={<ProjectAssignments />} />
                 <Route path="export" element={<ProjectExport />} />
+                <Route path="errors" element={<ProjectErrors />} />
               </Route>
               {/* Legacy global routes (kept for backward compatibility) */}
               <Route path="upload-data" element={<UploadData />} />

@@ -21,6 +21,7 @@ const TABS = [
     { key: "labels", label: "Labels", icon: "label" },
     { key: "assignments", label: "Assignments", icon: "assignment" },
     { key: "export", label: "Export", icon: "download" },
+    { key: "errors", label: "Errors", icon: "bug_report" },
 ];
 
 const ProjectDetail: React.FC = () => {

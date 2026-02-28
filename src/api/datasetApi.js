@@ -14,7 +14,21 @@ export const datasetApi = {
      * @param {File[]} files
      * @returns {Promise<Object>} DatasetResponse
      */
-    createDataset: async (projectId, batchName, files) => {
+    /**
+     * Create a new dataset (batch) under a project
+     * BE contract: POST /api/projects/{projectId}/datasets (multipart/form-data)
+     *   - @RequestParam("batch_name") String batchName
+     *   - @RequestPart("files") List<MultipartFile> files
+     * Response: DatasetResponse { datasetId, name, status, createdAt, projectId, totalItems }
+     * Limits: max-file-size=10MB, max-request-size=100MB
+     *
+     * @param {number} projectId
+     * @param {string} batchName
+     * @param {File[]} files
+     * @param {function} [onProgress] - optional (event) => void for upload progress
+     * @returns {Promise<Object>} DatasetResponse
+     */
+    createDataset: async (projectId, batchName, files, onProgress) => {
         const formData = new FormData();
         formData.append("batch_name", batchName);
         files.forEach((file) => {
@@ -23,7 +37,10 @@ export const datasetApi = {
         return await apiClient.post(
             `/api/projects/${projectId}/datasets`,
             formData,
-            { headers: { "Content-Type": "multipart/form-data" } }
+            {
+                headers: { "Content-Type": "multipart/form-data" },
+                ...(onProgress ? { onUploadProgress: onProgress } : {}),
+            }
         );
     },
 
