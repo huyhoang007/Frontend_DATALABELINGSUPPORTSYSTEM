@@ -28,84 +28,30 @@ export default function TaskList() {
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState(null);
 
-    /* ── Load tasks from Manager Assignments localStorage ── */
-    const TASKS_PREFIX = "dlss_project_tasks::";
-    const loadLocalStorageTasks = React.useCallback(() => {
-        const all = [];
-        const seen = new Set();
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith(TASKS_PREFIX)) {
-                try {
-                    const tasks = JSON.parse(localStorage.getItem(key) || "[]");
-                    tasks.forEach((t) => {
-                        if (!seen.has(t.id)) {
-                            seen.add(t.id);
-                            // Normalize to same shape as API assignments
-                            all.push({
-                                assignmentId: t.id,
-                                projectName: t.projectName || `Project ${t.projectId || ""}`,
-                                datasetName: t.datasetName || "—",
-                                status: t.status || "PENDING",
-                                progress: 0,
-                                annotatorName: t.annotatorName || "",
-                                annotatorId: t.annotatorId || "",
-                                reviewerName: t.reviewerName || "—",
-                                _source: "localStorage",
-                            });
-                        }
-                    });
-                } catch { /* skip bad JSON */ }
-            }
-        }
-        return all;
-    }, []);
-
-    /* ── Fetch assignments: API first, merge localStorage ── */
+    /* ── Fetch assignments from BE API ── */
     const fetchAssignments = React.useCallback(async () => {
         setLoading(true);
         setError(null);
 
-        let apiList = [];
-        let apiOk = false;
-
-        // 1. Try real BE API
         try {
             const data = await annotationApi.getMyAssignments();
-            apiList = Array.isArray(data) ? data : (data?.content || data?.data || []);
-            apiOk = true;
+            const apiList = Array.isArray(data) ? data : (data?.content || data?.data || []);
             console.log("[ANNOTATOR_TASKS] API assignments:", apiList.length);
+            setAssignments(apiList);
         } catch (err) {
-            console.warn("[ANNOTATOR_TASKS] API failed, will use localStorage fallback", err);
-        }
-
-        // 2. Load localStorage tasks (from Manager Create Task)
-        const localTasks = loadLocalStorageTasks();
-        console.log("[ANNOTATOR_TASKS] localStorage tasks:", localTasks.length);
-
-        // 3. Filter localStorage tasks for current user
-        const username = (user?.username || "").toLowerCase();
-        const myLocalTasks = localTasks.filter((t) => {
-            const annName = (t.annotatorName || "").toLowerCase();
-            return annName === username || !username; // show all if can't determine user
-        });
-
-        // 4. Merge: API tasks + localStorage tasks (avoid duplicate IDs)
-        const apiIds = new Set(apiList.map((a) => String(a.assignmentId)));
-        const merged = [
-            ...apiList,
-            ...myLocalTasks.filter((t) => !apiIds.has(String(t.assignmentId))),
-        ];
-
-        console.log("[ANNOTATOR_TASKS] merged total:", merged.length, { api: apiList.length, local: myLocalTasks.length });
-        setAssignments(merged);
-
-        if (!apiOk && myLocalTasks.length === 0) {
-            setError("Không thể tải từ API. Chưa có task nào được phân công từ Manager.");
+            console.error("[ANNOTATOR_TASKS] API failed", err);
+            const status = err?.status;
+            if (status === 401) {
+                setError("Hết phiên đăng nhập — vui lòng đăng nhập lại.");
+            } else if (status === 403) {
+                setError("Bạn không có quyền xem danh sách task.");
+            } else {
+                setError(err?.message || "Không thể tải danh sách task từ server.");
+            }
         }
 
         setLoading(false);
-    }, [loadLocalStorageTasks, user]);
+    }, []);
 
     React.useEffect(() => {
         fetchAssignments();
