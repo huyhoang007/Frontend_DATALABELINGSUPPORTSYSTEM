@@ -4,19 +4,57 @@ import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/Table";
 import { BadgeStatus } from "../../components/ui/BadgeStatus";
-import { TASKS } from "../../services/mockData";
 import { useAuth } from "../../context/AuthContext";
+import reviewApi from "../../api/reviewApi";
 
 export default function ReviewQueue() {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
 
-    // Only SUBMITTED tasks are in review queue (conceptually)
-    const reviewTasks = TASKS.filter(t => t.status === "SUBMITTED");
+    const [assignments, setAssignments] = React.useState([]);
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [error, setError] = React.useState(null);
+    const [searchQuery, setSearchQuery] = React.useState("");
 
-    const handleReview = (task) => {
-        navigate(`/reviewer/review/${task.id}`);
+    React.useEffect(() => {
+        let cancelled = false;
+        async function fetchAssignments() {
+            setIsLoading(true);
+            setError(null);
+            try {
+                const data = await reviewApi.getMyReviewAssignments();
+                if (!cancelled) setAssignments(Array.isArray(data) ? data : []);
+            } catch (err) {
+                if (!cancelled) setError(err?.response?.data?.message || err?.message || "Failed to load assignments");
+            } finally {
+                if (!cancelled) setIsLoading(false);
+            }
+        }
+        fetchAssignments();
+        return () => { cancelled = true; };
+    }, []);
+
+    // Filter: show only SUBMITTED by default (reviewable), also search
+    const reviewableAssignments = React.useMemo(() => {
+        let list = assignments.filter(a => a.status === "SUBMITTED" || a.status === "REJECTED");
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase();
+            list = list.filter(a =>
+                (a.projectName || "").toLowerCase().includes(q) ||
+                (a.annotatorName || "").toLowerCase().includes(q)
+            );
+        }
+        return list;
+    }, [assignments, searchQuery]);
+
+    const handleReview = (assignment) => {
+        navigate(`/reviewer/review/${assignment.assignmentId}`);
     };
+
+    // Stats
+    const pendingCount = assignments.filter(a => a.status === "SUBMITTED").length;
+    const approvedCount = assignments.filter(a => a.status === "APPROVED").length;
+    const rejectedCount = assignments.filter(a => a.status === "REJECTED").length;
 
     return (
         <div className="min-h-screen bg-background text-foreground p-6">
@@ -24,7 +62,7 @@ export default function ReviewQueue() {
                 <div>
                     <h1 className="text-h1 font-extrabold tracking-tight text-foreground">Review Queue</h1>
                     <p className="text-muted-foreground text-sm mt-1">
-                        <span className="text-annotator-primary font-bold">{reviewTasks.length}</span> tasks pending review.
+                        <span className="text-annotator-primary font-bold">{pendingCount}</span> tasks pending review.
                     </p>
                 </div>
                 <div className="flex items-center space-x-4">
@@ -35,10 +73,10 @@ export default function ReviewQueue() {
             {/* KPI Summary */}
             <div className="grid grid-cols-4 gap-4 mb-8">
                 {[
-                    { label: "Pending", value: reviewTasks.length, color: "text-blue-400" },
-                    { label: "Approved Today", value: 12, color: "text-green-400" },
-                    { label: "Rejected Today", value: 3, color: "text-red-400" },
-                    { label: "Total Reviewed", value: 156, color: "text-foreground" },
+                    { label: "Pending", value: pendingCount, color: "text-blue-400" },
+                    { label: "Approved", value: approvedCount, color: "text-green-400" },
+                    { label: "Rejected", value: rejectedCount, color: "text-red-400" },
+                    { label: "Total", value: assignments.length, color: "text-foreground" },
                 ].map((kpi) => (
                     <div key={kpi.label} className="p-4 rounded-lg bg-card border border-border">
                         <p className="text-micro font-bold uppercase tracking-wide text-muted-foreground">{kpi.label}</p>
@@ -54,51 +92,73 @@ export default function ReviewQueue() {
                     <Button variant="secondary" leftIcon="sort" size="sm">Sort</Button>
                 </div>
                 <div className="w-64">
-                    <Input placeholder="Search tasks..." leftIcon="search" />
+                    <Input
+                        placeholder="Search tasks..."
+                        leftIcon="search"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                 </div>
             </div>
 
+            {/* Loading / Error */}
+            {isLoading && (
+                <div className="flex items-center justify-center py-20">
+                    <span className="material-symbols-outlined animate-spin text-3xl text-muted-foreground">progress_activity</span>
+                    <span className="ml-3 text-muted-foreground">Loading assignments...</span>
+                </div>
+            )}
+
+            {error && (
+                <div className="text-center py-12 text-red-400">
+                    <span className="material-symbols-outlined text-4xl mb-2 block">error</span>
+                    <p>{error}</p>
+                </div>
+            )}
+
             {/* Review Table */}
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Project</TableHead>
-                        <TableHead>Submitter</TableHead>
-                        <TableHead>Submitted At</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Action</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {reviewTasks.map((task) => (
-                        <TableRow key={task.id} onClick={() => handleReview(task)}>
-                            <TableCell><span className="font-mono text-xs text-muted-foreground">{task.id}</span></TableCell>
-                            <TableCell><span className="font-medium text-foreground">{task.projectName}</span></TableCell>
-                            <TableCell><span className="text-xs text-foreground">{task.assignee}</span></TableCell>
-                            <TableCell>
-                                <span className="text-muted-foreground text-xs">
-                                    {new Date(task.lastUpdated).toLocaleString()}
-                                </span>
-                            </TableCell>
-                            <TableCell>
-                                <BadgeStatus status={task.status} />
-                            </TableCell>
-                            <TableCell className="text-right">
-                                <Button size="sm" variant="primary" onClick={(e) => { e.stopPropagation(); handleReview(task); }}>Review</Button>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                    {reviewTasks.length === 0 && (
+            {!isLoading && !error && (
+                <Table>
+                    <TableHeader>
                         <TableRow>
-                            <TableCell className="text-center py-12 text-muted-foreground" colSpan={6}>
-                                <span className="material-symbols-outlined text-4xl mb-2 opacity-20 block">check_circle</span>
-                                No tasks pending review. Good job!
-                            </TableCell>
+                            <TableHead>ID</TableHead>
+                            <TableHead>Project</TableHead>
+                            <TableHead>Annotator</TableHead>
+                            <TableHead>Dataset</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Progress</TableHead>
+                            <TableHead className="text-right">Action</TableHead>
                         </TableRow>
-                    )}
-                </TableBody>
-            </Table>
+                    </TableHeader>
+                    <TableBody>
+                        {reviewableAssignments.map((a) => (
+                            <TableRow key={a.assignmentId} onClick={() => handleReview(a)}>
+                                <TableCell><span className="font-mono text-xs text-muted-foreground">{a.assignmentId}</span></TableCell>
+                                <TableCell><span className="font-medium text-foreground">{a.projectName}</span></TableCell>
+                                <TableCell><span className="text-xs text-foreground">{a.annotatorName || "—"}</span></TableCell>
+                                <TableCell><span className="text-xs text-muted-foreground">{a.datasetName || "—"}</span></TableCell>
+                                <TableCell>
+                                    <BadgeStatus status={a.status} />
+                                </TableCell>
+                                <TableCell>
+                                    <span className="text-xs text-muted-foreground">{a.progress ?? 0}%</span>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <Button size="sm" variant="primary" onClick={(e) => { e.stopPropagation(); handleReview(a); }}>Review</Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                        {reviewableAssignments.length === 0 && (
+                            <TableRow>
+                                <TableCell className="text-center py-12 text-muted-foreground" colSpan={7}>
+                                    <span className="material-symbols-outlined text-4xl mb-2 opacity-20 block">check_circle</span>
+                                    No tasks pending review. Good job!
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            )}
         </div>
     );
 }

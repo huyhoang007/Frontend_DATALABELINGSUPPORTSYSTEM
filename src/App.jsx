@@ -97,7 +97,7 @@ function App() {
             />
             <Route path="/reviewer/queue" element={<ReviewQueue />} />
             <Route
-              path="/reviewer/review/:taskId"
+              path="/reviewer/review/:assignmentId"
               element={<ReviewWorkspace />}
             />
 
