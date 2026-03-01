@@ -19,12 +19,20 @@ export function Sidebar() {
         { to: "/manager/policies", label: "Tạo policy", icon: "policy" },
     ];
 
+    const annotatorLinks = [
+        { to: "/annotator/dashboard", label: "Dashboard", icon: "dashboard" },
+        { to: "/annotator/tasks", label: "My Tasks", icon: "assignment" },
+    ];
+
     // Select links based on user role (source of truth from AuthContext)
-    const links = user?.role === "ADMIN" ? adminLinks : managerLinks;
+    let links = [];
+    if (user?.role === "ADMIN") links = adminLinks;
+    else if (user?.role === "ANNOTATOR") links = annotatorLinks;
+    else links = managerLinks;
 
     // Determine role display and badge
-    const roleDisplay = user?.role === "ADMIN" ? "Admin" : "Manager";
-    const roleBadge = user?.role === "ADMIN" ? "AD" : "MG";
+    const roleDisplay = user?.role === "ADMIN" ? "Admin" : user?.role === "ANNOTATOR" ? "Annotator" : "Manager";
+    const roleBadge = user?.role === "ADMIN" ? "AD" : user?.role === "ANNOTATOR" ? "AN" : "MG";
 
     const handleLogout = () => {
         logout();

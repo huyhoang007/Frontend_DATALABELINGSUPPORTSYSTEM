@@ -28,7 +28,7 @@ export default function ReviewQueue() {
                     </p>
                 </div>
                 <div className="flex items-center space-x-4">
-                    <Button variant="ghost" onClick={() => logout()} leftIcon="logout">Logout</Button>
+                    <Button variant="ghost" onClick={() => { logout(); navigate("/login"); }} leftIcon="logout">Logout</Button>
                 </div>
             </div>
 
