@@ -7,6 +7,19 @@ import {
 } from "./geometryUtils";
 import { useUndoRedo } from "./useUndoRedo";
 
+/** Safely extract an array from any BE response shape */
+function unwrapArray(data) {
+    if (Array.isArray(data)) return data;
+    if (data == null || typeof data !== "object") return [];
+    if (Array.isArray(data.data)) return data.data;
+    if (Array.isArray(data.content)) return data.content;
+    if (data.data && typeof data.data === "object") {
+        if (Array.isArray(data.data.data)) return data.data.data;
+        if (Array.isArray(data.data.content)) return data.data.content;
+    }
+    return [];
+}
+
 const DEBOUNCE_MS = 400;
 const DONE_KEY = (assignmentId, itemId) => `anno_done_${assignmentId}_${itemId}`;
 
@@ -23,7 +36,9 @@ const DONE_KEY = (assignmentId, itemId) => `anno_done_${assignmentId}_${itemId}`
 export function useAnnotations({ assignmentId, addToast }) {
     const [annotations, setAnnotations] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [loadError, setLoadError] = useState(null);
     const currentItemIdRef = useRef(null);
+    const requestIdRef = useRef(0);
 
     // Save infrastructure
     const saveTimeoutRef = useRef(null);
@@ -66,6 +81,7 @@ export function useAnnotations({ assignmentId, addToast }) {
 
         isSavingRef.current = true;
         const data = snapshot || latestAnnotationsRef.current;
+        if (!Array.isArray(data)) { isSavingRef.current = false; return; }
 
         try {
             const rows = flattenToBeRows(data);
@@ -109,21 +125,43 @@ export function useAnnotations({ assignmentId, addToast }) {
         currentItemIdRef.current = itemId;
         if (!assignmentId || !itemId) {
             setAnnotations([]);
+            setLoadError(null);
             return;
         }
+
+        // Race guard: only apply result for latest request
+        const myId = ++requestIdRef.current;
+
         setIsLoading(true);
+        setLoadError(null);
         try {
             const beData = await annotationApi.getAnnotationsByItem(assignmentId, itemId);
-            const groups = groupAnnotationsByKey(beData || []);
+
+            // Stale response guard
+            if (myId !== requestIdRef.current) return;
+
+            const rawArr = unwrapArray(beData);
+            let groups;
+            try {
+                groups = groupAnnotationsByKey(rawArr);
+            } catch (parseErr) {
+                console.error("[ANNOT_WORKSPACE] groupAnnotationsByKey failed", parseErr);
+                groups = [];
+                setLoadError(parseErr);
+            }
             setAnnotations(groups);
             if (import.meta.env.DEV) {
                 console.log("[ANNO] loaded", groups.length, "groups for item", itemId);
             }
         } catch (err) {
-            console.error("[ANNO] load error", err);
+            if (myId !== requestIdRef.current) return;
+            console.error("[ANNOT_WORKSPACE] loadAnnotations failed", err);
             setAnnotations([]);
+            setLoadError(err);
         } finally {
-            setIsLoading(false);
+            if (myId === requestIdRef.current) {
+                setIsLoading(false);
+            }
         }
     }, [assignmentId]);
 
@@ -223,6 +261,7 @@ export function useAnnotations({ assignmentId, addToast }) {
     return {
         annotations,
         isLoading,
+        loadError,
         loadAnnotations,
         addAnnotation,
         deleteAnnotation,
