@@ -240,6 +240,33 @@ export default function Workspace() {
     const [activeLabelFilterId, setActiveLabelFilterId] = React.useState(null);
     const [pendingShape, setPendingShape] = React.useState(null); // shape waiting for label selection
 
+    /* ── Save lock + safeSaveNow ── */
+    const saveInFlightRef = React.useRef(null);
+    const lastSaveToastRef = React.useRef(0);
+
+    const safeSaveNow = React.useCallback(async () => {
+        // Dedupe: reuse in-flight promise
+        if (saveInFlightRef.current) return saveInFlightRef.current;
+        const p = (async () => {
+            try {
+                await anno.saveNow();
+                return { ok: true };
+            } catch (err) {
+                console.error("[ANNOT_WORKSPACE] saveNow failed", err);
+                const now = Date.now();
+                if (now - lastSaveToastRef.current > 3000) {
+                    lastSaveToastRef.current = now;
+                    addToast?.({ type: "warning", message: "Lưu annotation thất bại" });
+                }
+                return { ok: false, error: err };
+            } finally {
+                saveInFlightRef.current = null;
+            }
+        })();
+        saveInFlightRef.current = p;
+        return p;
+    }, [anno.saveNow, addToast]);
+
     /* ── Drawing tools hook ── */
     const onShapeComplete = React.useCallback((shape) => {
         setPendingShape(shape);
@@ -278,35 +305,54 @@ export default function Workspace() {
 
     React.useEffect(() => { fetchWorkspace(); }, [fetchWorkspace]);
 
+    /* ── Clamp currentImageIndex when items change ── */
+    React.useEffect(() => {
+        if (items.length > 0 && currentImageIndex >= items.length) {
+            setCurrentImageIndex(items.length - 1);
+        }
+    }, [items.length]);
+
     /* ── Load annotations when item changes ── */
     React.useEffect(() => {
-        if (currentItem?.itemId) {
-            anno.loadAnnotations(currentItem.itemId);
+        const itemId = currentItem?.itemId;
+        if (!itemId) return;
+        try {
+            Promise.resolve(anno.loadAnnotations(itemId)).catch((err) => {
+                console.error("[ANNOT_WORKSPACE] loadAnnotations failed", err);
+            });
+        } catch (err) {
+            console.error("[ANNOT_WORKSPACE] loadAnnotations sync throw", err);
         }
     }, [currentItem?.itemId]);
 
     /* ── Navigation ── */
     const handleNavigate = async (direction) => {
-        // Flush save for current item before switching
-        await anno.saveNow();
+        if (items.length === 0) return;
+        await safeSaveNow();
 
         let newIndex = currentImageIndex;
         if (direction === "first") newIndex = 0;
-        if (direction === "prev") newIndex = Math.max(0, currentImageIndex - 1);
-        if (direction === "next") newIndex = Math.min(totalImages - 1, currentImageIndex + 1);
-        if (direction === "last") newIndex = totalImages - 1;
+        if (direction === "prev") newIndex = currentImageIndex - 1;
+        if (direction === "next") newIndex = currentImageIndex + 1;
+        if (direction === "last") newIndex = items.length - 1;
 
-        if (newIndex !== currentImageIndex) {
-            setCurrentImageIndex(newIndex);
-            setSelectedGroupKey(null);
-            setActiveLabelFilterId(null);
-        }
+        // Clamp safety
+        newIndex = Math.max(0, Math.min(items.length - 1, newIndex));
+        if (newIndex === currentImageIndex) return;
+
+        setCurrentImageIndex(newIndex);
+        setSelectedGroupKey(null);
+        setActiveLabelFilterId(null);
+        setPendingShape(null);
+        setActiveTool("select");
     };
 
     /* ── Save (flush) ── */
     const handleSave = async () => {
-        await anno.saveNow();
-        addToast({ type: "success", message: "Đã lưu annotations" });
+        const result = await safeSaveNow();
+        if (result.ok) {
+            addToast({ type: "success", message: "Đã lưu annotations" });
+        }
     };
 
     /* ── Submit assignment ── */
@@ -319,7 +365,7 @@ export default function Workspace() {
             await annotationApi.submitAssignment(assignmentId);
             console.log("[WORKSPACE] submit success");
             addToast({ type: "success", message: "Đã nộp bài thành công!" });
-            navigate("/annotator/tasks");
+            navigate("/annotator/dashboard");
         } catch (err) {
             console.error("[WORKSPACE] submit error", err);
             const errorMsg = typeof err?.message === 'string' ? err.message : (err?.message?.message || "Nộp bài thất bại");
@@ -431,7 +477,7 @@ export default function Workspace() {
                     return (
                         <div
                             key={item.itemId}
-                            onClick={() => { handleNavigate(null); setCurrentImageIndex(idx); setSelectedGroupKey(null); setActiveLabelFilterId(null); }}
+                            onClick={async () => { if (idx === currentImageIndex || items.length === 0) return; await safeSaveNow(); setCurrentImageIndex(idx); setSelectedGroupKey(null); setActiveLabelFilterId(null); setPendingShape(null); setActiveTool("select"); }}
                             className={cn(
                                 "flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 group border border-transparent",
                                 idx === currentImageIndex
