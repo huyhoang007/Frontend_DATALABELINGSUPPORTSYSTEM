@@ -104,7 +104,12 @@ export function parseGeometry(geomStr) {
     if (!geomStr) return null;
     if (typeof geomStr === "object") return geomStr; // already parsed
     try {
-        return JSON.parse(geomStr);
+        let parsed = JSON.parse(geomStr);
+        // Handle double-escaped JSON (backend sometimes wraps JSON string in another JSON string)
+        if (typeof parsed === "string") {
+            parsed = JSON.parse(parsed);
+        }
+        return parsed;
     } catch {
         return null;
     }
