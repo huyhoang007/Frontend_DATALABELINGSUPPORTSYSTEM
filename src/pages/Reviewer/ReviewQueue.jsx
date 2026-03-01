@@ -65,9 +65,6 @@ export default function ReviewQueue() {
                         <span className="text-annotator-primary font-bold">{pendingCount}</span> tasks pending review.
                     </p>
                 </div>
-                <div className="flex items-center space-x-4">
-                    <Button variant="ghost" onClick={() => { logout(); navigate("/login"); }} leftIcon="logout">Logout</Button>
-                </div>
             </div>
 
             {/* KPI Summary */}
