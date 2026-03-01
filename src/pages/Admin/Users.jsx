@@ -21,7 +21,7 @@ export default function AdminUsers() {
     email: "",
     password: "",
     fullName: "",
-    roleId: 2, // Default to Annotator (Database: 1=ADMIN, 2=ANNOTATOR, 3=REVIEWER, 4=MANAGER)
+    roleId: 3, // Default to Annotator (Database: 1=ADMIN, 2=MANAGER, 3=ANNOTATOR, 4=REVIEWER)
   });
 
   // Fetch users on mount
@@ -110,7 +110,7 @@ export default function AdminUsers() {
         email: "",
         password: "",
         fullName: "",
-        roleId: 2,
+        roleId: 3,
       });
       fetchUsers(); // Refresh list
     } catch (error) {
@@ -136,11 +136,11 @@ export default function AdminUsers() {
       case 1:
         return { name: "Admin", color: "#ef4444" };
       case 2:
-        return { name: "Annotator", color: "#3b82f6" };
-      case 3:
-        return { name: "Reviewer", color: "#f59e0b" };
-      case 4:
         return { name: "Manager", color: "#10b981" };
+      case 3:
+        return { name: "Annotator", color: "#3b82f6" };
+      case 4:
+        return { name: "Reviewer", color: "#f59e0b" };
       default:
         return { name: "Unknown", color: "#6b7280" };
     }
@@ -193,7 +193,7 @@ export default function AdminUsers() {
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">
-                 User Management
+                User Management
               </h1>
               <p className="text-muted-foreground">
                 Manage system users and roles
@@ -237,11 +237,10 @@ export default function AdminUsers() {
                   setStatusFilter(tab.value);
                   setCurrentPage(1);
                 }}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  statusFilter === tab.value
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${statusFilter === tab.value
                     ? "bg-blue-600 text-white"
                     : "bg-card border border-border text-foreground hover:bg-accent"
-                }`}
+                  }`}
               >
                 {tab.label} ({tab.count})
               </button>
@@ -489,9 +488,9 @@ export default function AdminUsers() {
                       }
                       className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
                     >
-                      <option value={2}>Annotator</option>
-                      <option value={3}>Reviewer</option>
-                      <option value={4}>Manager</option>
+                      <option value={2}>Manager</option>
+                      <option value={3}>Annotator</option>
+                      <option value={4}>Reviewer</option>
                     </select>
                   </div>
 

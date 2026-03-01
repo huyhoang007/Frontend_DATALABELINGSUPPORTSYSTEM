@@ -311,13 +311,19 @@ export default function Workspace() {
 
     /* ── Submit assignment ── */
     const handleSubmit = async () => {
+        console.log("[WORKSPACE] handleSubmit clicked");
         try {
+            console.log("[WORKSPACE] calling anno.saveNow");
             await anno.saveNow();
+            console.log("[WORKSPACE] calling annotationApi.submitAssignment");
             await annotationApi.submitAssignment(assignmentId);
+            console.log("[WORKSPACE] submit success");
             addToast({ type: "success", message: "Đã nộp bài thành công!" });
             navigate("/annotator/tasks");
         } catch (err) {
-            addToast({ type: "error", message: err?.message || "Nộp bài thất bại" });
+            console.error("[WORKSPACE] submit error", err);
+            const errorMsg = typeof err?.message === 'string' ? err.message : (err?.message?.message || "Nộp bài thất bại");
+            addToast({ type: "error", message: errorMsg });
         }
     };
 
@@ -464,8 +470,14 @@ export default function Workspace() {
 
             {/* Bottom actions */}
             <div className="p-3 border-t border-border space-y-2">
-                <Button variant="primary" className="w-full" onClick={handleSubmit} leftIcon="send">
-                    Submit Assignment
+                <Button
+                    variant="primary"
+                    className="w-full"
+                    onClick={handleSubmit}
+                    leftIcon={workspace?.assignmentStatus === "SUBMITTED" || workspace?.assignmentStatus === "APPROVED" ? "check_circle" : "send"}
+                    disabled={workspace?.assignmentStatus === "SUBMITTED" || workspace?.assignmentStatus === "APPROVED"}
+                >
+                    {workspace?.assignmentStatus === "SUBMITTED" ? "Already Submitted" : workspace?.assignmentStatus === "APPROVED" ? "Approved" : "Submit Assignment"}
                 </Button>
             </div>
         </div>

@@ -11,6 +11,7 @@ import TaskList from "./pages/Annotator/TaskList";
 import Workspace from "./pages/Annotator/Workspace";
 import ReviewQueue from "./pages/Reviewer/ReviewQueue";
 import ReviewWorkspace from "./pages/Reviewer/ReviewWorkspace";
+import AnnotatorDashboard from "./pages/Annotator/AnnotatorDashboard";
 import ManagerDashboard from "./pages/Manager/ManagerDashboard";
 import ManagerProjects from "./pages/Manager/Projects";
 import ProjectDetail from "./pages/Manager/ProjectDetail";
@@ -40,6 +41,7 @@ import { RoleGuard } from "./components/Common/RoleGuard";
 import { LogoutButton } from "./components/Common/LogoutButton";
 import { ManagerLayout } from "./layouts/ManagerLayout";
 import { AdminLayout } from "./layouts/AdminLayout";
+import { AnnotatorLayout } from "./layouts/AnnotatorLayout";
 
 // Helper to get role-based redirect
 function getRoleBasedRedirectWrapper() {
@@ -73,10 +75,20 @@ function App() {
             {/* Role: Annotator */}
             <Route
               path="/annotator"
-              element={<Navigate to="/annotator/tasks" replace />}
-            />
-            <Route path="/annotator/tasks" element={<TaskList />} />
-            <Route path="/annotator/task/:taskId" element={<Workspace />} />
+              element={
+                <RoleGuard allowedRoles={["ANNOTATOR"]}>
+                  <AnnotatorLayout />
+                </RoleGuard>
+              }
+            >
+              <Route
+                index
+                element={<Navigate to="tasks" replace />}
+              />
+              <Route path="dashboard" element={<AnnotatorDashboard user={JSON.parse(localStorage.getItem('user') || '{}')} onLogout={() => { localStorage.clear(); window.location.href = '/login'; }} />} />
+              <Route path="tasks" element={<TaskList />} />
+              <Route path="task/:taskId" element={<Workspace />} />
+            </Route>
 
             {/* Role: Reviewer */}
             <Route

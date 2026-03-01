@@ -94,7 +94,7 @@ export default function TaskList() {
                         )}
                     </p>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => logout()} leftIcon="logout">
+                <Button variant="ghost" size="sm" onClick={() => { logout(); navigate('/login'); }} leftIcon="logout">
                     Logout
                 </Button>
             </div>
