@@ -42,6 +42,7 @@ import { LogoutButton } from "./components/Common/LogoutButton";
 import { ManagerLayout } from "./layouts/ManagerLayout";
 import { AdminLayout } from "./layouts/AdminLayout";
 import { AnnotatorLayout } from "./layouts/AnnotatorLayout";
+import { ReviewerLayout } from "./layouts/ReviewerLayout";
 
 // Helper to get role-based redirect
 function getRoleBasedRedirectWrapper() {
@@ -90,12 +91,19 @@ function App() {
               <Route path="task/:taskId" element={<Workspace />} />
             </Route>
 
-            {/* Role: Reviewer */}
+            {/* Role: Reviewer - Layout with sidebar for queue, workspace stays outside */}
             <Route
               path="/reviewer"
-              element={<Navigate to="/reviewer/queue" replace />}
-            />
-            <Route path="/reviewer/queue" element={<ReviewQueue />} />
+              element={
+                <RoleGuard allowedRoles={["REVIEWER"]}>
+                  <ReviewerLayout />
+                </RoleGuard>
+              }
+            >
+              <Route index element={<Navigate to="queue" replace />} />
+              <Route path="queue" element={<ReviewQueue />} />
+            </Route>
+            {/* ReviewWorkspace - no sidebar, uses own 3-column layout */}
             <Route
               path="/reviewer/review/:assignmentId"
               element={<ReviewWorkspace />}
