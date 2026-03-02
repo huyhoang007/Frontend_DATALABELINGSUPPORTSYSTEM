@@ -1,20 +1,19 @@
-import * as React from "react";
+﻿import * as React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Workspace3Column } from "../../components/layout/WorkspaceLayout";
 import { Button } from "../../components/ui/Button";
 import { annotationApi } from "../../api/annotationApi";
 import apiClient from "../../api/apiClient";
 import { useToast } from "../../context/ToastContext";
-import { cn } from "../../utils/cn";
 
-/* ── New modules ── */
+/* â”€â”€ New modules â”€â”€ */
 import { useAnnotations } from "./useAnnotations";
 import { useDrawingTools } from "./useDrawingTools";
 import AnnotationOverlay from "./AnnotationOverlay";
 import LabelSelectModal from "./LabelSelectModal";
 import AnnotationList from "./AnnotationList";
 
-/* ── Helpers ── */
+/* â”€â”€ Helpers â”€â”€ */
 function resolveImagePath(fileUrl) {
     if (!fileUrl) return null;
     if (fileUrl.startsWith("http")) return fileUrl;
@@ -28,13 +27,41 @@ function resolveImagePath(fileUrl) {
     return url;
 }
 
+/* ── Thumbnail image component ── */
+function ThumbnailImg({ fileUrl, alt }) {
+    const [src, setSrc] = React.useState(null);
+    React.useEffect(() => {
+        let cancelled = false;
+        let blobUrl = null;
+        if (!fileUrl) return;
+        const path = resolveImagePath(fileUrl);
+        if (!path) return;
+        (async () => {
+            try {
+                const res = await apiClient.get(path, { responseType: "blob", transformResponse: [(d) => d] });
+                if (cancelled) return;
+                const blob = res instanceof Blob ? res : new Blob([res]);
+                blobUrl = URL.createObjectURL(blob);
+                setSrc(blobUrl);
+            } catch { /* silent */ }
+        })();
+        return () => { cancelled = true; if (blobUrl) URL.revokeObjectURL(blobUrl); };
+    }, [fileUrl]);
+    if (!src) return (
+        <div className="w-full h-full flex items-center justify-center" style={{ background: "#0e1621" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 24, color: "#3a5068" }}>image</span>
+        </div>
+    );
+    return <img src={src} alt={alt} className="w-full h-full object-cover" draggable={false} />;
+}
+
 /* ── Tool definitions ── */
 const TOOLS = [
-    { id: "select", icon: "pan_tool_alt", label: "Select" },
-    { id: "bbox", icon: "crop_free", label: "Rectangle" },
     { id: "polygon", icon: "pentagon", label: "Polygon" },
-    { id: "polyline", icon: "polyline", label: "Polyline" },
+    { id: "bbox", icon: "crop_free", label: "Rectangle" },
     { id: "points", icon: "scatter_plot", label: "Points" },
+    { id: "polyline", icon: "polyline", label: "Polyline" },
+    { id: "select", icon: "pan_tool_alt", label: "Select" },
 ];
 
 export default function Workspace() {
@@ -43,18 +70,57 @@ export default function Workspace() {
     const { addToast } = useToast();
     const assignmentId = taskId;
 
-    /* ── Workspace data from API ── */
+    /* â”€â”€ Workspace data from API â”€â”€ */
     const [workspace, setWorkspace] = React.useState(null);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState(null);
 
-    /* ── Items & navigation ── */
+    /* â”€â”€ Items & navigation â”€â”€ */
     const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
     const items = workspace?.items || [];
     const currentItem = items[currentImageIndex] || null;
     const totalImages = items.length;
 
-    /* ── Image blob fetch ── */
+    /* ── Fetch workspace ── */
+    const fetchWorkspace = React.useCallback(async () => {
+        if (!assignmentId) return;
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await annotationApi.openWorkspace(assignmentId);
+            setWorkspace(data);
+        } catch (err) {
+            setError(err?.message || "Failed to load workspace");
+        } finally {
+            setLoading(false);
+        }
+    }, [assignmentId]);
+
+    /* ── Annotations hook ── */
+    const anno = useAnnotations({ assignmentId, addToast });
+
+    /* ── Tool & UI state ── */
+    const [activeTool, setActiveTool] = React.useState("polygon");
+    const [selectedGroupKey, setSelectedGroupKey] = React.useState(null);
+    const [activeLabelFilterId, setActiveLabelFilterId] = React.useState(null);
+    const [pendingShape, setPendingShape] = React.useState(null);
+    const [zoom, setZoom] = React.useState(100);
+
+    /* ── Drawing tools hook ── */
+    const drawing = useDrawingTools({
+        activeTool,
+        onShapeComplete: (shape) => setPendingShape(shape),
+        addToast,
+    });
+
+    /* ── Live clock ── */
+    const [now, setNow] = React.useState(new Date());
+    React.useEffect(() => {
+        const t = setInterval(() => setNow(new Date()), 1000);
+        return () => clearInterval(t);
+    }, []);
+
+    /* â”€â”€ Image blob fetch â”€â”€ */
     const [imageBlobUrl, setImageBlobUrl] = React.useState(null);
     const [imageLoading, setImageLoading] = React.useState(false);
     const [imageError, setImageError] = React.useState(null);
@@ -89,9 +155,9 @@ export default function Workspace() {
         return () => { cancelled = true; if (blobUrl) URL.revokeObjectURL(blobUrl); };
     }, [currentItem?.itemId, currentItem?.fileUrl]);
 
-    /* ══════════════════════════════════════════════════════
-       LABELS — robust mapping + fallback API by projectId
-       ══════════════════════════════════════════════════════ */
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       LABELS â€” robust mapping + fallback API by projectId
+       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
     // Fallback labels state (when workspace labelGroups is empty)
     const [fallbackLabels, setFallbackLabels] = React.useState([]);
@@ -120,7 +186,7 @@ export default function Workspace() {
             return null;
         }
 
-        // Safe ID — handle both numeric and UUID string IDs
+        // Safe ID â€” handle both numeric and UUID string IDs
         const idNum = Number(rawId);
         const finalId = Number.isFinite(idNum) ? idNum : String(rawId);
 
@@ -168,31 +234,64 @@ export default function Workspace() {
         return labels;
     }, [workspace]);
 
-    // Fallback: if workspace labelGroups empty → fetch ALL active labels from BE
+    // Fallback: if workspace labelGroups empty -> try localStorage (project-scoped rules),
+    // then fall through to ALL active labels only if localStorage has nothing.
     React.useEffect(() => {
         if (labelsFromGroups.length > 0) {
-            setFallbackLabels([]); // workspace had labels, no fallback needed
+            setFallbackLabels([]);
             return;
         }
-        if (!workspace) return; // workspace not loaded yet
+        if (!workspace) return;
 
-        if (import.meta.env.DEV) {
-            console.log("[LABELS] groups empty → fallback via GET /api/labels/active");
+        // Step 1: try localStorage bridge written by ProjectLabels.tsx
+        const projectName = workspace?.projectName;
+        if (projectName) {
+            try {
+                const nameMap = JSON.parse(localStorage.getItem("dlss_project_name_pid_map") || "{}");
+                const storedPid = nameMap[projectName];
+                if (storedPid) {
+                    const savedRules = JSON.parse(
+                        localStorage.getItem(`dlss_project_rules_full::${storedPid}`) || "[]"
+                    );
+                    if (savedRules.length > 0) {
+                        const labels = [];
+                        const seen = new Set();
+                        savedRules.forEach((rule) => {
+                            const gName = rule.name || "";
+                            (rule.labels || []).forEach((raw) => {
+                                const label = normalizeLabel(raw, gName);
+                                if (!label) return;
+                                const key = String(label.id);
+                                if (seen.has(key)) return;
+                                seen.add(key);
+                                labels.push(label);
+                            });
+                        });
+                        if (labels.length > 0) {
+                            if (import.meta.env.DEV)
+                                console.log("[LABELS] from localStorage rules:", labels.length, labels);
+                            setFallbackLabels(labels);
+                            setLabelsLoading(false);
+                            return;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn("[LABELS] localStorage lookup failed:", e);
+            }
         }
+
+        // Step 2: last resort - fetch ALL active labels
+        if (import.meta.env.DEV)
+            console.log("[LABELS] no localStorage data - fallback via GET /api/labels/active");
 
         let cancelled = false;
         setLabelsLoading(true);
 
         (async () => {
             try {
-                // Call GET /api/labels/active — now accessible for ANNOTATOR role
                 const rawLabels = await apiClient.get("/api/labels/active");
                 if (cancelled) return;
-
-                if (import.meta.env.DEV) {
-                    console.log("[LABELS] fallback raw:", rawLabels);
-                }
-
                 const arr = Array.isArray(rawLabels) ? rawLabels : (rawLabels?.data ?? rawLabels?.content ?? []);
                 const labels = [];
                 const seen = new Set();
@@ -204,14 +303,12 @@ export default function Workspace() {
                     seen.add(key);
                     labels.push(label);
                 });
-
-                if (import.meta.env.DEV) {
-                    console.log("[LABELS] fallback normalized:", labels.length, labels);
-                }
+                if (import.meta.env.DEV)
+                    console.log("[LABELS] all-active fallback:", labels.length, labels);
                 setFallbackLabels(labels);
             } catch (err) {
                 console.error("[LABELS] fallback fetch error:", err);
-                addToast?.({ type: "error", message: "Không tải được labels" });
+                addToast?.({ type: "error", message: "Khong tai duoc labels" });
             } finally {
                 if (!cancelled) setLabelsLoading(false);
             }
@@ -220,174 +317,100 @@ export default function Workspace() {
         return () => { cancelled = true; };
     }, [workspace, labelsFromGroups.length, addToast]);
 
-    // Final merged allLabels: workspace groups (primary) → fallback (secondary)
+    /* ── All labels: workspace groups first, fallback second ── */
     const allLabels = labelsFromGroups.length > 0 ? labelsFromGroups : fallbackLabels;
 
-    // DEV log when using fallback
-    React.useEffect(() => {
-        if (import.meta.env.DEV && labelsFromGroups.length === 0 && fallbackLabels.length > 0) {
-            console.log("[LABELS] using FALLBACK labels:", fallbackLabels.length);
+    /* ── Label groups for modal (preserves rule/group structure) ── */
+    const labelGroupsForModal = React.useMemo(() => {
+        const rawGroups = (
+            workspace?.labelGroups ||
+            workspace?.data?.labelGroups ||
+            workspace?.data?.data?.labelGroups ||
+            workspace?.payload?.labelGroups ||
+            []
+        );
+        if (rawGroups.length > 0) {
+            return rawGroups
+                .map((g) => ({
+                    ruleId: g.ruleId,
+                    ruleName: g.ruleName || "(no name)",
+                    labels: (g.labels || []).map((l) => ({
+                        id: l.labelId ?? l.id,
+                        name: l.labelName ?? l.name,
+                        color: l.colorCode ?? l.color ?? "#6b7280",
+                        type: l.labelType ?? l.type ?? "BBOX",
+                    })).filter((l) => l.id != null && l.name),
+                }))
+                .filter((g) => g.labels.length > 0);
         }
-    }, [labelsFromGroups.length, fallbackLabels.length]);
-
-    /* ── Annotation state hook ── */
-    const anno = useAnnotations({ assignmentId, addToast });
-
-    /* ── Tools state ── */
-    const [activeTool, setActiveTool] = React.useState("select");
-    const [zoom, setZoom] = React.useState(100);
-    const [selectedGroupKey, setSelectedGroupKey] = React.useState(null);
-    const [activeLabelFilterId, setActiveLabelFilterId] = React.useState(null);
-    const [pendingShape, setPendingShape] = React.useState(null); // shape waiting for label selection
-
-    /* ── Save lock + safeSaveNow ── */
-    const saveInFlightRef = React.useRef(null);
-    const lastSaveToastRef = React.useRef(0);
-
-    const safeSaveNow = React.useCallback(async () => {
-        // Dedupe: reuse in-flight promise
-        if (saveInFlightRef.current) return saveInFlightRef.current;
-        const p = (async () => {
-            try {
-                await anno.saveNow();
-                return { ok: true };
-            } catch (err) {
-                console.error("[ANNOT_WORKSPACE] saveNow failed", err);
-                const now = Date.now();
-                if (now - lastSaveToastRef.current > 3000) {
-                    lastSaveToastRef.current = now;
-                    addToast?.({ type: "warning", message: "Lưu annotation thất bại" });
-                }
-                return { ok: false, error: err };
-            } finally {
-                saveInFlightRef.current = null;
-            }
-        })();
-        saveInFlightRef.current = p;
-        return p;
-    }, [anno.saveNow, addToast]);
-
-    /* ── Drawing tools hook ── */
-    const onShapeComplete = React.useCallback((shape) => {
-        setPendingShape(shape);
-    }, []);
-
-    const drawing = useDrawingTools({ activeTool, onShapeComplete, addToast });
-
-    /* ── Fetch workspace ── */
-    const fetchWorkspace = React.useCallback(async () => {
-        if (!assignmentId) return;
-        setLoading(true);
-        setError(null);
-        try {
-            const data = await annotationApi.openWorkspace(assignmentId);
-            console.log("[WORKSPACE] loaded", data);
-            console.log("[WORKSPACE] labelGroups:", data?.labelGroups, "count:", data?.labelGroups?.length);
-            if (data?.labelGroups?.length > 0) {
-                console.log("[WORKSPACE] first group:", JSON.stringify(data.labelGroups[0], null, 2));
-            }
-            setWorkspace(data);
-            const firstTodoIdx = (data?.items || []).findIndex((i) => {
-                const hasAnno = i.annotations && i.annotations.length > 0;
-                return !hasAnno;
-            });
-            setCurrentImageIndex(firstTodoIdx >= 0 ? firstTodoIdx : 0);
-        } catch (err) {
-            console.error("[WORKSPACE] fetch error", err);
-            const status = err?.status;
-            if (status === 403) setError("Bạn không có quyền mở workspace này.");
-            else if (status === 401) setError("Hết phiên đăng nhập — vui lòng đăng nhập lại.");
-            else setError(err?.message || "Không thể tải workspace.");
-        } finally {
-            setLoading(false);
+        // fallback: wrap flat labels in a single group
+        if (fallbackLabels.length > 0) {
+            return [{ ruleId: null, ruleName: "Labels", labels: fallbackLabels }];
         }
-    }, [assignmentId]);
+        return [];
+    }, [workspace, fallbackLabels]);
 
     React.useEffect(() => { fetchWorkspace(); }, [fetchWorkspace]);
 
-    /* ── Clamp currentImageIndex when items change ── */
-    React.useEffect(() => {
-        if (items.length > 0 && currentImageIndex >= items.length) {
-            setCurrentImageIndex(items.length - 1);
-        }
-    }, [items.length]);
-
     /* ── Load annotations when item changes ── */
     React.useEffect(() => {
-        const itemId = currentItem?.itemId;
-        if (!itemId) return;
-        try {
-            Promise.resolve(anno.loadAnnotations(itemId)).catch((err) => {
-                console.error("[ANNOT_WORKSPACE] loadAnnotations failed", err);
-            });
-        } catch (err) {
-            console.error("[ANNOT_WORKSPACE] loadAnnotations sync throw", err);
+        if (currentItem?.itemId) {
+            anno.loadAnnotations(currentItem.itemId);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentItem?.itemId]);
 
-    /* ── Navigation ── */
+    /* â”€â”€ Navigation â”€â”€ */
     const handleNavigate = async (direction) => {
-        if (items.length === 0) return;
-        await safeSaveNow();
+        // Flush save for current item before switching
+        await anno.saveNow();
 
         let newIndex = currentImageIndex;
         if (direction === "first") newIndex = 0;
-        if (direction === "prev") newIndex = currentImageIndex - 1;
-        if (direction === "next") newIndex = currentImageIndex + 1;
-        if (direction === "last") newIndex = items.length - 1;
+        if (direction === "prev") newIndex = Math.max(0, currentImageIndex - 1);
+        if (direction === "next") newIndex = Math.min(totalImages - 1, currentImageIndex + 1);
+        if (direction === "last") newIndex = totalImages - 1;
 
-        // Clamp safety
-        newIndex = Math.max(0, Math.min(items.length - 1, newIndex));
-        if (newIndex === currentImageIndex) return;
-
-        setCurrentImageIndex(newIndex);
-        setSelectedGroupKey(null);
-        setActiveLabelFilterId(null);
-        setPendingShape(null);
-        setActiveTool("select");
+        if (newIndex !== currentImageIndex) {
+            setCurrentImageIndex(newIndex);
+            setSelectedGroupKey(null);
+            setActiveLabelFilterId(null);
+        }
     };
 
-    /* ── Save (flush) ── */
+    /* â”€â”€ Save (flush) â”€â”€ */
     const handleSave = async () => {
-        const result = await safeSaveNow();
-        if (result.ok) {
-            addToast({ type: "success", message: "Đã lưu annotations" });
-        }
+        await anno.saveNow();
+        addToast({ type: "success", message: "ÄÃ£ lÆ°u annotations" });
     };
 
-    /* ── Submit assignment ── */
+    /* â”€â”€ Submit assignment â”€â”€ */
     const handleSubmit = async () => {
-        console.log("[WORKSPACE] handleSubmit clicked");
         try {
-            console.log("[WORKSPACE] calling anno.saveNow");
             await anno.saveNow();
-            console.log("[WORKSPACE] calling annotationApi.submitAssignment");
             await annotationApi.submitAssignment(assignmentId);
-            console.log("[WORKSPACE] submit success");
-            addToast({ type: "success", message: "Đã nộp bài thành công!" });
-            navigate("/annotator/dashboard");
+            addToast({ type: "success", message: "ÄÃ£ ná»™p bÃ i thÃ nh cÃ´ng!" });
+            navigate("/annotator/tasks");
         } catch (err) {
-            console.error("[WORKSPACE] submit error", err);
-            const errorMsg = typeof err?.message === 'string' ? err.message : (err?.message?.message || "Nộp bài thất bại");
-            addToast({ type: "error", message: errorMsg });
+            addToast({ type: "error", message: err?.message || "Ná»™p bÃ i tháº¥t báº¡i" });
         }
     };
 
-    /* ── Mark as Done ── */
+    /* â”€â”€ Mark as Done â”€â”€ */
     const handleMarkDone = () => {
         if (!currentItem) return;
         if (anno.isDone(currentItem.itemId)) {
             anno.unmarkDone(currentItem.itemId);
-            addToast({ type: "info", message: "Đã bỏ đánh dấu Done" });
+            addToast({ type: "info", message: "ÄÃ£ bá» Ä‘Ã¡nh dáº¥u Done" });
         } else {
             const ok = anno.markDone(currentItem.itemId);
-            if (ok) addToast({ type: "success", message: "Đã đánh dấu Done ✓" });
+            if (ok) addToast({ type: "success", message: "ÄÃ£ Ä‘Ã¡nh dáº¥u Done âœ“" });
         }
         // force re-render for sidebar
         setWorkspace((w) => ({ ...w }));
     };
 
-    /* ── Label select modal callbacks ── */
+    /* â”€â”€ Label select modal callbacks â”€â”€ */
     const handleLabelSave = (labelIds) => {
         if (pendingShape) {
             anno.addAnnotation(pendingShape, labelIds, allLabels);
@@ -399,11 +422,11 @@ export default function Workspace() {
         setPendingShape(null);
     };
 
-    /* ── Progress ── */
+    /* â”€â”€ Progress â”€â”€ */
     const doneCount = items.filter((i) => anno.isDone(i.itemId)).length;
     const progressPercent = totalImages > 0 ? Math.round((doneCount / totalImages) * 100) : 0;
 
-    /* ── Loading / Error states ── */
+    /* â”€â”€ Loading / Error states â”€â”€ */
     if (loading) {
         return (
             <div className="flex items-center justify-center h-screen bg-background text-foreground">
@@ -438,314 +461,331 @@ export default function Workspace() {
     const imgHeight = currentItem?.height || 600;
     const currentIsDone = currentItem ? anno.isDone(currentItem.itemId) : false;
 
-    // ───────────────────────────────
-    // LEFT PANEL
-    // ───────────────────────────────
-    const LeftPanel = (
-        <div className="flex flex-col h-full bg-card">
-            <div className="p-4 border-b border-border bg-card">
-                <Button variant="ghost" size="sm" onClick={() => navigate("/annotator/tasks")} leftIcon="arrow_back" className="mb-3 -ml-2 text-muted-foreground hover:text-foreground">
-                    Back to List
-                </Button>
-                <div className="space-y-1">
-                    <h2 className="text-lg font-bold tracking-tight text-foreground truncate">{workspace.projectName || "Project"}</h2>
-                    <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
-                        Assignment #{assignmentId} · {(workspace.assignmentStatus || "").replace("_", " ")}
-                    </p>
-                </div>
-            </div>
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    const ss = String(now.getSeconds()).padStart(2, "0");
 
-            <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                {/* Progress */}
-                <div className="px-2 py-3">
-                    <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">Progress</span>
-                        <span className="text-[10px] font-mono font-bold text-annotator-primary">{progressPercent}%</span>
-                    </div>
-                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-annotator-primary rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }} />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-1">{doneCount} / {totalImages} items done</p>
-                </div>
-
-                <p className="px-2 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
-                    Items ({totalImages})
-                </p>
-
-                {items.map((item, idx) => {
-                    const itemDone = anno.isDone(item.itemId);
-                    return (
-                        <div
-                            key={item.itemId}
-                            onClick={async () => { if (idx === currentImageIndex || items.length === 0) return; await safeSaveNow(); setCurrentImageIndex(idx); setSelectedGroupKey(null); setActiveLabelFilterId(null); setPendingShape(null); setActiveTool("select"); }}
-                            className={cn(
-                                "flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 group border border-transparent",
-                                idx === currentImageIndex
-                                    ? "bg-annotator-primary/10 border-annotator-primary/20 shadow-sm"
-                                    : "hover:bg-muted hover:border-border"
-                            )}
-                        >
-                            <div className={cn(
-                                "w-10 h-10 rounded-md flex items-center justify-center mr-3 transition-colors overflow-hidden bg-muted",
-                                idx === currentImageIndex ? "ring-2 ring-annotator-primary/30" : ""
-                            )}>
-                                <span className="material-symbols-outlined text-[16px] text-muted-foreground">image</span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className={cn(
-                                    "text-xs font-medium truncate transition-colors",
-                                    idx === currentImageIndex ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
-                                )}>
-                                    {item.fileName || `Item #${item.itemId}`}
-                                </p>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                    <span className={cn(
-                                        "text-[9px] font-bold uppercase px-1.5 py-0.5 rounded",
-                                        itemDone
-                                            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                            : "bg-muted text-muted-foreground"
-                                    )}>
-                                        {itemDone ? "DONE" : "TODO"}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Bottom actions */}
-            <div className="p-3 border-t border-border space-y-2">
-                <Button
-                    variant="primary"
-                    className="w-full"
-                    onClick={handleSubmit}
-                    leftIcon={workspace?.assignmentStatus === "SUBMITTED" || workspace?.assignmentStatus === "APPROVED" ? "check_circle" : "send"}
-                    disabled={workspace?.assignmentStatus === "SUBMITTED" || workspace?.assignmentStatus === "APPROVED"}
-                >
-                    {workspace?.assignmentStatus === "SUBMITTED" ? "Already Submitted" : workspace?.assignmentStatus === "APPROVED" ? "Approved" : "Submit Assignment"}
-                </Button>
-            </div>
-        </div>
-    );
-
-    // ───────────────────────────────
-    // CENTER PANEL
-    // ───────────────────────────────
-    const CenterPanel = (
+    // â”€â”€ FULL REDESIGN â”€â”€
+    return (
         <>
-            {/* Toolbar */}
-            <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card/80 backdrop-blur-sm z-20">
-                <div className="flex items-center gap-1">
+            <div className="flex flex-col h-screen overflow-hidden" style={{ background: "#131c2e", color: "#e2e8f0" }}>
+
+                {/* â•â•â•â•â•â•â•â•â•â• TOP BAR â•â•â•â•â•â•â•â•â•â• */}
+                <div className="flex items-center gap-2 px-3 shrink-0 border-b"
+                    style={{ height: 48, background: "#182233", borderColor: "#253347" }}>
+
+                    {/* Dashboard Logo Link */}
+                    <button
+                        onClick={() => navigate("/annotator/dashboard")}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded transition-colors hover:bg-white/5"
+                    >
+                        <div className="flex items-center justify-center w-6 h-6 rounded bg-gradient-to-br from-teal-400 to-emerald-600 shadow-lg shadow-teal-500/20">
+                            <span className="material-symbols-outlined text-white text-[14px]">category</span>
+                        </div>
+                        <span className="font-bold text-sm tracking-tight text-white hidden sm:block">
+                            DataLabel<span className="text-teal-400">Core</span>
+                        </span>
+                    </button>
+
+                    {/* Progress bar + count */}
+                    <div className="flex items-center gap-2 mx-3">
+                        <div className="w-28 h-1.5 rounded-full overflow-hidden" style={{ background: "#253347" }}>
+                            <div className="h-full rounded-full transition-all duration-500"
+                                style={{ width: `${progressPercent}%`, background: "#00bfa5" }} />
+                        </div>
+                        <span className="text-xs font-medium whitespace-nowrap" style={{ color: "#64748b" }}>
+                            {currentImageIndex + 1}/{totalImages} ảnh
+                        </span>
+                    </div>
+
                     {/* Navigation */}
-                    <div className="flex items-center bg-muted rounded-lg p-0.5 mr-3">
+                    <div className="flex items-center rounded overflow-hidden" style={{ background: "#1e2f42" }}>
                         {[
                             { icon: "first_page", dir: "first" },
                             { icon: "chevron_left", dir: "prev" },
+                        ].map(({ icon, dir }) => (
+                            <button key={dir} onClick={() => handleNavigate(dir)}
+                                className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-white/10"
+                                style={{ color: "#64748b" }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>{icon}</span>
+                            </button>
+                        ))}
+                        <span className="px-2 text-xs font-bold tabular-nums" style={{ color: "#e2e8f0" }}>
+                            {currentImageIndex + 1}
+                        </span>
+                        {[
                             { icon: "chevron_right", dir: "next" },
                             { icon: "last_page", dir: "last" },
                         ].map(({ icon, dir }) => (
-                            <button key={dir} onClick={() => handleNavigate(dir)} className="w-7 h-7 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-background transition-colors">
-                                <span className="material-symbols-outlined text-[18px]">{icon}</span>
+                            <button key={dir} onClick={() => handleNavigate(dir)}
+                                className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-white/10"
+                                style={{ color: "#64748b" }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>{icon}</span>
                             </button>
                         ))}
                     </div>
-                    <span className="text-[10px] font-mono text-muted-foreground mr-3 select-none tabular-nums">
-                        {currentImageIndex + 1} / {totalImages}
-                    </span>
-                </div>
 
-                <div className="flex items-center">
-                    {/* Drawing tools */}
-                    {TOOLS.map((tool) => (
-                        <button
-                            key={tool.id}
-                            onClick={() => { setActiveTool(tool.id); setSelectedGroupKey(null); }}
-                            title={tool.label}
-                            className={cn(
-                                "w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-150",
-                                activeTool === tool.id
-                                    ? "bg-annotator-primary text-white shadow-md shadow-annotator-primary/30 scale-105"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                            )}
-                        >
-                            <span className="material-symbols-outlined text-[20px]">{tool.icon}</span>
-                        </button>
-                    ))}
-                    <div className="w-px h-4 bg-border mx-2" />
+                    {/* Spacer */}
+                    <div className="flex-1" />
+
+                    {/* Clock */}
+                    <div className="flex items-center gap-1 mr-3">
+                        {[hh, mm, ss].map((unit, i) => (
+                            <span key={i} className="text-xs font-mono font-bold tabular-nums px-1.5 py-0.5 rounded"
+                                style={{ background: "#1e2f42", color: "#94a3b8", letterSpacing: "0.05em" }}>
+                                {unit}
+                            </span>
+                        ))}
+                    </div>
+
                     {/* Zoom */}
-                    <div className="flex items-center gap-1 px-1">
-                        <button onClick={() => setZoom((z) => Math.max(10, z - 10))} className="w-8 h-8 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                            <span className="material-symbols-outlined text-[18px]">remove</span>
+                    <div className="flex items-center gap-1 mr-2">
+                        <button onClick={() => setZoom((z) => Math.max(10, z - 10))}
+                            className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
+                            style={{ color: "#64748b" }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>remove</span>
                         </button>
-                        <span className="text-[10px] font-mono font-bold w-10 text-center text-muted-foreground tabular-nums select-none">{zoom}%</span>
-                        <button onClick={() => setZoom((z) => Math.min(200, z + 10))} className="w-8 h-8 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                            <span className="material-symbols-outlined text-[18px]">add</span>
+                        <span className="text-[11px] font-mono font-bold w-10 text-center tabular-nums"
+                            style={{ color: "#94a3b8" }}>{zoom}%</span>
+                        <button onClick={() => setZoom((z) => Math.min(400, z + 10))}
+                            className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
+                            style={{ color: "#64748b" }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add</span>
                         </button>
                     </div>
-                    <div className="w-px h-4 bg-border mx-2" />
-                    {/* Save & Mark Done */}
-                    <button onClick={handleSave} title="Lưu" className="w-8 h-8 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                        <span className="material-symbols-outlined text-[18px]">save</span>
-                    </button>
-                    <button
-                        onClick={handleMarkDone}
-                        title={currentIsDone ? "Bỏ Done" : "Mark as Done"}
-                        disabled={!currentIsDone && anno.annotations.length === 0}
-                        className={cn(
-                            "w-8 h-8 flex items-center justify-center rounded-full transition-colors",
-                            currentIsDone
-                                ? "text-green-500 hover:text-green-600 hover:bg-green-500/10"
-                                : anno.annotations.length === 0
-                                    ? "text-muted-foreground/30 cursor-not-allowed"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                        )}
-                    >
-                        <span className="material-symbols-outlined text-[18px]">
-                            {currentIsDone ? "check_circle" : "task_alt"}
-                        </span>
-                    </button>
-                </div>
-            </div>
 
-            {/* Canvas */}
-            <div className="flex-1 flex items-center justify-center p-8 overflow-auto bg-transparent">
-                <div
-                    className="relative bg-black shadow-2xl transition-transform duration-200 ease-out border border-white/10 ring-1 ring-black/40"
-                    style={{ width: imgWidth * (zoom / 100), height: imgHeight * (zoom / 100) }}
-                >
-                    {/* Image */}
-                    {imageLoading ? (
-                        <div className="absolute inset-0 flex items-center justify-center select-none">
-                            <span className="material-symbols-outlined text-3xl text-muted-foreground animate-spin">progress_activity</span>
+                    {/* Action icons */}
+                    <div className="flex items-center gap-1">
+                        <button onClick={handleSave} title="LÆ°u"
+                            className="w-8 h-8 flex items-center justify-center rounded transition-colors hover:bg-white/10"
+                            style={{ color: "#64748b" }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>save</span>
+                        </button>
+                        <button onClick={handleMarkDone}
+                            title={currentIsDone ? "Bỏ Done" : "Mark Done"}
+                            disabled={!currentIsDone && anno.annotations.length === 0}
+                            className="w-8 h-8 flex items-center justify-center rounded transition-colors hover:bg-white/10"
+                            style={{ color: currentIsDone ? "#00bfa5" : "#64748b" }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                                {currentIsDone ? "check_circle" : "task_alt"}
+                            </span>
+                        </button>
+                        <button onClick={() => navigate("/annotator/tasks")} title="Cài đặt"
+                            className="w-8 h-8 flex items-center justify-center rounded transition-colors hover:bg-white/10"
+                            style={{ color: "#64748b" }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>settings</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* â•â•â•â•â•â•â•â•â•â• BODY â•â•â•â•â•â•â•â•â•â• */}
+                <div className="flex flex-1 overflow-hidden">
+
+                    {/* ── LEFT: Image thumbnails ── */}
+                    <div className="flex flex-col shrink-0 overflow-y-auto border-r"
+                        style={{ width: 148, background: "#182233", borderColor: "#253347" }}>
+
+                        {/* Project Info & Submit Action */}
+                        <div className="p-3 border-b shrink-0 flex flex-col gap-2" style={{ borderColor: "#253347" }}>
+                            {/* Task name badge */}
+                            <div className="flex items-center justify-between px-2 py-1.5 rounded text-xs font-medium bg-[#1e2f42] text-[#cbd5e1] border border-[#2a3f55]">
+                                <span className="truncate flex-1" title={workspace.projectName || `Assignment #${assignmentId}`}>
+                                    {workspace.projectName || `Assignment #${assignmentId}`}
+                                </span>
+                            </div>
+
+                            {/* Submit */}
+                            <button
+                                onClick={handleSubmit}
+                                className="w-full py-2 rounded text-xs font-bold transition-opacity hover:opacity-80 shadow-md flex items-center justify-center gap-1.5"
+                                style={{ background: "#00bfa5", color: "#fff" }}>
+                                <span>Nộp đánh giá</span>
+                                <span className="material-symbols-outlined text-[14px]">send</span>
+                            </button>
                         </div>
-                    ) : imageBlobUrl ? (
-                        <img src={imageBlobUrl} alt={currentItem?.fileName || `Image ${currentImageIndex + 1}`}
-                            className="absolute inset-0 w-full h-full object-contain" draggable={false}
-                        />
-                    ) : imageError ? (
-                        <div className="absolute inset-0 flex items-center justify-center select-none bg-black/80">
-                            <div className="text-center p-6 max-w-md">
-                                <span className="material-symbols-outlined text-5xl text-red-400 mb-3">broken_image</span>
-                                <p className="text-sm font-medium text-red-300 mb-2">Không tải được ảnh</p>
-                                <p className="text-[10px] font-mono text-slate-400 break-all mb-2">{imageError.url}</p>
-                                <p className="text-[10px] font-mono text-red-400 mb-4">{imageError.message}</p>
-                                <button onClick={() => { setImageError(null); setImageBlobUrl(null); }}
-                                    className="px-4 py-1.5 text-xs font-medium rounded-md bg-white/10 text-white hover:bg-white/20 transition-colors">
-                                    Thử lại
+
+                        {/* Image List */}
+                        <div className="flex-1 p-2 space-y-2 overflow-y-auto">
+                            {items.map((item, idx) => {
+                                const isActive = idx === currentImageIndex;
+                                const isDone = anno.isDone(item.itemId);
+                                return (
+                                    <div key={item.itemId}
+                                        onClick={() => { setCurrentImageIndex(idx); setSelectedGroupKey(null); setActiveLabelFilterId(null); }}
+                                        className="relative cursor-pointer rounded overflow-hidden transition-all"
+                                        style={{
+                                            border: isActive ? "2px solid #00bfa5" : "2px solid transparent",
+                                            background: "#1e2f42",
+                                        }}>
+                                        {/* Number badge */}
+                                        <div className="absolute top-1 left-1 z-10 w-5 h-5 rounded text-[10px] font-bold flex items-center justify-center shadow-md bg-black/40 backdrop-blur-sm"
+                                            style={{ border: isActive ? "1px solid #00bfa5" : "1px solid rgba(255,255,255,0.1)", color: isActive ? "#00bfa5" : "#fff" }}>
+                                            {idx + 1}
+                                        </div>
+                                        {/* Done badge */}
+                                        {isDone && (
+                                            <div className="absolute top-1 right-1 z-10 drop-shadow-md">
+                                                <span className="material-symbols-outlined text-[16px]" style={{ color: "#00bfa5" }}>check_circle</span>
+                                            </div>
+                                        )}
+                                        {/* Thumbnail */}
+                                        <div className="w-full overflow-hidden" style={{ height: 80 }}>
+                                            <ThumbnailImg fileUrl={item.fileUrl} alt={item.fileName || `Item ${idx + 1}`} />
+                                        </div>
+                                        {/* Selection Glow */}
+                                        {isActive && (
+                                            <div className="absolute inset-0 ring-inset ring-2 ring-[#00bfa5] rounded pointer-events-none" />
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Quick Save button at bottom */}
+                        <div className="p-3 border-t shrink-0" style={{ borderColor: "#253347" }}>
+                            <button onClick={handleSave}
+                                className="w-full py-1.5 rounded text-xs font-semibold transition-colors hover:bg-white/10 flex items-center justify-center gap-1.5"
+                                style={{ background: "transparent", border: "1px solid #3a5068", color: "#94a3b8" }}>
+                                <span className="material-symbols-outlined text-[14px]">save</span>
+                                <span>Lưu nháp</span>
+                            </button>
+                        </div>
+                    </div>
+
+
+                    {/* ── CENTER: Canvas ── */}
+                    <div className="flex-1 overflow-auto relative" style={{ background: "#0e1621" }}>
+                        {/* centering wrapper — expands to at least full viewport so canvas stays centered at small zoom */}
+                        <div style={{ minHeight: "100%", minWidth: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: 32, boxSizing: "border-box" }}>
+                            <div className="relative shadow-2xl shrink-0"
+                                style={{
+                                    width: imgWidth * (zoom / 100),
+                                    height: imgHeight * (zoom / 100),
+                                    background: "#000",
+                                    border: "1px solid rgba(255,255,255,0.08)",
+                                }}>
+                                {imageLoading ? (
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <span className="material-symbols-outlined animate-spin" style={{ fontSize: 32, color: "#3a5068" }}>progress_activity</span>
+                                    </div>
+                                ) : imageBlobUrl ? (
+                                    <img src={imageBlobUrl} alt={currentItem?.fileName || `Image ${currentImageIndex + 1}`}
+                                        className="absolute inset-0 w-full h-full object-contain" draggable={false} />
+                                ) : imageError ? (
+                                    <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.8)" }}>
+                                        <div className="text-center p-6 max-w-sm">
+                                            <span className="material-symbols-outlined mb-3 block" style={{ fontSize: 48, color: "#f87171" }}>broken_image</span>
+                                            <p className="text-sm font-medium mb-1" style={{ color: "#f87171" }}>Không tải được ảnh</p>
+                                            <p className="text-[10px] font-mono break-all mb-4" style={{ color: "#64748b" }}>{imageError.url}</p>
+                                            <button onClick={() => { setImageError(null); setImageBlobUrl(null); }}
+                                                className="px-4 py-1.5 text-xs font-medium rounded"
+                                                style={{ background: "rgba(255,255,255,0.1)", color: "#fff" }}>
+                                                Thử lại
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="absolute inset-0 flex items-center justify-center select-none opacity-20">
+                                        <span className="material-symbols-outlined" style={{ fontSize: 64, color: "#3a5068" }}>image</span>
+                                    </div>
+                                )}
+
+                                {/* Annotation Overlay */}
+                                <AnnotationOverlay
+                                    annotations={anno.annotations}
+                                    draftShape={drawing.draftShape}
+                                    cursorPt={drawing.cursorPt}
+                                    activeTool={activeTool}
+                                    selectedGroupKey={selectedGroupKey}
+                                    activeLabelFilterId={activeLabelFilterId}
+                                    onSelect={setSelectedGroupKey}
+                                    onUpdateGeometry={anno.updateGeometry}
+                                    drawingHandlers={drawing}
+                                />
+
+                                {/* Label select popup — absolute inside canvas so it scrolls with it */}
+                                {pendingShape && (
+                                    <LabelSelectModal
+                                        labelGroups={labelGroupsForModal}
+                                        pendingShape={pendingShape}
+                                        canvasWidth={imgWidth * (zoom / 100)}
+                                        canvasHeight={imgHeight * (zoom / 100)}
+                                        onSave={handleLabelSave}
+                                        onCancel={handleLabelCancel}
+                                    />
+                                )}
+                            </div>{/* end canvas */}
+                        </div>{/* end centering wrapper */}
+
+
+                    </div>
+
+                    {/* â”€â”€ RIGHT: Tools + Annotations â”€â”€ */}
+                    <div className="flex flex-col shrink-0 border-l overflow-hidden"
+                        style={{ width: 260, background: "#182233", borderColor: "#253347" }}>
+
+                        {/* Tool icons */}
+                        <div className="flex items-center justify-center gap-1 px-3 py-2 border-b shrink-0"
+                            style={{ borderColor: "#253347" }}>
+                            {TOOLS.map((tool) => (
+                                <button key={tool.id}
+                                    onClick={() => { setActiveTool(tool.id); setSelectedGroupKey(null); }}
+                                    title={tool.label}
+                                    className="w-9 h-9 flex items-center justify-center rounded-lg transition-all"
+                                    style={activeTool === tool.id
+                                        ? { background: "#00bfa5", color: "#fff" }
+                                        : { background: "transparent", color: "#4a6788" }}>
+                                    <span className="material-symbols-outlined" style={{ fontSize: 20 }}>{tool.icon}</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Annotations header */}
+                        <div className="flex items-center justify-between px-3 py-2 border-b shrink-0"
+                            style={{ borderColor: "#253347" }}>
+                            <span className="text-xs font-semibold" style={{ color: "#e2e8f0" }}>
+                                Kết quả ({anno.annotations.length})
+                            </span>
+                            <div className="flex items-center gap-1">
+                                <button className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
+                                    style={{ color: "#4a6788" }}>
+                                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>visibility</span>
+                                </button>
+                                <button className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
+                                    style={{ color: "#4a6788" }}>
+                                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>format_list_bulleted</span>
                                 </button>
                             </div>
                         </div>
-                    ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-slate-500 select-none">
-                            <div className="text-center opacity-30">
-                                <span className="material-symbols-outlined text-6xl mb-4">image</span>
-                                <p className="text-xs font-mono tracking-wide uppercase">Image {currentImageIndex + 1}</p>
-                            </div>
+
+                        {/* Annotations list */}
+                        <div className="flex-1 overflow-y-auto">
+                            {labelsLoading && allLabels.length === 0 ? (
+                                <div className="flex items-center justify-center h-24 gap-2 opacity-50">
+                                    <span className="material-symbols-outlined animate-spin" style={{ fontSize: 18, color: "#3a5068" }}>progress_activity</span>
+                                    <p className="text-xs" style={{ color: "#3a5068" }}>Đang tải...</p>
+                                </div>
+                            ) : anno.annotations.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center h-32 gap-2 opacity-30">
+                                    <span className="material-symbols-outlined" style={{ fontSize: 32, color: "#3a5068" }}>layers</span>
+                                    <p className="text-xs" style={{ color: "#3a5068" }}>Chưa có annotation</p>
+                                </div>
+                            ) : (
+                                <AnnotationList
+                                    annotations={anno.annotations}
+                                    allLabels={allLabels}
+                                    selectedGroupKey={selectedGroupKey}
+                                    activeLabelFilterId={activeLabelFilterId}
+                                    onSelect={(gk) => { setSelectedGroupKey(gk); setActiveTool("select"); }}
+                                    onDelete={anno.deleteAnnotation}
+                                    onToggleHidden={anno.toggleHidden}
+                                />
+                            )}
                         </div>
-                    )}
-
-                    {/* Annotation Overlay */}
-                    <AnnotationOverlay
-                        annotations={anno.annotations}
-                        draftShape={drawing.draftShape}
-                        cursorPt={drawing.cursorPt}
-                        activeTool={activeTool}
-                        selectedGroupKey={selectedGroupKey}
-                        activeLabelFilterId={activeLabelFilterId}
-                        onSelect={setSelectedGroupKey}
-                        onUpdateGeometry={anno.updateGeometry}
-                        drawingHandlers={drawing}
-                    />
+                    </div>
                 </div>
             </div>
 
-            {/* Drawing hint */}
-            {activeTool !== "select" && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-full bg-card/90 backdrop-blur-sm border border-border shadow-lg">
-                    <p className="text-[10px] text-muted-foreground font-medium">
-                        {activeTool === "bbox" && "Click & drag to draw rectangle • Shift = square"}
-                        {activeTool === "polygon" && "Click to add vertices • Snap to first point to close • Hold P for quick draw • Enter to close • Esc to cancel"}
-                        {activeTool === "polyline" && "Click to add points • Enter to finalize & close • Esc to cancel"}
-                        {activeTool === "points" && "Click to place points (min 2) • Enter to finalize • Esc to cancel"}
-                    </p>
-                </div>
-            )}
-        </>
-    );
-
-    // ───────────────────────────────
-    // RIGHT PANEL
-    // ───────────────────────────────
-    const RightPanel = (
-        <div className="flex flex-col h-full bg-card">
-            {/* Labels section */}
-            <div className="p-4 border-b border-border">
-                <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Labels</h4>
-                <div className="grid grid-cols-1 gap-2">
-                    {allLabels.map((label) => {
-                        const count = anno.annotations.filter((a) => a.labelIds.includes(label.id)).length;
-                        const isActive = activeLabelFilterId === label.id;
-                        return (
-                            <button
-                                key={label.id}
-                                onClick={() => setActiveLabelFilterId(isActive ? null : label.id)}
-                                className={cn(
-                                    "flex items-center space-x-2 px-3 py-2 rounded-md border transition-all text-left group",
-                                    isActive
-                                        ? "bg-annotator-primary/10 border-annotator-primary/30 shadow-sm"
-                                        : "border-border bg-muted/30 hover:bg-muted hover:border-muted-foreground/20"
-                                )}
-                            >
-                                <span className="w-2.5 h-2.5 rounded-sm shadow-sm" style={{ background: label.color }} />
-                                <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground flex-1 truncate">{label.name}</span>
-                                {count > 0 && (
-                                    <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 rounded">{count}</span>
-                                )}
-                            </button>
-                        );
-                    })}
-                    {labelsLoading && allLabels.length === 0 && (
-                        <div className="flex items-center justify-center py-4 gap-2">
-                            <span className="material-symbols-outlined text-sm text-muted-foreground animate-spin">progress_activity</span>
-                            <p className="text-xs text-muted-foreground">Đang tải labels...</p>
-                        </div>
-                    )}
-                    {!labelsLoading && allLabels.length === 0 && (
-                        <p className="text-xs text-muted-foreground text-center py-4">Project chưa có labels</p>
-                    )}
-                </div>
-            </div>
-
-            {/* Annotations list */}
-            <div className="flex-1 overflow-y-auto p-4">
-                <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">
-                    Annotations ({anno.annotations.length})
-                </h4>
-                <AnnotationList
-                    annotations={anno.annotations}
-                    allLabels={allLabels}
-                    selectedGroupKey={selectedGroupKey}
-                    activeLabelFilterId={activeLabelFilterId}
-                    onSelect={(gk) => { setSelectedGroupKey(gk); setActiveTool("select"); }}
-                    onDelete={anno.deleteAnnotation}
-                    onToggleHidden={anno.toggleHidden}
-                />
-            </div>
-        </div>
-    );
-
-    return (
-        <>
-            <Workspace3Column left={LeftPanel} center={CenterPanel} right={RightPanel} rightWidth="w-[420px]" />
-            {/* Label select modal (shown after drawing a shape) */}
-            {pendingShape && (
-                <LabelSelectModal
-                    labels={allLabels}
-                    onSave={handleLabelSave}
-                    onCancel={handleLabelCancel}
-                />
-            )}
         </>
     );
 }

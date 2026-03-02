@@ -98,24 +98,18 @@ export function isClosingSelfIntersecting(points) {
 
 /**
  * Parse geometry JSON string safely.
- * Handles single-encoded strings (normal case) and double-encoded strings
- * left over from a previous bug where geometry was stringified before sending.
- * Returns a plain object or null.
+ * Returns parsed object or null.
  */
 export function parseGeometry(geomStr) {
     if (!geomStr) return null;
     if (typeof geomStr === "object") return geomStr; // already parsed
     try {
-        const first = JSON.parse(geomStr);
-        // If the result is still a string it was double-encoded — parse once more
-        if (typeof first === "string") {
-            try {
-                return JSON.parse(first);
-            } catch {
-                return null;
-            }
+        let parsed = JSON.parse(geomStr);
+        // Handle double-escaped JSON (backend sometimes wraps JSON string in another JSON string)
+        if (typeof parsed === "string") {
+            parsed = JSON.parse(parsed);
         }
-        return first;
+        return parsed;
     } catch {
         return null;
     }
@@ -168,19 +162,18 @@ export function groupAnnotationsByKey(beAnnotations) {
 
 /**
  * Convert FE annotation groups → flat BE rows for BatchSaveAnnotationRequest.
- * Each label in a group creates one row with geometry as a JSON object (not a string)
- * so the backend's JsonNode field receives an ObjectNode, not a TextNode.
+ * Each label in a group creates one row with full geometry JSON (including groupKey + type).
  */
 export function flattenToBeRows(feAnnotations) {
     const rows = [];
     feAnnotations.forEach((group) => {
-        const geomObj = {
+        const geomJson = JSON.stringify({
             type: group.shapeType,
             groupKey: group.groupKey,
             ...group.geometry,
-        };
+        });
         group.labelIds.forEach((labelId) => {
-            rows.push({ labelId, geometry: geomObj });
+            rows.push({ labelId, geometry: geomJson });
         });
     });
     return rows;

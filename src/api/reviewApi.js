@@ -49,10 +49,13 @@ const reviewApi = {
      * @param {{ hasError: boolean, policyId?: number }} payload
      * @returns {Promise<AnnotationResponse>}
      */
-    reviewAnnotation: async (reviewingId, { hasError, policyId }) => {
+    reviewAnnotation: async (reviewingId, { hasError, policyId, note }) => {
         const body = { hasError };
         if (hasError && policyId != null) {
             body.policyId = policyId;
+        }
+        if (note) {
+            body.note = note;
         }
         const res = await apiClient.post(`/api/annotations/${reviewingId}/review`, body);
         return res.data ?? res;

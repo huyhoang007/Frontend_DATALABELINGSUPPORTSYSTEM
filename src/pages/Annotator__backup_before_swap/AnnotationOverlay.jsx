@@ -19,23 +19,6 @@ export default function AnnotationOverlay({
 }) {
     const svgRef = React.useRef(null);
     const [dragState, setDragState] = React.useState(null);
-    const [svgSize, setSvgSize] = React.useState({ w: 1, h: 1 });
-
-    // Track actual SVG pixel dimensions so circles stay circular
-    React.useEffect(() => {
-        if (!svgRef.current) return;
-        const ro = new ResizeObserver((entries) => {
-            for (const entry of entries) {
-                const { width, height } = entry.contentRect;
-                if (width > 0 && height > 0) setSvgSize({ w: width, h: height });
-            }
-        });
-        ro.observe(svgRef.current);
-        // initial size
-        const rect = svgRef.current.getBoundingClientRect();
-        if (rect.width > 0) setSvgSize({ w: rect.width, h: rect.height });
-        return () => ro.disconnect();
-    }, []);
     // dragState: { groupKey, vertexIdx: number|null (null=whole shape), startPt, startGeom }
 
     // Keep svgRectRef updated for drawing tools
@@ -177,9 +160,7 @@ export default function AnnotationOverlay({
     const onClick = (e) => drawingHandlers?.handleClick?.(e);
 
     // ── Render helpers ──
-    // Convert normalized (0‥1) coord to actual SVG pixel value
-    const px = (v, axis) => v * (axis === "y" ? svgSize.h : svgSize.w);
-    const pxPts = (points) => points.map((p) => `${px(p.x, "x")},${px(p.y, "y")}`).join(" ");
+    const pct = (v) => `${v * 100}%`;
 
     const renderShape = (group, isSelected, isDraft = false) => {
         const geom = group.geometry;
@@ -192,6 +173,7 @@ export default function AnnotationOverlay({
             stroke: color,
             strokeWidth: strokeW,
             fill: `${color}${Math.round(fillOpacity * 255).toString(16).padStart(2, "0")}`,
+            vectorEffect: "non-scaling-stroke",
             strokeDasharray: dashArray,
             style: { cursor: activeTool === "select" ? "pointer" : "crosshair" },
         };
@@ -201,8 +183,8 @@ export default function AnnotationOverlay({
             return (
                 <g key={group.groupKey || "draft"}>
                     <rect
-                        x={px(geom.x, "x")} y={px(geom.y, "y")}
-                        width={px(geom.w, "x")} height={px(geom.h, "y")}
+                        x={pct(geom.x)} y={pct(geom.y)}
+                        width={pct(geom.w)} height={pct(geom.h)}
                         {...sharedProps}
                         pointerEvents={activeTool === "select" ? "all" : "none"}
                         onMouseDown={(e) => {
@@ -214,8 +196,9 @@ export default function AnnotationOverlay({
                     {isSelected && activeTool === "select" && (
                         <>
                             {[[geom.x, geom.y], [geom.x + geom.w, geom.y], [geom.x, geom.y + geom.h], [geom.x + geom.w, geom.y + geom.h]].map(([cx, cy], i) => (
-                                <circle key={i} cx={px(cx, "x")} cy={px(cy, "y")} r={5}
-                                    fill="white" stroke={color} strokeWidth={2}
+                                <circle key={i} cx={pct(cx)} cy={pct(cy)} r="5"
+                                    fill="white" stroke={color} strokeWidth="2"
+                                    vectorEffect="non-scaling-stroke"
                                     style={{ cursor: "move" }}
                                     pointerEvents="all"
                                 />
@@ -228,9 +211,10 @@ export default function AnnotationOverlay({
 
         // ── POLYGON ──
         if ((group.shapeType === "polygon") && geom.points) {
+            const pts = geom.points.map((p) => `${p.x * 100}%,${p.y * 100}%`).join(" ");
             return (
                 <g key={group.groupKey || "draft"}>
-                    <polygon points={pxPts(geom.points)} {...sharedProps}
+                    <polygon points={pts} {...sharedProps}
                         pointerEvents={activeTool === "select" ? "all" : "none"}
                         onMouseDown={(e) => {
                             handleShapeMouseDown(e, group);
@@ -238,8 +222,9 @@ export default function AnnotationOverlay({
                         }}
                     />
                     {isSelected && activeTool === "select" && geom.points.map((p, i) => (
-                        <circle key={i} cx={px(p.x, "x")} cy={px(p.y, "y")} r={5}
-                            fill="white" stroke={color} strokeWidth={2}
+                        <circle key={i} cx={pct(p.x)} cy={pct(p.y)} r="5"
+                            fill="white" stroke={color} strokeWidth="2"
+                            vectorEffect="non-scaling-stroke"
                             style={{ cursor: "move" }}
                             pointerEvents="all"
                             onMouseDown={(e) => handleVertexMouseDown(e, group, i)}
@@ -251,11 +236,12 @@ export default function AnnotationOverlay({
 
         // ── POLYLINE ──
         if (group.shapeType === "polyline" && geom.points) {
-            const sw = geom.strokeWidth || 2;
+            const sw = geom.strokeWidth || 3;
+            const pts = geom.points.map((p) => `${p.x * 100}%,${p.y * 100}%`).join(" ");
             const El = geom.closed ? "polygon" : "polyline";
             return (
                 <g key={group.groupKey || "draft"}>
-                    <El points={pxPts(geom.points)}
+                    <El points={pts}
                         {...sharedProps}
                         strokeWidth={sw}
                         fill={geom.closed ? `${color}10` : "none"}
@@ -265,15 +251,13 @@ export default function AnnotationOverlay({
                             if (isSelected) handleWholeDragStart(e, group);
                         }}
                     />
-                    {/* Always show vertex dots for polylines */}
-                    {geom.points.map((p, i) => (
-                        <circle key={i} cx={px(p.x, "x")} cy={px(p.y, "y")} r={isSelected ? 6 : 4}
-                            fill={color} stroke="white" strokeWidth={1.5}
-                            style={{ cursor: activeTool === "select" ? "move" : "crosshair" }}
-                            pointerEvents={activeTool === "select" ? "all" : "none"}
-                            onMouseDown={(e) => {
-                                if (activeTool === "select") handleVertexMouseDown(e, group, i);
-                            }}
+                    {isSelected && activeTool === "select" && geom.points.map((p, i) => (
+                        <circle key={i} cx={pct(p.x)} cy={pct(p.y)} r="5"
+                            fill="white" stroke={color} strokeWidth="2"
+                            vectorEffect="non-scaling-stroke"
+                            style={{ cursor: "move" }}
+                            pointerEvents="all"
+                            onMouseDown={(e) => handleVertexMouseDown(e, group, i)}
                         />
                     ))}
                 </g>
@@ -287,16 +271,18 @@ export default function AnnotationOverlay({
                     {/* Connecting lines */}
                     {geom.points.length > 1 && (
                         <polyline
-                            points={pxPts(geom.points)}
-                            stroke={color} strokeWidth={1} fill="none" strokeDasharray="4 3"
+                            points={geom.points.map((p) => `${p.x * 100}%,${p.y * 100}%`).join(" ")}
+                            stroke={color} strokeWidth="1" fill="none" strokeDasharray="4 3"
+                            vectorEffect="non-scaling-stroke"
                             opacity={0.5}
                             pointerEvents="none"
                         />
                     )}
                     {geom.points.map((p, i) => (
-                        <circle key={i} cx={px(p.x, "x")} cy={px(p.y, "y")}
+                        <circle key={i} cx={pct(p.x)} cy={pct(p.y)}
                             r={isSelected ? 6 : 4}
-                            fill={color} stroke="white" strokeWidth={1.5}
+                            fill={color} stroke="white" strokeWidth="1.5"
+                            vectorEffect="non-scaling-stroke"
                             style={{ cursor: activeTool === "select" ? "move" : "crosshair" }}
                             pointerEvents={activeTool === "select" ? "all" : "none"}
                             onMouseDown={(e) => {
@@ -325,54 +311,38 @@ export default function AnnotationOverlay({
             if (pts.length === 0) return null;
 
             const color = "#3b82f6";
-            const isFreehandPolygon = draftShape.type === "polygon" && pts.length >= 3;
-
             return (
                 <g key="_draft">
-                    {/* Polygon: filled shape (looks like a real annotation while drawing) */}
-                    {isFreehandPolygon && (
-                        <polygon
-                            points={pxPts(pts)}
-                            fill={`${color}30`}
-                            stroke={color}
-                            strokeWidth={2}
-                            strokeLinejoin="round"
-                            pointerEvents="none"
-                        />
-                    )}
-
-                    {/* Polyline / polygon with < 3 pts: dashed segments */}
-                    {!isFreehandPolygon && pts.length > 1 && (
+                    {/* Existing segments */}
+                    {pts.length > 1 && (
                         <polyline
-                            points={pxPts(pts)}
-                            stroke={color} strokeWidth={2} fill="none"
+                            points={pts.map((p) => `${p.x * 100}%,${p.y * 100}%`).join(" ")}
+                            stroke={color} strokeWidth="2" fill="none"
                             strokeDasharray="6 4"
+                            vectorEffect="non-scaling-stroke"
                             pointerEvents="none"
                         />
                     )}
-
-                    {/* Preview line to cursor (click mode) */}
-                    {cursorPt && pts.length > 0 && !isFreehandPolygon && (
+                    {/* Preview line to cursor */}
+                    {cursorPt && pts.length > 0 && (
                         <line
-                            x1={px(pts[pts.length - 1].x, "x")} y1={px(pts[pts.length - 1].y, "y")}
-                            x2={px(cursorPt.x, "x")} y2={px(cursorPt.y, "y")}
-                            stroke={color} strokeWidth={1.5} strokeDasharray="4 3"
+                            x1={pct(pts[pts.length - 1].x)} y1={pct(pts[pts.length - 1].y)}
+                            x2={pct(cursorPt.x)} y2={pct(cursorPt.y)}
+                            stroke={color} strokeWidth="1.5" strokeDasharray="4 3"
+                            vectorEffect="non-scaling-stroke"
                             pointerEvents="none" opacity={0.6}
                         />
                     )}
-
                     {/* Vertex dots */}
-                    {pts.map((p, i) => {
-                        const isFirst = i === 0 && draftShape.type === "polygon" && pts.length >= 3;
-                        return (
-                            <circle key={i} cx={px(p.x, "x")} cy={px(p.y, "y")}
-                                r={isFirst ? 7 : isFreehandPolygon ? 3 : 4}
-                                fill={isFirst ? "#22c55e" : color}
-                                stroke="white" strokeWidth={1.5}
-                                pointerEvents="none"
-                            />
-                        );
-                    })}
+                    {pts.map((p, i) => (
+                        <circle key={i} cx={pct(p.x)} cy={pct(p.y)}
+                            r={i === 0 && draftShape.type === "polygon" && pts.length >= 3 ? 7 : 4}
+                            fill={i === 0 && draftShape.type === "polygon" && pts.length >= 3 ? "#22c55e" : color}
+                            stroke="white" strokeWidth="1.5"
+                            vectorEffect="non-scaling-stroke"
+                            pointerEvents="none"
+                        />
+                    ))}
                 </g>
             );
         }
@@ -388,7 +358,9 @@ export default function AnnotationOverlay({
         <svg
             ref={svgRef}
             className="absolute inset-0 w-full h-full"
-            style={{ cursor: cursorStyle, zIndex: 10, overflow: "visible" }}
+            style={{ cursor: cursorStyle, zIndex: 10 }}
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
             onMouseDown={onMouseDown}
             onMouseMove={onMouseMove}
             onMouseUp={onMouseUp}
