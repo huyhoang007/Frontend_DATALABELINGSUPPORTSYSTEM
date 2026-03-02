@@ -88,8 +88,17 @@ function App() {
               />
               <Route path="dashboard" element={<AnnotatorDashboard user={JSON.parse(localStorage.getItem('user') || '{}')} onLogout={() => { localStorage.clear(); window.location.href = '/login'; }} />} />
               <Route path="tasks" element={<TaskList />} />
-              <Route path="task/:taskId" element={<Workspace />} />
             </Route>
+
+            {/* Annotator Workspace - no sidebar, uses own 3-column layout */}
+            <Route
+              path="/annotator/task/:taskId"
+              element={
+                <RoleGuard allowedRoles={["ANNOTATOR"]}>
+                  <Workspace />
+                </RoleGuard>
+              }
+            />
 
             {/* Role: Reviewer - Layout with sidebar for queue, workspace stays outside */}
             <Route

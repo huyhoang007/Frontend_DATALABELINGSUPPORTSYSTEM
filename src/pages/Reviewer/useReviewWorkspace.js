@@ -198,11 +198,11 @@ export default function useReviewWorkspace(assignmentIdNum) {
     }, [currentItemId]); // Intentionally NOT including annoCache to avoid infinite loop
 
     // ── Review a single annotation ──
-    const handleReviewAnnotation = useCallback(async (reviewingId, hasError, policyId) => {
+    const handleReviewAnnotation = useCallback(async (reviewingId, hasError, policyId, note) => {
         if (!currentItemId) return { success: false, error: "No current item" };
         setReviewSubmitting(true);
         try {
-            await reviewApi.reviewAnnotation(reviewingId, { hasError, policyId: hasError ? policyId : undefined });
+            await reviewApi.reviewAnnotation(reviewingId, { hasError, policyId: hasError ? policyId : undefined, note: hasError ? note : undefined });
 
             // Refetch current item's annotations to get fresh status
             const freshAnnotations = await reviewApi.getReviewAnnotationsByItem(assignmentIdNum, currentItemId);

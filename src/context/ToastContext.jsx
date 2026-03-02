@@ -7,12 +7,19 @@ const ToastContext = React.createContext(null);
 export function ToastProvider({ children }) {
     const [toasts, setToasts] = React.useState([]);
 
-    const addToast = React.useCallback((message, type = "info") => {
+    const addToast = React.useCallback((messageOrObj, type = "info") => {
+        // Support both addToast("msg","type") and addToast({type, message})
+        let msg = messageOrObj;
+        let t = type;
+        if (messageOrObj && typeof messageOrObj === "object") {
+            msg = messageOrObj.message || String(messageOrObj);
+            t = messageOrObj.type || type;
+        }
         const id = Math.random().toString(36).substr(2, 9);
-        setToasts((prev) => [...prev, { id, message, type }]);
+        setToasts((prev) => [...prev, { id, message: msg, type: t }]);
 
         // Auto dismiss
-        if (type === 'success' || type === 'info') {
+        if (t === 'success' || t === 'info') {
             setTimeout(() => {
                 setToasts((prev) => prev.filter((t) => t.id !== id));
             }, 3000);

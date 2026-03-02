@@ -60,12 +60,14 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
     const [selectedGroupKey, setSelectedGroupKey] = React.useState(null);
     const [rejectingAnnoId, setRejectingAnnoId] = React.useState(null);
     const [selectedPolicyId, setSelectedPolicyId] = React.useState(null);
+    const [rejectNote, setRejectNote] = React.useState("");
 
     // Reset selection when switching items
     React.useEffect(() => {
         setSelectedGroupKey(null);
         setRejectingAnnoId(null);
         setSelectedPolicyId(null);
+        setRejectNote("");
     }, [currentItemIndex]);
 
     // ── Convert BE annotations → AnnotationGroup[] for canvas ──
@@ -96,11 +98,12 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
             addToast("Please select a policy/error type.", "error");
             return;
         }
-        const result = await handleReviewAnnotation(reviewingId, true, selectedPolicyId);
+        const result = await handleReviewAnnotation(reviewingId, true, selectedPolicyId, rejectNote.trim() || undefined);
         if (result.success) {
             addToast("Annotation rejected ✗", "warning");
             setRejectingAnnoId(null);
             setSelectedPolicyId(null);
+            setRejectNote("");
             if (result.allDone) {
                 addToast("Review complete. Assignment → REJECTED.", "warning");
                 setTimeout(() => navigate("/reviewer/queue"), 1500);
@@ -390,9 +393,21 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                             </button>
                                         ))}
                                     </div>
+                                    {/* Reject note */}
+                                    <div>
+                                        <p className="text-[10px] font-bold uppercase text-red-400 mb-1">Reason / Note</p>
+                                        <textarea
+                                            value={rejectNote}
+                                            onChange={(e) => setRejectNote(e.target.value)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            placeholder="Enter reason for rejection (optional)..."
+                                            rows={2}
+                                            className="w-full px-2 py-1.5 rounded text-xs bg-background border border-border text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 focus:ring-red-500/50"
+                                        />
+                                    </div>
                                     <div className="flex gap-2">
                                         <button
-                                            onClick={(e) => { e.stopPropagation(); setRejectingAnnoId(null); }}
+                                            onClick={(e) => { e.stopPropagation(); setRejectingAnnoId(null); setRejectNote(""); }}
                                             className="flex-1 px-2 py-1 rounded text-xs text-muted-foreground border border-border hover:bg-muted/10"
                                         >
                                             Cancel

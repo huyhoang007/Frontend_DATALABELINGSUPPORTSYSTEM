@@ -7,9 +7,8 @@ import {
     distPx,
 } from "./geometryUtils";
 
-const SNAP_PX = 12;         // snap-to-first-point threshold in pixels
-const MIN_SIZE = 0.01;      // minimum bbox size (normalized)
-const FREEHAND_MIN_PX = 8;  // min pixel gap between auto-added freehand points
+const SNAP_PX = 12; // snap-to-first-point threshold in pixels
+const MIN_SIZE = 0.01; // minimum bbox size (normalized)
 
 /**
  * Drawing tools hook.
@@ -29,12 +28,6 @@ export function useDrawingTools({ activeTool, onShapeComplete, addToast }) {
     // Polygon hold-P mode
     const [polygonHoldActive, setPolygonHoldActive] = useState(false);
 
-    // Polygon freehand mode (hold & drag)
-    const isFreehandRef = useRef(false);           // currently in freehand drag (activated after enough movement)
-    const freehandLastPtRef = useRef(null);        // last point added during freehand
-    const freehandJustFinishedRef = useRef(false); // suppress next click after freehand
-    const polygonMouseDownPtRef = useRef(null);    // pixel position where mouseDown started (for movement threshold)
-
     // Bbox drag state
     const isDragging = useRef(false);
     const startPt = useRef(null);
@@ -52,10 +45,6 @@ export function useDrawingTools({ activeTool, onShapeComplete, addToast }) {
         setCursorPt(null);
         isDragging.current = false;
         setPolygonHoldActive(false);
-        isFreehandRef.current = false;
-        freehandLastPtRef.current = null;
-        freehandJustFinishedRef.current = false;
-        polygonMouseDownPtRef.current = null;
     }, [activeTool]);
 
     const getNorm = useCallback((e) => {
@@ -90,14 +79,6 @@ export function useDrawingTools({ activeTool, onShapeComplete, addToast }) {
                 x: pt.x, y: pt.y, w: 0, h: 0,
             });
         }
-
-        // ── Polygon: record mouseDown position; freehand activates only after enough movement
-        if (activeTool === "polygon") {
-            const rect = svgRectRef.current;
-            polygonMouseDownPtRef.current = rect
-                ? { clientX: e.clientX, clientY: e.clientY }
-                : null;
-        }
     }, [activeTool, getNorm]);
 
     const handleMouseMove = useCallback((e) => {
@@ -107,30 +88,6 @@ export function useDrawingTools({ activeTool, onShapeComplete, addToast }) {
         // Update cursor for preview lines
         if (activeTool === "polygon" || activeTool === "polyline" || activeTool === "points") {
             setCursorPt(pt);
-        }
-
-        // ── Polygon freehand: activate once mouse moves far enough from mouseDown point
-        if (activeTool === "polygon" && polygonMouseDownPtRef.current) {
-            const down = polygonMouseDownPtRef.current;
-            const movedPx = Math.sqrt(
-                (e.clientX - down.clientX) ** 2 + (e.clientY - down.clientY) ** 2
-            );
-            if (!isFreehandRef.current && movedPx >= FREEHAND_MIN_PX) {
-                // Crossed threshold → enter freehand mode, wipe any click-built draft
-                isFreehandRef.current = true;
-                freehandLastPtRef.current = pt;
-                setDraftShape({ type: "polygon", points: [pt] });
-            } else if (isFreehandRef.current) {
-                const rect = svgRectRef.current;
-                const last = freehandLastPtRef.current;
-                if (rect && last && distPx(pt, last, rect) >= FREEHAND_MIN_PX) {
-                    freehandLastPtRef.current = pt;
-                    setDraftShape((prev) => ({
-                        type: "polygon",
-                        points: [...(prev?.points || []), pt],
-                    }));
-                }
-            }
         }
 
         if (activeTool === "bbox" && isDragging.current && startPt.current) {
@@ -170,24 +127,6 @@ export function useDrawingTools({ activeTool, onShapeComplete, addToast }) {
             setDraftShape(null);
             startPt.current = null;
         }
-
-        // ── Polygon freehand: complete on mouse release (only if freehand was activated)
-        if (activeTool === "polygon") {
-            polygonMouseDownPtRef.current = null;
-            if (isFreehandRef.current) {
-                isFreehandRef.current = false;
-                freehandLastPtRef.current = null;
-                freehandJustFinishedRef.current = true; // block upcoming click event
-                setDraftShape((prev) => {
-                    const pts = prev?.points || [];
-                    if (pts.length >= 3) {
-                        const shape = { type: "polygon", points: pts, closed: true };
-                        setTimeout(() => onShapeComplete?.(shape), 0);
-                    }
-                    return null;
-                });
-            }
-        }
     }, [activeTool, draftShape, onShapeComplete]);
 
     const handleClick = useCallback((e) => {
@@ -196,11 +135,6 @@ export function useDrawingTools({ activeTool, onShapeComplete, addToast }) {
         if (!pt) return;
 
         // ── Polygon tool ──
-        // Skip if we just finished a freehand drag (mouseUp already handled it)
-        if (activeTool === "polygon" && freehandJustFinishedRef.current) {
-            freehandJustFinishedRef.current = false;
-            return;
-        }
         if (activeTool === "polygon") {
             setDraftShape((prev) => {
                 const points = prev?.points || [];
@@ -235,9 +169,12 @@ export function useDrawingTools({ activeTool, onShapeComplete, addToast }) {
             });
         }
 
-        // ── Points tool ── single click = one point, immediately complete
+        // ── Points tool ──
         if (activeTool === "points") {
-            onShapeComplete?.({ type: "points", points: [pt] });
+            setDraftShape((prev) => {
+                const points = prev?.points || [];
+                return { type: "points", points: [...points, pt] };
+            });
         }
     }, [activeTool, getNorm, isNearFirstPoint, onShapeComplete, addToast]);
 
@@ -266,6 +203,15 @@ export function useDrawingTools({ activeTool, onShapeComplete, addToast }) {
                         points: [...draftShape.points],
                         closed: true,
                         strokeWidth: 3,
+                    };
+                    onShapeComplete?.(shape);
+                    setDraftShape(null);
+                }
+                if (activeTool === "points" && draftShape?.points?.length >= 2) {
+                    e.preventDefault();
+                    const shape = {
+                        type: "points",
+                        points: [...draftShape.points],
                     };
                     onShapeComplete?.(shape);
                     setDraftShape(null);
