@@ -12,6 +12,7 @@ import { useDrawingTools } from "./useDrawingTools";
 import AnnotationOverlay from "./AnnotationOverlay";
 import LabelSelectModal from "./LabelSelectModal";
 import AnnotationList from "./AnnotationList";
+import LabelSummaryPanel from "../../components/LabelSummaryPanel";
 
 /* â”€â”€ Helpers â”€â”€ */
 function resolveImagePath(fileUrl) {
@@ -105,6 +106,7 @@ export default function Workspace() {
     const [activeLabelFilterId, setActiveLabelFilterId] = React.useState(null);
     const [pendingShape, setPendingShape] = React.useState(null);
     const [zoom, setZoom] = React.useState(100);
+    const [rightTab, setRightTab] = React.useState("annotations"); // "annotations" | "summary"
 
     /* ── Drawing tools hook ── */
     const drawing = useDrawingTools({
@@ -389,10 +391,10 @@ export default function Workspace() {
         try {
             await anno.saveNow();
             await annotationApi.submitAssignment(assignmentId);
-            addToast({ type: "success", message: "ÄÃ£ ná»™p bÃ i thÃ nh cÃ´ng!" });
+            addToast({ type: "success", message: "ÄÃ£ ná»™p bÃ i thÃ nh cÃ´ng!" });
             navigate("/annotator/tasks");
         } catch (err) {
-            addToast({ type: "error", message: err?.message || "Ná»™p bÃ i tháº¥t báº¡i" });
+            addToast({ type: "error", message: err?.message || "Ná»™p bÃ i tháº¥t báº¡i" });
         }
     };
 
@@ -652,7 +654,6 @@ export default function Workspace() {
                         </div>
                     </div>
 
-
                     {/* ── CENTER: Canvas ── */}
                     <div className="flex-1 overflow-auto relative" style={{ background: "#0e1621" }}>
                         {/* centering wrapper — expands to at least full viewport so canvas stays centered at small zoom */}
@@ -717,7 +718,6 @@ export default function Workspace() {
                             </div>{/* end canvas */}
                         </div>{/* end centering wrapper */}
 
-
                     </div>
 
                     {/* â”€â”€ RIGHT: Tools + Annotations â”€â”€ */}
@@ -740,45 +740,60 @@ export default function Workspace() {
                             ))}
                         </div>
 
-                        {/* Annotations header */}
-                        <div className="flex items-center justify-between px-3 py-2 border-b shrink-0"
-                            style={{ borderColor: "#253347" }}>
-                            <span className="text-xs font-semibold" style={{ color: "#e2e8f0" }}>
+                        {/* ── Tab bar ── */}
+                        <div className="flex shrink-0 border-b" style={{ borderColor: "#253347" }}>
+                            <button
+                                onClick={() => setRightTab("annotations")}
+                                className="flex-1 py-2 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                                style={rightTab === "annotations"
+                                    ? { color: "#00bfa5", borderBottom: "2px solid #00bfa5" }
+                                    : { color: "#4a6788", borderBottom: "2px solid transparent" }}
+                            >
+                                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>layers</span>
                                 Kết quả ({anno.annotations.length})
-                            </span>
-                            <div className="flex items-center gap-1">
-                                <button className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
-                                    style={{ color: "#4a6788" }}>
-                                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>visibility</span>
-                                </button>
-                                <button className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
-                                    style={{ color: "#4a6788" }}>
-                                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>format_list_bulleted</span>
-                                </button>
-                            </div>
+                            </button>
+                            <button
+                                onClick={() => setRightTab("summary")}
+                                className="flex-1 py-2 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                                style={rightTab === "summary"
+                                    ? { color: "#00bfa5", borderBottom: "2px solid #00bfa5" }
+                                    : { color: "#4a6788", borderBottom: "2px solid transparent" }}
+                            >
+                                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>analytics</span>
+                                Tổng hợp
+                            </button>
                         </div>
 
-                        {/* Annotations list */}
+                        {/* ── Tab content ── */}
                         <div className="flex-1 overflow-y-auto">
-                            {labelsLoading && allLabels.length === 0 ? (
-                                <div className="flex items-center justify-center h-24 gap-2 opacity-50">
-                                    <span className="material-symbols-outlined animate-spin" style={{ fontSize: 18, color: "#3a5068" }}>progress_activity</span>
-                                    <p className="text-xs" style={{ color: "#3a5068" }}>Đang tải...</p>
-                                </div>
-                            ) : anno.annotations.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center h-32 gap-2 opacity-30">
-                                    <span className="material-symbols-outlined" style={{ fontSize: 32, color: "#3a5068" }}>layers</span>
-                                    <p className="text-xs" style={{ color: "#3a5068" }}>Chưa có annotation</p>
-                                </div>
+                            {rightTab === "annotations" ? (
+                                labelsLoading && allLabels.length === 0 ? (
+                                    <div className="flex items-center justify-center h-24 gap-2 opacity-50">
+                                        <span className="material-symbols-outlined animate-spin" style={{ fontSize: 18, color: "#3a5068" }}>progress_activity</span>
+                                        <p className="text-xs" style={{ color: "#3a5068" }}>Đang tải...</p>
+                                    </div>
+                                ) : anno.annotations.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center h-32 gap-2 opacity-30">
+                                        <span className="material-symbols-outlined" style={{ fontSize: 32, color: "#3a5068" }}>layers</span>
+                                        <p className="text-xs" style={{ color: "#3a5068" }}>Chưa có annotation</p>
+                                    </div>
+                                ) : (
+                                    <AnnotationList
+                                        annotations={anno.annotations}
+                                        allLabels={allLabels}
+                                        selectedGroupKey={selectedGroupKey}
+                                        activeLabelFilterId={activeLabelFilterId}
+                                        onSelect={(gk) => { setSelectedGroupKey(gk); setActiveTool("select"); }}
+                                        onDelete={anno.deleteAnnotation}
+                                        onToggleHidden={anno.toggleHidden}
+                                    />
+                                )
                             ) : (
-                                <AnnotationList
-                                    annotations={anno.annotations}
+                                <LabelSummaryPanel
+                                    workspace={workspace}
+                                    currentItem={currentItem}
+                                    liveAnnotations={anno.annotations}
                                     allLabels={allLabels}
-                                    selectedGroupKey={selectedGroupKey}
-                                    activeLabelFilterId={activeLabelFilterId}
-                                    onSelect={(gk) => { setSelectedGroupKey(gk); setActiveTool("select"); }}
-                                    onDelete={anno.deleteAnnotation}
-                                    onToggleHidden={anno.toggleHidden}
                                 />
                             )}
                         </div>

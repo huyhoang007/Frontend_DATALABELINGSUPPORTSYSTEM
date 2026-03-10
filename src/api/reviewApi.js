@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Review API Module
  * Wrappers for Reviewer-specific endpoints (AnnotationController.java)
  */
@@ -60,6 +60,20 @@ const reviewApi = {
         const res = await apiClient.post(`/api/annotations/${reviewingId}/review`, body);
         return res.data ?? res;
     },
+
+    /**
+     * Nộp kết quả đánh giá (finalize review).
+     * BE: POST /api/assignments/{assignmentId}/submit-review
+     * Pre-condition: tất cả annotations phải đã được reviewed (không còn PENDING).
+     * @param {number} assignmentId
+     * @returns {Promise<void>}
+     */
+    submitReview: async (assignmentId) => {
+        const res = await apiClient.post(`/api/assignments/${assignmentId}/submit-review`);
+        return res.data ?? res;
+    },
 };
 
 export default reviewApi;
+
+

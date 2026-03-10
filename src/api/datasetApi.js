@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Dataset API Module
  * Endpoints match backend DatasetController
  * Uses multipart/form-data for upload endpoints
@@ -88,4 +88,65 @@ export const datasetApi = {
     deleteItem: async (itemId) => {
         return await apiClient.delete(`/api/items/${itemId}`);
     },
+
+    // ─── Export ───────────────────────────────────────────────────────────────
+
+    /**
+     * Export dataset as custom JSON (all annotation details).
+     * Returns the parsed JSON object.
+     */
+    exportJson: async (datasetId, status = null) => {
+        const params = status ? { status } : {};
+        return await apiClient.get(`/api/datasets/${datasetId}/export/json`, { params });
+    },
+
+    /**
+     * Export dataset as CSV. Returns blob for download.
+     */
+    exportCsv: async (datasetId, status = null) => {
+        const params = status ? { status } : {};
+        return await apiClient.get(`/api/datasets/${datasetId}/export/csv`, {
+            params,
+            responseType: "blob",
+            transformResponse: [(d) => d],
+        });
+    },
+
+    /**
+     * Export dataset as COCO JSON. Returns blob for download.
+     */
+    exportCoco: async (datasetId, status = null) => {
+        const params = status ? { status } : {};
+        return await apiClient.get(`/api/datasets/${datasetId}/export/coco`, {
+            params,
+            responseType: "blob",
+            transformResponse: [(d) => d],
+        });
+    },
+
+    /**
+     * Export dataset as YOLO ZIP (includes label txts + images). Returns blob.
+     */
+    exportYolo: async (datasetId, status = null) => {
+        const params = status ? { status } : {};
+        return await apiClient.get(`/api/datasets/${datasetId}/export/yolo`, {
+            params,
+            responseType: "blob",
+            transformResponse: [(d) => d],
+        });
+    },
+
+    /**
+     * Export dataset as Pascal VOC ZIP (includes XML annotations + images). Returns blob.
+     */
+    exportPascalVoc: async (datasetId, status = null) => {
+        const params = status ? { status } : {};
+        return await apiClient.get(`/api/datasets/${datasetId}/export/pascal-voc`, {
+            params,
+            responseType: "blob",
+            transformResponse: [(d) => d],
+        });
+    },
 };
+
+

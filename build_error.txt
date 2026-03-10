@@ -1,0 +1,15 @@
+
+> swp@0.0.0 build
+> vite build
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 94 modules transformed.
+Γ£ù Build failed in 2.25s
+error during build:
+Could not resolve "./LabelSummaryPanel" from "src/pages/Annotator/Workspace.jsx"
+file: C:/Users/hai yen/Desktop/fe (2)/fe (1)/src/pages/Annotator/Workspace.jsx
+    at getRollupError (file:///C:/Users/hai%20yen/Desktop/fe%20(2)/fe%20(1)/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at error (file:///C:/Users/hai%20yen/Desktop/fe%20(2)/fe%20(1)/node_modules/rollup/dist/es/shared/parseAst.js:397:42)
+    at ModuleLoader.handleInvalidResolvedId (file:///C:/Users/hai%20yen/Desktop/fe%20(2)/fe%20(1)/node_modules/rollup/dist/es/shared/node-entry.js:21710:24)
+    at file:///C:/Users/hai%20yen/Desktop/fe%20(2)/fe%20(1)/node_modules/rollup/dist/es/shared/node-entry.js:21670:26
