@@ -1,4 +1,4 @@
-/**
+﻿/**
  * useReviewWorkspace — Custom hook for Reviewer Workspace.
  *
  * Key design decisions:
@@ -237,6 +237,20 @@ export default function useReviewWorkspace(assignmentIdNum) {
         }
     }, [assignmentIdNum, currentItemId, annoCache, items]);
 
+    // ── Submit full review (finalize) ──
+    const handleSubmitReview = useCallback(async () => {
+        setReviewSubmitting(true);
+        try {
+            await reviewApi.submitReview(assignmentIdNum);
+            return { success: true };
+        } catch (err) {
+            const msg = err?.response?.data?.message || err?.message || "Nộp đánh giá thất bại";
+            return { success: false, error: msg };
+        } finally {
+            setReviewSubmitting(false);
+        }
+    }, [assignmentIdNum]);
+
     return {
         // Workspace
         workspace,
@@ -267,6 +281,7 @@ export default function useReviewWorkspace(assignmentIdNum) {
         // Review
         reviewSubmitting,
         handleReviewAnnotation,
+        handleSubmitReview,
 
         // Stats
         reviewStats,
@@ -274,3 +289,5 @@ export default function useReviewWorkspace(assignmentIdNum) {
         isCacheComplete,
     };
 }
+
+

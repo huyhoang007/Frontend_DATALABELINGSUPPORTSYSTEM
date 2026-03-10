@@ -1,36 +1,76 @@
-import * as React from "react";
+﻿import * as React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Workspace3Column } from "../../components/layout/WorkspaceLayout";
-import { Button } from "../../components/ui/Button";
 import { useToast } from "../../context/ToastContext";
-import { cn } from "../../utils/cn";
+import apiClient from "../../api/apiClient";
 import useReviewWorkspace from "./useReviewWorkspace";
 import AnnotationOverlay from "../Annotator/AnnotationOverlay";
 import { groupAnnotationsByKey } from "../Annotator/geometryUtils";
 
+/* ── Resolve fileUrl → proxy path ── */
+function resolveImagePath(fileUrl) {
+    if (!fileUrl) return null;
+    if (fileUrl.startsWith("http")) return fileUrl;
+    let url = fileUrl;
+    if (!url.startsWith("/uploads")) {
+        url = `/uploads${url.startsWith("/") ? "" : "/"}${url}`;
+    }
+    return url;
+}
+
+/* ── Authenticated thumbnail component ── */
+function ThumbnailImg({ fileUrl, alt }) {
+    const [src, setSrc] = React.useState(null);
+    React.useEffect(() => {
+        let cancelled = false;
+        let blobUrl = null;
+        if (!fileUrl) return;
+        const path = resolveImagePath(fileUrl);
+        if (!path) return;
+        (async () => {
+            try {
+                const res = await apiClient.get(path, { responseType: "blob", transformResponse: [(d) => d] });
+                if (cancelled) return;
+                const blob = res instanceof Blob ? res : new Blob([res]);
+                blobUrl = URL.createObjectURL(blob);
+                setSrc(blobUrl);
+            } catch { /* silent */ }
+        })();
+        return () => { cancelled = true; if (blobUrl) URL.revokeObjectURL(blobUrl); };
+    }, [fileUrl]);
+
+    if (!src) return (
+        <div className="w-full h-full flex items-center justify-center" style={{ background: "#0e1621" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 24, color: "#3a5068" }}>image</span>
+        </div>
+    );
+    return <img src={src} alt={alt} className="w-full h-full object-cover" draggable={false} />;
+}
+
+/* ── Route guard ── */
 export default function ReviewWorkspace() {
     const { assignmentId } = useParams();
     const navigate = useNavigate();
-    const { addToast } = useToast();
 
-    // ── Type safety: parse assignmentId ──
     const assignmentIdNum = Number(assignmentId);
     if (!assignmentId || isNaN(assignmentIdNum)) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-center">
-                    <span className="material-symbols-outlined text-6xl text-red-400 mb-4 block">error</span>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Invalid Assignment ID</h2>
-                    <p className="text-muted-foreground mb-4">The assignment ID "{assignmentId}" is not valid.</p>
-                    <Button variant="secondary" onClick={() => navigate("/reviewer/queue")} leftIcon="arrow_back">Back to Queue</Button>
-                </div>
+            <div className="flex flex-col items-center justify-center h-screen gap-4"
+                style={{ background: "#131c2e", color: "#e2e8f0" }}>
+                <span className="material-symbols-outlined text-5xl" style={{ color: "#f87171" }}>error</span>
+                <h2 className="text-xl font-bold">Mã assignment không hợp lệ</h2>
+                <p style={{ color: "#64748b" }}>ID "{assignmentId}" không hợp lệ.</p>
+                <button onClick={() => navigate("/reviewer/queue")}
+                    className="px-4 py-2 rounded text-sm font-medium hover:opacity-80 transition"
+                    style={{ background: "#1e2f42", color: "#e2e8f0" }}>
+                    ← Quay lại danh sách
+                </button>
             </div>
         );
     }
-
     return <ReviewWorkspaceInner assignmentIdNum={assignmentIdNum} />;
 }
 
+/* ── Main workspace ── */
 function ReviewWorkspaceInner({ assignmentIdNum }) {
     const navigate = useNavigate();
     const { addToast } = useToast();
@@ -52,17 +92,28 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
         policies,
         reviewSubmitting,
         handleReviewAnnotation,
+        handleSubmitReview,
         reviewStats,
         getItemStats,
+        annoCache,
     } = useReviewWorkspace(assignmentIdNum);
 
-    // ── UI local state ──
+    /* ── UI local state ── */
     const [selectedGroupKey, setSelectedGroupKey] = React.useState(null);
     const [rejectingAnnoId, setRejectingAnnoId] = React.useState(null);
     const [selectedPolicyId, setSelectedPolicyId] = React.useState(null);
     const [rejectNote, setRejectNote] = React.useState("");
+    const [zoom, setZoom] = React.useState(100);
+    const [rightTab, setRightTab] = React.useState("review"); // "review" | "summary"
 
-    // Reset selection when switching items
+    /* ── Live clock ── */
+    const [now, setNow] = React.useState(new Date());
+    React.useEffect(() => {
+        const t = setInterval(() => setNow(new Date()), 1000);
+        return () => clearInterval(t);
+    }, []);
+
+    /* ── Reset per-item state when switching items ── */
     React.useEffect(() => {
         setSelectedGroupKey(null);
         setRejectingAnnoId(null);
@@ -70,179 +121,389 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
         setRejectNote("");
     }, [currentItemIndex]);
 
-    // ── Convert BE annotations → AnnotationGroup[] for canvas ──
+    /* ── Annotation groups for read-only canvas overlay ── */
     const annotationGroups = React.useMemo(
         () => groupAnnotationsByKey(currentAnnotations),
         [currentAnnotations]
     );
 
-    // ── Review handlers ──
-    const handleApproveAnnotation = async (reviewingId) => {
+    /* ── Navigation ── */
+    const handleNavigate = (dir) => {
+        const n = items.length;
+        let newIdx = currentItemIndex;
+        if (dir === "first") newIdx = 0;
+        if (dir === "prev") newIdx = Math.max(0, currentItemIndex - 1);
+        if (dir === "next") newIdx = Math.min(n - 1, currentItemIndex + 1);
+        if (dir === "last") newIdx = n - 1;
+        if (newIdx !== currentItemIndex) setCurrentItemIndex(newIdx);
+    };
+
+    /* ── Review handlers ── */
+    const handleApprove = async (reviewingId) => {
         const result = await handleReviewAnnotation(reviewingId, false, null);
         if (result.success) {
-            addToast("Annotation approved ✓", "success");
-            if (result.allDone) {
-                const msg = result.finalStatus === "APPROVED"
-                    ? "All annotations approved! Assignment → APPROVED."
-                    : "Review complete. Some annotations rejected → Assignment REJECTED.";
-                addToast(msg, result.finalStatus === "APPROVED" ? "success" : "warning");
-                setTimeout(() => navigate("/reviewer/queue"), 1500);
-            }
+            addToast({ type: "success", message: "Đã chấp nhận ✓" });
         } else {
-            addToast(result.error || "Failed to approve annotation", "error");
+            addToast({ type: "error", message: result.error || "Không thể chấp nhận annotation" });
         }
     };
 
-    const handleRejectAnnotation = async (reviewingId) => {
+    const handleReject = async (reviewingId) => {
         if (!selectedPolicyId) {
-            addToast("Please select a policy/error type.", "error");
+            addToast({ type: "error", message: "Vui lòng chọn loại lỗi vi phạm" });
             return;
         }
         const result = await handleReviewAnnotation(reviewingId, true, selectedPolicyId, rejectNote.trim() || undefined);
         if (result.success) {
-            addToast("Annotation rejected ✗", "warning");
+            addToast({ type: "warning", message: "Đã từ chối ✗" });
             setRejectingAnnoId(null);
             setSelectedPolicyId(null);
             setRejectNote("");
-            if (result.allDone) {
-                addToast("Review complete. Assignment → REJECTED.", "warning");
-                setTimeout(() => navigate("/reviewer/queue"), 1500);
-            }
         } else {
-            addToast(result.error || "Failed to reject annotation", "error");
+            addToast({ type: "error", message: result.error || "Không thể từ chối annotation" });
         }
     };
 
-    // ── Loading state ──
+    const handleSubmit = async () => {
+        const result = await handleSubmitReview();
+        if (result.success) {
+            addToast({ type: "success", message: "Đã nộp đánh giá thành công!" });
+            setTimeout(() => navigate("/reviewer/queue"), 1200);
+        } else {
+            addToast({ type: "error", message: result.error || "Nộp đánh giá thất bại" });
+        }
+    };
+
+    /* ── All labels (flat) from workspace.labelGroups ── */
+    const allLabels = React.useMemo(() => {
+        const groups = workspace?.labelGroups ?? [];
+        const labels = [];
+        const seen = new Set();
+        groups.forEach((g) => {
+            (g.labels || []).forEach((l) => {
+                const id = l.labelId ?? l.id;
+                if (id == null || seen.has(String(id))) return;
+                seen.add(String(id));
+                labels.push({
+                    id: Number(id),
+                    name: l.labelName ?? l.name ?? "",
+                    color: l.colorCode ?? l.color ?? "#6b7280",
+                    type: l.labelType ?? l.type ?? "BBOX",
+                });
+            });
+        });
+        return labels;
+    }, [workspace]);
+
+    /* ── Loading ── */
     if (workspaceLoading) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <span className="material-symbols-outlined animate-spin text-4xl text-muted-foreground">progress_activity</span>
-                <span className="ml-3 text-lg text-muted-foreground">Loading workspace...</span>
+            <div className="flex items-center justify-center h-screen"
+                style={{ background: "#131c2e", color: "#e2e8f0" }}>
+                <span className="material-symbols-outlined animate-spin mr-2"
+                    style={{ fontSize: 28, color: "#3a5068" }}>progress_activity</span>
+                <span style={{ color: "#64748b" }}>Đang tải workspace...</span>
             </div>
         );
     }
 
-    // ── Error state ──
+    /* ── Error ── */
     if (workspaceError) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-center">
-                    <span className="material-symbols-outlined text-6xl text-red-400 mb-4 block">error</span>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Cannot Load Workspace</h2>
-                    <p className="text-muted-foreground mb-4">{workspaceError}</p>
-                    <Button variant="secondary" onClick={() => navigate("/reviewer/queue")} leftIcon="arrow_back">Back to Queue</Button>
-                </div>
+            <div className="flex flex-col items-center justify-center h-screen gap-4"
+                style={{ background: "#131c2e", color: "#e2e8f0" }}>
+                <span className="material-symbols-outlined text-5xl" style={{ color: "#f87171" }}>error</span>
+                <h2 className="text-xl font-bold">Không tải được workspace</h2>
+                <p style={{ color: "#64748b" }}>{workspaceError}</p>
+                <button onClick={() => navigate("/reviewer/queue")}
+                    className="px-4 py-2 rounded text-sm font-medium hover:opacity-80 transition"
+                    style={{ background: "#1e2f42", color: "#e2e8f0" }}>
+                    ← Quay lại danh sách
+                </button>
             </div>
         );
     }
 
-    // ═══════════════════════════════════════════
-    //  LEFT PANEL: Assignment Info + Item List
-    // ═══════════════════════════════════════════
-    const LeftPanel = (
-        <div className="p-4 bg-card h-full flex flex-col overflow-hidden">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/reviewer/queue")} leftIcon="arrow_back" className="mb-4 text-muted-foreground hover:text-foreground shrink-0">
-                Back to Queue
-            </Button>
+    const imgWidth = currentItem?.width || 800;
+    const imgHeight = currentItem?.height || 600;
+    const totalImages = items.length;
+    const canSubmit = reviewStats.pending === 0 && reviewStats.total > 0;
 
-            {/* Assignment Info */}
-            <div className="bg-muted/10 p-4 rounded-xl border border-border mb-4 shrink-0">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Project</p>
-                <h3 className="text-lg font-bold text-foreground mb-3">{workspace?.projectName || "—"}</h3>
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    const ss = String(now.getSeconds()).padStart(2, "0");
 
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Status</p>
-                <p className="text-sm font-medium text-foreground mb-3">
-                    <span className={cn(
-                        "inline-flex items-center px-2 py-0.5 rounded text-xs font-bold",
-                        workspace?.assignmentStatus === "SUBMITTED" && "bg-blue-500/10 text-blue-400",
-                        workspace?.assignmentStatus === "REJECTED" && "bg-red-500/10 text-red-400",
-                        workspace?.assignmentStatus === "APPROVED" && "bg-green-500/10 text-green-400",
-                    )}>
-                        {workspace?.assignmentStatus}
-                    </span>
-                </p>
+    return (
+        <div className="flex flex-col h-screen overflow-hidden" style={{ background: "#131c2e", color: "#e2e8f0" }}>
 
-                {/* Review Progress */}
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Review Progress</p>
-                <div className="flex items-center gap-2 mb-1">
-                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-annotator-primary rounded-full transition-all"
-                            style={{ width: reviewStats.total > 0 ? `${(reviewStats.reviewed / reviewStats.total) * 100}%` : "0%" }}
-                        />
+            {/* ══ TOP BAR ══ */}
+            <div className="flex items-center gap-2 px-3 shrink-0 border-b"
+                style={{ height: 48, background: "#182233", borderColor: "#253347" }}>
+
+                {/* Logo / Back */}
+                <button onClick={() => navigate("/reviewer/queue")}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded transition-colors hover:bg-white/5">
+                    <div className="flex items-center justify-center w-6 h-6 rounded bg-gradient-to-br from-teal-400 to-emerald-600 shadow-lg shadow-teal-500/20">
+                        <span className="material-symbols-outlined text-white text-[14px]">category</span>
                     </div>
-                    <span className="text-xs text-muted-foreground font-mono">{reviewStats.reviewed}/{reviewStats.total}</span>
-                </div>
-                <div className="flex gap-3 text-[10px] text-muted-foreground">
-                    <span className="text-green-400">✓ {reviewStats.approved}</span>
-                    <span className="text-red-400">✗ {reviewStats.rejected}</span>
-                    <span>⏳ {reviewStats.pending}</span>
-                </div>
-            </div>
+                    <span className="font-bold text-sm tracking-tight text-white hidden sm:block">
+                        DataLabel<span className="text-teal-400">Core</span>
+                    </span>
+                </button>
 
-            {/* Item List */}
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 shrink-0">
-                Items ({items.length})
-            </p>
-            <div className="flex-1 overflow-y-auto space-y-1 min-h-0">
-                {items.map((item, idx) => {
-                    const stats = getItemStats(item.itemId);
-                    const isActive = idx === currentItemIndex;
-                    return (
-                        <button
-                            key={item.itemId}
-                            onClick={() => setCurrentItemIndex(idx)}
-                            className={cn(
-                                "w-full text-left p-2 rounded-lg border transition-all text-sm",
-                                isActive
-                                    ? "bg-annotator-primary/10 border-annotator-primary text-foreground"
-                                    : "bg-transparent border-transparent text-muted-foreground hover:bg-muted/20 hover:text-foreground"
-                            )}
-                        >
-                            <div className="flex items-center justify-between">
-                                <span className="font-mono text-xs truncate flex-1">#{item.itemId}</span>
-                                <div className="flex gap-1 text-[10px] shrink-0">
-                                    {stats.approved > 0 && <span className="text-green-400">✓{stats.approved}</span>}
-                                    {stats.rejected > 0 && <span className="text-red-400">✗{stats.rejected}</span>}
-                                    {stats.pending > 0 && <span className="text-yellow-400">⏳{stats.pending}</span>}
-                                </div>
-                            </div>
+                {/* Review progress bar */}
+                <div className="flex items-center gap-2 mx-3">
+                    <div className="w-28 h-1.5 rounded-full overflow-hidden" style={{ background: "#253347" }}>
+                        <div className="h-full rounded-full transition-all duration-500"
+                            style={{
+                                width: reviewStats.total > 0
+                                    ? `${(reviewStats.reviewed / reviewStats.total) * 100}%`
+                                    : "0%",
+                                background: "#00bfa5",
+                            }} />
+                    </div>
+                    <span className="text-xs font-medium whitespace-nowrap" style={{ color: "#64748b" }}>
+                        {currentItemIndex + 1}/{totalImages} ảnh
+                    </span>
+                </div>
+
+                {/* Image navigation */}
+                <div className="flex items-center rounded overflow-hidden" style={{ background: "#1e2f42" }}>
+                    {[{ icon: "first_page", dir: "first" }, { icon: "chevron_left", dir: "prev" }].map(({ icon, dir }) => (
+                        <button key={dir} onClick={() => handleNavigate(dir)}
+                            className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-white/10"
+                            style={{ color: "#64748b" }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>{icon}</span>
                         </button>
-                    );
-                })}
-            </div>
-        </div>
-    );
+                    ))}
+                    <span className="px-2 text-xs font-bold tabular-nums" style={{ color: "#e2e8f0" }}>
+                        {currentItemIndex + 1}
+                    </span>
+                    {[{ icon: "chevron_right", dir: "next" }, { icon: "last_page", dir: "last" }].map(({ icon, dir }) => (
+                        <button key={dir} onClick={() => handleNavigate(dir)}
+                            className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-white/10"
+                            style={{ color: "#64748b" }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>{icon}</span>
+                        </button>
+                    ))}
+                </div>
 
-    // ═══════════════════════════════════════════
-    //  CENTER PANEL: Read-only Canvas
-    // ═══════════════════════════════════════════
-    const CenterPanel = (
-        <div className="flex-1 overflow-hidden relative flex items-center justify-center bg-transparent">
-            {currentItem ? (
-                <div className="relative max-w-full max-h-full" style={{ display: "inline-block" }}>
-                    {imageLoading && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
-                            <span className="material-symbols-outlined animate-spin text-3xl text-muted-foreground">progress_activity</span>
-                        </div>
+                <div className="flex-1" />
+
+                {/* Clock */}
+                <div className="flex items-center gap-1 mr-3">
+                    {[hh, mm, ss].map((unit, i) => (
+                        <span key={i} className="text-xs font-mono font-bold tabular-nums px-1.5 py-0.5 rounded"
+                            style={{ background: "#1e2f42", color: "#94a3b8", letterSpacing: "0.05em" }}>
+                            {unit}
+                        </span>
+                    ))}
+                </div>
+
+                {/* Zoom */}
+                <div className="flex items-center gap-1 mr-2">
+                    <button onClick={() => setZoom((z) => Math.max(10, z - 10))}
+                        className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
+                        style={{ color: "#64748b" }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>remove</span>
+                    </button>
+                    <span className="text-[11px] font-mono font-bold w-10 text-center tabular-nums"
+                        style={{ color: "#94a3b8" }}>{zoom}%</span>
+                    <button onClick={() => setZoom((z) => Math.min(400, z + 10))}
+                        className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
+                        style={{ color: "#64748b" }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add</span>
+                    </button>
+                </div>
+
+                {/* Hoàn tất đánh giá button */}
+                <button
+                    onClick={handleSubmit}
+                    disabled={!canSubmit || reviewSubmitting}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold transition-opacity shadow-md"
+                    style={{
+                        background: canSubmit ? "#00bfa5" : "#1e2f42",
+                        color: canSubmit ? "#fff" : "#4a6788",
+                        border: canSubmit ? "none" : "1px solid #253347",
+                        cursor: canSubmit && !reviewSubmitting ? "pointer" : "not-allowed",
+                        opacity: reviewSubmitting ? 0.6 : 1,
+                    }}
+                    title={!canSubmit ? `Còn ${reviewStats.pending} annotation chưa được đánh giá` : "Hoàn tất và nộp đánh giá"}>
+                    {reviewSubmitting
+                        ? <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+                        : <span className="material-symbols-outlined text-[14px]">task_alt</span>}
+                    <span>Hoàn tất đánh giá</span>
+                    {!canSubmit && reviewStats.pending > 0 && (
+                        <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+                            style={{ background: "#253347", color: "#94a3b8" }}>
+                            {reviewStats.pending}
+                        </span>
                     )}
-                    {imageError && (
-                        <div className="flex items-center justify-center p-8 text-center">
-                            <div>
-                                <span className="material-symbols-outlined text-4xl text-red-400 mb-2 block">broken_image</span>
-                                <p className="text-sm text-red-400">{imageError.message}</p>
-                            </div>
+                </button>
+            </div>
+
+            {/* ══ BODY ══ */}
+            <div className="flex flex-1 overflow-hidden">
+
+                {/* ── LEFT: Thumbnails + Project info ── */}
+                <div className="flex flex-col shrink-0 border-r"
+                    style={{ width: 148, background: "#182233", borderColor: "#253347" }}>
+
+                    {/* Project & submit */}
+                    <div className="p-3 border-b shrink-0 flex flex-col gap-2" style={{ borderColor: "#253347" }}>
+                        {/* Project name */}
+                        <div className="px-2 py-1.5 rounded text-xs font-medium"
+                            style={{ background: "#1e2f42", color: "#cbd5e1", border: "1px solid #2a3f55" }}>
+                            <span className="block truncate" title={workspace?.projectName || `#${assignmentIdNum}`}>
+                                {workspace?.projectName || `Assignment #${assignmentIdNum}`}
+                            </span>
                         </div>
-                    )}
-                    {imageBlobUrl && (
-                        <>
-                            <img
-                                src={imageBlobUrl}
-                                alt={`Item #${currentItem.itemId}`}
-                                className="max-w-full max-h-[calc(100vh-80px)] object-contain block"
-                            />
-                            {/* Read-only annotation overlay */}
+
+                        {/* Assignment status */}
+                        <div className="flex items-center justify-center px-2 py-1 rounded text-[10px] font-bold"
+                            style={{
+                                background: workspace?.assignmentStatus === "APPROVED" ? "rgba(0,191,165,0.1)"
+                                    : workspace?.assignmentStatus === "REJECTED" ? "rgba(248,113,113,0.1)"
+                                        : "rgba(250,204,21,0.1)",
+                                color: workspace?.assignmentStatus === "APPROVED" ? "#00bfa5"
+                                    : workspace?.assignmentStatus === "REJECTED" ? "#f87171"
+                                        : "#facc15",
+                            }}>
+                            {workspace?.assignmentStatus || "SUBMITTED"}
+                        </div>
+
+                        {/* Nộp đánh giá */}
+                        <button onClick={handleSubmit}
+                            disabled={!canSubmit || reviewSubmitting}
+                            className="w-full py-2 rounded text-xs font-bold flex items-center justify-center gap-1.5 transition-opacity"
+                            style={{
+                                background: canSubmit ? "#00bfa5" : "#253347",
+                                color: canSubmit ? "#fff" : "#4a6788",
+                                cursor: canSubmit && !reviewSubmitting ? "pointer" : "not-allowed",
+                                opacity: reviewSubmitting ? 0.6 : 1,
+                            }}>
+                            <span className="material-symbols-outlined text-[14px]">send</span>
+                            <span>Nộp đánh giá</span>
+                        </button>
+                    </div>
+
+                    {/* Image list */}
+                    <div className="flex-1 p-2 space-y-2 overflow-y-auto">
+                        {items.map((item, idx) => {
+                            const stats = getItemStats(item.itemId);
+                            const isActive = idx === currentItemIndex;
+                            const allReviewed = stats.total > 0 && stats.pending === 0;
+                            const hasRejected = stats.rejected > 0;
+                            return (
+                                <div key={item.itemId}
+                                    onClick={() => { setCurrentItemIndex(idx); setSelectedGroupKey(null); }}
+                                    className="relative cursor-pointer rounded overflow-hidden transition-all"
+                                    style={{
+                                        border: isActive ? "2px solid #00bfa5" : "2px solid transparent",
+                                        background: "#1e2f42",
+                                    }}>
+                                    {/* Number badge */}
+                                    <div className="absolute top-1 left-1 z-10 w-5 h-5 rounded text-[10px] font-bold flex items-center justify-center bg-black/40 backdrop-blur-sm"
+                                        style={{
+                                            border: isActive ? "1px solid #00bfa5" : "1px solid rgba(255,255,255,0.1)",
+                                            color: isActive ? "#00bfa5" : "#fff",
+                                        }}>
+                                        {idx + 1}
+                                    </div>
+                                    {/* Status icon */}
+                                    {allReviewed && (
+                                        <div className="absolute top-1 right-1 z-10">
+                                            <span className="material-symbols-outlined text-[16px] drop-shadow-md"
+                                                style={{ color: hasRejected ? "#f87171" : "#00bfa5" }}>
+                                                {hasRejected ? "cancel" : "check_circle"}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {!allReviewed && stats.total > 0 && (
+                                        <div className="absolute top-1 right-1 z-10">
+                                            <span className="material-symbols-outlined text-[16px] drop-shadow-md"
+                                                style={{ color: "#facc15" }}>pending</span>
+                                        </div>
+                                    )}
+                                    {/* Thumbnail */}
+                                    <div className="w-full overflow-hidden" style={{ height: 80 }}>
+                                        <ThumbnailImg fileUrl={item.fileUrl} alt={item.fileName || `Ảnh ${idx + 1}`} />
+                                    </div>
+                                    {/* Active glow */}
+                                    {isActive && (
+                                        <div className="absolute inset-0 ring-inset ring-2 ring-[#00bfa5] rounded pointer-events-none" />
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Progress summary */}
+                    <div className="p-3 border-t shrink-0" style={{ borderColor: "#253347" }}>
+                        <div className="flex items-center justify-between text-[10px] mb-1.5" style={{ color: "#4a6788" }}>
+                            <span>Tiến độ</span>
+                            <span className="font-mono">{reviewStats.reviewed}/{reviewStats.total}</span>
+                        </div>
+                        <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: "#253347" }}>
+                            <div className="h-full rounded-full transition-all"
+                                style={{
+                                    width: reviewStats.total > 0
+                                        ? `${(reviewStats.reviewed / reviewStats.total) * 100}%`
+                                        : "0%",
+                                    background: "#00bfa5",
+                                }} />
+                        </div>
+                        <div className="flex justify-between text-[10px] mt-1.5">
+                            <span style={{ color: "#00bfa5" }}>✓ {reviewStats.approved}</span>
+                            <span style={{ color: "#f87171" }}>✗ {reviewStats.rejected}</span>
+                            <span style={{ color: "#facc15" }}>⋯ {reviewStats.pending}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── CENTER: Read-only canvas ── */}
+                <div className="flex-1 overflow-auto relative" style={{ background: "#0e1621" }}>
+                    <div style={{
+                        minHeight: "100%", minWidth: "100%", display: "flex",
+                        alignItems: "center", justifyContent: "center",
+                        padding: 32, boxSizing: "border-box",
+                    }}>
+                        <div className="relative shadow-2xl shrink-0"
+                            style={{
+                                width: imgWidth * (zoom / 100),
+                                height: imgHeight * (zoom / 100),
+                                background: "#000",
+                                border: "1px solid rgba(255,255,255,0.08)",
+                            }}>
+                            {imageLoading ? (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="material-symbols-outlined animate-spin"
+                                        style={{ fontSize: 32, color: "#3a5068" }}>progress_activity</span>
+                                </div>
+                            ) : imageBlobUrl ? (
+                                <img src={imageBlobUrl}
+                                    alt={currentItem?.fileName || `Ảnh ${currentItemIndex + 1}`}
+                                    className="absolute inset-0 w-full h-full object-contain"
+                                    draggable={false} />
+                            ) : imageError ? (
+                                <div className="absolute inset-0 flex items-center justify-center"
+                                    style={{ background: "rgba(0,0,0,0.8)" }}>
+                                    <div className="text-center p-6 max-w-sm">
+                                        <span className="material-symbols-outlined mb-3 block"
+                                            style={{ fontSize: 48, color: "#f87171" }}>broken_image</span>
+                                        <p className="text-sm font-medium mb-1" style={{ color: "#f87171" }}>Không tải được ảnh</p>
+                                        <p className="text-[10px] font-mono break-all"
+                                            style={{ color: "#64748b" }}>{imageError.url}</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="absolute inset-0 flex items-center justify-center select-none opacity-20">
+                                    <span className="material-symbols-outlined"
+                                        style={{ fontSize: 64, color: "#3a5068" }}>image</span>
+                                </div>
+                            )}
+
+                            {/* Read-only overlay */}
                             <AnnotationOverlay
                                 annotations={annotationGroups}
                                 draftShape={null}
@@ -254,195 +515,371 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                 onUpdateGeometry={null}
                                 drawingHandlers={null}
                             />
-                        </>
-                    )}
+                        </div>
+                    </div>
                 </div>
-            ) : (
-                <div className="text-center opacity-30">
-                    <span className="material-symbols-outlined text-6xl mb-4 block">image</span>
-                    <p className="text-xs font-mono tracking-wide uppercase">No item selected</p>
+
+                {/* ── RIGHT: Review/Summary panel ── */}
+                <div className="flex flex-col shrink-0 border-l overflow-hidden"
+                    style={{ width: 280, background: "#182233", borderColor: "#253347" }}>
+
+                    {/* Header line */}
+                    <div className="flex items-center gap-2 px-3 py-2 border-b shrink-0"
+                        style={{ borderColor: "#253347" }}>
+                        <span className="material-symbols-outlined text-[16px]" style={{ color: "#00bfa5" }}>rate_review</span>
+                        <span className="text-xs font-semibold" style={{ color: "#94a3b8" }}>
+                            Ảnh {currentItemIndex + 1} / {totalImages}
+                        </span>
+                        <div className="flex-1" />
+                        <span className="text-[10px] font-mono" style={{ color: "#4a6788" }}>
+                            <span style={{ color: "#00bfa5" }}>{currentAnnotations.filter(a => a.status === "APPROVED").length}✓</span>
+                            {" "}
+                            <span style={{ color: "#f87171" }}>{currentAnnotations.filter(a => a.status === "REJECTED").length}✗</span>
+                            {" "}
+                            <span style={{ color: "#facc15" }}>{currentAnnotations.filter(a => !a.status || a.status === "PENDING").length}⋯</span>
+                        </span>
+                    </div>
+
+                    {/* Tab bar */}
+                    <div className="flex shrink-0 border-b" style={{ borderColor: "#253347" }}>
+                        <button onClick={() => setRightTab("review")}
+                            className="flex-1 py-2 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                            style={rightTab === "review"
+                                ? { color: "#00bfa5", borderBottom: "2px solid #00bfa5" }
+                                : { color: "#4a6788", borderBottom: "2px solid transparent" }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>fact_check</span>
+                            Đánh giá ({currentAnnotations.length})
+                        </button>
+                        <button onClick={() => setRightTab("summary")}
+                            className="flex-1 py-2 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                            style={rightTab === "summary"
+                                ? { color: "#00bfa5", borderBottom: "2px solid #00bfa5" }
+                                : { color: "#4a6788", borderBottom: "2px solid transparent" }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>analytics</span>
+                            Tổng kết
+                        </button>
+                    </div>
+
+                    {/* Tab content */}
+                    <div className="flex-1 overflow-y-auto">
+                        {rightTab === "review" ? (
+                            /* ─── Đánh giá tab ─── */
+                            <div className="p-3 space-y-2">
+                                {itemAnnoLoading && (
+                                    <div className="flex items-center justify-center py-8 gap-2 opacity-50">
+                                        <span className="material-symbols-outlined animate-spin"
+                                            style={{ fontSize: 20, color: "#3a5068" }}>progress_activity</span>
+                                        <span className="text-xs" style={{ color: "#3a5068" }}>Đang tải...</span>
+                                    </div>
+                                )}
+
+                                {!itemAnnoLoading && currentAnnotations.length === 0 && (
+                                    <div className="flex flex-col items-center justify-center py-12 gap-2 opacity-30">
+                                        <span className="material-symbols-outlined"
+                                            style={{ fontSize: 32, color: "#3a5068" }}>label_off</span>
+                                        <p className="text-xs" style={{ color: "#3a5068" }}>Không có annotation</p>
+                                    </div>
+                                )}
+
+                                {!itemAnnoLoading && currentAnnotations.map((anno) => {
+                                    const isRejecting = rejectingAnnoId === anno.reviewingId;
+                                    const group = annotationGroups.find(g => g.beReviewingIds?.includes(anno.reviewingId));
+                                    const gKey = group?.groupKey || `solo_${anno.reviewingId}`;
+                                    const isHighlighted = selectedGroupKey === gKey;
+                                    const isPending = !anno.status || anno.status === "PENDING";
+                                    const isApproved = anno.status === "APPROVED";
+
+                                    return (
+                                        <div key={anno.reviewingId}
+                                            className="rounded-lg border transition-all cursor-pointer"
+                                            style={{
+                                                background: isHighlighted ? "#1e3a4a" : "#1e2f42",
+                                                borderColor: isHighlighted ? "#00bfa5" : "#253347",
+                                                padding: "10px 12px",
+                                            }}
+                                            onClick={() => setSelectedGroupKey(isHighlighted ? null : gKey)}>
+
+                                            {/* Header: color dot + label name + status */}
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <span className="w-2.5 h-2.5 rounded-full shrink-0"
+                                                        style={{ background: anno.colorCode || "#6b7280" }} />
+                                                    <span className="text-sm font-medium truncate"
+                                                        style={{ color: "#e2e8f0" }}>
+                                                        {anno.labelName || `Label #${anno.labelId}`}
+                                                    </span>
+                                                </div>
+                                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ml-1"
+                                                    style={{
+                                                        background: isApproved ? "rgba(0,191,165,0.1)"
+                                                            : anno.status === "REJECTED" ? "rgba(248,113,113,0.1)"
+                                                                : "rgba(250,204,21,0.1)",
+                                                        color: isApproved ? "#00bfa5"
+                                                            : anno.status === "REJECTED" ? "#f87171"
+                                                                : "#facc15",
+                                                    }}>
+                                                    {anno.status || "PENDING"}
+                                                </span>
+                                            </div>
+
+                                            {/* Meta info */}
+                                            <div className="flex items-center gap-2 text-[10px] mb-2"
+                                                style={{ color: "#4a6788" }}>
+                                                <span className="uppercase">{anno.labelType || "BBOX"}</span>
+                                                {anno.policyName && (
+                                                    <span style={{ color: "#f87171" }} className="truncate">● {anno.policyName}</span>
+                                                )}
+                                                {anno.isImproved && (
+                                                    <span style={{ color: "#60a5fa" }}>↺ Đã sửa</span>
+                                                )}
+                                            </div>
+
+                                            {/* Action buttons (PENDING only) */}
+                                            {isPending && (
+                                                <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                                    <button onClick={() => handleApprove(anno.reviewingId)}
+                                                        disabled={reviewSubmitting}
+                                                        className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-bold transition"
+                                                        style={{
+                                                            background: "rgba(0,191,165,0.1)",
+                                                            color: "#00bfa5",
+                                                            border: "1px solid rgba(0,191,165,0.2)",
+                                                        }}>
+                                                        {reviewSubmitting
+                                                            ? <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                                                            : <span className="material-symbols-outlined text-sm">check</span>}
+                                                        Chấp nhận
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setRejectingAnnoId(isRejecting ? null : anno.reviewingId);
+                                                            setSelectedPolicyId(null);
+                                                            setRejectNote("");
+                                                        }}
+                                                        disabled={reviewSubmitting || policies.length === 0}
+                                                        title={policies.length === 0 ? "Chưa có policy được cấu hình" : "Từ chối annotation này"}
+                                                        className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-bold transition disabled:opacity-40"
+                                                        style={{
+                                                            background: "rgba(248,113,113,0.1)",
+                                                            color: "#f87171",
+                                                            border: "1px solid rgba(248,113,113,0.2)",
+                                                        }}>
+                                                        <span className="material-symbols-outlined text-sm">close</span>
+                                                        Từ chối
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            {/* Inline reject form */}
+                                            {isRejecting && (
+                                                <div className="mt-2 p-2 rounded-lg space-y-2"
+                                                    style={{
+                                                        background: "rgba(248,113,113,0.05)",
+                                                        border: "1px solid rgba(248,113,113,0.2)",
+                                                    }}
+                                                    onClick={(e) => e.stopPropagation()}>
+                                                    <p className="text-[10px] font-bold uppercase"
+                                                        style={{ color: "#f87171" }}>Chọn lỗi vi phạm</p>
+                                                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                                                        {policies.map(p => (
+                                                            <button key={p.policyId}
+                                                                onClick={() => setSelectedPolicyId(p.policyId)}
+                                                                className="w-full text-left px-2 py-1.5 rounded text-xs border transition"
+                                                                style={{
+                                                                    background: selectedPolicyId === p.policyId ? "rgba(248,113,113,0.1)" : "transparent",
+                                                                    color: selectedPolicyId === p.policyId ? "#f87171" : "#64748b",
+                                                                    borderColor: selectedPolicyId === p.policyId ? "#f87171" : "#253347",
+                                                                }}>
+                                                                <span className="font-medium">{p.errorName}</span>
+                                                                {p.errorLevel && <span className="ml-2 opacity-50">({p.errorLevel})</span>}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] font-bold uppercase mb-1"
+                                                            style={{ color: "#f87171" }}>Lý do từ chối</p>
+                                                        <textarea value={rejectNote}
+                                                            onChange={(e) => setRejectNote(e.target.value)}
+                                                            placeholder="Ghi chú lý do (không bắt buộc)..."
+                                                            rows={2}
+                                                            className="w-full px-2 py-1.5 rounded text-xs resize-none focus:outline-none"
+                                                            style={{
+                                                                background: "#131c2e",
+                                                                border: "1px solid #253347",
+                                                                color: "#e2e8f0",
+                                                            }} />
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <button onClick={() => { setRejectingAnnoId(null); setRejectNote(""); }}
+                                                            className="flex-1 px-2 py-1 rounded text-xs transition hover:bg-white/5"
+                                                            style={{ color: "#64748b", border: "1px solid #253347" }}>
+                                                            Hủy
+                                                        </button>
+                                                        <button onClick={() => handleReject(anno.reviewingId)}
+                                                            disabled={!selectedPolicyId || reviewSubmitting}
+                                                            className="flex-1 px-2 py-1 rounded text-xs font-bold transition disabled:opacity-40"
+                                                            style={{
+                                                                background: selectedPolicyId ? "#f87171" : "#253347",
+                                                                color: selectedPolicyId ? "#fff" : "#4a6788",
+                                                                cursor: selectedPolicyId ? "pointer" : "not-allowed",
+                                                            }}>
+                                                            {reviewSubmitting ? "Đang xử lý..." : "Xác nhận từ chối"}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            /* ─── Tổng kết tab ─── */
+                            <ReviewSummaryPanel
+                                items={items}
+                                annoCache={annoCache}
+                                allLabels={allLabels}
+                                reviewStats={reviewStats}
+                                currentItemIndex={currentItemIndex}
+                                setCurrentItemIndex={setCurrentItemIndex}
+                            />
+                        )}
+                    </div>
                 </div>
-            )}
+            </div>
         </div>
     );
+}
 
-    // ═══════════════════════════════════════════
-    //  RIGHT PANEL: Annotation List + Review Actions
-    // ═══════════════════════════════════════════
-    const RightPanel = (
-        <div className="flex flex-col h-full bg-card overflow-hidden">
-            <div className="p-4 border-b border-border shrink-0">
-                <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    Annotations — Item #{currentItemId || "—"}
-                </h4>
-            </div>
+/* ── Review Summary Panel (Tổng kết tab) ── */
+function ReviewSummaryPanel({ items, annoCache, allLabels, reviewStats, currentItemIndex, setCurrentItemIndex }) {
 
-            {/* Annotation list */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
-                {itemAnnoLoading && (
-                    <div className="flex items-center justify-center py-8">
-                        <span className="material-symbols-outlined animate-spin text-xl text-muted-foreground">progress_activity</span>
-                    </div>
-                )}
+    /* Build per-label stats across all cached annotations */
+    const labelStats = React.useMemo(() => {
+        const map = new Map();
+        Object.values(annoCache).flat().forEach((ann) => {
+            if (!ann.labelId) return;
+            if (!map.has(ann.labelId)) {
+                map.set(ann.labelId, {
+                    labelId: ann.labelId,
+                    labelName: ann.labelName || `Label #${ann.labelId}`,
+                    colorCode: ann.colorCode || "#6b7280",
+                    total: 0,
+                    approved: 0,
+                    rejected: 0,
+                    pending: 0,
+                });
+            }
+            const e = map.get(ann.labelId);
+            e.total++;
+            if (ann.status === "APPROVED") e.approved++;
+            else if (ann.status === "REJECTED") e.rejected++;
+            else e.pending++;
+        });
+        return Array.from(map.values()).sort((a, b) => b.total - a.total);
+    }, [annoCache]);
 
-                {!itemAnnoLoading && currentAnnotations.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                        <span className="material-symbols-outlined text-3xl mb-2 block opacity-20">label_off</span>
-                        <p className="text-xs">No annotations for this item.</p>
-                    </div>
-                )}
-
-                {!itemAnnoLoading && currentAnnotations.map((anno) => {
-                    const isRejecting = rejectingAnnoId === anno.reviewingId;
-                    const groupKey = `solo_${anno.reviewingId}`;
-                    const isHighlighted = selectedGroupKey === groupKey ||
-                        annotationGroups.some(g =>
-                            g.groupKey === selectedGroupKey && g.beReviewingIds?.includes(anno.reviewingId)
-                        );
-
-                    return (
-                        <div
-                            key={anno.reviewingId}
-                            className={cn(
-                                "p-3 rounded-lg border transition-all",
-                                isHighlighted ? "border-annotator-primary bg-annotator-primary/5" : "border-border bg-muted/5",
-                            )}
-                            onClick={() => {
-                                // Find the group containing this annotation
-                                const group = annotationGroups.find(g => g.beReviewingIds?.includes(anno.reviewingId));
-                                setSelectedGroupKey(group?.groupKey || groupKey);
-                            }}
-                        >
-                            {/* Header: label + status */}
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                    <span
-                                        className="w-3 h-3 rounded-full shrink-0"
-                                        style={{ backgroundColor: anno.colorCode || "#6b7280" }}
-                                    />
-                                    <span className="text-sm font-medium text-foreground truncate">
-                                        {anno.labelName || `Label #${anno.labelId}`}
-                                    </span>
-                                </div>
-                                <span className={cn(
-                                    "text-[10px] font-bold uppercase px-1.5 py-0.5 rounded",
-                                    anno.status === "APPROVED" && "bg-green-500/10 text-green-400",
-                                    anno.status === "REJECTED" && "bg-red-500/10 text-red-400",
-                                    (!anno.status || anno.status === "PENDING") && "bg-yellow-500/10 text-yellow-400",
-                                )}>
-                                    {anno.status || "PENDING"}
-                                </span>
-                            </div>
-
-                            {/* Info */}
-                            <div className="text-[10px] text-muted-foreground mb-2">
-                                <span className="uppercase">{anno.labelType || "bbox"}</span>
-                                {anno.policyName && <span className="ml-2 text-red-400">Policy: {anno.policyName}</span>}
-                                {anno.isImproved && <span className="ml-2 text-blue-400">(improved)</span>}
-                            </div>
-
-                            {/* Action buttons (only for PENDING or re-review) */}
-                            {(!anno.status || anno.status === "PENDING") && (
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); handleApproveAnnotation(anno.reviewingId); }}
-                                        disabled={reviewSubmitting}
-                                        className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded text-xs font-bold bg-green-600/10 text-green-400 border border-green-600/20 hover:bg-green-600/20 transition disabled:opacity-50"
-                                    >
-                                        {reviewSubmitting ? (
-                                            <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
-                                        ) : (
-                                            <span className="material-symbols-outlined text-sm">check</span>
-                                        )}
-                                        Approve
-                                    </button>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setRejectingAnnoId(isRejecting ? null : anno.reviewingId);
-                                            setSelectedPolicyId(null);
-                                        }}
-                                        disabled={reviewSubmitting || policies.length === 0}
-                                        title={policies.length === 0 ? "No policies configured. Contact Manager." : "Reject this annotation"}
-                                        className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded text-xs font-bold bg-red-600/10 text-red-400 border border-red-600/20 hover:bg-red-600/20 transition disabled:opacity-50"
-                                    >
-                                        <span className="material-symbols-outlined text-sm">close</span>
-                                        Reject
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* Reject form (inline) */}
-                            {isRejecting && (
-                                <div className="mt-2 p-2 rounded-lg bg-red-500/5 border border-red-500/20 space-y-2">
-                                    <p className="text-[10px] font-bold uppercase text-red-400">Select Error Policy</p>
-                                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                                        {policies.map(p => (
-                                            <button
-                                                key={p.policyId}
-                                                onClick={(e) => { e.stopPropagation(); setSelectedPolicyId(p.policyId); }}
-                                                className={cn(
-                                                    "w-full text-left px-2 py-1.5 rounded text-xs border transition",
-                                                    selectedPolicyId === p.policyId
-                                                        ? "bg-red-500/10 text-red-400 border-red-500"
-                                                        : "text-muted-foreground border-border hover:bg-muted/10"
-                                                )}
-                                            >
-                                                <span className="font-medium">{p.errorName}</span>
-                                                {p.errorLevel && <span className="ml-2 opacity-50">({p.errorLevel})</span>}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    {/* Reject note */}
-                                    <div>
-                                        <p className="text-[10px] font-bold uppercase text-red-400 mb-1">Reason / Note</p>
-                                        <textarea
-                                            value={rejectNote}
-                                            onChange={(e) => setRejectNote(e.target.value)}
-                                            onClick={(e) => e.stopPropagation()}
-                                            placeholder="Enter reason for rejection (optional)..."
-                                            rows={2}
-                                            className="w-full px-2 py-1.5 rounded text-xs bg-background border border-border text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 focus:ring-red-500/50"
-                                        />
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); setRejectingAnnoId(null); setRejectNote(""); }}
-                                            className="flex-1 px-2 py-1 rounded text-xs text-muted-foreground border border-border hover:bg-muted/10"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleRejectAnnotation(anno.reviewingId); }}
-                                            disabled={!selectedPolicyId || reviewSubmitting}
-                                            className="flex-1 px-2 py-1 rounded text-xs font-bold bg-red-600 text-white hover:bg-red-500 transition disabled:opacity-50"
-                                        >
-                                            {reviewSubmitting ? "Submitting..." : "Confirm Reject"}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Bottom: keyboard shortcuts hint */}
-            <div className="p-3 border-t border-border shrink-0">
-                <p className="text-[10px] text-muted-foreground text-center">
-                    Click annotation to highlight on canvas
-                </p>
-            </div>
+    const statCard = (label, value, color) => (
+        <div className="flex flex-col items-center justify-center rounded-lg p-3"
+            style={{ background: "#1e2f42", border: "1px solid #253347" }}>
+            <span className="text-xl font-bold tabular-nums" style={{ color }}>{value}</span>
+            <span className="text-[10px] mt-0.5" style={{ color: "#4a6788" }}>{label}</span>
         </div>
     );
 
     return (
-        <Workspace3Column
-            left={LeftPanel}
-            center={CenterPanel}
-            right={RightPanel}
-            leftWidth="w-64"
-            rightWidth="w-80"
-        />
+        <div className="p-3 space-y-4">
+            {/* Overall stats */}
+            <div>
+                <p className="text-[10px] font-bold uppercase mb-2" style={{ color: "#4a6788" }}>Tổng quan</p>
+                <div className="grid grid-cols-3 gap-2">
+                    {statCard("Chấp nhận", reviewStats.approved, "#00bfa5")}
+                    {statCard("Từ chối", reviewStats.rejected, "#f87171")}
+                    {statCard("Chờ duyệt", reviewStats.pending, "#facc15")}
+                </div>
+                <div className="mt-2 flex items-center gap-2">
+                    <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "#253347" }}>
+                        <div className="h-full rounded-full transition-all"
+                            style={{
+                                width: reviewStats.total > 0
+                                    ? `${(reviewStats.reviewed / reviewStats.total) * 100}%`
+                                    : "0%",
+                                background: "#00bfa5",
+                            }} />
+                    </div>
+                    <span className="text-[10px] font-mono shrink-0" style={{ color: "#64748b" }}>
+                        {reviewStats.reviewed}/{reviewStats.total}
+                    </span>
+                </div>
+            </div>
+
+            {/* Per-item breakdown */}
+            <div>
+                <p className="text-[10px] font-bold uppercase mb-2" style={{ color: "#4a6788" }}>
+                    Theo ảnh ({items.length})
+                </p>
+                <div className="space-y-1">
+                    {items.map((item, idx) => {
+                        const annos = annoCache[item.itemId] ?? [];
+                        const approved = annos.filter(a => a.status === "APPROVED").length;
+                        const rejected = annos.filter(a => a.status === "REJECTED").length;
+                        const pending = annos.filter(a => !a.status || a.status === "PENDING").length;
+                        const isActive = idx === currentItemIndex;
+                        return (
+                            <button key={item.itemId}
+                                onClick={() => setCurrentItemIndex(idx)}
+                                className="w-full text-left px-2 py-1.5 rounded transition-colors"
+                                style={{
+                                    background: isActive ? "rgba(0,191,165,0.1)" : "transparent",
+                                    border: `1px solid ${isActive ? "#00bfa5" : "#253347"}`,
+                                }}>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-medium" style={{ color: isActive ? "#00bfa5" : "#94a3b8" }}>
+                                        Ảnh {idx + 1}
+                                    </span>
+                                    <div className="flex items-center gap-2 text-[10px] font-mono">
+                                        {approved > 0 && <span style={{ color: "#00bfa5" }}>✓{approved}</span>}
+                                        {rejected > 0 && <span style={{ color: "#f87171" }}>✗{rejected}</span>}
+                                        {pending > 0 && <span style={{ color: "#facc15" }}>⋯{pending}</span>}
+                                        {annos.length === 0 && <span style={{ color: "#3a5068" }}>—</span>}
+                                    </div>
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Per-label breakdown */}
+            {labelStats.length > 0 && (
+                <div>
+                    <p className="text-[10px] font-bold uppercase mb-2" style={{ color: "#4a6788" }}>
+                        Theo nhãn ({labelStats.length})
+                    </p>
+                    <div className="space-y-1.5">
+                        {labelStats.map((ls) => (
+                            <div key={ls.labelId} className="px-2 py-1.5 rounded"
+                                style={{ background: "#1e2f42", border: "1px solid #253347" }}>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="w-2.5 h-2.5 rounded-full shrink-0"
+                                        style={{ background: ls.colorCode }} />
+                                    <span className="text-xs font-medium truncate flex-1"
+                                        style={{ color: "#e2e8f0" }}>{ls.labelName}</span>
+                                    <span className="text-[10px] font-mono" style={{ color: "#64748b" }}>
+                                        {ls.total}
+                                    </span>
+                                </div>
+                                <div className="flex gap-2 text-[10px] pl-4">
+                                    {ls.approved > 0 && <span style={{ color: "#00bfa5" }}>✓{ls.approved}</span>}
+                                    {ls.rejected > 0 && <span style={{ color: "#f87171" }}>✗{ls.rejected}</span>}
+                                    {ls.pending > 0 && <span style={{ color: "#facc15" }}>⋯{ls.pending}</span>}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
+
+
