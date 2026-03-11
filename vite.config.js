@@ -8,18 +8,14 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8080',
+        target: 'http://127.0.0.1:8080/',
         changeOrigin: true,
         secure: false,
       },
-      // NOTE: Restart dev server after changing proxy config!
-      // Spring Boot static-locations: file:uploads/ serves at root URL,
-      // so we strip /uploads prefix => /uploads/project_5/img.png → /project_5/img.png
       '/uploads': {
-        target: 'http://127.0.0.1:8080',
+        target: 'http://127.0.0.1:8080/',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/uploads/, ''),
       },
     },
   },
