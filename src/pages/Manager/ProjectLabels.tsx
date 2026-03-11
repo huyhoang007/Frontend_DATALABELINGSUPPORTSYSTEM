@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { labelApi } from "../../api/labelApi";
 import { labelRuleApi } from "../../api/labelRuleApi";
 import apiClient from "../../api/apiClient";
 import { Card } from "../../components/ui/Card";
@@ -10,10 +9,8 @@ import { ConfirmDialog, ModalDialog } from "../../components/ui/Modal";
 import {
     Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "../../components/ui/Table";
-import { cn } from "../../utils/cn";
 
 /* ── localStorage keys (fallback for project mapping) ── */
-const labelsKey = (pid: string) => `dlss_project_labels::${pid}`;
 const rulesKey = (pid: string) => `dlss_project_label_rules::${pid}`;
 
 /* ── helpers ── */
@@ -42,26 +39,10 @@ function seedRules() {
     ];
 }
 
-/* ── inner tab type ── */
-type InnerTab = "labels" | "rules";
-
 export default function ProjectLabels() {
     const { projectId } = useParams();
     const navigate = useNavigate();
     const pid = projectId || "";
-
-    /* ── shared state ── */
-    const [activeTab, setActiveTab] = useState<InnerTab>("labels");
-
-    /* ── Labels state ── */
-    const [globalLabels, setGlobalLabels] = useState<any[]>([]);
-    const [projectLabelIds, setProjectLabelIds] = useState<string[]>([]);
-    const [search, setSearch] = useState("");
-    const [loadingLabels, setLoadingLabels] = useState(true);
-    const [errorLabels, setErrorLabels] = useState("");
-    const [deleteTarget, setDeleteTarget] = useState<any>(null);
-    const [deleting, setDeleting] = useState(false);
-    const [toast, setToast] = useState("");
 
     /* ── Label Rules state ── */
     const [globalRules, setGlobalRules] = useState<any[]>([]);
@@ -69,29 +50,13 @@ export default function ProjectLabels() {
     const [loadingRules, setLoadingRules] = useState(false);
     const [ruleModalOpen, setRuleModalOpen] = useState(false);
     const [ruleSearch, setRuleSearch] = useState("");
+    const [toast, setToast] = useState("");
 
     /* ── toast helper ── */
     const showToast = useCallback((msg: string) => {
         setToast(msg);
         setTimeout(() => setToast(""), 2500);
     }, []);
-
-    /* ── Load global labels from REAL API ── */
-    const loadLabels = async () => {
-        setLoadingLabels(true);
-        setErrorLabels("");
-        try {
-            const res = await labelApi.getAllLabels();
-            const data = unwrap(res);
-            setGlobalLabels(data);
-        } catch (err: any) {
-            console.error("[ProjectLabels] Failed to load labels from API:", err);
-            setErrorLabels(err?.message || "Không thể tải danh sách nhãn từ API");
-            setGlobalLabels([]);
-        } finally {
-            setLoadingLabels(false);
-        }
-    };
 
     /* ── Load global rules: API-first, fallback mock ── */
     const loadRules = async () => {
@@ -114,49 +79,11 @@ export default function ProjectLabels() {
     };
 
     useEffect(() => {
-        loadLabels();
         loadRules();
         if (pid) {
-            setProjectLabelIds(loadIds(labelsKey(pid)));
             setProjectRuleIds(loadIds(rulesKey(pid)));
         }
     }, [pid]);
-
-    /* ── Label helpers ── */
-    const getLabelId = (l: any) => String(l.labelId ?? l.id);
-
-    const isLabelAdded = (l: any) => projectLabelIds.includes(getLabelId(l));
-
-    const addLabel = (l: any) => {
-        const id = getLabelId(l);
-        if (projectLabelIds.includes(id)) { showToast("Nhãn đã có trong project"); return; }
-        const next = [...projectLabelIds, id];
-        setProjectLabelIds(next);
-        saveIds(labelsKey(pid), next);
-        showToast(`Đã thêm "${l.labelName ?? l.name}"`);
-    };
-
-    const removeLabel = (l: any) => {
-        const id = getLabelId(l);
-        const next = projectLabelIds.filter((i) => i !== id);
-        setProjectLabelIds(next);
-        saveIds(labelsKey(pid), next);
-        showToast(`Đã gỡ "${l.labelName ?? l.name}"`);
-    };
-
-    const handleDelete = async () => {
-        if (!deleteTarget) return;
-        setDeleting(true);
-        try {
-            await labelApi.deleteLabel(deleteTarget.labelId ?? deleteTarget.id);
-            setDeleteTarget(null);
-            loadLabels(); // refresh from API
-        } catch (err: any) {
-            setErrorLabels(err?.message || "Xóa thất bại");
-        } finally {
-            setDeleting(false);
-        }
-    };
 
     /* ── Rule helpers ── */
     const getRuleId = (r: any) => String(r.ruleId ?? r.id);
@@ -196,10 +123,6 @@ export default function ProjectLabels() {
     };
 
     /* ── Derived data ── */
-    const filteredGlobal = globalLabels.filter((l: any) =>
-        (l.labelName || l.name || "").toLowerCase().includes(search.toLowerCase())
-    );
-    const projectLabels = globalLabels.filter((l) => isLabelAdded(l));
     const projectRules = globalRules.filter((r) => isRuleAdded(r));
     const filteredModalRules = globalRules.filter((r) =>
         (r.name || r.ruleName || "").toLowerCase().includes(ruleSearch.toLowerCase())
@@ -210,11 +133,8 @@ export default function ProjectLabels() {
         <div className="space-y-4">
             {/* ── Header ── */}
             <div className="flex items-center justify-between flex-wrap gap-2">
-                <h2 className="text-base font-bold text-foreground">Labels & Label Rules</h2>
+                <h2 className="text-base font-bold text-foreground">Label Rules</h2>
                 <div className="flex gap-2">
-                    <Button variant="secondary" size="sm" onClick={() => navigate(`/manager/projects/${projectId}/labels/new`)}>
-                        <span className="material-symbols-outlined text-base mr-1">add</span>Thêm nhãn
-                    </Button>
                     <Button variant="secondary" size="sm" onClick={() => { setRuleModalOpen(true); setRuleSearch(""); }}>
                         <span className="material-symbols-outlined text-base mr-1">playlist_add</span>Thêm label rules
                     </Button>
@@ -228,231 +148,59 @@ export default function ProjectLabels() {
                 </div>
             )}
 
-            {/* ── Inner Tabs ── */}
-            <div className="flex gap-1 border-b border-border/50">
-                {([
-                    { key: "labels" as InnerTab, label: "Labels", icon: "label" },
-                    { key: "rules" as InnerTab, label: "Label Rules", icon: "rule" },
-                ]).map((tab) => (
-                    <button
-                        key={tab.key}
-                        onClick={() => setActiveTab(tab.key)}
-                        className={cn(
-                            "flex items-center gap-1.5 px-3 pb-3 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap",
-                            activeTab === tab.key
-                                ? "border-primary text-primary"
-                                : "border-transparent text-muted-foreground hover:text-foreground"
-                        )}
-                    >
-                        <span className="material-symbols-outlined text-[16px]">{tab.icon}</span>
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
-
-            {/* ═══════════ TAB: Labels ═══════════ */}
-            {activeTab === "labels" && (
-                <div className="space-y-6">
-                    {/* ── Project Labels ── */}
-                    <Card className="p-6 space-y-4">
+            {/* ═══════════ Label Rules Content ═══════════ */}
+            <div className="space-y-6">
+                <Card className="p-6 space-y-4">
+                    <div className="flex items-center justify-between">
                         <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                            <span className="material-symbols-outlined text-[16px]">folder_special</span>
-                            Labels của project
+                            <span className="material-symbols-outlined text-[16px]">rule</span>
+                            Label Rules của project
                         </h3>
-                        {projectLabels.length === 0 ? (
-                            <div className="text-center py-8">
-                                <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2 block">label_off</span>
-                                <p className="text-muted-foreground text-sm">Chưa có nhãn nào được thêm vào project</p>
-                            </div>
-                        ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="w-12">Color</TableHead>
-                                        <TableHead>Tên nhãn</TableHead>
-                                        <TableHead>Loại</TableHead>
-                                        <TableHead>Mô tả</TableHead>
-                                        <TableHead>Phím tắt</TableHead>
-                                        <TableHead className="text-right">Hành động</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {projectLabels.map((label: any) => (
-                                        <TableRow key={getLabelId(label)}>
-                                            <TableCell>
-                                                <div className="w-5 h-5 rounded-full border border-border" style={{ backgroundColor: label.colorCode || "#888" }} />
-                                            </TableCell>
-                                            <TableCell className="font-medium">{label.labelName ?? label.name}</TableCell>
-                                            <TableCell>
-                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground">
-                                                    {label.labelType ?? label.type ?? "—"}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell className="text-muted-foreground max-w-[200px] truncate">{label.description || "—"}</TableCell>
-                                            <TableCell>
-                                                {label.shortcutKey ? (
-                                                    <kbd className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-xs font-mono border border-border">{label.shortcutKey}</kbd>
-                                                ) : "—"}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <Button variant="ghost" size="sm" onClick={() => removeLabel(label)} title="Gỡ khỏi project">
-                                                    <span className="material-symbols-outlined text-base text-destructive">remove_circle</span>
-                                                    <span className="ml-1 text-sm text-destructive">Gỡ</span>
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        )}
-                    </Card>
+                        <Button variant="secondary" size="sm" onClick={() => { setRuleModalOpen(true); setRuleSearch(""); }}>
+                            <span className="material-symbols-outlined text-base mr-1">add</span>Thêm rule
+                        </Button>
+                    </div>
 
-                    {/* ── Global Labels (from API) ── */}
-                    <Card className="p-6 space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                                <span className="material-symbols-outlined text-[16px]">list</span>
-                                Labels chung (Global) — <span className="text-xs font-normal text-muted-foreground">từ API</span>
-                            </h3>
-                            {errorLabels && (
-                                <Button variant="ghost" size="sm" onClick={loadLabels}>
-                                    <span className="material-symbols-outlined text-base mr-1">refresh</span>Thử lại
-                                </Button>
-                            )}
+                    {loadingRules ? (
+                        <div className="text-center py-8">
+                            <span className="material-symbols-outlined text-2xl text-muted-foreground animate-spin block mb-2">progress_activity</span>
+                            <p className="text-sm text-muted-foreground">Đang tải...</p>
                         </div>
-
-                        {errorLabels && (
-                            <p className="text-sm text-destructive flex items-center gap-1">
-                                <span className="material-symbols-outlined text-[16px]">error</span>
-                                {errorLabels}
-                            </p>
-                        )}
-
-                        <Input placeholder="Tìm kiếm nhãn..." value={search} onChange={(e: any) => setSearch(e.target.value)} className="max-w-sm" />
-
-                        {loadingLabels ? (
-                            <div className="text-center py-8">
-                                <span className="material-symbols-outlined text-2xl text-muted-foreground animate-spin block mb-2">progress_activity</span>
-                                <p className="text-sm text-muted-foreground">Đang tải từ API...</p>
-                            </div>
-                        ) : filteredGlobal.length === 0 ? (
-                            <div className="text-center py-12">
-                                <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2 block">label_off</span>
-                                <p className="text-muted-foreground">{search ? "Không tìm thấy nhãn phù hợp" : "Chưa có nhãn nào"}</p>
-                            </div>
-                        ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="w-12">Color</TableHead>
-                                        <TableHead>Tên nhãn</TableHead>
-                                        <TableHead>Loại</TableHead>
-                                        <TableHead>Mô tả</TableHead>
-                                        <TableHead>Phím tắt</TableHead>
-                                        <TableHead className="text-right">Hành động</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {filteredGlobal.map((label: any) => (
-                                        <TableRow key={getLabelId(label)}>
-                                            <TableCell>
-                                                <div className="w-5 h-5 rounded-full border border-border" style={{ backgroundColor: label.colorCode || "#888" }} />
-                                            </TableCell>
-                                            <TableCell className="font-medium">{label.labelName ?? label.name}</TableCell>
-                                            <TableCell>
-                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground">
-                                                    {label.labelType ?? label.type ?? "—"}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell className="text-muted-foreground max-w-[200px] truncate">{label.description || "—"}</TableCell>
-                                            <TableCell>
-                                                {label.shortcutKey ? (
-                                                    <kbd className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-xs font-mono border border-border">{label.shortcutKey}</kbd>
-                                                ) : "—"}
-                                            </TableCell>
-                                            <TableCell className="text-right flex items-center justify-end gap-1">
-                                                <Button
-                                                    variant="secondary"
-                                                    size="sm"
-                                                    disabled={isLabelAdded(label)}
-                                                    onClick={() => addLabel(label)}
-                                                >
-                                                    <span className="material-symbols-outlined text-base mr-1">add</span>
-                                                    {isLabelAdded(label) ? "Đã thêm" : "Thêm vào project"}
-                                                </Button>
-                                                <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(label)} title="Xóa nhãn">
-                                                    <span className="material-symbols-outlined text-base text-destructive">delete</span>
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        )}
-                    </Card>
-                </div>
-            )}
-
-            {/* ═══════════ TAB: Label Rules ═══════════ */}
-            {activeTab === "rules" && (
-                <div className="space-y-6">
-                    <Card className="p-6 space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                                <span className="material-symbols-outlined text-[16px]">rule</span>
-                                Label Rules của project
-                            </h3>
-                            <Button variant="secondary" size="sm" onClick={() => { setRuleModalOpen(true); setRuleSearch(""); }}>
-                                <span className="material-symbols-outlined text-base mr-1">add</span>Thêm rule
+                    ) : projectRules.length === 0 ? (
+                        <div className="text-center py-8">
+                            <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2 block">rule</span>
+                            <p className="text-muted-foreground text-sm">Chưa có label rule nào trong project</p>
+                            <Button variant="secondary" size="sm" className="mt-3" onClick={() => { setRuleModalOpen(true); setRuleSearch(""); }}>
+                                <span className="material-symbols-outlined text-base mr-1">add</span>Thêm label rules
                             </Button>
                         </div>
-
-                        {loadingRules ? (
-                            <div className="text-center py-8">
-                                <span className="material-symbols-outlined text-2xl text-muted-foreground animate-spin block mb-2">progress_activity</span>
-                                <p className="text-sm text-muted-foreground">Đang tải...</p>
-                            </div>
-                        ) : projectRules.length === 0 ? (
-                            <div className="text-center py-8">
-                                <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2 block">rule</span>
-                                <p className="text-muted-foreground text-sm">Chưa có label rule nào trong project</p>
-                                <Button variant="secondary" size="sm" className="mt-3" onClick={() => { setRuleModalOpen(true); setRuleSearch(""); }}>
-                                    <span className="material-symbols-outlined text-base mr-1">add</span>Thêm label rules
-                                </Button>
-                            </div>
-                        ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Tên Rule</TableHead>
-                                        <TableHead>Nội dung / Mô tả</TableHead>
-                                        <TableHead className="text-right">Hành động</TableHead>
+                    ) : (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Tên Rule</TableHead>
+                                    <TableHead>Nội dung / Mô tả</TableHead>
+                                    <TableHead className="text-right">Hành động</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {projectRules.map((rule: any) => (
+                                    <TableRow key={getRuleId(rule)}>
+                                        <TableCell className="font-medium">{rule.name ?? rule.ruleName}</TableCell>
+                                        <TableCell className="text-muted-foreground max-w-[300px] truncate">{rule.ruleContent ?? rule.description ?? "—"}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Button variant="ghost" size="sm" onClick={() => removeRule(rule)} title="Gỡ khỏi project">
+                                                <span className="material-symbols-outlined text-base text-destructive">remove_circle</span>
+                                                <span className="ml-1 text-sm text-destructive">Gỡ</span>
+                                            </Button>
+                                        </TableCell>
                                     </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {projectRules.map((rule: any) => (
-                                        <TableRow key={getRuleId(rule)}>
-                                            <TableCell className="font-medium">{rule.name ?? rule.ruleName}</TableCell>
-                                            <TableCell className="text-muted-foreground max-w-[300px] truncate">{rule.ruleContent ?? rule.description ?? "—"}</TableCell>
-                                            <TableCell className="text-right">
-                                                <Button variant="ghost" size="sm" onClick={() => removeRule(rule)} title="Gỡ khỏi project">
-                                                    <span className="material-symbols-outlined text-base text-destructive">remove_circle</span>
-                                                    <span className="ml-1 text-sm text-destructive">Gỡ</span>
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        )}
-                    </Card>
-                </div>
-            )}
-
-            {/* ── Delete Label Confirm Dialog ── */}
-            <ConfirmDialog isOpen={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete}
-                title="Xóa nhãn" message={`Bạn có chắc muốn xóa nhãn "${deleteTarget?.labelName ?? deleteTarget?.name}"?`}
-                confirmText={deleting ? "Đang xóa..." : "Xóa"} isDestructive />
+                                ))}
+                            </TableBody>
+                        </Table>
+                    )}
+                </Card>
+            </div>
 
             {/* ── Add Label Rules Modal ── */}
             <ModalDialog
