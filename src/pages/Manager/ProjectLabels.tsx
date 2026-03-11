@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { labelApi } from "../../api/labelApi";
 import { labelRuleApi } from "../../api/labelRuleApi";
+import apiClient from "../../api/apiClient";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
@@ -162,20 +163,35 @@ export default function ProjectLabels() {
 
     const isRuleAdded = (r: any) => projectRuleIds.includes(getRuleId(r));
 
-    const addRule = (r: any) => {
+    /** Sync the full list of ruleIds to backend */
+    const syncRulesToBackend = async (ruleIds: string[]) => {
+        if (!pid) return;
+        try {
+            await apiClient.put(`/api/projects/${pid}/label-rules`, {
+                ruleIds: ruleIds.map((id) => Number(id)),
+            });
+        } catch (err: any) {
+            console.error("[ProjectLabels] Failed to sync rules to backend:", err);
+            showToast("Lỗi đồng bộ label rules lên server");
+        }
+    };
+
+    const addRule = async (r: any) => {
         const id = getRuleId(r);
         if (projectRuleIds.includes(id)) return;
         const next = [...projectRuleIds, id];
         setProjectRuleIds(next);
         saveIds(rulesKey(pid), next);
+        await syncRulesToBackend(next);
         showToast(`Đã thêm rule "${r.name ?? r.ruleName}"`);
     };
 
-    const removeRule = (r: any) => {
+    const removeRule = async (r: any) => {
         const id = getRuleId(r);
         const next = projectRuleIds.filter((i) => i !== id);
         setProjectRuleIds(next);
         saveIds(rulesKey(pid), next);
+        await syncRulesToBackend(next);
         showToast(`Đã gỡ rule "${r.name ?? r.ruleName}"`);
     };
 
