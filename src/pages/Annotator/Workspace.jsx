@@ -286,22 +286,30 @@ export default function Workspace() {
             }
         }
 
-        // Step 2: last resort - fetch ALL active labels + label rules
+        // Step 2: last resort - fetch ALL active labels + project-specific label rules
+        const projectId = workspace?.projectId;
         if (import.meta.env.DEV)
-            console.log("[LABELS] no localStorage data - fallback via GET /api/labels/active + /api/label-rules");
+            console.log("[LABELS] no localStorage data - fallback via GET /api/labels/active + project label-rules, projectId:", projectId);
 
         let cancelled = false;
         setLabelsLoading(true);
 
         (async () => {
             try {
-                // Fetch both labels and label rules in parallel
-                const [rawLabels, rawRules] = await Promise.all([
-                    apiClient.get("/api/labels/active"),
-                    labelRuleApi.getAllRules().catch((err) => {
+                // Fetch both labels and project-specific label rules in parallel
+                const labelRulesPromise = projectId
+                    ? apiClient.get(`/api/projects/${projectId}/label-rules`).catch((err) => {
+                        console.warn("[LABELS] project label rules fetch failed:", err);
+                        return [];
+                    })
+                    : labelRuleApi.getAllRules().catch((err) => {
                         console.warn("[LABELS] label rules fetch failed:", err);
                         return [];
-                    }),
+                    });
+
+                const [rawLabels, rawRules] = await Promise.all([
+                    apiClient.get("/api/labels/active"),
+                    labelRulesPromise,
                 ]);
                 if (cancelled) return;
 
@@ -377,8 +385,7 @@ export default function Workspace() {
                         color: l.colorCode ?? l.color ?? "#6b7280",
                         type: l.labelType ?? l.type ?? "BBOX",
                     })).filter((l) => l.id != null && l.name),
-                }))
-                .filter((g) => g.labels.length > 0);
+                }));
         }
         // 2. Fallback: use separately fetched label rules
         if (fallbackRuleGroups.length > 0) {
