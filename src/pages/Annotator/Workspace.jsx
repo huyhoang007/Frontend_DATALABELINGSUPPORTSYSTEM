@@ -4,6 +4,7 @@ import { Workspace3Column } from "../../components/layout/WorkspaceLayout";
 import { Button } from "../../components/ui/Button";
 import { annotationApi } from "../../api/annotationApi";
 import apiClient from "../../api/apiClient";
+import { labelRuleApi } from "../../api/labelRuleApi";
 import { useToast } from "../../context/ToastContext";
 
 /* â”€â”€ New modules â”€â”€ */
@@ -164,6 +165,8 @@ export default function Workspace() {
     // Fallback labels state (when workspace labelGroups is empty)
     const [fallbackLabels, setFallbackLabels] = React.useState([]);
     const [labelsLoading, setLabelsLoading] = React.useState(false);
+    // Fallback label rules (fetched separately when workspace labelGroups is empty)
+    const [fallbackRuleGroups, setFallbackRuleGroups] = React.useState([]);
 
     /** Pick first non-empty array from candidates (avoids || eating []) */
     function pickFirstNonEmptyArray(...candidates) {
@@ -283,17 +286,26 @@ export default function Workspace() {
             }
         }
 
-        // Step 2: last resort - fetch ALL active labels
+        // Step 2: last resort - fetch ALL active labels + label rules
         if (import.meta.env.DEV)
-            console.log("[LABELS] no localStorage data - fallback via GET /api/labels/active");
+            console.log("[LABELS] no localStorage data - fallback via GET /api/labels/active + /api/label-rules");
 
         let cancelled = false;
         setLabelsLoading(true);
 
         (async () => {
             try {
-                const rawLabels = await apiClient.get("/api/labels/active");
+                // Fetch both labels and label rules in parallel
+                const [rawLabels, rawRules] = await Promise.all([
+                    apiClient.get("/api/labels/active"),
+                    labelRuleApi.getAllRules().catch((err) => {
+                        console.warn("[LABELS] label rules fetch failed:", err);
+                        return [];
+                    }),
+                ]);
                 if (cancelled) return;
+
+                // Parse flat labels
                 const arr = Array.isArray(rawLabels) ? rawLabels : (rawLabels?.data ?? rawLabels?.content ?? []);
                 const labels = [];
                 const seen = new Set();
@@ -308,6 +320,28 @@ export default function Workspace() {
                 if (import.meta.env.DEV)
                     console.log("[LABELS] all-active fallback:", labels.length, labels);
                 setFallbackLabels(labels);
+
+                // Parse label rules into groups for the modal
+                const rulesArr = Array.isArray(rawRules) ? rawRules : (rawRules?.data ?? rawRules?.content ?? []);
+                if (rulesArr.length > 0) {
+                    const ruleGroups = rulesArr
+                        .map((rule) => ({
+                            ruleId: rule.ruleId ?? rule.id,
+                            ruleName: rule.name ?? rule.ruleName ?? "(no name)",
+                            labels: (Array.isArray(rule.labels) ? [...rule.labels] : [])
+                                .map((l) => ({
+                                    id: l.labelId ?? l.id,
+                                    name: l.labelName ?? l.name,
+                                    color: l.colorCode ?? l.color ?? "#6b7280",
+                                    type: l.labelType ?? l.type ?? "BBOX",
+                                }))
+                                .filter((l) => l.id != null && l.name),
+                        }))
+                        .filter((g) => g.ruleId != null);
+                    if (import.meta.env.DEV)
+                        console.log("[LABELS] fallback ruleGroups:", ruleGroups.length, ruleGroups);
+                    setFallbackRuleGroups(ruleGroups);
+                }
             } catch (err) {
                 console.error("[LABELS] fallback fetch error:", err);
                 addToast?.({ type: "error", message: "Khong tai duoc labels" });
@@ -324,6 +358,7 @@ export default function Workspace() {
 
     /* ── Label groups for modal (preserves rule/group structure) ── */
     const labelGroupsForModal = React.useMemo(() => {
+        // 1. Try workspace labelGroups (from openWorkspace API)
         const rawGroups = (
             workspace?.labelGroups ||
             workspace?.data?.labelGroups ||
@@ -345,12 +380,16 @@ export default function Workspace() {
                 }))
                 .filter((g) => g.labels.length > 0);
         }
-        // fallback: wrap flat labels in a single group
+        // 2. Fallback: use separately fetched label rules
+        if (fallbackRuleGroups.length > 0) {
+            return fallbackRuleGroups;
+        }
+        // 3. Last resort: wrap flat labels in a single group
         if (fallbackLabels.length > 0) {
-            return [{ ruleId: null, ruleName: "Labels", labels: fallbackLabels }];
+            return [{ ruleId: null, ruleName: "All Labels", labels: fallbackLabels }];
         }
         return [];
-    }, [workspace, fallbackLabels]);
+    }, [workspace, fallbackLabels, fallbackRuleGroups]);
 
     React.useEffect(() => { fetchWorkspace(); }, [fetchWorkspace]);
 
