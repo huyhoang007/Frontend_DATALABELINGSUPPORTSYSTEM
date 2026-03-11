@@ -16,6 +16,7 @@ export default function AnnotationOverlay({
     onSelect,            // (groupKey) => void
     onUpdateGeometry,    // (groupKey, newGeom) => void
     drawingHandlers,     // { handleMouseDown, handleMouseMove, handleMouseUp, handleClick, svgRectRef }
+    readOnly,            // boolean
 }) {
     const svgRef = React.useRef(null);
     const [dragState, setDragState] = React.useState(null);
@@ -160,6 +161,7 @@ export default function AnnotationOverlay({
 
     // ── Combined mouse handlers ──
     const onMouseDown = (e) => {
+        if (readOnly) return;
         if (activeTool === "select") {
             // Click on empty space → deselect
             onSelect?.(null);
@@ -167,14 +169,21 @@ export default function AnnotationOverlay({
         drawingHandlers?.handleMouseDown?.(e);
     };
     const onMouseMove = (e) => {
+        if (readOnly) return;
         // update svgRect for drawing tools
         if (svgRef.current && drawingHandlers?.svgRectRef) {
             drawingHandlers.svgRectRef.current = svgRef.current.getBoundingClientRect();
         }
         drawingHandlers?.handleMouseMove?.(e);
     };
-    const onMouseUp = (e) => drawingHandlers?.handleMouseUp?.(e);
-    const onClick = (e) => drawingHandlers?.handleClick?.(e);
+    const onMouseUp = (e) => {
+        if (readOnly) return;
+        drawingHandlers?.handleMouseUp?.(e);
+    };
+    const onClick = (e) => {
+        if (readOnly) return;
+        drawingHandlers?.handleClick?.(e);
+    };
 
     // ── Render helpers ──
     // Convert normalized (0‥1) coord to actual SVG pixel value
@@ -204,14 +213,15 @@ export default function AnnotationOverlay({
                         x={px(geom.x, "x")} y={px(geom.y, "y")}
                         width={px(geom.w, "x")} height={px(geom.h, "y")}
                         {...sharedProps}
-                        pointerEvents={activeTool === "select" ? "all" : "none"}
+                        pointerEvents={(activeTool === "select" && !readOnly) ? "all" : "none"}
                         onMouseDown={(e) => {
+                            if (readOnly) return;
                             handleShapeMouseDown(e, group);
                             if (isSelected) handleWholeDragStart(e, group);
                         }}
                     />
                     {/* Corner handles for selected bbox */}
-                    {isSelected && activeTool === "select" && (
+                    {isSelected && activeTool === "select" && !readOnly && (
                         <>
                             {[[geom.x, geom.y], [geom.x + geom.w, geom.y], [geom.x, geom.y + geom.h], [geom.x + geom.w, geom.y + geom.h]].map(([cx, cy], i) => (
                                 <circle key={i} cx={px(cx, "x")} cy={px(cy, "y")} r={5}
@@ -231,13 +241,14 @@ export default function AnnotationOverlay({
             return (
                 <g key={group.groupKey || "draft"}>
                     <polygon points={pxPts(geom.points)} {...sharedProps}
-                        pointerEvents={activeTool === "select" ? "all" : "none"}
+                        pointerEvents={(activeTool === "select" && !readOnly) ? "all" : "none"}
                         onMouseDown={(e) => {
+                            if (readOnly) return;
                             handleShapeMouseDown(e, group);
                             if (isSelected) handleWholeDragStart(e, group);
                         }}
                     />
-                    {isSelected && activeTool === "select" && geom.points.map((p, i) => (
+                    {isSelected && activeTool === "select" && !readOnly && geom.points.map((p, i) => (
                         <circle key={i} cx={px(p.x, "x")} cy={px(p.y, "y")} r={5}
                             fill="white" stroke={color} strokeWidth={2}
                             style={{ cursor: "move" }}
@@ -259,14 +270,15 @@ export default function AnnotationOverlay({
                         {...sharedProps}
                         strokeWidth={sw}
                         fill={geom.closed ? `${color}10` : "none"}
-                        pointerEvents={activeTool === "select" ? "all" : "none"}
+                        pointerEvents={(activeTool === "select" && !readOnly) ? "all" : "none"}
                         onMouseDown={(e) => {
+                            if (readOnly) return;
                             handleShapeMouseDown(e, group);
                             if (isSelected) handleWholeDragStart(e, group);
                         }}
                     />
                     {/* Always show vertex dots for polylines */}
-                    {geom.points.map((p, i) => (
+                    {!readOnly && geom.points.map((p, i) => (
                         <circle key={i} cx={px(p.x, "x")} cy={px(p.y, "y")} r={isSelected ? 6 : 4}
                             fill={color} stroke="white" strokeWidth={1.5}
                             style={{ cursor: activeTool === "select" ? "move" : "crosshair" }}
@@ -297,9 +309,10 @@ export default function AnnotationOverlay({
                         <circle key={i} cx={px(p.x, "x")} cy={px(p.y, "y")}
                             r={isSelected ? 6 : 4}
                             fill={color} stroke="white" strokeWidth={1.5}
-                            style={{ cursor: activeTool === "select" ? "move" : "crosshair" }}
-                            pointerEvents={activeTool === "select" ? "all" : "none"}
+                            style={{ cursor: (activeTool === "select" && !readOnly) ? "move" : "crosshair" }}
+                            pointerEvents={(activeTool === "select" && !readOnly) ? "all" : "none"}
                             onMouseDown={(e) => {
+                                if (readOnly) return;
                                 handleShapeMouseDown(e, group);
                                 if (isSelected) handleVertexMouseDown(e, group, i);
                             }}
@@ -380,7 +393,7 @@ export default function AnnotationOverlay({
         return null;
     };
 
-    const cursorStyle = activeTool === "select" ? "default"
+    const cursorStyle = readOnly ? "default" : activeTool === "select" ? "default"
         : activeTool === "bbox" ? "crosshair"
             : "crosshair";
 

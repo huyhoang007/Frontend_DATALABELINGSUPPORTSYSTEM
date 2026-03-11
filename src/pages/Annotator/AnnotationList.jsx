@@ -20,6 +20,7 @@ export default function AnnotationList({
     onSelect,
     onDelete,
     onToggleHidden,
+    readOnly,
 }) {
     // Filter by label if active
     const visibleAnnotations = React.useMemo(() => {
@@ -95,16 +96,18 @@ export default function AnnotationList({
                                     {group.isHidden ? "visibility_off" : "visibility"}
                                 </span>
                             </button>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDelete?.(group.groupKey);
-                                }}
-                                className="p-1 hover:bg-red-500/10 rounded text-muted-foreground hover:text-red-500 transition-colors"
-                                title="Xóa"
-                            >
-                                <span className="material-symbols-outlined text-[16px]">delete</span>
-                            </button>
+                            {!readOnly && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onDelete?.(group.groupKey);
+                                    }}
+                                    className="p-1 hover:bg-red-500/10 rounded text-muted-foreground hover:text-red-500 transition-colors"
+                                    title="Xóa"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">delete</span>
+                                </button>
+                            )}
                         </div>
                     </div>
                 );
