@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getMockData, deleteMockItem } from "../../utils/mockStorage";
+import { policiesAPI } from "../../services/api";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { ConfirmDialog } from "../../components/ui/Modal";
@@ -8,20 +8,16 @@ import {
     Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "../../components/ui/Table";
 
-// TODO_BACKEND: Replace with real API when available
-
-const STORAGE_KEY = "mock_error_types";
-
-function seedErrorTypes() {
-    return [
-        { id: crypto.randomUUID(), name: "Missing Label", code: "MISSING_LABEL", severity: "HIGH", description: "Object exists but no label applied", isActive: true },
-        { id: crypto.randomUUID(), name: "Wrong Bounding Box", code: "WRONG_BBOX", severity: "MEDIUM", description: "Bounding box does not match object", isActive: true },
-        { id: crypto.randomUUID(), name: "Overlapping", code: "OVERLAP", severity: "LOW", description: "Labels overlap incorrectly", isActive: true },
-        { id: crypto.randomUUID(), name: "Incomplete Annotation", code: "INCOMPLETE", severity: "HIGH", description: "Object partially annotated", isActive: false },
-    ];
+interface PolicyItem {
+    policyId: number;
+    errorName: string;
+    description: string;
+    errorLevel: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
-const SEVERITY_STYLES = {
+const SEVERITY_STYLES: Record<string, string> = {
     CRITICAL: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
     HIGH: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
     MEDIUM: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
@@ -30,18 +26,36 @@ const SEVERITY_STYLES = {
 
 export default function ErrorTypes() {
     const navigate = useNavigate();
-    const [items, setItems] = useState([]);
-    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [items, setItems] = useState<PolicyItem[]>([]);
+    const [deleteTarget, setDeleteTarget] = useState<PolicyItem | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    const fetchPolicies = async () => {
+        setLoading(true);
+        try {
+            const res = await policiesAPI.getAll(0, 200);
+            const policies: PolicyItem[] = res.content || res;
+            setItems(policies);
+        } catch (err) {
+            console.error("Failed to load policies:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        setItems(getMockData(STORAGE_KEY, seedErrorTypes));
+        fetchPolicies();
     }, []);
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (!deleteTarget) return;
-        deleteMockItem(STORAGE_KEY, deleteTarget.id);
-        setItems(getMockData(STORAGE_KEY, seedErrorTypes));
-        setDeleteTarget(null);
+        try {
+            await policiesAPI.delete(deleteTarget.policyId);
+            setDeleteTarget(null);
+            await fetchPolicies();
+        } catch (err) {
+            console.error("Failed to delete policy:", err);
+        }
     };
 
     return (
@@ -55,7 +69,12 @@ export default function ErrorTypes() {
             </div>
 
             <Card className="p-6">
-                {items.length === 0 ? (
+                {loading ? (
+                    <div className="text-center py-12">
+                        <span className="material-symbols-outlined text-2xl text-muted-foreground animate-spin block mb-2">progress_activity</span>
+                        <p className="text-sm text-muted-foreground">Đang tải...</p>
+                    </div>
+                ) : items.length === 0 ? (
                     <div className="text-center py-12">
                         <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2 block">bug_report</span>
                         <p className="text-muted-foreground">Chưa có loại lỗi nào</p>
@@ -65,29 +84,21 @@ export default function ErrorTypes() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Tên</TableHead>
-                                <TableHead>Mã</TableHead>
                                 <TableHead>Severity</TableHead>
                                 <TableHead>Mô tả</TableHead>
-                                <TableHead>Trạng thái</TableHead>
                                 <TableHead className="text-right">Hành động</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {items.map((item) => (
-                                <TableRow key={item.id}>
-                                    <TableCell className="font-medium">{item.name}</TableCell>
-                                    <TableCell><code className="text-xs bg-muted px-1.5 py-0.5 rounded">{item.code}</code></TableCell>
+                                <TableRow key={item.policyId}>
+                                    <TableCell className="font-medium">{item.errorName}</TableCell>
                                     <TableCell>
-                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${SEVERITY_STYLES[item.severity] || "bg-muted text-muted-foreground"}`}>
-                                            {item.severity}
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${SEVERITY_STYLES[item.errorLevel] || "bg-muted text-muted-foreground"}`}>
+                                            {item.errorLevel}
                                         </span>
                                     </TableCell>
                                     <TableCell className="text-muted-foreground max-w-[200px] truncate">{item.description || "—"}</TableCell>
-                                    <TableCell>
-                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${item.isActive ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-muted text-muted-foreground"}`}>
-                                            {item.isActive ? "Active" : "Inactive"}
-                                        </span>
-                                    </TableCell>
                                     <TableCell className="text-right">
                                         <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(item)} title="Xóa">
                                             <span className="material-symbols-outlined text-base text-destructive">delete</span>
@@ -105,7 +116,7 @@ export default function ErrorTypes() {
                 onClose={() => setDeleteTarget(null)}
                 onConfirm={handleDelete}
                 title="Xóa loại lỗi"
-                message={`Bạn có chắc muốn xóa "${deleteTarget?.name}"?`}
+                message={`Bạn có chắc muốn xóa "${deleteTarget?.errorName}"?`}
                 isDestructive
             />
         </div>
