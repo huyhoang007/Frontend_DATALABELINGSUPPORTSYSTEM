@@ -77,11 +77,14 @@ export default function Workspace() {
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState(null);
 
-    /* â”€â”€ Items & navigation â”€â”€ */
+    /* ── Items & navigation ── */
     const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
     const items = workspace?.items || [];
     const currentItem = items[currentImageIndex] || null;
     const totalImages = items.length;
+
+    // Is the assignment read-only (already submitted or approved)?
+    const isReadOnly = workspace?.assignmentStatus?.toUpperCase() === "SUBMITTED" || workspace?.assignmentStatus?.toUpperCase() === "APPROVED";
 
     /* ── Fetch workspace ── */
     const fetchWorkspace = React.useCallback(async () => {
@@ -108,6 +111,12 @@ export default function Workspace() {
     const [pendingShape, setPendingShape] = React.useState(null);
     const [zoom, setZoom] = React.useState(100);
     const [rightTab, setRightTab] = React.useState("annotations"); // "annotations" | "summary"
+
+    React.useEffect(() => {
+        if (isReadOnly && activeTool !== "select") {
+            setActiveTool("select");
+        }
+    }, [isReadOnly, activeTool]);
 
     /* ── Drawing tools hook ── */
     const drawing = useDrawingTools({
@@ -428,12 +437,14 @@ export default function Workspace() {
 
     /* â”€â”€ Save (flush) â”€â”€ */
     const handleSave = async () => {
+        if (isReadOnly) return;
         await anno.saveNow();
         addToast({ type: "success", message: "ÄÃ£ lÆ°u annotations" });
     };
 
     /* â”€â”€ Submit assignment â”€â”€ */
     const handleSubmit = async () => {
+        if (isReadOnly) return;
         try {
             await anno.saveNow();
             await annotationApi.submitAssignment(assignmentId);
@@ -446,7 +457,7 @@ export default function Workspace() {
 
     /* â”€â”€ Mark as Done â”€â”€ */
     const handleMarkDone = () => {
-        if (!currentItem) return;
+        if (!currentItem || isReadOnly) return;
         if (anno.isDone(currentItem.itemId)) {
             anno.unmarkDone(currentItem.itemId);
             addToast({ type: "info", message: "ÄÃ£ bá» Ä‘Ã¡nh dáº¥u Done" });
@@ -611,8 +622,8 @@ export default function Workspace() {
                         </button>
                         <button onClick={handleMarkDone}
                             title={currentIsDone ? "Bỏ Done" : "Mark Done"}
-                            disabled={!currentIsDone && anno.annotations.length === 0}
-                            className="w-8 h-8 flex items-center justify-center rounded transition-colors hover:bg-white/10"
+                            disabled={(!currentIsDone && anno.annotations.length === 0) || isReadOnly}
+                            className={`w-8 h-8 flex items-center justify-center rounded transition-colors hover:bg-white/10 ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
                             style={{ color: currentIsDone ? "#00bfa5" : "#64748b" }}>
                             <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
                                 {currentIsDone ? "check_circle" : "task_alt"}
@@ -645,10 +656,11 @@ export default function Workspace() {
                             {/* Submit */}
                             <button
                                 onClick={handleSubmit}
-                                className="w-full py-2 rounded text-xs font-bold transition-opacity hover:opacity-80 shadow-md flex items-center justify-center gap-1.5"
-                                style={{ background: "#00bfa5", color: "#fff" }}>
-                                <span>Nộp đánh giá</span>
-                                <span className="material-symbols-outlined text-[14px]">send</span>
+                                disabled={isReadOnly}
+                                className={`w-full py-2 rounded text-xs font-bold transition-opacity hover:opacity-80 shadow-md flex items-center justify-center gap-1.5 ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                style={{ background: isReadOnly ? "#3f51b5" : "#00bfa5", color: "#fff" }}>
+                                <span>{isReadOnly ? "Đã nộp" : "Nộp đánh giá"}</span>
+                                {!isReadOnly && <span className="material-symbols-outlined text-[14px]">send</span>}
                             </button>
                         </div>
 
@@ -692,7 +704,8 @@ export default function Workspace() {
                         {/* Quick Save button at bottom */}
                         <div className="p-3 border-t shrink-0" style={{ borderColor: "#253347" }}>
                             <button onClick={handleSave}
-                                className="w-full py-1.5 rounded text-xs font-semibold transition-colors hover:bg-white/10 flex items-center justify-center gap-1.5"
+                                disabled={isReadOnly}
+                                className={`w-full py-1.5 rounded text-xs font-semibold flex items-center justify-center gap-1.5 ${isReadOnly ? 'opacity-50 cursor-not-allowed' : 'transition-colors hover:bg-white/10'}`}
                                 style={{ background: "transparent", border: "1px solid #3a5068", color: "#94a3b8" }}>
                                 <span className="material-symbols-outlined text-[14px]">save</span>
                                 <span>Lưu nháp</span>
@@ -742,12 +755,13 @@ export default function Workspace() {
                                     annotations={anno.annotations}
                                     draftShape={drawing.draftShape}
                                     cursorPt={drawing.cursorPt}
-                                    activeTool={activeTool}
+                                    activeTool={isReadOnly ? "select" : activeTool}
                                     selectedGroupKey={selectedGroupKey}
                                     activeLabelFilterId={activeLabelFilterId}
                                     onSelect={setSelectedGroupKey}
-                                    onUpdateGeometry={anno.updateGeometry}
-                                    drawingHandlers={drawing}
+                                    onUpdateGeometry={isReadOnly ? undefined : anno.updateGeometry}
+                                    drawingHandlers={isReadOnly ? {} : drawing}
+                                    readOnly={isReadOnly}
                                 />
 
                                 {/* Label select popup — absolute inside canvas so it scrolls with it */}
@@ -773,11 +787,12 @@ export default function Workspace() {
                         {/* Tool icons */}
                         <div className="flex items-center justify-center gap-1 px-3 py-2 border-b shrink-0"
                             style={{ borderColor: "#253347" }}>
-                            {TOOLS.map((tool) => (
+                            {(isReadOnly ? TOOLS.filter(t => t.id === "select") : TOOLS).map((tool) => (
                                 <button key={tool.id}
-                                    onClick={() => { setActiveTool(tool.id); setSelectedGroupKey(null); }}
+                                    onClick={() => { if (!isReadOnly || tool.id === "select") { setActiveTool(tool.id); setSelectedGroupKey(null); } }}
                                     title={tool.label}
-                                    className="w-9 h-9 flex items-center justify-center rounded-lg transition-all"
+                                    disabled={isReadOnly && tool.id !== "select"}
+                                    className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all ${isReadOnly && tool.id !== "select" ? 'opacity-30 cursor-not-allowed hidden' : ''}`}
                                     style={activeTool === tool.id
                                         ? { background: "#00bfa5", color: "#fff" }
                                         : { background: "transparent", color: "#4a6788" }}>
@@ -830,8 +845,9 @@ export default function Workspace() {
                                         selectedGroupKey={selectedGroupKey}
                                         activeLabelFilterId={activeLabelFilterId}
                                         onSelect={(gk) => { setSelectedGroupKey(gk); setActiveTool("select"); }}
-                                        onDelete={anno.deleteAnnotation}
+                                        onDelete={isReadOnly ? undefined : anno.deleteAnnotation}
                                         onToggleHidden={anno.toggleHidden}
+                                        readOnly={isReadOnly}
                                     />
                                 )
                             ) : (
