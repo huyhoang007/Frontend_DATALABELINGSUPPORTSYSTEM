@@ -45,7 +45,22 @@ export default function ProjectExport() {
     const [statusFilter, setStatusFilter] = useState("APPROVED");
     const [exporting, setExporting] = useState(false);
     const [error, setError] = useState("");
-    const [history, setHistory] = useState<HistoryEntry[]>([]);
+
+    // Persist export history in sessionStorage so it survives navigation
+    const storageKey = `export_history_project_${projectId}`;
+    const [history, setHistory] = useState<HistoryEntry[]>(() => {
+        try {
+            const saved = sessionStorage.getItem(storageKey);
+            return saved ? JSON.parse(saved) : [];
+        } catch {
+            return [];
+        }
+    });
+    useEffect(() => {
+        try {
+            sessionStorage.setItem(storageKey, JSON.stringify(history));
+        } catch { /* ignore quota errors */ }
+    }, [history, storageKey]);
 
     const loadDatasets = useCallback(async () => {
         if (!projectId) return;
@@ -213,9 +228,9 @@ export default function ProjectExport() {
 
             {/* Session export history */}
             <Card className="p-6">
-                <h2 className="text-base font-bold text-foreground mb-4">Lịch sử Export (phiên này)</h2>
+                <h2 className="text-base font-bold text-foreground mb-4">Lịch sử Export</h2>
                 {history.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Chưa có bản export nào trong phiên này.</p>
+                    <p className="text-sm text-muted-foreground">Chưa có bản export nào.</p>
                 ) : (
                     <Table>
                         <TableHeader>
