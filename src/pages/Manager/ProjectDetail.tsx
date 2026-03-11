@@ -18,7 +18,7 @@ interface ProjectData {
 const TABS = [
     { key: "", label: "Overview", icon: "dashboard" },
     { key: "data", label: "Data", icon: "cloud_upload" },
-    { key: "labels", label: "Labels", icon: "label" },
+    { key: "labels", label: "Label Rules", icon: "rule" },
     { key: "assignments", label: "Assignments", icon: "assignment" },
     { key: "export", label: "Export", icon: "download" },
     { key: "errors", label: "Errors", icon: "bug_report" },

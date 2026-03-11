@@ -128,7 +128,7 @@ export default function useReviewWorkspace(assignmentIdNum) {
         return { total, approved, rejected, pending: total - approved - rejected };
     }, [annoCache]);
 
-    // ── Fetch workspace + policies on mount ──
+    // ── Fetch workspace on mount ──
     useEffect(() => {
         let cancelled = false;
 
@@ -157,23 +157,35 @@ export default function useReviewWorkspace(assignmentIdNum) {
             }
         }
 
+        fetchWorkspace();
+
+        return () => { cancelled = true; };
+    }, [assignmentIdNum]);
+
+    // ── Fetch project-specific policies when workspace is loaded ──
+    useEffect(() => {
+        const projectId = workspace?.projectId;
+        if (!projectId) return;
+
+        let cancelled = false;
+
         async function fetchPolicies() {
             try {
-                const result = await policyApi.list({ page: 0, size: 100 });
+                const result = await policyApi.getByProject(projectId);
                 if (cancelled) return;
-                // adaptPolicyListResponse returns { data: Policy[], meta }
-                setPolicies(result.data ?? []);
+                // getByProject returns PolicyResponse[] (array directly)
+                const list = Array.isArray(result) ? result : (result.data ?? result);
+                setPolicies(Array.isArray(list) ? list : []);
             } catch (err) {
-                console.warn("[REVIEW] Failed to fetch policies:", err);
+                console.warn("[REVIEW] Failed to fetch project policies:", err);
                 if (!cancelled) setPolicies([]);
             }
         }
 
-        fetchWorkspace();
         fetchPolicies();
 
         return () => { cancelled = true; };
-    }, [assignmentIdNum]);
+    }, [workspace?.projectId]);
 
     // ── Lazy-load annotations for current item (only if cache miss) ──
     const refreshItemAnnotations = useCallback(async (itemId) => {
