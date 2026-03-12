@@ -4,6 +4,29 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { cn } from '../../utils/cn';
 
+// Bảng màu Modern Enterprise UI (Atlassian/Jira style)
+const T = {
+  bg: "#F7F8F9",
+  surface: "#FFFFFF",
+  surfaceHover: "#F1F2F4",
+  border: "#DCDFE4",
+  borderStrong: "#B3B9C4",
+  textPrimary: "#172B4D",
+  textSecondary: "#44546F",
+  textMuted: "#626F86",
+  brand: "#0C66E4",
+  brandHover: "#0055CC",
+  brandLight: "#E9F2FF",
+  green: "#1F845A",
+  greenBg: "#DCFFF1",
+  amber: "#A54800",
+  amberBg: "#FFF7D6",
+  purple: "#5E4DB2",
+  purpleBg: "#F3F0FF",
+  red: "#DE350B",
+  redBg: "#FFEBE6",
+};
+
 const ModernReviewingPage: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -102,43 +125,144 @@ const ModernReviewingPage: React.FC = () => {
   );
 
   return (
-    <div className="p-8 min-h-full bg-transparent space-y-8">
+    <div style={{
+      padding: '32px',
+      minHeight: '100vh',
+      backgroundColor: T.bg,
+    }}>
       {/* Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
+        <div style={{ marginBottom: '24px' }}>
+          <h1 style={{
+            fontSize: '24px',
+            fontWeight: '600',
+            color: T.textPrimary,
+            marginBottom: '8px',
+          }}>
             Kiểm duyệt & Review
           </h1>
-          <p className="text-lg text-muted-foreground">
+          <p style={{
+            fontSize: '15px',
+            color: T.textSecondary,
+          }}>
             Quản lý quá trình review và kiểm duyệt annotations
           </p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-amber-500/10 text-amber-600 border-amber-500/20">
-            <div className="text-2xl font-bold mb-1">
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '16px',
+          marginBottom: '24px',
+        }}>
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: T.amberBg,
+            color: T.amber,
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
               {reviews.filter(r => r.status === 'pending').length}
             </div>
-            <div className="text-xs font-medium opacity-80">Chờ review</div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '500',
+              opacity: 0.8,
+            }}>
+              Chờ review
+            </div>
           </div>
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-            <div className="text-2xl font-bold mb-1">
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: T.greenBg,
+            color: T.green,
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
               {reviews.filter(r => r.status === 'approved').length}
             </div>
-            <div className="text-xs font-medium opacity-80">Đã duyệt</div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '500',
+              opacity: 0.8,
+            }}>
+              Đã duyệt
+            </div>
           </div>
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-red-500/10 text-red-600 border-red-500/20">
-            <div className="text-2xl font-bold mb-1">
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: T.redBg,
+            color: T.red,
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
               {reviews.filter(r => r.status === 'rejected').length}
             </div>
-            <div className="text-xs font-medium opacity-80">Từ chối</div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '500',
+              opacity: 0.8,
+            }}>
+              Từ chối
+            </div>
           </div>
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-purple-500/10 text-purple-600 border-purple-500/20">
-            <div className="text-2xl font-bold mb-1">
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: T.purpleBg,
+            color: T.purple,
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
               {reviews.filter(r => r.is_improved).length}
             </div>
-            <div className="text-xs font-medium opacity-80">Đã cải thiện</div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '500',
+              opacity: 0.8,
+            }}>
+              Đã cải thiện
+            </div>
           </div>
         </div>
 
@@ -147,7 +271,17 @@ const ModernReviewingPage: React.FC = () => {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-4 py-2 bg-background border border-input rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer min-w-[200px]"
+            style={{
+              padding: '8px 16px',
+              backgroundColor: T.surface,
+              border: `1px solid ${T.border}`,
+              borderRadius: '8px',
+              fontSize: '14px',
+              color: T.textPrimary,
+              outline: 'none',
+              cursor: 'pointer',
+              minWidth: '200px',
+            }}
           >
             <option value="all">Tất cả trạng thái</option>
             <option value="pending">Chờ duyệt</option>

@@ -4,6 +4,29 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { cn } from '../../utils/cn';
 
+// Bảng màu Modern Enterprise UI (Atlassian/Jira style)
+const T = {
+  bg: "#F7F8F9",
+  surface: "#FFFFFF",
+  surfaceHover: "#F1F2F4",
+  border: "#DCDFE4",
+  borderStrong: "#B3B9C4",
+  textPrimary: "#172B4D",
+  textSecondary: "#44546F",
+  textMuted: "#626F86",
+  brand: "#0C66E4",
+  brandHover: "#0055CC",
+  brandLight: "#E9F2FF",
+  green: "#1F845A",
+  greenBg: "#DCFFF1",
+  amber: "#A54800",
+  amberBg: "#FFF7D6",
+  purple: "#5E4DB2",
+  purpleBg: "#F3F0FF",
+  red: "#DE350B",
+  redBg: "#FFEBE6",
+};
+
 const ModernUsersPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('all');
@@ -107,15 +130,32 @@ const ModernUsersPage: React.FC = () => {
   });
 
   return (
-    <div className="p-8 min-h-full bg-transparent space-y-8">
+    <div style={{
+      padding: '32px',
+      minHeight: '100vh',
+      backgroundColor: T.bg,
+    }}>
       {/* Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-        <div className="flex items-center justify-between mb-6">
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '24px',
+        }}>
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
+            <h1 style={{
+              fontSize: '24px',
+              fontWeight: '600',
+              color: T.textPrimary,
+              marginBottom: '8px',
+            }}>
               Quản lý người dùng
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p style={{
+              fontSize: '15px',
+              color: T.textSecondary,
+            }}>
               Quản lý tài khoản và phân quyền người dùng trong hệ thống
             </p>
           </div>
@@ -130,25 +170,74 @@ const ModernUsersPage: React.FC = () => {
         </div>
 
         {/* Search and Filters */}
-        <div className="flex gap-4 items-center">
-          <div className="relative flex-1">
+        <div style={{
+          display: 'flex',
+          gap: '16px',
+          alignItems: 'center',
+        }}>
+          <div style={{
+            position: 'relative',
+            flex: 1,
+          }}>
             <input
               type="text"
               placeholder="Tìm kiếm theo tên hoặc email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-background border border-input rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm"
+              style={{
+                width: '100%',
+                paddingLeft: '44px',
+                paddingRight: '16px',
+                paddingTop: '10px',
+                paddingBottom: '10px',
+                backgroundColor: T.surface,
+                border: `1px solid ${T.border}`,
+                borderRadius: '8px',
+                fontSize: '14px',
+                color: T.textPrimary,
+                outline: 'none',
+                transition: 'all 0.2s ease',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = T.brand;
+                e.currentTarget.style.boxShadow = `0 0 0 3px ${T.brandLight}`;
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = T.border;
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             />
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">
-              S
+            <div style={{
+              position: 'absolute',
+              left: '16px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: T.textMuted,
+              fontSize: '16px',
+            }}>
+              🔍
             </div>
           </div>
 
-          <div className="relative min-w-[200px]">
+          <div style={{
+            position: 'relative',
+            minWidth: '200px',
+          }}>
             <select
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
-              className="w-full px-4 py-3 bg-background border border-input rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm cursor-pointer appearance-none"
+              style={{
+                width: '100%',
+                padding: '10px 16px',
+                backgroundColor: T.surface,
+                border: `1px solid ${T.border}`,
+                borderRadius: '8px',
+                fontSize: '14px',
+                color: T.textPrimary,
+                outline: 'none',
+                cursor: 'pointer',
+                appearance: 'none',
+              }}
             >
               {roleOptions.map(role => (
                 <option key={role.value} value={role.value}>

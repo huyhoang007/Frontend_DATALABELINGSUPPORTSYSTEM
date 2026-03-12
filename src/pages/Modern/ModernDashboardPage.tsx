@@ -1,29 +1,27 @@
 import React, { useState } from 'react';
 import { DashboardStats } from '../../types/cvat';
 
-// Modern Enterprise UI - Bảng màu T chuẩn
+// Bảng màu Modern Enterprise UI (Atlassian/Jira style)
 const T = {
   bg: "#F7F8F9",
   surface: "#FFFFFF",
-  surfaceHover: "#F8F9FA",
-  border: "#DFE1E6",
-  borderLight: "#EBECF0",
+  surfaceHover: "#F1F2F4",
+  border: "#DCDFE4",
+  borderStrong: "#B3B9C4",
   textPrimary: "#172B4D",
-  textSecondary: "#5E6C84",
-  textMuted: "#8993A4",
-  brand: "#0052CC",
-  brandHover: "#0747A6",
-  brandLight: "#DEEBFF",
-  success: "#00875A",
-  successBg: "#E3FCEF",
-  warning: "#FF991F",
-  warningBg: "#FFFAE6",
-  danger: "#DE350B",
-  dangerBg: "#FFEBE6",
-  info: "#0065FF",
-  infoBg: "#DEEBFF",
-  purple: "#5243AA",
-  purpleBg: "#EAE6FF",
+  textSecondary: "#44546F",
+  textMuted: "#626F86",
+  brand: "#0C66E4",
+  brandHover: "#0055CC",
+  brandLight: "#E9F2FF",
+  green: "#1F845A",
+  greenBg: "#DCFFF1",
+  amber: "#A54800",
+  amberBg: "#FFF7D6",
+  purple: "#5E4DB2",
+  purpleBg: "#F3F0FF",
+  red: "#DE350B",
+  redBg: "#FFEBE6",
 };
 
 const ModernDashboardPage: React.FC = () => {
@@ -181,8 +179,8 @@ const ModernDashboardPage: React.FC = () => {
                 borderRadius: '6px',
                 fontSize: '13px',
                 fontWeight: '600',
-                backgroundColor: stat.change.startsWith('+') ? T.successBg : T.dangerBg,
-                color: stat.change.startsWith('+') ? T.success : T.danger,
+                backgroundColor: stat.change.startsWith('+') ? T.greenBg : T.redBg,
+                color: stat.change.startsWith('+') ? T.green : T.red,
               }}>
                 {stat.change}
               </div>
@@ -258,9 +256,9 @@ const ModernDashboardPage: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {recentActivities.map((activity, index) => {
             const getActivityColor = () => {
-              if (activity.type === 'success') return { bg: T.successBg, text: T.success };
-              if (activity.type === 'info') return { bg: T.infoBg, text: T.info };
-              return { bg: T.warningBg, text: T.warning };
+              if (activity.type === 'success') return { bg: T.greenBg, text: T.green };
+              if (activity.type === 'info') return { bg: T.brandLight, text: T.brand };
+              return { bg: T.amberBg, text: T.amber };
             };
             const colors = getActivityColor();
 
@@ -276,7 +274,7 @@ const ModernDashboardPage: React.FC = () => {
                   padding: '16px',
                   borderRadius: '10px',
                   backgroundColor: hoveredActivity === index ? T.surfaceHover : T.bg,
-                  border: `1px solid ${T.borderLight}`,
+                  border: `1px solid ${T.border}`,
                   transition: 'all 0.2s ease',
                   cursor: 'pointer',
                 }}
