@@ -8,29 +8,27 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { cn } from "../../utils/cn";
 
-// Modern Enterprise UI - Bảng màu T chuẩn
+// Bảng màu Modern Enterprise UI (Atlassian/Jira style)
 const T = {
   bg: "#F7F8F9",
   surface: "#FFFFFF",
-  surfaceHover: "#F8F9FA",
-  border: "#DFE1E6",
-  borderLight: "#EBECF0",
+  surfaceHover: "#F1F2F4",
+  border: "#DCDFE4",
+  borderStrong: "#B3B9C4",
   textPrimary: "#172B4D",
-  textSecondary: "#5E6C84",
-  textMuted: "#8993A4",
-  brand: "#0052CC",
-  brandHover: "#0747A6",
-  brandLight: "#DEEBFF",
-  success: "#00875A",
-  successBg: "#E3FCEF",
-  warning: "#FF991F",
-  warningBg: "#FFFAE6",
-  danger: "#DE350B",
-  dangerBg: "#FFEBE6",
-  info: "#0065FF",
-  infoBg: "#DEEBFF",
-  purple: "#5243AA",
-  purpleBg: "#EAE6FF",
+  textSecondary: "#44546F",
+  textMuted: "#626F86",
+  brand: "#0C66E4",
+  brandHover: "#0055CC",
+  brandLight: "#E9F2FF",
+  green: "#1F845A",
+  greenBg: "#DCFFF1",
+  amber: "#A54800",
+  amberBg: "#FFF7D6",
+  purple: "#5E4DB2",
+  purpleBg: "#F3F0FF",
+  red: "#DE350B",
+  redBg: "#FFEBE6",
 };
 
 // Define local interfaces matching backend response if needed,

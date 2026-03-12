@@ -6,6 +6,29 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { cn } from '../../utils/cn';
 
+// Bảng màu Modern Enterprise UI (Atlassian/Jira style)
+const T = {
+  bg: "#F7F8F9",
+  surface: "#FFFFFF",
+  surfaceHover: "#F1F2F4",
+  border: "#DCDFE4",
+  borderStrong: "#B3B9C4",
+  textPrimary: "#172B4D",
+  textSecondary: "#44546F",
+  textMuted: "#626F86",
+  brand: "#0C66E4",
+  brandHover: "#0055CC",
+  brandLight: "#E9F2FF",
+  green: "#1F845A",
+  greenBg: "#DCFFF1",
+  amber: "#A54800",
+  amberBg: "#FFF7D6",
+  purple: "#5E4DB2",
+  purpleBg: "#F3F0FF",
+  red: "#DE350B",
+  redBg: "#FFEBE6",
+};
+
 // Type declaration for toast
 const useTypedToast = () => useToast() as { addToast: (message: string, type?: 'success' | 'error' | 'info') => void };
 
@@ -316,19 +339,36 @@ const ModernLabelsPage: React.FC = () => {
   const getLabelId = (label: Label) => label.labelId || label.label_id || 0;
 
   return (
-    <div className="p-8 min-h-full bg-transparent space-y-8">
+    <div style={{
+      padding: '32px',
+      minHeight: '100vh',
+      backgroundColor: T.bg,
+    }}>
       {/* Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-        <div className="flex items-center justify-between mb-6">
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '24px',
+        }}>
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
+            <h1 style={{
+              fontSize: '24px',
+              fontWeight: '600',
+              color: T.textPrimary,
+              marginBottom: '8px',
+            }}>
               Quản lý nhãn & quy tắc
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p style={{
+              fontSize: '15px',
+              color: T.textSecondary,
+            }}>
               Quản lý labels và label rules cho các dự án gán nhãn
             </p>
           </div>
-          <div className="flex gap-3">
+          <div style={{ display: 'flex', gap: '12px' }}>
             <Button
               variant="primary"
               className="bg-emerald-600 hover:bg-emerald-700 text-white"

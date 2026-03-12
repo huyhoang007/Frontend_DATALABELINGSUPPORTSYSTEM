@@ -33,6 +33,7 @@ import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AdminUsers from "./pages/Admin/Users";
 import AdminLabels from "./pages/Admin/Labels";
 import AdminPolicies from "./pages/Admin/Policies";
+import AdminActivityLogs from "./pages/Admin/ActivityLogs";
 import DevHealthCheck from "./components/DevHealthCheck";
 import Unauthorized from "./pages/Unauthorized";
 import { RoleGuard } from "./components/Common/RoleGuard";
@@ -169,6 +170,7 @@ function App() {
               <Route path="users" element={<AdminUsers />} />
               <Route path="labels" element={<AdminLabels />} />
               <Route path="policies" element={<AdminPolicies />} />
+              <Route path="logs" element={<AdminActivityLogs />} />
             </Route>
 
             {/* Unauthorized */}

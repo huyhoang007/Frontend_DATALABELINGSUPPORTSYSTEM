@@ -4,6 +4,29 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { cn } from '../../utils/cn';
 
+// Bảng màu Modern Enterprise UI (Atlassian/Jira style)
+const T = {
+  bg: "#F7F8F9",
+  surface: "#FFFFFF",
+  surfaceHover: "#F1F2F4",
+  border: "#DCDFE4",
+  borderStrong: "#B3B9C4",
+  textPrimary: "#172B4D",
+  textSecondary: "#44546F",
+  textMuted: "#626F86",
+  brand: "#0C66E4",
+  brandHover: "#0055CC",
+  brandLight: "#E9F2FF",
+  green: "#1F845A",
+  greenBg: "#DCFFF1",
+  amber: "#A54800",
+  amberBg: "#FFF7D6",
+  purple: "#5E4DB2",
+  purpleBg: "#F3F0FF",
+  red: "#DE350B",
+  redBg: "#FFEBE6",
+};
+
 const ModernAssignmentsPage: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -73,15 +96,32 @@ const ModernAssignmentsPage: React.FC = () => {
   );
 
   return (
-    <div className="p-8 min-h-full bg-transparent space-y-8">
+    <div style={{
+      padding: '32px',
+      minHeight: '100vh',
+      backgroundColor: T.bg,
+    }}>
       {/* Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-        <div className="flex items-center justify-between mb-6">
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '24px',
+        }}>
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
+            <h1 style={{
+              fontSize: '24px',
+              fontWeight: '600',
+              color: T.textPrimary,
+              marginBottom: '8px',
+            }}>
               Phân công nhiệm vụ
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p style={{
+              fontSize: '15px',
+              color: T.textSecondary,
+            }}>
               Quản lý phân công annotator và reviewer cho các dataset
             </p>
           </div>
@@ -96,27 +136,109 @@ const ModernAssignmentsPage: React.FC = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-amber-500/10 text-amber-600 border-amber-500/20">
-            <div className="text-2xl font-bold mb-1">
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '16px',
+        }}>
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: T.amberBg,
+            color: T.amber,
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
               {assignments.filter(a => a.status === 'pending').length}
             </div>
-            <div className="text-xs font-medium opacity-80">Chờ xử lý</div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '500',
+              opacity: 0.8,
+            }}>
+              Chờ xử lý
+            </div>
           </div>
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-blue-500/10 text-blue-600 border-blue-500/20">
-            <div className="text-2xl font-bold mb-1">
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: T.brandLight,
+            color: T.brand,
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
               {assignments.filter(a => a.status === 'in_progress').length}
             </div>
-            <div className="text-xs font-medium opacity-80">Đang thực hiện</div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '500',
+              opacity: 0.8,
+            }}>
+              Đang thực hiện
+            </div>
           </div>
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-            <div className="text-2xl font-bold mb-1">
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: T.greenBg,
+            color: T.green,
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
               {assignments.filter(a => a.status === 'completed').length}
             </div>
-            <div className="text-xs font-medium opacity-80">Hoàn thành</div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '500',
+              opacity: 0.8,
+            }}>
+              Hoàn thành
+            </div>
           </div>
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-purple-500/10 text-purple-600 border-purple-500/20">
-            <div className="text-2xl font-bold mb-1">
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: T.purpleBg,
+            color: T.purple,
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
               {assignments.filter(a => a.status === 'reviewed').length}
             </div>
             <div className="text-xs font-medium opacity-80">Đã review</div>

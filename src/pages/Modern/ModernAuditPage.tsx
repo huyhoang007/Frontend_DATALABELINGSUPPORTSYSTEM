@@ -3,6 +3,29 @@ import { ActivityLog, User } from '../../types/cvat';
 import { Card } from '../../components/ui/Card';
 import { cn } from '../../utils/cn';
 
+// Bảng màu Modern Enterprise UI (Atlassian/Jira style)
+const T = {
+  bg: "#F7F8F9",
+  surface: "#FFFFFF",
+  surfaceHover: "#F1F2F4",
+  border: "#DCDFE4",
+  borderStrong: "#B3B9C4",
+  textPrimary: "#172B4D",
+  textSecondary: "#44546F",
+  textMuted: "#626F86",
+  brand: "#0C66E4",
+  brandHover: "#0055CC",
+  brandLight: "#E9F2FF",
+  green: "#1F845A",
+  greenBg: "#DCFFF1",
+  amber: "#A54800",
+  amberBg: "#FFF7D6",
+  purple: "#5E4DB2",
+  purpleBg: "#F3F0FF",
+  red: "#DE350B",
+  redBg: "#FFEBE6",
+};
+
 const ModernAuditPage: React.FC = () => {
   const [selectedAction, setSelectedAction] = useState('all');
   const [selectedUser, setSelectedUser] = useState('all');
@@ -152,43 +175,144 @@ const ModernAuditPage: React.FC = () => {
   ];
 
   return (
-    <div className="p-8 min-h-full bg-transparent space-y-8">
+    <div style={{
+      padding: '32px',
+      minHeight: '100vh',
+      backgroundColor: T.bg,
+    }}>
       {/* Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
+        <div style={{ marginBottom: '24px' }}>
+          <h1 style={{
+            fontSize: '24px',
+            fontWeight: '600',
+            color: T.textPrimary,
+            marginBottom: '8px',
+          }}>
             Nhật ký hệ thống
           </h1>
-          <p className="text-lg text-muted-foreground">
+          <p style={{
+            fontSize: '15px',
+            color: T.textSecondary,
+          }}>
             Theo dõi tất cả hoạt động và thay đổi trong hệ thống
           </p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-            <div className="text-2xl font-bold mb-1">
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '16px',
+          marginBottom: '24px',
+        }}>
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: T.greenBg,
+            color: T.green,
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
               {activityLogs.filter(log => log.action.includes('CREATE')).length}
             </div>
-            <div className="text-xs font-medium opacity-80">Tạo mới</div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '500',
+              opacity: 0.8,
+            }}>
+              Tạo mới
+            </div>
           </div>
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-blue-500/10 text-blue-600 border-blue-500/20">
-            <div className="text-2xl font-bold mb-1">
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: T.brandLight,
+            color: T.brand,
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
               {activityLogs.filter(log => log.action.includes('UPDATE')).length}
             </div>
-            <div className="text-xs font-medium opacity-80">Cập nhật</div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '500',
+              opacity: 0.8,
+            }}>
+              Cập nhật
+            </div>
           </div>
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-purple-500/10 text-purple-600 border-purple-500/20">
-            <div className="text-2xl font-bold mb-1">
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: T.purpleBg,
+            color: T.purple,
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
               {activityLogs.filter(log => log.action.includes('APPROVE')).length}
             </div>
-            <div className="text-xs font-medium opacity-80">Phê duyệt</div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '500',
+              opacity: 0.8,
+            }}>
+              Phê duyệt
+            </div>
           </div>
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-cyan-500/10 text-cyan-600 border-cyan-500/20">
-            <div className="text-2xl font-bold mb-1">
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: T.brandLight,
+            color: T.brand,
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
               {activityLogs.filter(log => log.action.includes('COMPLETE')).length}
             </div>
-            <div className="text-xs font-medium opacity-80">Hoàn thành</div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '500',
+              opacity: 0.8,
+            }}>
+              Hoàn thành
+            </div>
           </div>
         </div>
 

@@ -29,31 +29,135 @@ interface AdminDashboardProps {
   onLogout?: () => void;
 }
 
+interface RoleStats {
+  annotators: number;
+  reviewers: number;
+  managers: number;
+  admins: number;
+}
+
+interface RecentActivity {
+  id: number;
+  message: string;
+  timestamp: string;
+  type: string;
+}
+
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const [totalUsers, setTotalUsers] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [hoveredKpi, setHoveredKpi] = useState<number | null>(null);
   const [hoveredButton, setHoveredButton] = useState<string | null>(null);
+  const [roleStats, setRoleStats] = useState<RoleStats>({
+    annotators: 0,
+    reviewers: 0,
+    managers: 0,
+    admins: 0
+  });
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
 
   // Fetch real data from backend
   useEffect(() => {
-    const fetchUserCount = async () => {
+    const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
-        const response = await userApi.getAllUsers({ page: 0, size: 1 });
-        // Response has totalElements for total count
-        setTotalUsers(response.totalElements || 0);
+        
+        // Fetch all users to calculate role distribution
+        const usersResponse = await userApi.getAllUsers({ page: 0, size: 1000 });
+        const users = usersResponse.content || [];
+        
+        setTotalUsers(usersResponse.totalElements || users.length);
+        
+        // Calculate role distribution from real data
+        const stats = {
+          annotators: users.filter((u: any) => u.roleName === 'ANNOTATOR').length,
+          reviewers: users.filter((u: any) => u.roleName === 'REVIEWER').length,
+          managers: users.filter((u: any) => u.roleName === 'MANAGER').length,
+          admins: users.filter((u: any) => u.roleName === 'ADMIN').length
+        };
+        setRoleStats(stats);
+        
       } catch (error) {
-        console.error('Failed to fetch user count:', error);
+        console.error('Failed to fetch dashboard data:', error);
         setTotalUsers(0);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchUserCount();
+    const fetchRecentActivities = async () => {
+      try {
+        // Import activityLogApi
+        const { activityLogApi } = await import('../../api/activityLogApi');
+        
+        // Fetch recent activity logs
+        const logsResponse = await activityLogApi.getAllLogs({ page: 0, size: 5 });
+        const logs = logsResponse.content || logsResponse || [];
+        
+        // Transform logs to activity format
+        const activities: RecentActivity[] = logs.map((log: any, index: number) => {
+          let message = '';
+          const username = log.username || `Người dùng #${log.userId}`;
+          
+          // Format message based on action type
+          if (log.action?.toLowerCase().includes('login')) {
+            message = `${username} đã đăng nhập`;
+          } else if (log.action?.toLowerCase().includes('create')) {
+            const target = log.target || log.targetType || 'đối tượng';
+            message = `${username} đã tạo ${target}`;
+          } else if (log.action?.toLowerCase().includes('update')) {
+            const target = log.target || log.targetType || 'đối tượng';
+            message = `${username} đã cập nhật ${target}`;
+          } else if (log.action?.toLowerCase().includes('delete')) {
+            const target = log.target || log.targetType || 'đối tượng';
+            message = `${username} đã xóa ${target}`;
+          } else {
+            message = `${username} - ${log.action}`;
+          }
+          
+          // Format timestamp
+          const timestamp = formatTimeAgo(log.timestamp || log.createdAt);
+          
+          return {
+            id: log.logId || log.id || index,
+            message,
+            timestamp,
+            type: log.action?.toLowerCase() || 'unknown'
+          };
+        });
+        
+        setRecentActivities(activities);
+        
+      } catch (error) {
+        console.error('Failed to fetch recent activities:', error);
+        setRecentActivities([]);
+      }
+    };
+
+    fetchDashboardData();
+    fetchRecentActivities();
   }, []);
+
+  // Helper function to format time ago
+  const formatTimeAgo = (dateString: string) => {
+    if (!dateString) return 'Không rõ';
+    
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Vừa xong';
+    if (diffMins < 60) return `${diffMins} phút trước`;
+    if (diffHours < 24) return `${diffHours} giờ trước`;
+    if (diffDays === 1) return 'Hôm qua';
+    if (diffDays < 7) return `${diffDays} ngày trước`;
+    
+    return date.toLocaleDateString('vi-VN');
+  };
 
   return (
     <div style={{
@@ -179,7 +283,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
       <div style={{
         display: "grid",
         gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-        gap: "16px"
+        gap: "16px",
+        marginBottom: "32px"
       }}>
         <div
           onMouseEnter={() => setHoveredKpi(0)}
@@ -215,6 +320,162 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             lineHeight: 1
           }}>
             {isLoading ? '...' : totalUsers.toLocaleString()}
+          </div>
+        </div>
+      </div>
+
+      {/* Role Distribution & Recent Activity */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: "24px"
+      }}>
+        {/* Role Distribution */}
+        <div style={{
+          padding: "32px",
+          background: T.surface,
+          border: `1px solid ${T.border}`,
+          borderRadius: "6px",
+          boxShadow: "0 1px 3px rgba(9,30,66,.08)"
+        }}>
+          <h3 style={{
+            marginBottom: "24px",
+            fontSize: "16px",
+            fontWeight: 700,
+            color: T.textPrimary
+          }}>
+            Phân bổ vai trò
+          </h3>
+          
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            {/* Annotators */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <span style={{ fontSize: "14px", color: T.textSecondary }}>Annotators</span>
+                <span style={{ fontSize: "16px", fontWeight: 700, color: T.textPrimary }}>{roleStats.annotators}</span>
+              </div>
+              <div style={{ 
+                height: "8px", 
+                background: T.border, 
+                borderRadius: "4px",
+                overflow: "hidden"
+              }}>
+                <div style={{
+                  height: "100%",
+                  width: `${totalUsers > 0 ? (roleStats.annotators / totalUsers) * 100 : 0}%`,
+                  background: "linear-gradient(90deg, #667eea 0%, #764ba2 100%)",
+                  borderRadius: "4px",
+                  transition: "width 0.3s ease"
+                }} />
+              </div>
+            </div>
+
+            {/* Reviewers */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <span style={{ fontSize: "14px", color: T.textSecondary }}>Reviewers</span>
+                <span style={{ fontSize: "16px", fontWeight: 700, color: T.textPrimary }}>{roleStats.reviewers}</span>
+              </div>
+              <div style={{ 
+                height: "8px", 
+                background: T.border, 
+                borderRadius: "4px",
+                overflow: "hidden"
+              }}>
+                <div style={{
+                  height: "100%",
+                  width: `${totalUsers > 0 ? (roleStats.reviewers / totalUsers) * 100 : 0}%`,
+                  background: "linear-gradient(90deg, #06b6d4 0%, #0891b2 100%)",
+                  borderRadius: "4px",
+                  transition: "width 0.3s ease"
+                }} />
+              </div>
+            </div>
+
+            {/* Managers */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <span style={{ fontSize: "14px", color: T.textSecondary }}>Managers</span>
+                <span style={{ fontSize: "16px", fontWeight: 700, color: T.textPrimary }}>{roleStats.managers}</span>
+              </div>
+              <div style={{ 
+                height: "8px", 
+                background: T.border, 
+                borderRadius: "4px",
+                overflow: "hidden"
+              }}>
+                <div style={{
+                  height: "100%",
+                  width: `${totalUsers > 0 ? (roleStats.managers / totalUsers) * 100 : 0}%`,
+                  background: "linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)",
+                  borderRadius: "4px",
+                  transition: "width 0.3s ease"
+                }} />
+              </div>
+            </div>
+
+            {/* Admins */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <span style={{ fontSize: "14px", color: T.textSecondary }}>Admins</span>
+                <span style={{ fontSize: "16px", fontWeight: 700, color: T.textPrimary }}>{roleStats.admins}</span>
+              </div>
+              <div style={{ 
+                height: "8px", 
+                background: T.border, 
+                borderRadius: "4px",
+                overflow: "hidden"
+              }}>
+                <div style={{
+                  height: "100%",
+                  width: `${totalUsers > 0 ? (roleStats.admins / totalUsers) * 100 : 0}%`,
+                  background: "linear-gradient(90deg, #ef4444 0%, #dc2626 100%)",
+                  borderRadius: "4px",
+                  transition: "width 0.3s ease"
+                }} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div style={{
+          padding: "32px",
+          background: T.surface,
+          border: `1px solid ${T.border}`,
+          borderRadius: "6px",
+          boxShadow: "0 1px 3px rgba(9,30,66,.08)"
+        }}>
+          <h3 style={{
+            marginBottom: "24px",
+            fontSize: "16px",
+            fontWeight: 700,
+            color: T.textPrimary
+          }}>
+            Hoạt động gần đây
+          </h3>
+          
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {recentActivities.map((activity) => (
+              <div key={activity.id} style={{
+                paddingBottom: "16px",
+                borderBottom: `1px solid ${T.border}`
+              }}>
+                <p style={{
+                  fontSize: "14px",
+                  color: T.textPrimary,
+                  marginBottom: "4px"
+                }}>
+                  {activity.message}
+                </p>
+                <p style={{
+                  fontSize: "12px",
+                  color: T.textMuted
+                }}>
+                  {activity.timestamp}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </div>

@@ -40,6 +40,9 @@ export default function AdminUsers() {
   const [processingUserId, setProcessingUserId] = useState(null);
   const [hoveredRow, setHoveredRow] = useState(null);
   const [hoveredTab, setHoveredTab] = useState(null);
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [newRole, setNewRole] = useState(null);
   const [newUser, setNewUser] = useState({
     username: "",
     email: "",
@@ -108,6 +111,76 @@ export default function AdminUsers() {
     } catch (error) {
       console.error("Failed to reject user:", error);
       addToast(error.message || "Từ chối tài khoản thất bại", "error");
+    } finally {
+      setProcessingUserId(null);
+    }
+  };
+
+  const handleBanUser = async (userId) => {
+    if (!window.confirm("Bạn có chắc muốn cấm người dùng này?")) {
+      return;
+    }
+
+    setProcessingUserId(userId);
+    try {
+      // Use suspendUser instead of banUser if backend doesn't have /ban endpoint
+      await userApi.suspendUser(userId);
+      addToast("Đã cấm người dùng thành công", "success");
+      fetchUsers();
+    } catch (error) {
+      console.error("Failed to ban user:", error);
+      addToast(error.message || "Cấm người dùng thất bại", "error");
+    } finally {
+      setProcessingUserId(null);
+    }
+  };
+
+  const handleUnbanUser = async (userId) => {
+    if (!window.confirm("Bạn có chắc muốn bỏ cấm người dùng này?")) {
+      return;
+    }
+
+    setProcessingUserId(userId);
+    try {
+      // Use activateUser instead of unbanUser if backend doesn't have /unban endpoint
+      await userApi.activateUser(userId);
+      addToast("Đã bỏ cấm người dùng thành công", "success");
+      fetchUsers();
+    } catch (error) {
+      console.error("Failed to unban user:", error);
+      addToast(error.message || "Bỏ cấm người dùng thất bại", "error");
+    } finally {
+      setProcessingUserId(null);
+    }
+  };
+
+  const handleOpenRoleModal = (user) => {
+    setSelectedUser(user);
+    // Map role name to roleId
+    const roleMap = {
+      'ADMIN': 1,
+      'MANAGER': 2,
+      'ANNOTATOR': 3,
+      'REVIEWER': 4
+    };
+    setNewRole(roleMap[user.roleName?.toUpperCase()] || user.roleId || 3);
+    setShowRoleModal(true);
+  };
+
+  const handleChangeRole = async () => {
+    if (!selectedUser || !newRole) return;
+
+    setProcessingUserId(selectedUser.userId);
+    try {
+      // Use updateUser API with roleId
+      await userApi.updateUser(selectedUser.userId, { roleId: newRole });
+      addToast("Đã thay đổi vai trò thành công", "success");
+      setShowRoleModal(false);
+      setSelectedUser(null);
+      fetchUsers();
+    } catch (error) {
+      console.error("Failed to change role:", error);
+      addToast(error.message || "Thay đổi vai trò thất bại", "error");
     } finally {
       setProcessingUserId(null);
     }
@@ -187,7 +260,18 @@ export default function AdminUsers() {
 
   // Pagination logic
   const filteredUsers = users.filter((u) => {
-    if (statusFilter === "all") return true;
+    const isBanned = u.status?.toLowerCase() === "banned" || 
+                     u.status?.toLowerCase() === "suspended" || 
+                     u.status?.toLowerCase() === "inactive";
+    
+    if (statusFilter === "all") {
+      // "Tất cả" không bao gồm người bị cấm
+      return !isBanned;
+    }
+    if (statusFilter === "banned") {
+      // Tab "Bị cấm" chỉ hiển thị người bị cấm
+      return isBanned;
+    }
     return u.status?.toLowerCase() === statusFilter.toLowerCase();
   });
 
@@ -272,7 +356,16 @@ export default function AdminUsers() {
           {/* Status Filter Tabs */}
           <div style={{ marginBottom: "24px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
             {[
-              { value: "all", label: "Tất cả", count: users.length },
+              { 
+                value: "all", 
+                label: "Tất cả", 
+                count: users.filter((u) => {
+                  const isBanned = u.status?.toLowerCase() === "banned" || 
+                                   u.status?.toLowerCase() === "suspended" || 
+                                   u.status?.toLowerCase() === "inactive";
+                  return !isBanned;
+                }).length 
+              },
               {
                 value: "pending",
                 label: "Chờ duyệt",
@@ -289,8 +382,9 @@ export default function AdminUsers() {
               {
                 value: "banned",
                 label: "Bị cấm",
-                count: users.filter((u) => u.status?.toLowerCase() === "banned")
-                  .length,
+                count: users.filter(
+                  (u) => u.status?.toLowerCase() === "banned" || u.status?.toLowerCase() === "suspended" || u.status?.toLowerCase() === "inactive",
+                ).length,
               },
             ].map((tab, idx) => (
               <button
@@ -447,7 +541,10 @@ export default function AdminUsers() {
                           background: `${getStatusColor(u.status)}20`,
                           color: getStatusColor(u.status)
                         }}>
-                          {u.status === 'active' ? 'Hoạt động' : u.status === 'pending' ? 'Chờ duyệt' : u.status === 'banned' ? 'Bị cấm' : u.status === 'inactive' ? 'Không hoạt động' : u.status || "Hoạt động"}
+                          {u.status === 'active' ? 'Hoạt động' : 
+                           u.status === 'pending' ? 'Chờ duyệt' : 
+                           u.status === 'banned' || u.status === 'suspended' || u.status === 'inactive' ? 'Bị cấm' : 
+                           u.status || "Hoạt động"}
                         </span>
                         <span style={{ fontSize: "12px", color: T.textMuted }}>
                           {u.createdAt
@@ -500,15 +597,14 @@ export default function AdminUsers() {
                                 ✖ Từ chối
                               </button>
                             </div>
-                          ) : u.status?.toLowerCase() === "banned" ? (
+                          ) : (u.status?.toLowerCase() === "banned" || 
+                                u.status?.toLowerCase() === "suspended" || 
+                                u.status?.toLowerCase() === "inactive") ? (
                             <button
-                              onClick={() =>
-                                userApi
-                                  .unbanUser(u.userId)
-                                  .then(() => fetchUsers())
-                              }
-                              onMouseEnter={(e) => e.currentTarget.style.background = T.brandHover}
-                              onMouseLeave={(e) => e.currentTarget.style.background = T.brand}
+                              onClick={() => handleUnbanUser(u.userId)}
+                              disabled={processingUserId === u.userId}
+                              onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.background = T.brandHover)}
+                              onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.background = T.brand)}
                               style={{
                                 padding: "6px 12px",
                                 background: T.brand,
@@ -517,17 +613,61 @@ export default function AdminUsers() {
                                 borderRadius: "4px",
                                 fontWeight: 700,
                                 border: "none",
-                                cursor: "pointer",
+                                cursor: processingUserId === u.userId ? "not-allowed" : "pointer",
+                                opacity: processingUserId === u.userId ? 0.5 : 1,
                                 transition: "all .15s",
                                 fontFamily: "inherit"
                               }}
                             >
-                              Unban
+                              Bỏ cấm
                             </button>
                           ) : (
-                            <span style={{ fontSize: "12px", color: T.textMuted }}>
-                              -
-                            </span>
+                            <div style={{ display: "flex", gap: "8px" }}>
+                              <button
+                                onClick={() => handleOpenRoleModal(u)}
+                                disabled={processingUserId === u.userId}
+                                onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.background = T.brandHover)}
+                                onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.background = T.brand)}
+                                style={{
+                                  padding: "6px 12px",
+                                  background: T.brand,
+                                  color: "#FFFFFF",
+                                  fontSize: "11px",
+                                  borderRadius: "4px",
+                                  fontWeight: 700,
+                                  border: "none",
+                                  cursor: processingUserId === u.userId ? "not-allowed" : "pointer",
+                                  opacity: processingUserId === u.userId ? 0.5 : 1,
+                                  transition: "all .15s",
+                                  fontFamily: "inherit"
+                                }}
+                                title="Thay đổi vai trò"
+                              >
+                                Vai trò
+                              </button>
+                              <button
+                                onClick={() => handleBanUser(u.userId)}
+                                disabled={processingUserId === u.userId}
+                                onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.background = "#DC2626")}
+                                onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.background = T.red)}
+                                style={{
+                                  padding: "6px 12px",
+                                  background: T.red,
+                                  color: "#FFFFFF",
+                                  fontSize: "11px",
+                                  borderRadius: "4px",
+                                  fontWeight: 700,
+                                  border: "none",
+                                  cursor: processingUserId === u.userId ? "not-allowed" : "pointer",
+                                  opacity: processingUserId === u.userId ? 0.5 : 1,
+                                  transition: "all .15s",
+                                  fontFamily: "inherit"
+                                }}
+                                title="Cấm người dùng"
+                              >
+                                Cấm
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -858,6 +998,129 @@ export default function AdminUsers() {
                     onMouseLeave={(e) => !isCreating && (e.currentTarget.style.background = T.brand)}
                   >
                     {isCreating ? "Đang tạo..." : "Tạo"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Change Role Modal */}
+          {showRoleModal && selectedUser && (
+            <div style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 9999
+            }}>
+              <div style={{
+                background: T.surface,
+                border: `1px solid ${T.border}`,
+                borderRadius: "6px",
+                padding: "32px",
+                width: "90%",
+                maxWidth: "450px",
+                boxShadow: "0 8px 24px rgba(9,30,66,.25)"
+              }}>
+                <h2 style={{
+                  fontSize: "20px",
+                  fontWeight: 700,
+                  color: T.textPrimary,
+                  marginBottom: "8px"
+                }}>
+                  Thay đổi vai trò
+                </h2>
+                <p style={{
+                  fontSize: "13px",
+                  color: T.textMuted,
+                  marginBottom: "24px"
+                }}>
+                  Thay đổi vai trò cho người dùng: <strong>{selectedUser.fullName || selectedUser.username}</strong>
+                </p>
+
+                <div>
+                  <label style={{
+                    display: "block",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: T.textMuted,
+                    marginBottom: "8px"
+                  }}>
+                    Chọn vai trò mới <span style={{ color: T.red }}>*</span>
+                  </label>
+                  <select
+                    value={newRole}
+                    onChange={(e) => setNewRole(parseInt(e.target.value))}
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      background: T.bg,
+                      border: `1px solid ${T.border}`,
+                      borderRadius: "4px",
+                      color: T.textPrimary,
+                      fontSize: "14px",
+                      fontFamily: "inherit",
+                      outline: "none",
+                      cursor: "pointer"
+                    }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
+                    onBlur={(e) => e.currentTarget.style.borderColor = T.border}
+                  >
+                    <option value={1}>Admin</option>
+                    <option value={2}>Manager</option>
+                    <option value={3}>Annotator</option>
+                    <option value={4}>Reviewer</option>
+                  </select>
+                </div>
+
+                <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
+                  <button
+                    onClick={() => {
+                      setShowRoleModal(false);
+                      setSelectedUser(null);
+                    }}
+                    disabled={processingUserId === selectedUser.userId}
+                    style={{
+                      flex: 1,
+                      padding: "10px 20px",
+                      border: `1px solid ${T.border}`,
+                      borderRadius: "4px",
+                      color: T.textPrimary,
+                      background: T.surface,
+                      cursor: processingUserId === selectedUser.userId ? "not-allowed" : "pointer",
+                      transition: "all .15s",
+                      fontSize: "14px",
+                      fontWeight: 600,
+                      fontFamily: "inherit"
+                    }}
+                    onMouseEnter={(e) => processingUserId !== selectedUser.userId && (e.currentTarget.style.background = T.surfaceHover)}
+                    onMouseLeave={(e) => processingUserId !== selectedUser.userId && (e.currentTarget.style.background = T.surface)}
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handleChangeRole}
+                    disabled={processingUserId === selectedUser.userId}
+                    style={{
+                      flex: 1,
+                      padding: "10px 20px",
+                      background: T.brand,
+                      color: "#FFFFFF",
+                      borderRadius: "4px",
+                      border: "none",
+                      cursor: processingUserId === selectedUser.userId ? "not-allowed" : "pointer",
+                      opacity: processingUserId === selectedUser.userId ? 0.5 : 1,
+                      transition: "all .15s",
+                      fontSize: "14px",
+                      fontWeight: 700,
+                      fontFamily: "inherit"
+                    }}
+                    onMouseEnter={(e) => processingUserId !== selectedUser.userId && (e.currentTarget.style.background = T.brandHover)}
+                    onMouseLeave={(e) => processingUserId !== selectedUser.userId && (e.currentTarget.style.background = T.brand)}
+                  >
+                    {processingUserId === selectedUser.userId ? "Đang xử lý..." : "Lưu thay đổi"}
                   </button>
                 </div>
               </div>

@@ -16,6 +16,7 @@ export function Sidebar() {
     const managerLinks = [
         { to: "/manager/dashboard", label: "Dashboard", icon: "dashboard" },
         { to: "/manager/projects", label: "Projects", icon: "folder" },
+        { to: "/manager/labels", label: "Tạo nhãn", icon: "label" },
         { to: "/manager/policies", label: "Tạo policy", icon: "policy" },
     ];
 
