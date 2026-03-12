@@ -102,13 +102,14 @@ export default function Workspace() {
     }, [assignmentId]);
 
     /* ── Annotations hook ── */
-    const anno = useAnnotations({ assignmentId, addToast });
+    const anno = useAnnotations({ assignmentId, assignmentStatus: workspace?.assignmentStatus, addToast });
 
     /* ── Tool & UI state ── */
     const [activeTool, setActiveTool] = React.useState("polygon");
     const [selectedGroupKey, setSelectedGroupKey] = React.useState(null);
     const [activeLabelFilterId, setActiveLabelFilterId] = React.useState(null);
     const [pendingShape, setPendingShape] = React.useState(null);
+    const [relabelGroupKey, setRelabelGroupKey] = React.useState(null);
     const [zoom, setZoom] = React.useState(100);
     const [rightTab, setRightTab] = React.useState("annotations"); // "annotations" | "summary"
 
@@ -471,7 +472,10 @@ export default function Workspace() {
 
     /* â”€â”€ Label select modal callbacks â”€â”€ */
     const handleLabelSave = (labelIds) => {
-        if (pendingShape) {
+        if (relabelGroupKey) {
+            anno.updateLabels(relabelGroupKey, labelIds, allLabels);
+            setRelabelGroupKey(null);
+        } else if (pendingShape) {
             anno.addAnnotation(pendingShape, labelIds, allLabels);
             setPendingShape(null);
             setActiveTool("select");
@@ -479,6 +483,7 @@ export default function Workspace() {
     };
     const handleLabelCancel = () => {
         setPendingShape(null);
+        setRelabelGroupKey(null);
     };
 
     /* â”€â”€ Progress â”€â”€ */
@@ -765,7 +770,7 @@ export default function Workspace() {
                                 />
 
                                 {/* Label select popup — absolute inside canvas so it scrolls with it */}
-                                {pendingShape && (
+                                {(pendingShape || relabelGroupKey) && (
                                     <LabelSelectModal
                                         labelGroups={labelGroupsForModal}
                                         pendingShape={pendingShape}
@@ -847,6 +852,7 @@ export default function Workspace() {
                                         onSelect={(gk) => { setSelectedGroupKey(gk); setActiveTool("select"); }}
                                         onDelete={isReadOnly ? undefined : anno.deleteAnnotation}
                                         onToggleHidden={anno.toggleHidden}
+                                        onRelabel={isReadOnly ? undefined : setRelabelGroupKey}
                                         readOnly={isReadOnly}
                                     />
                                 )

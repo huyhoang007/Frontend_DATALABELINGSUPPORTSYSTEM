@@ -144,6 +144,11 @@ export function groupAnnotationsByKey(beAnnotations) {
                 g.labelNames.push(ann.labelName || "Unknown");
             }
             g.beReviewingIds.push(ann.reviewingId);
+            // Worst status wins: REJECTED > PENDING > APPROVED
+            const s = ann.status || null;
+            if (s === "REJECTED") g.reviewStatus = "REJECTED";
+            else if (g.reviewStatus !== "REJECTED" && s === "PENDING") g.reviewStatus = s;
+            if (!g.policyName && ann.policyName) g.policyName = ann.policyName;
         } else {
             // Build clean geometry (strip meta fields)
             const cleanGeom = { ...geom };
@@ -159,6 +164,8 @@ export function groupAnnotationsByKey(beAnnotations) {
                 labelNames: [ann.labelName || "Unknown"],
                 beReviewingIds: [ann.reviewingId],
                 isHidden: false,
+                reviewStatus: ann.status || null,
+                policyName: ann.policyName || null,
             });
         }
     });
