@@ -84,7 +84,7 @@ export default function AdminLabels() {
                     <div className="mb-8 flex items-center justify-between">
                         <div>
                             <h1 className="text-3xl font-bold text-foreground mb-2">
-                                🏷️ Label Management
+                                Label Management
                             </h1>
                             <p className="text-muted-foreground">
                                 Manage global label taxonomy
@@ -94,7 +94,7 @@ export default function AdminLabels() {
                             onClick={() => setShowCreateModal(true)}
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
                         >
-                            ➕ Create Label
+                            Create Label
                         </button>
                     </div>
 
@@ -102,12 +102,12 @@ export default function AdminLabels() {
                     <div className="bg-card border border-border rounded-lg p-6">
                         {isLoading ? (
                             <div className="text-center text-muted-foreground py-12">
-                                <div className="text-4xl mb-4 animate-spin">⏳</div>
+                                <div className="text-4xl mb-4 animate-spin">...</div>
                                 <p>Loading labels...</p>
                             </div>
                         ) : labels.length === 0 ? (
                             <div className="text-center text-muted-foreground py-12">
-                                <div className="text-6xl mb-4">🏷️</div>
+                                <div className="text-6xl mb-4">L</div>
                                 <p className="text-lg font-medium mb-2">No labels configured</p>
                                 <p className="text-sm">Click "Create Label" to add your first label</p>
                             </div>

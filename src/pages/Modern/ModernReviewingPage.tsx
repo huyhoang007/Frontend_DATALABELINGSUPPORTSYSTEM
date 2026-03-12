@@ -90,10 +90,10 @@ const ModernReviewingPage: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending': return '⏳';
-      case 'approved': return '✅';
-      case 'rejected': return '❌';
-      default: return '❓';
+      case 'pending': return 'P';
+      case 'approved': return 'A';
+      case 'rejected': return 'R';
+      default: return '?';
     }
   };
 
@@ -107,7 +107,7 @@ const ModernReviewingPage: React.FC = () => {
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
-            <span>👁️</span> Kiểm duyệt & Review
+            Kiểm duyệt & Review
           </h1>
           <p className="text-lg text-muted-foreground">
             Quản lý quá trình review và kiểm duyệt annotations
@@ -150,7 +150,7 @@ const ModernReviewingPage: React.FC = () => {
             className="px-4 py-2 bg-background border border-input rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer min-w-[200px]"
           >
             <option value="all">Tất cả trạng thái</option>
-            <option value="pending">Chờ review</option>
+            <option value="pending">Chờ duyệt</option>
             <option value="approved">Đã duyệt</option>
             <option value="rejected">Từ chối</option>
           </select>
@@ -168,17 +168,6 @@ const ModernReviewingPage: React.FC = () => {
             )}
           >
             <div className="flex items-start gap-5">
-              {/* Status Icon */}
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0"
-                style={{
-                  backgroundColor: `${getStatusColor(review.status)}20`,
-                  color: getStatusColor(review.status)
-                }}
-              >
-                {getStatusIcon(review.status)}
-              </div>
-
               {/* Review Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-3 mb-3">
@@ -197,14 +186,14 @@ const ModernReviewingPage: React.FC = () => {
                   </div>
                   {review.is_improved && (
                     <div className="px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-full text-[10px] font-bold uppercase tracking-wide">
-                      ✨ Improved
+                      Improved
                     </div>
                   )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-4">
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">📁 Dự án</div>
+                    <div className="text-xs text-muted-foreground mb-1">Dự án</div>
                     <div className="text-sm font-semibold text-foreground truncate">
                       {review.assignment?.project?.name}
                     </div>
@@ -214,7 +203,7 @@ const ModernReviewingPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">🏷️ Label</div>
+                    <div className="text-xs text-muted-foreground mb-1">Label</div>
                     <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                       <div
                         className="w-3 h-3 rounded-full shrink-0"
@@ -228,7 +217,7 @@ const ModernReviewingPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">✏️ Annotator</div>
+                    <div className="text-xs text-muted-foreground mb-1">Annotator</div>
                     <div className="text-sm font-semibold text-foreground truncate">
                       {review.annotator?.full_name}
                     </div>
@@ -238,7 +227,7 @@ const ModernReviewingPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">👁️ Reviewer</div>
+                    <div className="text-xs text-muted-foreground mb-1">Reviewer</div>
                     <div className="text-sm font-semibold text-foreground truncate">
                       {review.reviewer?.full_name}
                     </div>
@@ -250,7 +239,7 @@ const ModernReviewingPage: React.FC = () => {
 
                 {/* Geometry Preview */}
                 <div className="mb-4">
-                  <div className="text-xs text-muted-foreground mb-1">📐 Geometry</div>
+                  <div className="text-xs text-muted-foreground mb-1">Geometry</div>
                   <div className="bg-muted/40 p-2 rounded-md font-mono text-[10px] text-muted-foreground truncate border border-border/50 max-w-md">
                     {review.geometry}
                   </div>
@@ -275,7 +264,6 @@ const ModernReviewingPage: React.FC = () => {
                       <Button
                         variant="secondary"
                         className="h-8 text-xs text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-200 dark:border-emerald-800"
-                        iconColorClass="text-emerald-600"
                         leftIcon="check"
                       >
                         Duyệt
@@ -284,7 +272,6 @@ const ModernReviewingPage: React.FC = () => {
                       <Button
                         variant="secondary"
                         className="h-8 text-xs text-red-600 bg-red-500/10 hover:bg-red-500/20 border-red-200 dark:border-red-800"
-                        iconColorClass="text-red-600"
                         leftIcon="close"
                       >
                         Từ chối
@@ -295,7 +282,6 @@ const ModernReviewingPage: React.FC = () => {
                   <Button
                     variant="secondary"
                     className="h-8 text-xs text-amber-600 bg-amber-500/10 hover:bg-amber-500/20 border-amber-200 dark:border-amber-800"
-                    iconColorClass="text-amber-600"
                     leftIcon="edit"
                   >
                     Ghi chú
@@ -313,7 +299,7 @@ const ModernReviewingPage: React.FC = () => {
           <Card className="w-full max-w-3xl p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-border/50">
               <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                <span>👁️</span> Chi tiết Review #{selectedReview.reviewing_id}
+                Chi tiết Review #{selectedReview.reviewing_id}
               </h2>
               <Button
                 variant="ghost"
@@ -321,7 +307,7 @@ const ModernReviewingPage: React.FC = () => {
                 className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                 onClick={() => setShowReviewModal(false)}
               >
-                ✕
+                X
               </Button>
             </div>
 
@@ -355,7 +341,7 @@ const ModernReviewingPage: React.FC = () => {
                   <div>
                     <div className="text-xs text-muted-foreground mb-1">Cải thiện</div>
                     <div className={cn("text-sm font-medium", selectedReview.is_improved ? "text-emerald-500" : "text-muted-foreground")}>
-                      {selectedReview.is_improved ? '✅ Đã cải thiện' : '❌ Chưa cải thiện'}
+                      {selectedReview.is_improved ? 'Đã cải thiện' : 'Chưa cải thiện'}
                     </div>
                   </div>
                 </div>

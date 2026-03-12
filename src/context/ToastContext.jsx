@@ -18,12 +18,12 @@ export function ToastProvider({ children }) {
         const id = Math.random().toString(36).substr(2, 9);
         setToasts((prev) => [...prev, { id, message: msg, type: t }]);
 
-        // Auto dismiss
-        if (t === 'success' || t === 'info') {
-            setTimeout(() => {
-                setToasts((prev) => prev.filter((t) => t.id !== id));
-            }, 3000);
-        }
+        // Auto dismiss ALL toasts after duration
+        // Success/Info: 3 seconds, Error/Warning: 5 seconds
+        const duration = (t === 'error' || t === 'warning') ? 5000 : 3000;
+        setTimeout(() => {
+            setToasts((prev) => prev.filter((toast) => toast.id !== id));
+        }, duration);
     }, []);
 
     const removeToast = React.useCallback((id) => {
@@ -34,28 +34,31 @@ export function ToastProvider({ children }) {
         <ToastContext.Provider value={{ addToast }}>
             {children}
             {createPortal(
-                <div className="fixed bottom-4 right-4 z-50 flex flex-col space-y-2 pointer-events-none">
+                <div className="fixed top-6 right-6 z-[9999] flex flex-col space-y-3 pointer-events-none">
                     {toasts.map((toast) => (
                         <div
                             key={toast.id}
                             className={cn(
-                                "pointer-events-auto flex items-center w-full max-w-xs px-4 py-3 rounded-lg shadow-lg border animate-in slide-in-from-right-full duration-300",
-                                toast.type === "success" && "bg-dark-surface-panel border-green-500/20 text-green-400",
-                                toast.type === "error" && "bg-dark-surface-panel border-red-500/20 text-red-400",
-                                toast.type === "info" && "bg-dark-surface-panel border-blue-500/20 text-blue-400",
+                                "pointer-events-auto flex items-center gap-3 w-full max-w-md px-5 py-4 rounded-xl shadow-2xl border-2 animate-in slide-in-from-right-full duration-300 backdrop-blur-sm",
+                                toast.type === "success" && "bg-emerald-500/95 border-emerald-400/50 text-white",
+                                toast.type === "error" && "bg-red-500/95 border-red-400/50 text-white",
+                                toast.type === "warning" && "bg-amber-500/95 border-amber-400/50 text-white",
+                                toast.type === "info" && "bg-blue-500/95 border-blue-400/50 text-white",
                             )}
                         >
-                            <span className="material-symbols-outlined mr-2 text-[20px]">
+                            <span className="material-symbols-outlined text-[24px] font-bold">
                                 {toast.type === "success" && "check_circle"}
                                 {toast.type === "error" && "error"}
+                                {toast.type === "warning" && "warning"}
                                 {toast.type === "info" && "info"}
                             </span>
-                            <p className="text-sm font-medium">{toast.message}</p>
+                            <p className="text-base font-semibold flex-1">{toast.message}</p>
                             <button
                                 onClick={() => removeToast(toast.id)}
-                                className="ml-auto text-dark-text-muted hover:text-dark-text-primary"
+                                className="ml-2 hover:bg-white/20 rounded-lg p-1 transition-colors"
+                                title="Đóng"
                             >
-                                <span className="material-symbols-outlined text-[16px]">close</span>
+                                <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
                     ))}

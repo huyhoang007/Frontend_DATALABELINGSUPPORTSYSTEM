@@ -381,7 +381,7 @@ export default function Workspace() {
             addToast({ type: "info", message: "Đã bỏ đánh dấu Done" });
         } else {
             const ok = anno.markDone(currentItem.itemId);
-            if (ok) addToast({ type: "success", message: "Đã đánh dấu Done ✓" });
+            if (ok) addToast({ type: "success", message: "Đã đánh dấu Done" });
         }
         // force re-render for sidebar
         setWorkspace((w) => ({ ...w }));

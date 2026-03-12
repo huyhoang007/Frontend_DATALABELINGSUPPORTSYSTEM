@@ -4,6 +4,28 @@ import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { userApi } from "../../api/userApi";
 
+// Bảng màu Modern Enterprise UI
+const T = {
+  bg: "#F7F8F9",
+  surface: "#FFFFFF",
+  surfaceHover: "#F1F2F4",
+  border: "#DCDFE4",
+  textPrimary: "#172B4D",
+  textSecondary: "#44546F",
+  textMuted: "#626F86",
+  brand: "#0C66E4",
+  brandHover: "#0055CC",
+  brandLight: "#E9F2FF",
+  green: "#1F845A",
+  greenBg: "#DCFFF1",
+  amber: "#A54800",
+  amberBg: "#FFF7D6",
+  purple: "#5E4DB2",
+  purpleBg: "#F3F0FF",
+  red: "#DE350B",
+  redBg: "#FFEBE6",
+};
+
 export default function AdminUsers() {
   const { user } = useAuth();
   const { addToast } = useToast();
@@ -16,6 +38,8 @@ export default function AdminUsers() {
   const [statusFilter, setStatusFilter] = useState("all"); // 'all', 'pending', 'active', 'banned'
   const usersPerPage = 10;
   const [processingUserId, setProcessingUserId] = useState(null);
+  const [hoveredRow, setHoveredRow] = useState(null);
+  const [hoveredTab, setHoveredTab] = useState(null);
   const [newUser, setNewUser] = useState({
     username: "",
     email: "",
@@ -48,7 +72,7 @@ export default function AdminUsers() {
       setUsers(data.content || data || []);
     } catch (error) {
       console.error("Failed to fetch users:", error);
-      addToast("Failed to load users", "error");
+      addToast("Không thể tải danh sách người dùng", "error");
     } finally {
       setIsLoading(false);
     }
@@ -186,29 +210,67 @@ export default function AdminUsers() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
-      <main className="flex-1 p-8 overflow-auto">
-        <div className="max-w-7xl mx-auto">
+    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif" }}>
+      <main style={{ padding: "32px 40px", width: "100%" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
           {/* Header */}
-          <div className="mb-8 flex items-center justify-between">
+          <div style={{
+            marginBottom: "32px",
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "space-between",
+            paddingBottom: "24px",
+            borderBottom: `2px solid ${T.border}`,
+            flexWrap: "wrap",
+            gap: "16px"
+          }}>
             <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
+              <p style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                color: T.textMuted,
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                marginBottom: "4px"
+              }}>
+                Quản lý hệ thống
+              </p>
+              <h1 style={{
+                fontSize: "28px",
+                fontWeight: 800,
+                color: T.textPrimary,
+                letterSpacing: "-0.02em",
+                marginBottom: "8px"
+              }}>
                 User Management
               </h1>
-              <p className="text-muted-foreground">
-                Manage system users and roles
+              <p style={{ fontSize: "14px", color: T.textMuted }}>
+                Quản lý người dùng và phân quyền trong hệ thống
               </p>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+              onMouseEnter={(e) => e.currentTarget.style.background = T.brandHover}
+              onMouseLeave={(e) => e.currentTarget.style.background = T.brand}
+              style={{
+                padding: "10px 20px",
+                background: T.brand,
+                color: "#FFFFFF",
+                border: "none",
+                borderRadius: "4px",
+                fontSize: "14px",
+                fontWeight: 700,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                transition: "all .15s"
+              }}
             >
-              ➕ Create User
+              Tạo người dùng
             </button>
           </div>
 
           {/* Status Filter Tabs */}
-          <div className="mb-6 flex gap-2 flex-wrap">
+          <div style={{ marginBottom: "24px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
             {[
               { value: "all", label: "Tất cả", count: users.length },
               {
@@ -220,27 +282,37 @@ export default function AdminUsers() {
               },
               {
                 value: "active",
-                label: "Active",
+                label: "Hoạt động",
                 count: users.filter((u) => u.status?.toLowerCase() === "active")
                   .length,
               },
               {
                 value: "banned",
-                label: "Banned",
+                label: "Bị cấm",
                 count: users.filter((u) => u.status?.toLowerCase() === "banned")
                   .length,
               },
-            ].map((tab) => (
+            ].map((tab, idx) => (
               <button
                 key={tab.value}
                 onClick={() => {
                   setStatusFilter(tab.value);
                   setCurrentPage(1);
                 }}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${statusFilter === tab.value
-                    ? "bg-blue-600 text-white"
-                    : "bg-card border border-border text-foreground hover:bg-accent"
-                  }`}
+                onMouseEnter={() => setHoveredTab(idx)}
+                onMouseLeave={() => setHoveredTab(null)}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "4px",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  transition: "all .15s",
+                  background: statusFilter === tab.value ? T.brand : (hoveredTab === idx ? T.surfaceHover : T.surface),
+                  color: statusFilter === tab.value ? "#FFFFFF" : T.textPrimary,
+                  border: `1px solid ${statusFilter === tab.value ? T.brand : T.border}`,
+                  cursor: "pointer",
+                  fontFamily: "inherit"
+                }}
               >
                 {tab.label} ({tab.count})
               </button>
@@ -248,115 +320,182 @@ export default function AdminUsers() {
           </div>
 
           {/* User List */}
-          <div className="bg-card border border-border rounded-lg overflow-hidden">
+          <div style={{
+            background: T.surface,
+            border: `1px solid ${T.border}`,
+            borderRadius: "6px",
+            overflow: "hidden",
+            boxShadow: "0 1px 3px rgba(9,30,66,.08)"
+          }}>
             {isLoading ? (
-              <div className="text-center text-muted-foreground py-12">
-                <div className="text-4xl mb-4 animate-spin">⏳</div>
-                <p>Loading users...</p>
+              <div style={{
+                textAlign: "center",
+                color: T.textMuted,
+                padding: "64px 0"
+              }}>
+                <div style={{ fontSize: "32px", marginBottom: "16px" }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "32px", color: T.textMuted, animation: "spin 1s linear infinite" }}>progress_activity</span>
+                </div>
+                <p style={{ fontSize: "13px" }}>Đang tải người dùng...</p>
               </div>
             ) : users.length === 0 ? (
-              <div className="text-center text-muted-foreground py-12">
-                <div className="text-6xl mb-4">👤</div>
-                <p className="text-lg font-medium mb-2">No users found</p>
-                <p className="text-sm">
-                  Click "Create User" to add the first user
+              <div style={{
+                textAlign: "center",
+                color: T.textMuted,
+                padding: "64px 0"
+              }}>
+                <p style={{ fontSize: "16px", fontWeight: 600, marginBottom: "8px", color: T.textPrimary }}>
+                  Không tìm thấy người dùng
+                </p>
+                <p style={{ fontSize: "13px" }}>
+                  Nhấn "Tạo người dùng" để thêm người dùng đầu tiên
                 </p>
               </div>
             ) : (
-              <table className="w-full">
-                <thead className="bg-background/50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      User
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Role
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Created
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {currentUsers.map((u) => {
+              <>
+                {/* Table Header */}
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "2fr 2fr 1fr 1fr 1fr 1.5fr",
+                  padding: "12px 24px",
+                  background: "#FAFBFC",
+                  borderBottom: `1px solid ${T.border}`,
+                  gap: "12px"
+                }}>
+                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>NGƯỜI DÙNG</p>
+                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>EMAIL</p>
+                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>VAI TRÒ</p>
+                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>TRẠNG THÁI</p>
+                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>NGÀY TẠO</p>
+                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>THAO TÁC</p>
+                </div>
+
+                {/* Table Body */}
+                <div>
+                  {currentUsers.map((u, idx) => {
                     const roleInfo = u.roleName
                       ? getRoleLabelFromName(u.roleName)
                       : getRoleLabel(u.roleId);
                     return (
-                      <tr
+                      <div
                         key={u.userId || u.id}
-                        className="hover:bg-accent/30 transition-colors"
+                        onMouseEnter={() => setHoveredRow(idx)}
+                        onMouseLeave={() => setHoveredRow(null)}
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "2fr 2fr 1fr 1fr 1fr 1.5fr",
+                          padding: "16px 24px",
+                          background: hoveredRow === idx ? T.brandLight : (idx % 2 === 0 ? T.surface : "#FAFBFC"),
+                          borderBottom: `1px solid ${T.border}`,
+                          transition: "all .15s",
+                          gap: "12px",
+                          alignItems: "center"
+                        }}
                       >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                              {u.fullName?.[0]?.toUpperCase() ||
-                                u.username?.[0]?.toUpperCase() ||
-                                "?"}
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                          <div style={{
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "50%",
+                            background: `linear-gradient(135deg, ${T.brand}, ${T.purple})`,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#FFFFFF",
+                            fontSize: "16px",
+                            fontWeight: 700
+                          }}>
+                            {u.fullName?.[0]?.toUpperCase() ||
+                              u.username?.[0]?.toUpperCase() ||
+                              "?"}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: "13px", fontWeight: 700, color: T.textPrimary }}>
+                              {u.fullName || u.username}
                             </div>
-                            <div>
-                              <div className="font-medium text-foreground">
-                                {u.fullName || u.username}
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                @{u.username}
-                              </div>
+                            <div style={{ fontSize: "12px", color: T.textMuted }}>
+                              @{u.username}
                             </div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-foreground">
+                        </div>
+                        <span style={{ fontSize: "13px", color: T.textPrimary }}>
                           {u.email}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className="px-2 py-1 rounded-full text-xs font-medium"
-                            style={{
-                              backgroundColor: `${roleInfo.color}20`,
-                              color: roleInfo.color,
-                            }}
-                          >
-                            {roleInfo.name}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className="px-2 py-1 rounded-full text-xs font-medium"
-                            style={{
-                              backgroundColor: `${getStatusColor(u.status)}20`,
-                              color: getStatusColor(u.status),
-                            }}
-                          >
-                            {u.status || "Active"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-muted-foreground">
+                        </span>
+                        <span style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          padding: "4px 10px",
+                          borderRadius: "4px",
+                          fontSize: "10px",
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                          background: `${roleInfo.color}20`,
+                          color: roleInfo.color
+                        }}>
+                          {roleInfo.name}
+                        </span>
+                        <span style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          padding: "4px 10px",
+                          borderRadius: "4px",
+                          fontSize: "10px",
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                          background: `${getStatusColor(u.status)}20`,
+                          color: getStatusColor(u.status)
+                        }}>
+                          {u.status === 'active' ? 'Hoạt động' : u.status === 'pending' ? 'Chờ duyệt' : u.status === 'banned' ? 'Bị cấm' : u.status === 'inactive' ? 'Không hoạt động' : u.status || "Hoạt động"}
+                        </span>
+                        <span style={{ fontSize: "12px", color: T.textMuted }}>
                           {u.createdAt
                             ? new Date(u.createdAt).toLocaleDateString()
                             : "-"}
-                        </td>
-                        <td className="px-6 py-4">
+                        </span>
+                        <div>
                           {u.status?.toLowerCase() === "pending" ? (
-                            <div className="flex gap-2">
+                            <div style={{ display: "flex", gap: "8px" }}>
                               <button
                                 onClick={() => handleApproveUser(u.userId)}
                                 disabled={processingUserId === u.userId}
-                                className="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 text-white text-xs rounded-lg font-medium transition-colors flex items-center gap-1"
+                                onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.background = "#16A34A")}
+                                onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.background = T.green)}
+                                style={{
+                                  padding: "6px 12px",
+                                  background: T.green,
+                                  color: "#FFFFFF",
+                                  fontSize: "11px",
+                                  borderRadius: "4px",
+                                  fontWeight: 700,
+                                  border: "none",
+                                  cursor: processingUserId === u.userId ? "not-allowed" : "pointer",
+                                  opacity: processingUserId === u.userId ? 0.5 : 1,
+                                  transition: "all .15s",
+                                  fontFamily: "inherit"
+                                }}
                               >
                                 ✔ Chấp nhận
                               </button>
                               <button
                                 onClick={() => handleRejectUser(u.userId)}
                                 disabled={processingUserId === u.userId}
-                                className="px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:bg-red-600/50 text-white text-xs rounded-lg font-medium transition-colors flex items-center gap-1"
+                                onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.background = "#DC2626")}
+                                onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.background = T.red)}
+                                style={{
+                                  padding: "6px 12px",
+                                  background: T.red,
+                                  color: "#FFFFFF",
+                                  fontSize: "11px",
+                                  borderRadius: "4px",
+                                  fontWeight: 700,
+                                  border: "none",
+                                  cursor: processingUserId === u.userId ? "not-allowed" : "pointer",
+                                  opacity: processingUserId === u.userId ? 0.5 : 1,
+                                  transition: "all .15s",
+                                  fontFamily: "inherit"
+                                }}
                               >
                                 ✖ Từ chối
                               </button>
@@ -368,42 +507,83 @@ export default function AdminUsers() {
                                   .unbanUser(u.userId)
                                   .then(() => fetchUsers())
                               }
-                              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg font-medium transition-colors"
+                              onMouseEnter={(e) => e.currentTarget.style.background = T.brandHover}
+                              onMouseLeave={(e) => e.currentTarget.style.background = T.brand}
+                              style={{
+                                padding: "6px 12px",
+                                background: T.brand,
+                                color: "#FFFFFF",
+                                fontSize: "11px",
+                                borderRadius: "4px",
+                                fontWeight: 700,
+                                border: "none",
+                                cursor: "pointer",
+                                transition: "all .15s",
+                                fontFamily: "inherit"
+                              }}
                             >
                               Unban
                             </button>
                           ) : (
-                            <span className="text-xs text-muted-foreground">
+                            <span style={{ fontSize: "12px", color: T.textMuted }}>
                               -
                             </span>
                           )}
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
+                </div>
+              </>
             )}
 
             {/* Pagination */}
             {!isLoading && filteredUsers.length > 0 && totalPages > 1 && (
-              <div className="flex items-center justify-between p-4 border-t border-border">
-                <div className="text-sm text-muted-foreground">
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "16px 24px",
+                borderTop: `1px solid ${T.border}`
+              }}>
+                <div style={{ fontSize: "13px", color: T.textMuted }}>
                   Hiển thị {indexOfFirstUser + 1}-
                   {Math.min(indexOfLastUser, filteredUsers.length)} /{" "}
                   {filteredUsers.length} người dùng
                 </div>
-                <div className="flex gap-2">
+                <div style={{ display: "flex", gap: "8px" }}>
                   <button
                     onClick={() =>
                       setCurrentPage((prev) => Math.max(prev - 1, 1))
                     }
                     disabled={currentPage === 1}
-                    className="px-3 py-1.5 text-sm border border-border rounded-lg text-foreground hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      padding: "8px 16px",
+                      fontSize: "13px",
+                      border: `1px solid ${T.border}`,
+                      borderRadius: "4px",
+                      color: T.textPrimary,
+                      background: T.surface,
+                      cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                      opacity: currentPage === 1 ? 0.5 : 1,
+                      transition: "all .15s",
+                      fontFamily: "inherit",
+                      fontWeight: 600
+                    }}
+                    onMouseEnter={(e) => currentPage !== 1 && (e.currentTarget.style.background = T.surfaceHover)}
+                    onMouseLeave={(e) => currentPage !== 1 && (e.currentTarget.style.background = T.surface)}
                   >
                     ← Trước
                   </button>
-                  <div className="px-3 py-1.5 text-sm border border-border rounded-lg bg-blue-600/10 text-blue-600 font-medium">
+                  <div style={{
+                    padding: "8px 16px",
+                    fontSize: "13px",
+                    border: `1px solid ${T.border}`,
+                    borderRadius: "4px",
+                    background: T.brandLight,
+                    color: T.brand,
+                    fontWeight: 700
+                  }}>
                     {currentPage} / {totalPages}
                   </div>
                   <button
@@ -411,7 +591,21 @@ export default function AdminUsers() {
                       setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                     }
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1.5 text-sm border border-border rounded-lg text-foreground hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      padding: "8px 16px",
+                      fontSize: "13px",
+                      border: `1px solid ${T.border}`,
+                      borderRadius: "4px",
+                      color: T.textPrimary,
+                      background: T.surface,
+                      cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                      opacity: currentPage === totalPages ? 0.5 : 1,
+                      transition: "all .15s",
+                      fontFamily: "inherit",
+                      fontWeight: 600
+                    }}
+                    onMouseEnter={(e) => currentPage !== totalPages && (e.currentTarget.style.background = T.surfaceHover)}
+                    onMouseLeave={(e) => currentPage !== totalPages && (e.currentTarget.style.background = T.surface)}
                   >
                     Tiếp →
                   </button>
@@ -422,16 +616,43 @@ export default function AdminUsers() {
 
           {/* Create User Modal */}
           {showCreateModal && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
-                <h2 className="text-xl font-bold text-foreground mb-4">
-                  Create New User
+            <div style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 9999
+            }}>
+              <div style={{
+                background: T.surface,
+                border: `1px solid ${T.border}`,
+                borderRadius: "6px",
+                padding: "32px",
+                width: "90%",
+                maxWidth: "500px",
+                boxShadow: "0 8px 24px rgba(9,30,66,.25)"
+              }}>
+                <h2 style={{
+                  fontSize: "20px",
+                  fontWeight: 700,
+                  color: T.textPrimary,
+                  marginBottom: "24px"
+                }}>
+                  Tạo người dùng mới
                 </h2>
 
-                <div className="space-y-4">
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">
-                      Username <span className="text-red-500">*</span>
+                    <label style={{
+                      display: "block",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: T.textMuted,
+                      marginBottom: "6px"
+                    }}>
+                      Username <span style={{ color: T.red }}>*</span>
                     </label>
                     <input
                       type="text"
@@ -439,14 +660,32 @@ export default function AdminUsers() {
                       onChange={(e) =>
                         setNewUser({ ...newUser, username: e.target.value })
                       }
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        background: T.bg,
+                        border: `1px solid ${T.border}`,
+                        borderRadius: "4px",
+                        color: T.textPrimary,
+                        fontSize: "13px",
+                        fontFamily: "inherit",
+                        outline: "none"
+                      }}
                       placeholder="johndoe"
+                      onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
+                      onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">
-                      Email <span className="text-red-500">*</span>
+                    <label style={{
+                      display: "block",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: T.textMuted,
+                      marginBottom: "6px"
+                    }}>
+                      Email <span style={{ color: T.red }}>*</span>
                     </label>
                     <input
                       type="email"
@@ -454,14 +693,32 @@ export default function AdminUsers() {
                       onChange={(e) =>
                         setNewUser({ ...newUser, email: e.target.value })
                       }
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        background: T.bg,
+                        border: `1px solid ${T.border}`,
+                        borderRadius: "4px",
+                        color: T.textPrimary,
+                        fontSize: "13px",
+                        fontFamily: "inherit",
+                        outline: "none"
+                      }}
                       placeholder="john@example.com"
+                      onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
+                      onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">
-                      Full Name <span className="text-red-500">*</span>
+                    <label style={{
+                      display: "block",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: T.textMuted,
+                      marginBottom: "6px"
+                    }}>
+                      Full Name <span style={{ color: T.red }}>*</span>
                     </label>
                     <input
                       type="text"
@@ -469,14 +726,32 @@ export default function AdminUsers() {
                       onChange={(e) =>
                         setNewUser({ ...newUser, fullName: e.target.value })
                       }
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        background: T.bg,
+                        border: `1px solid ${T.border}`,
+                        borderRadius: "4px",
+                        color: T.textPrimary,
+                        fontSize: "13px",
+                        fontFamily: "inherit",
+                        outline: "none"
+                      }}
                       placeholder="John Doe"
+                      onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
+                      onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">
-                      Role <span className="text-red-500">*</span>
+                    <label style={{
+                      display: "block",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: T.textMuted,
+                      marginBottom: "6px"
+                    }}>
+                      Role <span style={{ color: T.red }}>*</span>
                     </label>
                     <select
                       value={newUser.roleId}
@@ -486,7 +761,19 @@ export default function AdminUsers() {
                           roleId: parseInt(e.target.value),
                         })
                       }
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        background: T.bg,
+                        border: `1px solid ${T.border}`,
+                        borderRadius: "4px",
+                        color: T.textPrimary,
+                        fontSize: "13px",
+                        fontFamily: "inherit",
+                        outline: "none"
+                      }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
+                      onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                     >
                       <option value={2}>Manager</option>
                       <option value={3}>Annotator</option>
@@ -495,8 +782,14 @@ export default function AdminUsers() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">
-                      Password <span className="text-red-500">*</span>
+                    <label style={{
+                      display: "block",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: T.textMuted,
+                      marginBottom: "6px"
+                    }}>
+                      Password <span style={{ color: T.red }}>*</span>
                     </label>
                     <input
                       type="password"
@@ -504,26 +797,67 @@ export default function AdminUsers() {
                       onChange={(e) =>
                         setNewUser({ ...newUser, password: e.target.value })
                       }
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        background: T.bg,
+                        border: `1px solid ${T.border}`,
+                        borderRadius: "4px",
+                        color: T.textPrimary,
+                        fontSize: "13px",
+                        fontFamily: "inherit",
+                        outline: "none"
+                      }}
                       placeholder="••••••••"
+                      onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
+                      onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                     />
                   </div>
                 </div>
 
-                <div className="flex gap-3 mt-6">
+                <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
                   <button
                     onClick={() => setShowCreateModal(false)}
-                    className="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-accent transition-colors"
                     disabled={isCreating}
+                    style={{
+                      flex: 1,
+                      padding: "10px 20px",
+                      border: `1px solid ${T.border}`,
+                      borderRadius: "4px",
+                      color: T.textPrimary,
+                      background: T.surface,
+                      cursor: isCreating ? "not-allowed" : "pointer",
+                      transition: "all .15s",
+                      fontSize: "14px",
+                      fontWeight: 600,
+                      fontFamily: "inherit"
+                    }}
+                    onMouseEnter={(e) => !isCreating && (e.currentTarget.style.background = T.surfaceHover)}
+                    onMouseLeave={(e) => !isCreating && (e.currentTarget.style.background = T.surface)}
                   >
-                    Cancel
+                    Hủy
                   </button>
                   <button
                     onClick={handleCreateUser}
                     disabled={isCreating}
-                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white rounded-lg font-medium transition-colors"
+                    style={{
+                      flex: 1,
+                      padding: "10px 20px",
+                      background: T.brand,
+                      color: "#FFFFFF",
+                      borderRadius: "4px",
+                      border: "none",
+                      cursor: isCreating ? "not-allowed" : "pointer",
+                      opacity: isCreating ? 0.5 : 1,
+                      transition: "all .15s",
+                      fontSize: "14px",
+                      fontWeight: 700,
+                      fontFamily: "inherit"
+                    }}
+                    onMouseEnter={(e) => !isCreating && (e.currentTarget.style.background = T.brandHover)}
+                    onMouseLeave={(e) => !isCreating && (e.currentTarget.style.background = T.brand)}
                   >
-                    {isCreating ? "Creating..." : "Create"}
+                    {isCreating ? "Đang tạo..." : "Tạo"}
                   </button>
                 </div>
               </div>

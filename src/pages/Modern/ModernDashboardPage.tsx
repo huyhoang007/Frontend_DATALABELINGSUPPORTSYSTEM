@@ -1,9 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { DashboardStats } from '../../types/cvat';
-import { Card } from '../../components/ui/Card';
-import { cn } from '../../utils/cn';
+
+// Modern Enterprise UI - Bảng màu T chuẩn
+const T = {
+  bg: "#F7F8F9",
+  surface: "#FFFFFF",
+  surfaceHover: "#F8F9FA",
+  border: "#DFE1E6",
+  borderLight: "#EBECF0",
+  textPrimary: "#172B4D",
+  textSecondary: "#5E6C84",
+  textMuted: "#8993A4",
+  brand: "#0052CC",
+  brandHover: "#0747A6",
+  brandLight: "#DEEBFF",
+  success: "#00875A",
+  successBg: "#E3FCEF",
+  warning: "#FF991F",
+  warningBg: "#FFFAE6",
+  danger: "#DE350B",
+  dangerBg: "#FFEBE6",
+  info: "#0065FF",
+  infoBg: "#DEEBFF",
+  purple: "#5243AA",
+  purpleBg: "#EAE6FF",
+};
 
 const ModernDashboardPage: React.FC = () => {
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const [hoveredActivity, setHoveredActivity] = useState<number | null>(null);
   // Mock dashboard stats theo ERD
   const stats: DashboardStats = {
     total_users: 1234,
@@ -19,42 +44,42 @@ const ModernDashboardPage: React.FC = () => {
       title: 'Tổng người dùng',
       value: stats.total_users.toLocaleString(),
       change: '+12%',
-      icon: '👥',
+      icon: 'U',
       color: '#3b82f6'
     },
     {
       title: 'Dự án đang hoạt động',
       value: stats.active_projects.toString(),
       change: '+8%',
-      icon: '📁',
+      icon: 'P',
       color: '#10b981'
     },
     {
       title: 'Nhiệm vụ hoàn thành',
       value: stats.completed_tasks.toLocaleString(),
       change: '+23%',
-      icon: '✅',
+      icon: 'T',
       color: '#f59e0b'
     },
     {
       title: 'Tổng datasets',
       value: stats.total_datasets.toString(),
       change: '+15%',
-      icon: '💾',
+      icon: 'D',
       color: '#8b5cf6'
     },
     {
       title: 'Chờ review',
       value: stats.pending_reviews.toString(),
       change: '-5%',
-      icon: '👁️',
+      icon: 'R',
       color: '#ef4444'
     },
     {
       title: 'Điểm chất lượng',
       value: `${stats.quality_score}%`,
       change: '+2%',
-      icon: '⭐',
+      icon: 'Q',
       color: '#06b6d4'
     }
   ];
@@ -67,108 +92,231 @@ const ModernDashboardPage: React.FC = () => {
   ];
 
   return (
-    <div className="p-8 min-h-full bg-transparent space-y-8">
+    <div style={{
+      padding: '32px',
+      minHeight: '100vh',
+      backgroundColor: T.bg,
+    }}>
       {/* Welcome Section */}
-      <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-        <div className="flex items-center gap-5">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-3xl flex items-center justify-center text-4xl shadow-xl shadow-blue-500/30">
-            👋
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Chào mừng trở lại, Admin!
-            </h1>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              Hôm nay là {new Date().toLocaleDateString('vi-VN', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}. Hệ thống đang hoạt động tốt.
-            </p>
-          </div>
+      <div style={{
+        padding: '32px',
+        backgroundColor: T.surface,
+        border: `1px solid ${T.border}`,
+        borderRadius: '12px',
+        marginBottom: '32px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+      }}>
+        <div>
+          <h1 style={{
+            fontSize: '28px',
+            fontWeight: '600',
+            color: T.textPrimary,
+            marginBottom: '8px',
+            letterSpacing: '-0.01em',
+          }}>
+            Chào mừng trở lại, Admin!
+          </h1>
+          <p style={{
+            fontSize: '15px',
+            color: T.textSecondary,
+            lineHeight: '1.6',
+          }}>
+            Hôm nay là {new Date().toLocaleDateString('vi-VN', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}. Hệ thống đang hoạt động tốt.
+          </p>
         </div>
-      </Card>
+      </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gap: '24px',
+        marginBottom: '32px',
+      }}>
         {dashboardCards.map((stat, index) => (
-          <Card
+          <div
             key={index}
-            className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-card/80 backdrop-blur border-border/60 hover:border-primary/30 group cursor-pointer"
+            onMouseEnter={() => setHoveredCard(index)}
+            onMouseLeave={() => setHoveredCard(null)}
+            style={{
+              padding: '24px',
+              backgroundColor: T.surface,
+              border: `1px solid ${hoveredCard === index ? T.brand : T.border}`,
+              borderRadius: '12px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              transform: hoveredCard === index ? 'translateY(-2px)' : 'translateY(0)',
+              boxShadow: hoveredCard === index 
+                ? '0 8px 16px rgba(0,0,0,0.12)' 
+                : '0 1px 3px rgba(0,0,0,0.08)',
+            }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-xl"
-                style={{
-                  backgroundColor: `${stat.color}15`,
-                  color: stat.color
-                }}
-              >
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '16px',
+            }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+                fontWeight: '600',
+                backgroundColor: `${stat.color}15`,
+                color: stat.color,
+              }}>
                 {stat.icon}
               </div>
-              <div
-                className={cn(
-                  "px-3 py-1 rounded-full text-xs font-semibold",
-                  stat.change.startsWith('+')
-                    ? "bg-emerald-500/10 text-emerald-600"
-                    : "bg-red-500/10 text-red-600"
-                )}
-              >
+              <div style={{
+                padding: '4px 12px',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: '600',
+                backgroundColor: stat.change.startsWith('+') ? T.successBg : T.dangerBg,
+                color: stat.change.startsWith('+') ? T.success : T.danger,
+              }}>
                 {stat.change}
               </div>
             </div>
             <div>
-              <h3 className="text-3xl font-bold text-foreground mb-1">
+              <h3 style={{
+                fontSize: '32px',
+                fontWeight: '700',
+                color: T.textPrimary,
+                marginBottom: '4px',
+                letterSpacing: '-0.02em',
+              }}>
                 {stat.value}
               </h3>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p style={{
+                fontSize: '13px',
+                fontWeight: '500',
+                color: T.textSecondary,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}>
                 {stat.title}
               </p>
             </div>
-          </Card>
+          </div>
         ))}
       </div>
 
       {/* Recent Activities */}
-      <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-            🔥 Hoạt động gần đây
+      <div style={{
+        padding: '32px',
+        backgroundColor: T.surface,
+        border: `1px solid ${T.border}`,
+        borderRadius: '12px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '24px',
+        }}>
+          <h2 style={{
+            fontSize: '20px',
+            fontWeight: '600',
+            color: T.textPrimary,
+          }}>
+            Hoạt động gần đây
           </h2>
-          <button className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 border border-blue-500/20 rounded-lg text-sm font-medium transition-all">
+          <button style={{
+            padding: '8px 16px',
+            backgroundColor: T.brandLight,
+            color: T.brand,
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = T.brand;
+            e.currentTarget.style.color = '#FFFFFF';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = T.brandLight;
+            e.currentTarget.style.color = T.brand;
+          }}>
             Xem tất cả
           </button>
         </div>
 
-        <div className="space-y-4">
-          {recentActivities.map((activity, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-4 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 border border-border/50 transition-all"
-            >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {recentActivities.map((activity, index) => {
+            const getActivityColor = () => {
+              if (activity.type === 'success') return { bg: T.successBg, text: T.success };
+              if (activity.type === 'info') return { bg: T.infoBg, text: T.info };
+              return { bg: T.warningBg, text: T.warning };
+            };
+            const colors = getActivityColor();
+
+            return (
               <div
-                className={cn(
-                  "w-10 h-10 rounded-xl flex items-center justify-center text-lg",
-                  activity.type === 'success' ? 'bg-emerald-500/10 text-emerald-600' :
-                    activity.type === 'info' ? 'bg-blue-500/10 text-blue-600' :
-                      'bg-amber-500/10 text-amber-600'
-                )}
+                key={index}
+                onMouseEnter={() => setHoveredActivity(index)}
+                onMouseLeave={() => setHoveredActivity(null)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  padding: '16px',
+                  borderRadius: '10px',
+                  backgroundColor: hoveredActivity === index ? T.surfaceHover : T.bg,
+                  border: `1px solid ${T.borderLight}`,
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer',
+                }}
               >
-                {activity.type === 'success' ? '✅' : activity.type === 'info' ? 'ℹ️' : '⚠️'}
-              </div>
-              <div className="flex-1">
-                <div className="text-sm font-semibold text-foreground mb-1">
-                  <span className="text-primary">{activity.user}</span> {activity.action}
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  backgroundColor: colors.bg,
+                  color: colors.text,
+                  flexShrink: 0,
+                }}>
+                  {activity.type === 'success' ? '✓' : activity.type === 'info' ? 'i' : '!'}
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {activity.project} • {activity.time}
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: T.textPrimary,
+                    marginBottom: '4px',
+                  }}>
+                    <span style={{ color: T.brand, fontWeight: '600' }}>{activity.user}</span> {activity.action}
+                  </div>
+                  <div style={{
+                    fontSize: '13px',
+                    color: T.textSecondary,
+                  }}>
+                    {activity.project} • {activity.time}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

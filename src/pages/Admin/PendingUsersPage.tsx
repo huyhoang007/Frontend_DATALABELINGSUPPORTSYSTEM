@@ -1,9 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { userApi } from "../../api/userApi";
 import { useToast } from "../../context/ToastContext";
-import { Card } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
-import { cn } from "../../utils/cn";
+
+// Bảng màu Modern Enterprise UI
+const T = {
+  bg: "#F7F8F9",
+  surface: "#FFFFFF",
+  surfaceHover: "#F1F2F4",
+  border: "#DCDFE4",
+  textPrimary: "#172B4D",
+  textSecondary: "#44546F",
+  textMuted: "#626F86",
+  brand: "#0C66E4",
+  brandHover: "#0055CC",
+  brandLight: "#E9F2FF",
+  green: "#1F845A",
+  greenBg: "#DCFFF1",
+  amber: "#A54800",
+  amberBg: "#FFF7D6",
+  purple: "#5E4DB2",
+  purpleBg: "#F3F0FF",
+  red: "#DE350B",
+  redBg: "#FFEBE6",
+};
 
 interface User {
   userId: number;
@@ -20,16 +39,17 @@ const PendingUsersPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const { showToast } = useToast();
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const { addToast } = useToast() as { addToast: (message: string, type?: 'success' | 'error' | 'info') => void };
 
   const loadPendingUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await userApi.getPendingUsers({ page, size: 10 });
+      const response = await userApi.getPendingUsers({ page, size: 10 }) as any;
       setPendingUsers(response.content || []);
       setTotalPages(response.totalPages || 0);
     } catch (error: any) {
-      showToast(error.message || "Failed to load pending users", "error");
+      addToast(error.message || "Failed to load pending users", "error");
     } finally {
       setIsLoading(false);
     }
@@ -46,167 +66,342 @@ const PendingUsersPage: React.FC = () => {
 
     try {
       await userApi.approveUser(userId);
-      showToast(`Đã duyệt tài khoản ${username}`, "success");
-      loadPendingUsers(); // Reload list
+      addToast(`Đã duyệt tài khoản ${username}`, "success");
+      loadPendingUsers();
     } catch (error: any) {
-      showToast(error.message || "Failed to approve user", "error");
+      addToast(error.message || "Failed to approve user", "error");
     }
   };
 
   const handleReject = async (userId: number, username: string) => {
     const reason = prompt(`Lý do từ chối tài khoản ${username}:`);
-    if (reason === null) return; // User cancelled
+    if (reason === null) return;
 
     try {
       await userApi.rejectUser(userId, reason);
-      showToast(`Đã từ chối tài khoản ${username}`, "info");
-      loadPendingUsers(); // Reload list
+      addToast(`Đã từ chối tài khoản ${username}`, "info");
+      loadPendingUsers();
     } catch (error: any) {
-      showToast(error.message || "Failed to reject user", "error");
+      addToast(error.message || "Failed to reject user", "error");
     }
   };
 
   if (isLoading && pendingUsers.length === 0) {
     return (
-      <div className="flex justify-center items-center min-h-[400px] text-muted-foreground">
-        <div className="text-center">
-          <div className="text-5xl mb-4 animate-spin">⏳</div>
-          <div>Đang tải...</div>
+      <div style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "400px",
+        color: T.textMuted
+      }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: "48px", marginBottom: "16px" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: "48px", animation: "spin 1s linear infinite" }}>progress_activity</span>
+          </div>
+          <div style={{ fontSize: "14px" }}>Đang tải...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8 min-h-full bg-transparent space-y-8">
+    <div style={{
+      padding: "32px 40px",
+      minHeight: "100vh",
+      background: T.bg,
+      fontFamily: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif"
+    }}>
       {/* Header */}
-      <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-        <div className="flex items-center justify-between">
+      <div style={{
+        padding: "32px",
+        background: T.surface,
+        border: `1px solid ${T.border}`,
+        borderRadius: "6px",
+        marginBottom: "32px",
+        boxShadow: "0 1px 3px rgba(9,30,66,.08)"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
-              <span>⏳</span> Tài khoản chờ duyệt
+            <h1 style={{
+              fontSize: "28px",
+              fontWeight: 800,
+              color: T.textPrimary,
+              marginBottom: "8px",
+              letterSpacing: "-0.02em"
+            }}>
+              Tài khoản chờ duyệt
             </h1>
-            <p className="text-lg text-muted-foreground">
-              {pendingUsers.length} tài khoản đang chờ phê duyệt từ Admin
+            <p style={{ fontSize: "14px", color: T.textMuted }}>
+              <span style={{ fontFamily: "monospace", fontWeight: 700, color: T.amber }}>{pendingUsers.length}</span> tài khoản đang chờ phê duyệt từ Admin
             </p>
           </div>
-          <Button
+          <button
             onClick={loadPendingUsers}
             disabled={isLoading}
-            variant="primary"
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
-            leftIcon={isLoading ? "loading" : "refresh"}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "10px 20px",
+              fontSize: "14px",
+              fontWeight: 700,
+              color: "#FFFFFF",
+              background: T.green,
+              border: "none",
+              borderRadius: "4px",
+              cursor: isLoading ? "not-allowed" : "pointer",
+              opacity: isLoading ? 0.7 : 1,
+              transition: "all .15s",
+              fontFamily: "inherit"
+            }}
+            onMouseEnter={(e) => !isLoading && (e.currentTarget.style.background = "#16A34A")}
+            onMouseLeave={(e) => !isLoading && (e.currentTarget.style.background = T.green)}
           >
+            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+              {isLoading ? "progress_activity" : "refresh"}
+            </span>
             Làm mới
-          </Button>
+          </button>
         </div>
-      </Card>
+      </div>
 
       {/* Empty State */}
       {pendingUsers.length === 0 && !isLoading && (
-        <Card className="p-16 text-center bg-card/80 backdrop-blur border-border/50">
-          <div className="text-6xl mb-4">✅</div>
-          <h3 className="text-xl font-bold text-foreground mb-2">
+        <div style={{
+          padding: "64px",
+          textAlign: "center",
+          background: T.surface,
+          border: `1px solid ${T.border}`,
+          borderRadius: "6px",
+          boxShadow: "0 1px 3px rgba(9,30,66,.08)"
+        }}>
+          <span className="material-symbols-outlined" style={{ fontSize: "64px", color: T.green + "40", marginBottom: "16px", display: "block" }}>
+            check_circle
+          </span>
+          <h3 style={{ fontSize: "20px", fontWeight: 700, color: T.textPrimary, marginBottom: "8px" }}>
             Không có tài khoản chờ duyệt
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p style={{ fontSize: "14px", color: T.textMuted }}>
             Tất cả tài khoản đăng ký đã được xử lý
           </p>
-        </Card>
+        </div>
       )}
 
       {/* Pending Users List */}
       {pendingUsers.length > 0 && (
-        <div className="grid gap-6">
-          {pendingUsers.map((user) => (
-            <Card
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          {pendingUsers.map((user, idx) => (
+            <div
               key={user.userId}
-              className="p-6 transition-all duration-300 hover:shadow-lg bg-card/80 backdrop-blur border-border/60"
+              onMouseEnter={() => setHoveredCard(idx)}
+              onMouseLeave={() => setHoveredCard(null)}
+              style={{
+                padding: "24px",
+                background: T.surface,
+                border: `1px solid ${T.border}`,
+                borderRadius: "6px",
+                transition: "all .15s",
+                boxShadow: hoveredCard === idx ? "0 4px 12px rgba(9,30,66,.12)" : "0 1px 3px rgba(9,30,66,.08)"
+              }}
             >
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-                {/* User Avatar */}
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-3xl shadow-lg shadow-amber-500/30 shrink-0">
-                  👤
-                </div>
-
+              <div style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: "24px",
+                flexWrap: "wrap"
+              }}>
                 {/* User Info */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold text-foreground mb-2">
+                <div style={{ flex: 1, minWidth: "300px" }}>
+                  <h3 style={{
+                    fontSize: "18px",
+                    fontWeight: 700,
+                    color: T.textPrimary,
+                    marginBottom: "12px"
+                  }}>
                     {user.fullName}
                   </h3>
-                  <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-500">👤</span>
-                      {user.username}
+                  <div style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "24px 32px",
+                    fontSize: "13px",
+                    color: T.textMuted
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ color: T.textMuted, fontWeight: 600 }}>Username:</span>
+                      <span style={{ fontFamily: "monospace", color: T.textPrimary }}>{user.username}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-500">📧</span>
-                      {user.email}
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ color: T.textMuted, fontWeight: 600 }}>Email:</span>
+                      <span style={{ color: T.textPrimary }}>{user.email}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-500">🏷️</span>
-                      {user.roleName}
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ color: T.textMuted, fontWeight: 600 }}>Role:</span>
+                      <span style={{
+                        padding: "2px 8px",
+                        borderRadius: "4px",
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        background: T.purpleBg,
+                        color: T.purple
+                      }}>
+                        {user.roleName}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-500">📅</span>
-                      {new Date(user.createdAt).toLocaleDateString("vi-VN")}
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ color: T.textMuted, fontWeight: 600 }}>Ngày tạo:</span>
+                      <span style={{ color: T.textPrimary }}>{new Date(user.createdAt).toLocaleDateString("vi-VN")}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Status Badge */}
-                <div className="px-4 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-500 text-sm font-bold tracking-wide">
-                  ⏳ PENDING
+                <div style={{
+                  padding: "8px 16px",
+                  borderRadius: "4px",
+                  background: T.amberBg,
+                  border: `1px solid ${T.amber}40`,
+                  color: T.amber,
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase"
+                }}>
+                  PENDING
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <Button
+                <div style={{ display: "flex", gap: "12px" }}>
+                  <button
                     onClick={() => handleApprove(user.userId, user.username)}
-                    variant="primary"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
-                    leftIcon="check"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "10px 20px",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      color: "#FFFFFF",
+                      background: T.green,
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      transition: "all .15s",
+                      fontFamily: "inherit",
+                      boxShadow: `0 2px 8px ${T.green}40`
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = "#16A34A"}
+                    onMouseLeave={(e) => e.currentTarget.style.background = T.green}
                   >
+                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>check</span>
                     Duyệt
-                  </Button>
+                  </button>
 
-                  <Button
+                  <button
                     onClick={() => handleReject(user.userId, user.username)}
-                    variant="primary"
-                    className="bg-red-600 hover:bg-red-700 text-white shadow-red-500/20"
-                    leftIcon="close"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "10px 20px",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      color: "#FFFFFF",
+                      background: T.red,
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      transition: "all .15s",
+                      fontFamily: "inherit",
+                      boxShadow: `0 2px 8px ${T.red}40`
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = "#DC2626"}
+                    onMouseLeave={(e) => e.currentTarget.style.background = T.red}
                   >
+                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>close</span>
                     Từ chối
-                  </Button>
+                  </button>
                 </div>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       )}
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center gap-3 mt-8">
-          <Button
+        <div style={{
+          display: "flex",
+          justifyContent: "center",
+          gap: "12px",
+          marginTop: "32px"
+        }}>
+          <button
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
-            variant="ghost"
-            leftIcon="arrow-left"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 16px",
+              fontSize: "13px",
+              fontWeight: 600,
+              color: T.textPrimary,
+              background: T.surface,
+              border: `1px solid ${T.border}`,
+              borderRadius: "4px",
+              cursor: page === 0 ? "not-allowed" : "pointer",
+              opacity: page === 0 ? 0.5 : 1,
+              transition: "all .15s",
+              fontFamily: "inherit"
+            }}
+            onMouseEnter={(e) => page !== 0 && (e.currentTarget.style.background = T.surfaceHover)}
+            onMouseLeave={(e) => page !== 0 && (e.currentTarget.style.background = T.surface)}
           >
+            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>arrow_back</span>
             Trước
-          </Button>
-          <div className="px-4 py-2 bg-card/50 rounded-lg text-sm font-bold text-foreground border border-border/50 flex items-center">
+          </button>
+          <div style={{
+            padding: "8px 16px",
+            background: T.brandLight,
+            borderRadius: "4px",
+            fontSize: "13px",
+            fontWeight: 700,
+            color: T.brand,
+            border: `1px solid ${T.brand}20`,
+            display: "flex",
+            alignItems: "center"
+          }}>
             Trang {page + 1} / {totalPages}
           </div>
-          <Button
+          <button
             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={page >= totalPages - 1}
-            variant="ghost"
-            rightIcon="arrow-right"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 16px",
+              fontSize: "13px",
+              fontWeight: 600,
+              color: T.textPrimary,
+              background: T.surface,
+              border: `1px solid ${T.border}`,
+              borderRadius: "4px",
+              cursor: page >= totalPages - 1 ? "not-allowed" : "pointer",
+              opacity: page >= totalPages - 1 ? 0.5 : 1,
+              transition: "all .15s",
+              fontFamily: "inherit"
+            }}
+            onMouseEnter={(e) => page < totalPages - 1 && (e.currentTarget.style.background = T.surfaceHover)}
+            onMouseLeave={(e) => page < totalPages - 1 && (e.currentTarget.style.background = T.surface)}
           >
             Sau
-          </Button>
+            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>arrow_forward</span>
+          </button>
         </div>
       )}
     </div>

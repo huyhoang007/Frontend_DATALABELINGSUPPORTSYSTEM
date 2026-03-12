@@ -31,25 +31,25 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         return {
           iconColor: '#f44336',
           confirmBg: '#f44336',
-          icon: '⚠️'
+          icon: '!'
         };
       case 'warning':
         return {
           iconColor: '#ff9800',
           confirmBg: '#ff9800',
-          icon: '⚠️'
+          icon: '!'
         };
       case 'info':
         return {
           iconColor: '#2196f3',
           confirmBg: '#2196f3',
-          icon: 'ℹ️'
+          icon: 'i'
         };
       default:
         return {
           iconColor: '#f44336',
           confirmBg: '#f44336',
-          icon: '⚠️'
+          icon: '!'
         };
     }
   };

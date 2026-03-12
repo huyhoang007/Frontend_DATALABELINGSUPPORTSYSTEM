@@ -322,7 +322,7 @@ const ModernLabelsPage: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
-              <span>🏷️</span> Quản lý nhãn & quy tắc
+              Quản lý nhãn & quy tắc
             </h1>
             <p className="text-lg text-muted-foreground">
               Quản lý labels và label rules cho các dự án gán nhãn
@@ -357,7 +357,7 @@ const ModernLabelsPage: React.FC = () => {
                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
             )}
           >
-            🏷️ Labels ({labels.length})
+            Nhãn ({labels.length})
           </button>
           <button
             onClick={() => setActiveTab('rules')}
@@ -368,7 +368,7 @@ const ModernLabelsPage: React.FC = () => {
                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
             )}
           >
-            📋 Label Rules ({labelRules.length})
+            Quy tắc nhãn ({labelRules.length})
           </button>
         </div>
       </Card>
@@ -382,17 +382,15 @@ const ModernLabelsPage: React.FC = () => {
               key={getLabelId(label)}
               className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-card/80 backdrop-blur border-border/60 group cursor-pointer"
             >
-              <div className="flex items-center gap-4 mb-4">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-xl text-white shadow-lg"
-                  style={{ backgroundColor: getLabelColor(label), boxShadow: `0 8px 20px ${getLabelColor(label)}40` }}
-                >
-                  🏷️
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-bold text-foreground mb-1 truncate">
-                    {getLabelName(label)}
-                  </h3>
+              <div className="mb-4">
+                <h3 className="text-lg font-bold text-foreground mb-1 truncate">
+                  {getLabelName(label)}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-4 h-4 rounded border border-border"
+                    style={{ backgroundColor: getLabelColor(label) }}
+                  />
                   <div className="text-xs text-muted-foreground font-mono">
                     {getLabelColor(label)}
                   </div>
@@ -407,26 +405,26 @@ const ModernLabelsPage: React.FC = () => {
                     color: getLabelColor(label)
                   }}
                 >
-                  ID: {getLabelId(label)}
+                  Mã: {getLabelId(label)}
                 </div>
                 <div className="flex gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 text-blue-500 hover:bg-blue-500/10"
+                    className="h-8 px-2 text-xs text-blue-500 hover:bg-blue-500/10"
                     onClick={(e) => { e.stopPropagation(); handleEditClick(label); }}
                     disabled={isDeleting}
                   >
-                    ✏️
+                    Sửa
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 text-red-500 hover:bg-red-500/10"
+                    className="h-8 px-2 text-xs text-red-500 hover:bg-red-500/10"
                     onClick={(e) => { e.stopPropagation(); handleDeleteLabel(getLabelId(label)); }}
                     disabled={isDeleting}
                   >
-                    🗑️
+                    Xóa
                   </Button>
                 </div>
               </div>
@@ -438,7 +436,6 @@ const ModernLabelsPage: React.FC = () => {
         <Card className="bg-card dark:bg-slate-800/60 backdrop-blur-xl border-border/50 overflow-hidden">
           {labelRules.length === 0 ? (
             <div className="p-12 text-center">
-              <div className="text-4xl mb-3">📋</div>
               <p className="text-muted-foreground">Chưa có rule nào. Hãy tạo rule đầu tiên!</p>
             </div>
           ) : null}
@@ -451,17 +448,13 @@ const ModernLabelsPage: React.FC = () => {
               )}
             >
               <div className="flex items-start gap-5">
-                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-xl text-blue-500">
-                  📋
-                </div>
-
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2">
                     <h3 className="text-lg font-bold text-foreground">
                       {rule.name}
                     </h3>
                     <div className="px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-500 text-xs font-bold uppercase tracking-wide">
-                      Rule #{rule.ruleId ?? rule.rule_id}
+                      Quy tắc #{rule.ruleId ?? rule.rule_id}
                     </div>
                   </div>
 
@@ -472,7 +465,7 @@ const ModernLabelsPage: React.FC = () => {
                   {/* Associated Labels */}
                   <div className="mb-4">
                     <div className="text-xs text-muted-foreground mb-2 font-medium">
-                      Associated Labels ({rule.labels?.length || 0}):
+                      Nhãn liên kết ({rule.labels?.length || 0}):
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {rule.labels?.map((label: any) => (
@@ -503,7 +496,7 @@ const ModernLabelsPage: React.FC = () => {
                       className="h-8 text-xs text-blue-600 bg-blue-500/10 hover:bg-blue-500/20 border-blue-200 dark:border-blue-800"
                       onClick={() => handleEditRuleClick(rule)}
                     >
-                      ✏️ Chỉnh sửa
+                      Chỉnh sửa
                     </Button>
 
                     <Button
@@ -512,7 +505,7 @@ const ModernLabelsPage: React.FC = () => {
                       className="h-8 text-xs text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-200 dark:border-emerald-800"
                       onClick={() => handleAttachLabelsClick(rule)}
                     >
-                      🔗 Thêm label
+                      Thêm label
                     </Button>
 
                     <Button
@@ -521,7 +514,7 @@ const ModernLabelsPage: React.FC = () => {
                       className="h-8 text-xs text-red-600 bg-red-500/10 hover:bg-red-500/20 border-red-200 dark:border-red-800"
                       onClick={() => handleDeleteRule((rule.ruleId ?? rule.rule_id) as number)}
                     >
-                      🗑️ Xóa
+                      Xóa
                     </Button>
                   </div>
                 </div>
@@ -536,7 +529,7 @@ const ModernLabelsPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
             <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <span>🏷️</span> Tạo label mới
+              Tạo label mới
             </h2>
 
             <div className="space-y-4 mb-6">
@@ -577,9 +570,9 @@ const ModernLabelsPage: React.FC = () => {
                   onChange={(e) => setNewLabel({ ...newLabel, labelType: e.target.value })}
                   className="w-full px-4 py-2 bg-background border border-input rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer"
                 >
-                  <option value="OBJECT">Object Detection</option>
-                  <option value="CLASSIFICATION">Classification</option>
-                  <option value="SEGMENTATION">Segmentation</option>
+                  <option value="OBJECT">Phát hiện đối tượng</option>
+                  <option value="CLASSIFICATION">Phân loại</option>
+                  <option value="SEGMENTATION">Phân đoạn</option>
                 </select>
               </div>
 
@@ -587,7 +580,7 @@ const ModernLabelsPage: React.FC = () => {
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">Phím tắt (tùy chọn)</label>
                 <input
                   type="text"
-                  placeholder="VD: P"
+                  placeholder="Ví dụ: P"
                   value={newLabel.shortcutKey}
                   onChange={(e) => setNewLabel({ ...newLabel, shortcutKey: e.target.value })}
                   className="w-full px-4 py-2 bg-background border border-input rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all uppercase"
@@ -622,7 +615,7 @@ const ModernLabelsPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
             <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <span>✏️</span> Chỉnh sửa label
+              Chỉnh sửa label
             </h2>
 
             <div className="space-y-4 mb-6">
@@ -661,9 +654,9 @@ const ModernLabelsPage: React.FC = () => {
                   onChange={(e) => setEditLabel({ ...editLabel, labelType: e.target.value })}
                   className="w-full px-4 py-2 bg-background border border-input rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer"
                 >
-                  <option value="OBJECT">Object Detection</option>
-                  <option value="CLASSIFICATION">Classification</option>
-                  <option value="SEGMENTATION">Segmentation</option>
+                  <option value="OBJECT">Phát hiện đối tượng</option>
+                  <option value="CLASSIFICATION">Phân loại</option>
+                  <option value="SEGMENTATION">Phân đoạn</option>
                 </select>
               </div>
 
@@ -671,6 +664,7 @@ const ModernLabelsPage: React.FC = () => {
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">Phím tắt (tùy chọn)</label>
                 <input
                   type="text"
+                  placeholder="Ví dụ: P"
                   value={editLabel.shortcutKey}
                   onChange={(e) => setEditLabel({ ...editLabel, shortcutKey: e.target.value })}
                   className="w-full px-4 py-2 bg-background border border-input rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all uppercase"
@@ -705,7 +699,7 @@ const ModernLabelsPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
             <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <span>📋</span> Tạo rule mới
+              Tạo rule mới
             </h2>
 
             <div className="space-y-4 mb-6">
@@ -801,7 +795,7 @@ const ModernLabelsPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
             <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <span>✏️</span> Chỉnh sửa rule
+              {showEditRuleModal ? 'Chỉnh sửa rule' : 'Tạo rule mới'}
             </h2>
 
             <div className="space-y-4 mb-6">
@@ -851,7 +845,7 @@ const ModernLabelsPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
             <h2 className="text-2xl font-bold text-foreground mb-1 flex items-center gap-2">
-              <span>🔗</span> Thêm label vào rule
+              Thêm label vào rule
             </h2>
             <p className="text-sm text-muted-foreground mb-6">
               Rule: <span className="font-semibold text-foreground">{attachingRule.name}</span>

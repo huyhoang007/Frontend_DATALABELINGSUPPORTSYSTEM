@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Agentation } from "agentation";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ThemeToggle } from "./components/ui/ThemeToggle";
 import { getRoleBasedRedirect } from "./utils/roleUtils";
@@ -34,7 +33,6 @@ import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AdminUsers from "./pages/Admin/Users";
 import AdminLabels from "./pages/Admin/Labels";
 import AdminPolicies from "./pages/Admin/Policies";
-import AdminActivityLogs from "./pages/Admin/ActivityLogs";
 import DevHealthCheck from "./components/DevHealthCheck";
 import Unauthorized from "./pages/Unauthorized";
 import { RoleGuard } from "./components/Common/RoleGuard";
@@ -171,7 +169,6 @@ function App() {
               <Route path="users" element={<AdminUsers />} />
               <Route path="labels" element={<AdminLabels />} />
               <Route path="policies" element={<AdminPolicies />} />
-              <Route path="logs" element={<AdminActivityLogs />} />
             </Route>
 
             {/* Unauthorized */}
@@ -181,9 +178,6 @@ function App() {
             <Route path="/dev-check" element={<DevHealthCheck />} />
           </Routes>
         </BrowserRouter>
-
-        {/* ✅ CHỈ chạy ở DEV (Vite) */}
-        {import.meta.env.DEV && <Agentation />}
       </div>
     </ThemeProvider>
   );

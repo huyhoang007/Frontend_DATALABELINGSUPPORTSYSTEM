@@ -107,6 +107,23 @@ apiClient.interceptors.response.use(
             if (typeof err.response?.data === 'string') {
                 return err.response.data;
             }
+            // Translate common HTTP error messages to Vietnamese
+            const status = err.response?.status;
+            if (status === 401) {
+                return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+            }
+            if (status === 403) {
+                return "Bạn không có quyền thực hiện hành động này.";
+            }
+            if (status === 404) {
+                return "Không tìm thấy tài nguyên yêu cầu.";
+            }
+            if (status === 500) {
+                return "Lỗi máy chủ. Vui lòng thử lại sau.";
+            }
+            if (status === 503) {
+                return "Dịch vụ tạm thời không khả dụng. Vui lòng thử lại sau.";
+            }
             // Default fallback
             return err.message || "Đã xảy ra lỗi";
         };

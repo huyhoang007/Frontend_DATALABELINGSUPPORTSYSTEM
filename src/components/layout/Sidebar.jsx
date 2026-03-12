@@ -62,12 +62,15 @@ export function Sidebar() {
     return (
         <aside className="w-64 border-r border-border bg-card text-card-foreground flex flex-col h-screen fixed left-0 top-0 transition-colors duration-200">
             <div className="h-16 flex items-center justify-center px-4 border-b border-border">
-                <span
-                    className="font-bold text-xl tracking-tight cursor-pointer hover:opacity-80 transition-opacity select-none flex items-center justify-center"
+                <div
+                    className="cursor-pointer hover:opacity-80 transition-opacity select-none flex items-center gap-3"
                     onClick={handleTitleClick}
                 >
-                    <span className="text-foreground">DataLabel</span><span className="text-primary">Core</span>
-                </span>
+                    <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
+                    <span className="font-bold text-xl tracking-tight">
+                        <span className="text-foreground">DataLabel</span><span className="text-primary">Core</span>
+                    </span>
+                </div>
             </div>
 
             <nav className="flex-1 py-4 px-2 space-y-1">

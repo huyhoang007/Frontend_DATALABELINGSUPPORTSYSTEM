@@ -73,10 +73,10 @@ const ModernUsersPage: React.FC = () => {
 
   const roleOptions = [
     { value: 'all', label: 'Tất cả vai trò', count: users.length },
-    { value: 'admin', label: 'Admin', count: users.filter(u => u.role?.role_name === 'admin').length },
-    { value: 'manager', label: 'Manager', count: users.filter(u => u.role?.role_name === 'manager').length },
-    { value: 'annotator', label: 'Annotator', count: users.filter(u => u.role?.role_name === 'annotator').length },
-    { value: 'reviewer', label: 'Reviewer', count: users.filter(u => u.role?.role_name === 'reviewer').length },
+    { value: 'admin', label: 'Quản trị viên', count: users.filter(u => u.role?.role_name === 'admin').length },
+    { value: 'manager', label: 'Quản lý', count: users.filter(u => u.role?.role_name === 'manager').length },
+    { value: 'annotator', label: 'Người gán nhãn', count: users.filter(u => u.role?.role_name === 'annotator').length },
+    { value: 'reviewer', label: 'Người kiểm duyệt', count: users.filter(u => u.role?.role_name === 'reviewer').length },
   ];
 
   const getRoleColor = (roleName: string) => {
@@ -91,11 +91,11 @@ const ModernUsersPage: React.FC = () => {
 
   const getRoleIcon = (roleName: string) => {
     switch (roleName) {
-      case 'admin': return '👑';
-      case 'manager': return '👨‍💼';
-      case 'annotator': return '✏️';
-      case 'reviewer': return '👁️';
-      default: return '👤';
+      case 'admin': return 'A';
+      case 'manager': return 'M';
+      case 'annotator': return 'N';
+      case 'reviewer': return 'R';
+      default: return 'U';
     }
   };
 
@@ -113,7 +113,7 @@ const ModernUsersPage: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
-              <span>👥</span> Quản lý người dùng
+              Quản lý người dùng
             </h1>
             <p className="text-lg text-muted-foreground">
               Quản lý tài khoản và phân quyền người dùng trong hệ thống
@@ -140,7 +140,7 @@ const ModernUsersPage: React.FC = () => {
               className="w-full pl-11 pr-4 py-3 bg-background border border-input rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm"
             />
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">
-              🔍
+              S
             </div>
           </div>
 
@@ -198,7 +198,7 @@ const ModernUsersPage: React.FC = () => {
                     : "bg-slate-500/10 text-slate-500 border-slate-500/20"
                 )}
               >
-                {user.status === 'active' ? 'Active' : 'Inactive'}
+                {user.status === 'active' ? 'Hoạt động' : 'Không hoạt động'}
               </div>
             </div>
 
@@ -266,7 +266,7 @@ const ModernUsersPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-md p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
             <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <span>➕</span> Thêm người dùng mới
+              Thêm người dùng mới
             </h2>
 
             <div className="space-y-4 mb-6">
@@ -283,7 +283,7 @@ const ModernUsersPage: React.FC = () => {
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Email</label>
                 <input
                   type="email"
-                  placeholder="example@domain.com"
+                  placeholder="vidu@domain.com"
                   className="w-full px-4 py-2.5 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                 />
               </div>

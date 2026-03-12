@@ -13,8 +13,17 @@ const statusConfig: Record<string, { color: string; dot?: string; icon?: string 
     APPROVED: { color: "text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50", dot: "bg-emerald-500" },
 };
 
+const statusLabels: Record<string, string> = {
+    TODO: "Cần làm",
+    IN_PROGRESS: "Đang thực hiện",
+    SUBMITTED: "Đã gửi",
+    REJECTED: "Từ chối",
+    APPROVED: "Đã duyệt",
+};
+
 export function BadgeStatus({ status }: BadgeStatusProps) {
     const config = statusConfig[status] || statusConfig.TODO;
+    const label = statusLabels[status] || status.replace("_", " ");
 
     return (
         <span className={cn(
@@ -27,7 +36,7 @@ export function BadgeStatus({ status }: BadgeStatusProps) {
             {config.icon && (
                 <span className="material-symbols-outlined text-[12px] mr-1">error</span>
             )}
-            {status.replace("_", " ")}
+            {label}
         </span>
     );
 }

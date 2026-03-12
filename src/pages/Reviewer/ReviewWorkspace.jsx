@@ -142,7 +142,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
     const handleApprove = async (reviewingId) => {
         const result = await handleReviewAnnotation(reviewingId, false, null);
         if (result.success) {
-            addToast({ type: "success", message: "Đã chấp nhận ✓" });
+            addToast({ type: "success", message: "Đã chấp nhận" });
         } else {
             addToast({ type: "error", message: result.error || "Không thể chấp nhận annotation" });
         }
@@ -155,7 +155,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
         }
         const result = await handleReviewAnnotation(reviewingId, true, selectedPolicyId, rejectNote.trim() || undefined);
         if (result.success) {
-            addToast({ type: "warning", message: "Đã từ chối ✗" });
+            addToast({ type: "warning", message: "Đã từ chối" });
             setRejectingAnnoId(null);
             setSelectedPolicyId(null);
             setRejectNote("");
@@ -454,9 +454,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                 }} />
                         </div>
                         <div className="flex justify-between text-[10px] mt-1.5">
-                            <span style={{ color: "#00bfa5" }}>✓ {reviewStats.approved}</span>
-                            <span style={{ color: "#f87171" }}>✗ {reviewStats.rejected}</span>
-                            <span style={{ color: "#facc15" }}>⋯ {reviewStats.pending}</span>
+                            <span style={{ color: "#00bfa5" }}>A {reviewStats.approved}</span>
+                            <span style={{ color: "#f87171" }}>R {reviewStats.rejected}</span>
+                            <span style={{ color: "#facc15" }}>P {reviewStats.pending}</span>
                         </div>
                     </div>
                 </div>
@@ -532,11 +532,11 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                         </span>
                         <div className="flex-1" />
                         <span className="text-[10px] font-mono" style={{ color: "#4a6788" }}>
-                            <span style={{ color: "#00bfa5" }}>{currentAnnotations.filter(a => a.status === "APPROVED").length}✓</span>
+                            <span style={{ color: "#00bfa5" }}>{currentAnnotations.filter(a => a.status === "APPROVED").length}A</span>
                             {" "}
-                            <span style={{ color: "#f87171" }}>{currentAnnotations.filter(a => a.status === "REJECTED").length}✗</span>
+                            <span style={{ color: "#f87171" }}>{currentAnnotations.filter(a => a.status === "REJECTED").length}R</span>
                             {" "}
-                            <span style={{ color: "#facc15" }}>{currentAnnotations.filter(a => !a.status || a.status === "PENDING").length}⋯</span>
+                            <span style={{ color: "#facc15" }}>{currentAnnotations.filter(a => !a.status || a.status === "PENDING").length}P</span>
                         </span>
                     </div>
 
@@ -837,9 +837,9 @@ function ReviewSummaryPanel({ items, annoCache, allLabels, reviewStats, currentI
                                         Ảnh {idx + 1}
                                     </span>
                                     <div className="flex items-center gap-2 text-[10px] font-mono">
-                                        {approved > 0 && <span style={{ color: "#00bfa5" }}>✓{approved}</span>}
-                                        {rejected > 0 && <span style={{ color: "#f87171" }}>✗{rejected}</span>}
-                                        {pending > 0 && <span style={{ color: "#facc15" }}>⋯{pending}</span>}
+                                        {approved > 0 && <span style={{ color: "#00bfa5" }}>A{approved}</span>}
+                                        {rejected > 0 && <span style={{ color: "#f87171" }}>R{rejected}</span>}
+                                        {pending > 0 && <span style={{ color: "#facc15" }}>P{pending}</span>}
                                         {annos.length === 0 && <span style={{ color: "#3a5068" }}>—</span>}
                                     </div>
                                 </div>
@@ -869,9 +869,9 @@ function ReviewSummaryPanel({ items, annoCache, allLabels, reviewStats, currentI
                                     </span>
                                 </div>
                                 <div className="flex gap-2 text-[10px] pl-4">
-                                    {ls.approved > 0 && <span style={{ color: "#00bfa5" }}>✓{ls.approved}</span>}
-                                    {ls.rejected > 0 && <span style={{ color: "#f87171" }}>✗{ls.rejected}</span>}
-                                    {ls.pending > 0 && <span style={{ color: "#facc15" }}>⋯{ls.pending}</span>}
+                                    {ls.approved > 0 && <span style={{ color: "#00bfa5" }}>A{ls.approved}</span>}
+                                    {ls.rejected > 0 && <span style={{ color: "#f87171" }}>R{ls.rejected}</span>}
+                                    {ls.pending > 0 && <span style={{ color: "#facc15" }}>P{ls.pending}</span>}
                                 </div>
                             </div>
                         ))}

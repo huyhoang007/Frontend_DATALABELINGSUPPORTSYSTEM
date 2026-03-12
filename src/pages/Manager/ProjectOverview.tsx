@@ -40,7 +40,7 @@ export default function ProjectOverview() {
     if (error) {
         return (
             <Card className="p-8 bg-card/80 backdrop-blur border-border/60 text-center">
-                <div className="text-red-400 text-sm mb-2">⚠️ {error}</div>
+                <div className="text-red-400 text-sm mb-2">! {error}</div>
                 <button onClick={() => window.location.reload()} className="text-xs text-primary underline">
                     Thử lại
                 </button>
@@ -240,7 +240,7 @@ export default function ProjectOverview() {
             {/* Alerts */}
             {alerts.length > 0 && (
                 <Card className="p-6 bg-card/80 backdrop-blur border-amber-500/30 border">
-                    <h3 className="text-base font-bold text-amber-500 mb-3">⚠️ Alerts</h3>
+                    <h3 className="text-base font-bold text-amber-500 mb-3">Alerts</h3>
                     <ul className="space-y-2">
                         {alerts.map((alert: string, idx: number) => (
                             <li key={idx} className="text-sm text-foreground flex items-start gap-2">

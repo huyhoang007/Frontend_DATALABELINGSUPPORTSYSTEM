@@ -1,0 +1,28 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer circle with dots -->
+  <circle cx="60" cy="60" r="50" stroke="#22D3EE" stroke-width="3" fill="none"/>
+  
+  <!-- Dots around the circle -->
+  <circle cx="60" cy="10" r="4" fill="#22D3EE"/>
+  <circle cx="85" cy="17" r="4" fill="#22D3EE"/>
+  <circle cx="103" cy="35" r="4" fill="#22D3EE"/>
+  <circle cx="110" cy="60" r="4" fill="#22D3EE"/>
+  <circle cx="103" cy="85" r="4" fill="#22D3EE"/>
+  <circle cx="85" cy="103" r="4" fill="#22D3EE"/>
+  <circle cx="60" cy="110" r="4" fill="#22D3EE"/>
+  <circle cx="35" cy="103" r="4" fill="#22D3EE"/>
+  <circle cx="17" cy="85" r="4" fill="#22D3EE"/>
+  <circle cx="10" cy="60" r="4" fill="#22D3EE"/>
+  <circle cx="17" cy="35" r="4" fill="#22D3EE"/>
+  <circle cx="35" cy="17" r="4" fill="#22D3EE"/>
+  
+  <!-- Inner hexagon -->
+  <path d="M60 25 L85 37.5 L85 62.5 L60 75 L35 62.5 L35 37.5 Z" stroke="#22D3EE" stroke-width="3" fill="none"/>
+  
+  <!-- Inner curved shapes -->
+  <path d="M45 40 Q50 50 45 60 Q40 70 35 75" stroke="#22D3EE" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M75 40 Q70 50 75 60 Q80 70 85 75" stroke="#22D3EE" stroke-width="3" fill="none" stroke-linecap="round"/>
+  
+  <!-- Center square -->
+  <rect x="50" y="50" width="20" height="20" stroke="#22D3EE" stroke-width="3" fill="none"/>
+</svg>

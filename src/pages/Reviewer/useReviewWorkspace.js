@@ -80,7 +80,7 @@ export default function useReviewWorkspace(assignmentIdNum) {
             } catch (err) {
                 if (cancelled) return;
                 const status = err?.status || err?.response?.status || "?";
-                setImageError({ url: path, message: `Status ${status}: ${err?.message || "Failed"}` });
+                setImageError({ url: path, message: `Trạng thái ${status}: ${err?.message || "Tải thất bại"}` });
             } finally {
                 if (!cancelled) setImageLoading(false);
             }
@@ -150,7 +150,7 @@ export default function useReviewWorkspace(assignmentIdNum) {
                 console.log(`[REVIEW] seeded cache for ${Object.keys(initialCache).length} items`);
             } catch (err) {
                 if (cancelled) return;
-                const msg = err?.response?.data?.message || err?.message || "Failed to load workspace";
+                const msg = err?.response?.data?.message || err?.message || "Không thể tải workspace";
                 setWorkspaceError(msg);
             } finally {
                 if (!cancelled) setWorkspaceLoading(false);
@@ -242,7 +242,7 @@ export default function useReviewWorkspace(assignmentIdNum) {
 
             return { success: true, allDone: false };
         } catch (err) {
-            const msg = err?.response?.data?.message || err?.message || "Failed to review annotation";
+            const msg = err?.response?.data?.message || err?.message || "Không thể đánh giá annotation";
             return { success: false, error: msg };
         } finally {
             setReviewSubmitting(false);

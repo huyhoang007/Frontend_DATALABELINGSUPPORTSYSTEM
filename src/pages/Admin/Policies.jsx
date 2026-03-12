@@ -22,7 +22,7 @@ export default function AdminPolicies() {
                     <div className="mb-8 flex items-center justify-between">
                         <div>
                             <h1 className="text-3xl font-bold text-foreground mb-2">
-                                📋 Policy Management
+                                Quản lý chính sách
                             </h1>
                             <p className="text-muted-foreground">
                                 Configure global policies and rules
@@ -32,13 +32,13 @@ export default function AdminPolicies() {
                             onClick={() => setShowCreateModal(true)}
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
                         >
-                            ➕ Create Policy
+                            Create Policy
                         </button>
                     </div>
 
                     <div className="bg-card border border-border rounded-lg p-6">
                         <div className="text-center text-muted-foreground py-12">
-                            <div className="text-6xl mb-4">📋</div>
+                            <div className="text-6xl mb-4 font-bold">P</div>
                             <p className="text-lg font-medium mb-2">No policies configured</p>
                             <p className="text-sm">Policy management API integration pending</p>
                             <p className="text-xs mt-2 text-yellow-600">TODO_BACKEND: GET /api/policies</p>

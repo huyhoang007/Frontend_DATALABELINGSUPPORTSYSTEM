@@ -5,6 +5,31 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { cn } from '../../utils/cn';
 
+// Modern Enterprise UI - Bảng màu T chuẩn
+const T = {
+  bg: "#F7F8F9",
+  surface: "#FFFFFF",
+  surfaceHover: "#F8F9FA",
+  border: "#DFE1E6",
+  borderLight: "#EBECF0",
+  textPrimary: "#172B4D",
+  textSecondary: "#5E6C84",
+  textMuted: "#8993A4",
+  brand: "#0052CC",
+  brandHover: "#0747A6",
+  brandLight: "#DEEBFF",
+  success: "#00875A",
+  successBg: "#E3FCEF",
+  warning: "#FF991F",
+  warningBg: "#FFFAE6",
+  danger: "#DE350B",
+  dangerBg: "#FFEBE6",
+  info: "#0065FF",
+  infoBg: "#DEEBFF",
+  purple: "#5243AA",
+  purpleBg: "#EAE6FF",
+};
+
 // Type declaration for toast
 const useTypedToast = () => useToast() as { addToast: (message: string, type?: 'success' | 'error' | 'info') => void };
 
@@ -100,7 +125,7 @@ const ModernPoliciesPage: React.FC = () => {
     setNewPolicy({
       errorName: getPolicyName(policy),
       description: policy.description || '',
-      errorLevel: (policy.errorLevel || policy.error_level || 'MEDIUM') as string
+      errorLevel: (policy.errorLevel || 'MEDIUM') as string
     });
     setShowEditModal(true);
   };
@@ -161,12 +186,12 @@ const ModernPoliciesPage: React.FC = () => {
   const getPolicyId = (policy: Policy) => policy.policyId || policy.policy_id || 0;
 
   const getPolicyIcon = (errorName: string) => {
-    if (errorName.includes('Quality')) return '⭐';
-    if (errorName.includes('Consistency')) return '🔄';
-    if (errorName.includes('Completeness')) return '✅';
-    if (errorName.includes('Boundary')) return '📐';
-    if (errorName.includes('Review')) return '👁️';
-    return '🛡️';
+    if (errorName.includes('Quality')) return 'Q';
+    if (errorName.includes('Consistency')) return 'C';
+    if (errorName.includes('Completeness')) return 'M';
+    if (errorName.includes('Boundary')) return 'B';
+    if (errorName.includes('Review')) return 'R';
+    return 'P';
   };
 
   const getPolicyColor = (errorName: string) => {
@@ -179,15 +204,32 @@ const ModernPoliciesPage: React.FC = () => {
   };
 
   return (
-    <div className="p-8 min-h-full bg-transparent space-y-8">
+    <div style={{
+      padding: '32px',
+      minHeight: '100vh',
+      backgroundColor: T.bg,
+    }}>
       {/* Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-        <div className="flex items-center justify-between mb-6">
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '24px',
+        }}>
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
-              <span>🛡️</span> Quản lý lỗi
+            <h1 style={{
+              fontSize: '24px',
+              fontWeight: '600',
+              color: T.textPrimary,
+              marginBottom: '8px',
+            }}>
+              Quản lý lỗi
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p style={{
+              fontSize: '15px',
+              color: T.textSecondary,
+            }}>
               Quản lý các loại lỗi và tiêu chuẩn chất lượng cho dự án
             </p>
           </div>
@@ -202,46 +244,183 @@ const ModernPoliciesPage: React.FC = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-blue-500/10 text-blue-600 border-blue-500/20">
-            <div className="text-2xl font-bold mb-1">{policies.length}</div>
-            <div className="text-xs font-medium opacity-80">Tổng các lỗi</div>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '16px',
+        }}>
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.borderLight}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: T.infoBg,
+            color: T.info,
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
+              {policies.length}
+            </div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '500',
+              opacity: 0.8,
+            }}>
+              Tổng các lỗi
+            </div>
           </div>
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-            <div className="text-2xl font-bold mb-1">
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.borderLight}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: T.successBg,
+            color: T.success,
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
               {policies.reduce((sum, policy) => sum + (policy.projects?.length || 0), 0)}
             </div>
-            <div className="text-xs font-medium opacity-80">Áp dụng cho dự án</div>
-          </div>
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-red-600/10 text-red-600 border-red-600/20">
-            <div className="text-2xl font-bold mb-1">
-              {policies.filter(p => (p.errorLevel || p.error_level) === 'CRITICAL').length}
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '500',
+              opacity: 0.8,
+            }}>
+              Áp dụng cho dự án
             </div>
-            <div className="text-xs font-medium opacity-80">Lỗi cực nghiêm trọng</div>
           </div>
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-red-500/10 text-red-500 border-red-500/20">
-            <div className="text-2xl font-bold mb-1">
-              {policies.filter(p => (p.errorLevel || p.error_level) === 'HIGH').length}
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.borderLight}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: T.dangerBg,
+            color: T.danger,
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
+              {policies.filter(p => p.errorLevel === 'CRITICAL').length}
             </div>
-            <div className="text-xs font-medium opacity-80">Lỗi cao</div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '500',
+              opacity: 0.8,
+            }}>
+              Lỗi cực nghiêm trọng
+            </div>
           </div>
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-amber-500/10 text-amber-500 border-amber-500/20">
-            <div className="text-2xl font-bold mb-1">
-              {policies.filter(p => (p.errorLevel || p.error_level) === 'MEDIUM').length}
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.borderLight}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: '#FFEBE6',
+            color: '#BF2600',
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
+              {policies.filter(p => p.errorLevel === 'HIGH').length}
             </div>
-            <div className="text-xs font-medium opacity-80">Lỗi trung bình</div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '500',
+              opacity: 0.8,
+            }}>
+              Lỗi cao
+            </div>
           </div>
-          <div className="p-4 rounded-xl border flex flex-col items-center justify-center text-center bg-green-500/10 text-green-500 border-green-500/20">
-            <div className="text-2xl font-bold mb-1">
-              {policies.filter(p => (p.errorLevel || p.error_level) === 'LOW').length}
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.borderLight}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: T.warningBg,
+            color: T.warning,
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
+              {policies.filter(p => p.errorLevel === 'MEDIUM').length}
             </div>
-            <div className="text-xs font-medium opacity-80">Lỗi nhẹ</div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '500',
+              opacity: 0.8,
+            }}>
+              Lỗi trung bình
+            </div>
+          </div>
+          <div style={{
+            padding: '16px',
+            borderRadius: '10px',
+            border: `1px solid ${T.borderLight}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            backgroundColor: T.successBg,
+            color: T.success,
+          }}>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              marginBottom: '4px',
+            }}>
+              {policies.filter(p => p.errorLevel === 'LOW').length}
+            </div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '500',
+              opacity: 0.8,
+            }}>
+              Lỗi nhẹ
+            </div>
           </div>
         </div>
       </Card>
 
       {/* Policies Grid */}
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(350px,1fr))] gap-6">
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+        gap: '24px',
+        marginTop: '32px',
+      }}>
         {policies.map((policy) => (
           <Card
             key={policy.policy_id}
@@ -251,29 +430,18 @@ const ModernPoliciesPage: React.FC = () => {
               setShowDetailModal(true);
             }}
           >
-            <div className="flex items-start gap-4 mb-4">
+            <div className="mb-4">
+              <h3 className="text-lg font-bold text-foreground truncate mb-1" title={getPolicyName(policy)}>
+                {getPolicyName(policy)}
+              </h3>
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-sm"
+                className="inline-flex px-2 py-0.5 rounded-lg text-xs font-semibold"
                 style={{
-                  backgroundColor: `${getPolicyColor(getPolicyName(policy))}20`,
+                  backgroundColor: `${getPolicyColor(getPolicyName(policy))}15`,
                   color: getPolicyColor(getPolicyName(policy))
                 }}
               >
-                {getPolicyIcon(getPolicyName(policy))}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-bold text-foreground truncate mb-1" title={getPolicyName(policy)}>
-                  {getPolicyName(policy)}
-                </h3>
-                <div
-                  className="inline-flex px-2 py-0.5 rounded-lg text-xs font-semibold"
-                  style={{
-                    backgroundColor: `${getPolicyColor(getPolicyName(policy))}15`,
-                    color: getPolicyColor(getPolicyName(policy))
-                  }}
-                >
-                  Policy #{getPolicyId(policy)}
-                </div>
+                Lỗi #{getPolicyId(policy)}
               </div>
             </div>
 
@@ -316,7 +484,7 @@ const ModernPoliciesPage: React.FC = () => {
                   }}
                   leftIcon="edit"
                 >
-                  Edit
+                  Sửa
                 </Button>
                 <Button
                   variant="destructive"
@@ -330,7 +498,7 @@ const ModernPoliciesPage: React.FC = () => {
                 />
               </div>
               <div className="text-xs text-muted-foreground font-medium flex items-center gap-1">
-                📊 {policy.projects?.length || 0} projects
+                {policy.projects?.length || 0} dự án
               </div>
             </div>
           </Card>
@@ -342,7 +510,7 @@ const ModernPoliciesPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
             <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <span>🛡️</span> {showEditModal ? 'Chỉnh sửa lỗi' : 'Tạo lỗi mới'}
+              {showEditModal ? 'Chỉnh sửa lỗi' : 'Tạo lỗi mới'}
             </h2>
 
             <div className="space-y-4 mb-6">
@@ -373,10 +541,10 @@ const ModernPoliciesPage: React.FC = () => {
                   onChange={(e) => setNewPolicy({ ...newPolicy, errorLevel: e.target.value })}
                   className="w-full px-4 py-2.5 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none cursor-pointer"
                 >
-                  <option value="LOW">Low - Thấp</option>
-                  <option value="MEDIUM">Medium - Trung bình</option>
-                  <option value="HIGH">High - Cao</option>
-                  <option value="CRITICAL">Critical - Nghiêm trọng</option>
+                  <option value="LOW">Thấp</option>
+                  <option value="MEDIUM">Trung bình</option>
+                  <option value="HIGH">Cao</option>
+                  <option value="CRITICAL">Nghiêm trọng</option>
                 </select>
               </div>
             </div>
@@ -410,35 +578,25 @@ const ModernPoliciesPage: React.FC = () => {
           <Card className="w-full max-w-2xl p-0 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]">
             {/* Modal Header */}
             <div className="p-6 border-b border-border/50 flex items-center justify-between bg-muted/20">
-              <div className="flex items-center gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-foreground">
+                  {getPolicyName(selectedPolicy)}
+                </h2>
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                  className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mt-1"
                   style={{
                     backgroundColor: `${getPolicyColor(getPolicyName(selectedPolicy))}20`,
+                    color: getPolicyColor(getPolicyName(selectedPolicy))
                   }}
                 >
-                  {getPolicyIcon(getPolicyName(selectedPolicy))}
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-foreground">
-                    {getPolicyName(selectedPolicy)}
-                  </h2>
-                  <div
-                    className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mt-1"
-                    style={{
-                      backgroundColor: `${getPolicyColor(getPolicyName(selectedPolicy))}20`,
-                      color: getPolicyColor(getPolicyName(selectedPolicy))
-                    }}
-                  >
-                    Policy #{getPolicyId(selectedPolicy)}
-                  </div>
+                  Lỗi #{getPolicyId(selectedPolicy)}
                 </div>
               </div>
               <button
                 onClick={() => setShowDetailModal(false)}
                 className="p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-lg transition-colors"
               >
-                ✕
+                X
               </button>
             </div>
 
@@ -473,7 +631,7 @@ const ModernPoliciesPage: React.FC = () => {
                         </div>
                       </div>
                       <div className="px-2 py-1 bg-blue-500/10 text-blue-600 rounded text-xs font-mono">
-                        ID: {project.project_id}
+                        Mã: {project.project_id}
                       </div>
                     </div>
                   ))}

@@ -21,14 +21,14 @@ const ModernAdminLayout: React.FC<ModernAdminLayoutProps> = ({
 
   // Chỉ các trang cần thiết theo ERD
   const adminMenuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊', description: 'Tổng quan hệ thống' },
-    { id: 'users', label: 'Quản lý người dùng', icon: '👥', description: 'Users & Roles' },
-    { id: 'projects', label: 'Quản lý dự án', icon: '📁', description: 'Projects & Datasets' },
-    { id: 'assignments', label: 'Phân công nhiệm vụ', icon: '📋', description: 'Task Assignments' },
-    { id: 'labels', label: 'Quản lý nhãn', icon: '🏷️', description: 'Labels & Rules' },
-    { id: 'reviewing', label: 'Kiểm duyệt', icon: '👁️', description: 'Review Process' },
-    { id: 'policies', label: 'Chính sách', icon: '🛡️', description: 'Quality Policies' },
-    { id: 'audit', label: 'Nhật ký hệ thống', icon: '📜', description: 'Activity Logs' },
+    { id: 'dashboard', label: 'Tổng quan', icon: 'D', description: 'Tổng quan hệ thống' },
+    { id: 'users', label: 'Quản lý người dùng', icon: 'U', description: 'Người dùng & Vai trò' },
+    { id: 'projects', label: 'Quản lý dự án', icon: 'P', description: 'Dự án & Tập dữ liệu' },
+    { id: 'assignments', label: 'Phân công nhiệm vụ', icon: 'A', description: 'Phân công công việc' },
+    { id: 'labels', label: 'Quản lý nhãn', icon: 'L', description: 'Nhãn & Quy tắc' },
+    { id: 'reviewing', label: 'Kiểm duyệt', icon: 'R', description: 'Quy trình kiểm duyệt' },
+    { id: 'policies', label: 'Chính sách', icon: 'S', description: 'Chính sách chất lượng' },
+    { id: 'audit', label: 'Nhật ký hệ thống', icon: 'H', description: 'Nhật ký hoạt động' },
   ];
 
   return (
@@ -43,18 +43,16 @@ const ModernAdminLayout: React.FC<ModernAdminLayoutProps> = ({
         {/* Header */}
         <div className="p-6 border-b border-border/50 bg-primary/5">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 shrink-0">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" fill="white" />
-              </svg>
+            <div className="w-12 h-12 flex items-center justify-center shrink-0">
+              <img src="/logo.svg" alt="Logo" className="w-full h-full" />
             </div>
             {sidebarOpen && (
-              <div className="animate-in fade-in slide-in-from-left-4 duration-300">
-                <h2 className="m-0 text-lg font-bold bg-gradient-to-br from-blue-500 to-blue-700 bg-clip-text text-transparent">
-                  ADMIN PANEL
+              <div>
+                <h2 className="m-0 text-lg font-bold text-foreground">
+                  QUẢN TRỊ VIÊN
                 </h2>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Data Labeling System
+                  Hệ thống gán nhãn dữ liệu
                 </p>
               </div>
             )}
@@ -129,7 +127,7 @@ const ModernAdminLayout: React.FC<ModernAdminLayoutProps> = ({
                   {currentUser.first_name} {currentUser.last_name}
                 </div>
                 <div className="text-xs text-blue-500 font-medium">
-                  Administrator
+                  Quản trị viên
                 </div>
               </div>
             </div>
@@ -143,7 +141,7 @@ const ModernAdminLayout: React.FC<ModernAdminLayoutProps> = ({
               sidebarOpen ? "px-4" : "px-0"
             )}
           >
-            <span className="text-lg">🚪</span>
+            <span className="text-lg">X</span>
             {sidebarOpen && <span>Đăng xuất</span>}
           </Button>
         </div>
@@ -163,9 +161,9 @@ const ModernAdminLayout: React.FC<ModernAdminLayoutProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs font-semibold">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs font-semibold">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              System Online
+              Hệ thống hoạt động
             </div>
             <div className="w-px h-8 bg-border/60 mx-2 hidden md:block" />
             <div className="text-sm text-muted-foreground">

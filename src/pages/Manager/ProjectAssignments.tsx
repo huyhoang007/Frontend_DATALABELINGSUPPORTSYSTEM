@@ -401,9 +401,9 @@ export default function ProjectAssignments() {
                                     <TableHead>DATA SOURCE</TableHead>
                                     <TableHead>ANNOTATOR</TableHead>
                                     <TableHead>REVIEWER</TableHead>
-                                    <TableHead>PROGRESS</TableHead>
-                                    <TableHead>STATUS</TableHead>
-                                    <TableHead className="text-right">ACTIONS</TableHead>
+                                    <TableHead>TIẾN ĐỘ</TableHead>
+                                    <TableHead>TRẠNG THÁI</TableHead>
+                                    <TableHead className="text-right">THAO TÁC</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>

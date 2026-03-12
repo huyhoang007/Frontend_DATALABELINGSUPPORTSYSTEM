@@ -51,7 +51,7 @@ export function ModalDialog({ isOpen, onClose, title, children, actions, variant
 }
 
 // Helper for Confirmation Dialog
-export function ConfirmDialog({ isOpen, onClose, onConfirm, title, message, confirmText = "Confirm", cancelText = "Cancel", isDestructive = false }) {
+export function ConfirmDialog({ isOpen, onClose, onConfirm, title, message, confirmText = "Xác nhận", cancelText = "Hủy", isDestructive = false }) {
     return (
         <ModalDialog
             isOpen={isOpen}
