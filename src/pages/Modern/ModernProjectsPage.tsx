@@ -8,6 +8,31 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { cn } from "../../utils/cn";
 
+// Modern Enterprise UI - Bảng màu T chuẩn
+const T = {
+  bg: "#F7F8F9",
+  surface: "#FFFFFF",
+  surfaceHover: "#F8F9FA",
+  border: "#DFE1E6",
+  borderLight: "#EBECF0",
+  textPrimary: "#172B4D",
+  textSecondary: "#5E6C84",
+  textMuted: "#8993A4",
+  brand: "#0052CC",
+  brandHover: "#0747A6",
+  brandLight: "#DEEBFF",
+  success: "#00875A",
+  successBg: "#E3FCEF",
+  warning: "#FF991F",
+  warningBg: "#FFFAE6",
+  danger: "#DE350B",
+  dangerBg: "#FFEBE6",
+  info: "#0065FF",
+  infoBg: "#DEEBFF",
+  purple: "#5243AA",
+  purpleBg: "#EAE6FF",
+};
+
 // Define local interfaces matching backend response if needed,
 // or mapped from 'types/cvat'.
 // Backend ProjectResponse: { id, name, type, status, managerId, ... }
@@ -49,7 +74,7 @@ const ModernProjectsPage: React.FC = () => {
   const [editDescription, setEditDescription] = useState("");
   const [editStatus, setEditStatus] = useState("");
 
-  const { addToast } = useToast();
+  const { addToast } = useToast() as { addToast: (message: string, type?: 'success' | 'error' | 'info') => void };
   const { user } = useAuth();
 
   // Load Projects on Mount
@@ -189,30 +214,15 @@ const ModernProjectsPage: React.FC = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "draft":
-        return "📋";
+        return "D";
       case "in_progress":
-        return "🔄";
+        return "P";
       case "completed":
-        return "✅";
+        return "C";
       case "paused":
-        return "⏸️";
+        return "T";
       default:
-        return "❓";
-    }
-  };
-
-  const getDataTypeIcon = (dataType: string) => {
-    switch (dataType) {
-      case "image":
-        return "🖼️";
-      case "text":
-        return "📝";
-      case "video":
-        return "🎥";
-      case "audio":
-        return "🎵";
-      default:
-        return "📄";
+        return "?";
     }
   };
 
@@ -236,15 +246,32 @@ const ModernProjectsPage: React.FC = () => {
   );
 
   return (
-    <div className="p-8 min-h-full bg-transparent space-y-8">
+    <div style={{
+      padding: '32px',
+      minHeight: '100vh',
+      backgroundColor: T.bg,
+    }}>
       {/* Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-        <div className="flex items-center justify-between mb-0">
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 0,
+        }}>
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
-              <span>📁</span> Quản lý dự án
+            <h1 style={{
+              fontSize: '24px',
+              fontWeight: '600',
+              color: T.textPrimary,
+              marginBottom: '8px',
+            }}>
+              Quản lý dự án
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p style={{
+              fontSize: '15px',
+              color: T.textSecondary,
+            }}>
               Quản lý các dự án gán nhãn dữ liệu và datasets
             </p>
           </div>
@@ -259,7 +286,7 @@ const ModernProjectsPage: React.FC = () => {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                🔲 Grid
+                Lưới
               </button>
               <button
                 onClick={() => setViewMode("list")}
@@ -270,7 +297,7 @@ const ModernProjectsPage: React.FC = () => {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                📋 List
+                Danh sách
               </button>
             </div>
             <Button
@@ -330,16 +357,6 @@ const ModernProjectsPage: React.FC = () => {
             >
               {/* Project Header */}
               <div className="flex items-center gap-4 mb-4">
-                <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl border-2"
-                  style={{
-                    backgroundColor: `${getDataTypeColor(project.data_type)}10`,
-                    borderColor: `${getDataTypeColor(project.data_type)}20`,
-                    color: getDataTypeColor(project.data_type)
-                  }}
-                >
-                  {getDataTypeIcon(project.data_type)}
-                </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-lg font-bold text-foreground truncate mb-1" title={project.name}>
                     {project.name}
@@ -430,8 +447,7 @@ const ModernProjectsPage: React.FC = () => {
             <tbody className="divide-y divide-border/50 text-foreground">
               {filteredProjects.map((project) => (
                 <tr key={project.project_id} className="hover:bg-muted/30 transition-colors">
-                  <td className="px-6 py-4 font-medium flex items-center gap-3">
-                    <span className="text-lg">{getDataTypeIcon(project.data_type)}</span>
+                  <td className="px-6 py-4 font-medium">
                     {project.name}
                   </td>
                   <td className="px-6 py-4">
@@ -467,7 +483,7 @@ const ModernProjectsPage: React.FC = () => {
                       onClick={() => navigate(`/manager/projects/${project.project_id}`)}
                       title="Xem chi tiết"
                     >
-                      👁
+                      Xem
                     </Button>
                     <Button
                       size="sm"
@@ -475,7 +491,7 @@ const ModernProjectsPage: React.FC = () => {
                       className="h-8 w-8 p-0"
                       onClick={() => handleEditClick(project)}
                     >
-                      ✏️
+                      Sửa
                     </Button>
                     <Button
                       size="sm"
@@ -483,7 +499,7 @@ const ModernProjectsPage: React.FC = () => {
                       className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                       onClick={() => handleDeleteProject(project.project_id)}
                     >
-                      🗑️
+                      Xóa
                     </Button>
                   </td>
                 </tr>
@@ -497,8 +513,8 @@ const ModernProjectsPage: React.FC = () => {
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
-            <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <span>📁</span> Tạo dự án mới
+            <h2 className="text-xl font-bold text-foreground mb-6">
+              Tạo dự án mới
             </h2>
 
             <div className="space-y-4 mb-6">
@@ -561,8 +577,8 @@ const ModernProjectsPage: React.FC = () => {
       {showEditModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
-            <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <span>✏️</span> Chỉnh sửa dự án
+            <h2 className="text-xl font-bold text-foreground mb-6">
+              Chỉnh sửa dự án
             </h2>
 
             <div className="space-y-4 mb-6">

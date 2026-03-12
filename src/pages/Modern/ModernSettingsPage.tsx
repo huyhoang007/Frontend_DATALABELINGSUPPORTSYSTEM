@@ -24,11 +24,11 @@ const ModernSettingsPage: React.FC = () => {
   });
 
   const tabs = [
-    { id: 'general', label: 'Cài đặt chung', icon: '⚙️' },
-    { id: 'security', label: 'Bảo mật', icon: '🔒' },
-    { id: 'email', label: 'Email', icon: '📧' },
-    { id: 'storage', label: 'Lưu trữ', icon: '💾' },
-    { id: 'backup', label: 'Sao lưu', icon: '🔄' }
+    { id: 'general', label: 'Cài đặt chung', icon: 'G' },
+    { id: 'security', label: 'Bảo mật', icon: 'S' },
+    { id: 'email', label: 'Email', icon: 'E' },
+    { id: 'storage', label: 'Lưu trữ', icon: 'D' },
+    { id: 'backup', label: 'Sao lưu', icon: 'B' }
   ];
 
   const handleSettingChange = (key: string, value: any) => {
@@ -288,7 +288,7 @@ const ModernSettingsPage: React.FC = () => {
 
       <div className="p-5 bg-blue-500/10 rounded-xl border border-blue-500/20">
         <h3 className="mb-4 text-base font-semibold text-blue-600 dark:text-blue-400">
-          📊 Thống kê lưu trữ
+          Thống kê lưu trữ
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -312,7 +312,7 @@ const ModernSettingsPage: React.FC = () => {
     <div className="space-y-6">
       <div className="p-5 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
         <h3 className="mb-4 text-base font-semibold text-emerald-600 dark:text-emerald-400">
-          ✅ Sao lưu tự động
+          Sao lưu tự động
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -365,7 +365,7 @@ const ModernSettingsPage: React.FC = () => {
       {/* Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
         <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
-          <span>⚙️</span> Cài đặt hệ thống
+          Cài đặt hệ thống
         </h1>
         <p className="text-lg text-muted-foreground">
           Cấu hình và tùy chỉnh các thông số hệ thống

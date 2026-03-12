@@ -1,7 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { cn } from '../../utils/cn';
+
+// Bảng màu Modern Enterprise UI
+const T = {
+  bg: "#F7F8F9",
+  surface: "#FFFFFF",
+  surfaceHover: "#F1F2F4",
+  border: "#DCDFE4",
+  textPrimary: "#172B4D",
+  textSecondary: "#44546F",
+  textMuted: "#626F86",
+  brand: "#0C66E4",
+  brandHover: "#0055CC",
+  brandLight: "#E9F2FF",
+  green: "#1F845A",
+  greenBg: "#DCFFF1",
+  amber: "#A54800",
+  amberBg: "#FFF7D6",
+  purple: "#5E4DB2",
+  purpleBg: "#F3F0FF",
+  red: "#DE350B",
+  redBg: "#FFEBE6",
+};
 
 interface ReviewerDashboardProps {
   user: any;
@@ -9,6 +30,9 @@ interface ReviewerDashboardProps {
 }
 
 const ReviewerDashboard: React.FC<ReviewerDashboardProps> = ({ user, onLogout }) => {
+  const [hoveredKpi, setHoveredKpi] = useState<number | null>(null);
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+
   const mockReviews = [
     {
       id: 1,
@@ -68,10 +92,10 @@ const ReviewerDashboard: React.FC<ReviewerDashboardProps> = ({ user, onLogout })
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'approved': return '✓';
-      case 'rejected': return '✗';
-      case 'pending': return '○';
-      case 'in_review': return '◐';
+      case 'approved': return 'V';
+      case 'rejected': return 'X';
+      case 'pending': return 'O';
+      case 'in_review': return 'R';
       default: return '?';
     }
   };
@@ -93,218 +117,327 @@ const ReviewerDashboard: React.FC<ReviewerDashboardProps> = ({ user, onLogout })
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif" }}>
       {/* Header */}
-      <Card className="rounded-none border-x-0 border-t-0 p-5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50 sticky top-0 z-50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-violet-700 rounded-xl flex items-center justify-center text-xl text-white shadow-lg shadow-violet-500/30">
-              R
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">
-                Reviewer Dashboard
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Chào mừng, {user.full_name}
-              </p>
-            </div>
+      <div style={{
+        padding: "20px 40px",
+        background: T.surface,
+        borderBottom: `1px solid ${T.border}`,
+        position: "sticky",
+        top: 0,
+        zIndex: 50
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <h1 style={{ fontSize: "24px", fontWeight: 800, color: T.textPrimary, letterSpacing: "-0.02em" }}>
+              Bảng điều khiển Reviewer
+            </h1>
+            <p style={{ fontSize: "13px", color: T.textMuted, marginTop: "4px" }}>
+              Chào mừng, {user.full_name}
+            </p>
           </div>
-          <Button
-            variant="ghost"
-            className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+          <button
             onClick={onLogout}
+            style={{
+              padding: "8px 16px",
+              fontSize: "13px",
+              fontWeight: 600,
+              color: T.red,
+              background: "transparent",
+              border: `1px solid ${T.border}`,
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              transition: "all .15s"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = T.redBg;
+              e.currentTarget.style.borderColor = T.red + "40";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.borderColor = T.border;
+            }}
           >
             Đăng xuất
-          </Button>
+          </button>
         </div>
-      </Card>
+      </div>
 
-      <div className="p-8 max-w-7xl mx-auto space-y-8">
+      <div style={{ padding: "32px 40px", maxWidth: "1400px", margin: "0 auto" }}>
         {/* Stats */}
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-6">
-          <Card className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-card/80 backdrop-blur border-border/60">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center text-xl text-amber-500">
-                ○
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "16px", marginBottom: "32px" }}>
+          {[
+            { label: "Chờ review", value: mockReviews.filter(r => r.status === 'pending').length, icon: "schedule", color: T.amber },
+            { label: "Đã duyệt", value: mockReviews.filter(r => r.status === 'approved').length, icon: "check_circle", color: T.green },
+            { label: "Từ chối", value: mockReviews.filter(r => r.status === 'rejected').length, icon: "cancel", color: T.red },
+            { label: "Đang review", value: mockReviews.filter(r => r.status === 'in_review').length, icon: "rate_review", color: T.purple },
+          ].map((stat, idx) => (
+            <div
+              key={stat.label}
+              onMouseEnter={() => setHoveredKpi(idx)}
+              onMouseLeave={() => setHoveredKpi(null)}
+              style={{
+                background: T.surface,
+                border: `1px solid ${T.border}`,
+                borderRadius: "6px",
+                padding: "20px",
+                borderTop: `3px solid ${stat.color}`,
+                boxShadow: hoveredKpi === idx ? "0 4px 12px rgba(9,30,66,.12)" : "none",
+                transition: "all .2s"
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                <p style={{
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  color: T.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em"
+                }}>
+                  {stat.label}
+                </p>
+                <span className="material-symbols-outlined" style={{ fontSize: "20px", color: stat.color }}>
+                  {stat.icon}
+                </span>
               </div>
-              <div>
-                <h3 className="text-3xl font-bold text-foreground">
-                  {mockReviews.filter(r => r.status === 'pending').length}
-                </h3>
-                <p className="text-sm text-muted-foreground">Chờ review</p>
-              </div>
+              <p style={{
+                fontSize: "32px",
+                fontWeight: 800,
+                color: T.textPrimary,
+                lineHeight: 1
+              }}>
+                {stat.value}
+              </p>
             </div>
-          </Card>
-
-          <Card className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-card/80 backdrop-blur border-border/60">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center text-xl text-emerald-500">
-                ✓
-              </div>
-              <div>
-                <h3 className="text-3xl font-bold text-foreground">
-                  {mockReviews.filter(r => r.status === 'approved').length}
-                </h3>
-                <p className="text-sm text-muted-foreground">Đã duyệt</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-card/80 backdrop-blur border-border/60">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center text-xl text-red-500">
-                ✗
-              </div>
-              <div>
-                <h3 className="text-3xl font-bold text-foreground">
-                  {mockReviews.filter(r => r.status === 'rejected').length}
-                </h3>
-                <p className="text-sm text-muted-foreground">Từ chối</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-card/80 backdrop-blur border-border/60">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-violet-500/10 rounded-xl flex items-center justify-center text-xl text-violet-500">
-                ◐
-              </div>
-              <div>
-                <h3 className="text-3xl font-bold text-foreground">
-                  {mockReviews.filter(r => r.status === 'in_review').length}
-                </h3>
-                <p className="text-sm text-muted-foreground">Đang review</p>
-              </div>
-            </div>
-          </Card>
+          ))}
         </div>
 
         {/* Review Tasks */}
-        <Card className="p-8 bg-card/80 backdrop-blur border-border/60">
-          <h2 className="text-xl font-bold text-foreground mb-6">
-            Review Tasks
+        <div style={{
+          background: T.surface,
+          border: `1px solid ${T.border}`,
+          borderRadius: "6px",
+          padding: "32px",
+          boxShadow: "0 1px 3px rgba(9,30,66,.08)"
+        }}>
+          <h2 style={{
+            fontSize: "18px",
+            fontWeight: 700,
+            color: T.textPrimary,
+            marginBottom: "24px"
+          }}>
+            Nhiệm vụ Review
           </h2>
 
-          <div className="space-y-4">
-            {mockReviews.map((review) => (
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {mockReviews.map((review, idx) => (
               <div
                 key={review.id}
-                className="p-5 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors"
+                onMouseEnter={() => setHoveredCard(idx)}
+                onMouseLeave={() => setHoveredCard(null)}
+                style={{
+                  padding: "20px",
+                  borderRadius: "6px",
+                  border: `1px solid ${T.border}`,
+                  background: hoveredCard === idx ? T.surfaceHover : T.surface,
+                  transition: "all .15s"
+                }}
               >
-                <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-lg font-semibold text-foreground">
+                <div style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "16px",
+                  marginBottom: "16px"
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <h3 style={{
+                      fontSize: "16px",
+                      fontWeight: 700,
+                      color: T.textPrimary
+                    }}>
                       {review.taskName}
                     </h3>
-                    <div
-                      className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide flex items-center gap-1"
-                      style={{
-                        backgroundColor: `${getStatusColor(review.status)}15`,
-                        color: getStatusColor(review.status)
-                      }}
-                    >
+                    <div style={{
+                      padding: "4px 10px",
+                      borderRadius: "4px",
+                      fontSize: "10px",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      background: `${getStatusColor(review.status)}15`,
+                      color: getStatusColor(review.status)
+                    }}>
                       <span>{getStatusIcon(review.status)}</span>
                       {review.status}
                     </div>
                   </div>
-                  <div
-                    className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide"
-                    style={{
-                      backgroundColor: `${getPriorityColor(review.priority)}15`,
-                      color: getPriorityColor(review.priority)
-                    }}
-                  >
-                    {review.priority} Priority
+                  <div style={{
+                    padding: "4px 10px",
+                    borderRadius: "4px",
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    background: `${getPriorityColor(review.priority)}15`,
+                    color: getPriorityColor(review.priority)
+                  }}>
+                    Ưu tiên {review.priority === 'high' ? 'cao' : review.priority === 'medium' ? 'trung bình' : 'thấp'}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 text-sm">
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                  gap: "16px",
+                  marginBottom: "16px",
+                  fontSize: "13px"
+                }}>
                   <div>
-                    <span className="text-muted-foreground block mb-1">Annotator</span>
-                    <span className="font-medium text-foreground">{review.annotator}</span>
+                    <span style={{ color: T.textMuted, display: "block", marginBottom: "4px" }}>Người gán nhãn</span>
+                    <span style={{ fontWeight: 600, color: T.textPrimary }}>{review.annotator}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground block mb-1">Dự án</span>
-                    <span className="font-medium text-foreground">{review.project}</span>
+                    <span style={{ color: T.textMuted, display: "block", marginBottom: "4px" }}>Dự án</span>
+                    <span style={{ fontWeight: 600, color: T.textPrimary }}>{review.project}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground block mb-1">Số items</span>
-                    <span className="font-medium text-foreground">{review.itemsCount}</span>
+                    <span style={{ color: T.textMuted, display: "block", marginBottom: "4px" }}>Số items</span>
+                    <span style={{ fontWeight: 600, color: T.textPrimary }}>{review.itemsCount}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground block mb-1">Gửi lúc</span>
-                    <span className="font-medium text-foreground">
+                    <span style={{ color: T.textMuted, display: "block", marginBottom: "4px" }}>Gửi lúc</span>
+                    <span style={{ fontWeight: 600, color: T.textPrimary }}>
                       {new Date(review.submittedAt).toLocaleDateString('vi-VN')}
                     </span>
                   </div>
                 </div>
 
                 {review.accuracy !== null && (
-                  <div className="mb-4">
-                    <div className="flex justify-between mb-1 text-xs">
-                      <span className="text-muted-foreground">Độ chính xác</span>
-                      <span
-                        className="font-bold"
-                        style={{ color: getAccuracyColor(review.accuracy) }}
-                      >
+                  <div style={{ marginBottom: "16px" }}>
+                    <div style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: "6px",
+                      fontSize: "12px"
+                    }}>
+                      <span style={{ color: T.textMuted }}>Độ chính xác</span>
+                      <span style={{
+                        fontWeight: 800,
+                        color: getAccuracyColor(review.accuracy)
+                      }}>
                         {review.accuracy}%
                       </span>
                     </div>
-                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{
-                          width: `${review.accuracy}%`,
-                          backgroundColor: getAccuracyColor(review.accuracy)
-                        }}
-                      />
+                    <div style={{
+                      height: "6px",
+                      width: "100%",
+                      background: T.border,
+                      borderRadius: "99px",
+                      overflow: "hidden"
+                    }}>
+                      <div style={{
+                        height: "100%",
+                        borderRadius: "99px",
+                        width: `${review.accuracy}%`,
+                        background: getAccuracyColor(review.accuracy),
+                        transition: "width .5s ease"
+                      }} />
                     </div>
                   </div>
                 )}
 
-                <div className="flex flex-wrap gap-2 pt-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="h-9 text-xs"
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", paddingTop: "8px" }}>
+                  <button style={{
+                    height: "36px",
+                    padding: "0 16px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: T.textPrimary,
+                    background: T.surfaceHover,
+                    border: `1px solid ${T.border}`,
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    transition: "all .15s"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = T.border}
+                  onMouseLeave={(e) => e.currentTarget.style.background = T.surfaceHover}
                   >
                     Xem chi tiết
-                  </Button>
+                  </button>
 
                   {review.status === 'pending' && (
                     <>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 text-xs text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-200 dark:border-emerald-800"
+                      <button style={{
+                        height: "36px",
+                        padding: "0 16px",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        color: T.green,
+                        background: T.greenBg,
+                        border: `1px solid ${T.green}40`,
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                        transition: "all .15s"
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = T.green + "30"}
+                      onMouseLeave={(e) => e.currentTarget.style.background = T.greenBg}
                       >
                         Duyệt
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 text-xs text-red-600 bg-red-500/10 hover:bg-red-500/20 border-red-200 dark:border-red-800"
+                      </button>
+                      <button style={{
+                        height: "36px",
+                        padding: "0 16px",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        color: T.red,
+                        background: T.redBg,
+                        border: `1px solid ${T.red}40`,
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                        transition: "all .15s"
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = T.red + "30"}
+                      onMouseLeave={(e) => e.currentTarget.style.background = T.redBg}
                       >
                         Từ chối
-                      </Button>
+                      </button>
                     </>
                   )}
 
                   {review.status === 'in_review' && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="h-9 text-xs text-violet-600 bg-violet-500/10 hover:bg-violet-500/20 border-violet-200 dark:border-violet-800"
+                    <button style={{
+                      height: "36px",
+                      padding: "0 16px",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: T.purple,
+                      background: T.purpleBg,
+                      border: `1px solid ${T.purple}40`,
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      transition: "all .15s"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = T.purple + "30"}
+                    onMouseLeave={(e) => e.currentTarget.style.background = T.purpleBg}
                     >
                       Tiếp tục review
-                    </Button>
+                    </button>
                   )}
                 </div>
               </div>
             ))}
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   );

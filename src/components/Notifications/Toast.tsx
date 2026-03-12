@@ -24,27 +24,27 @@ const Toast: React.FC<ToastProps> = ({ message, type, duration = 3000, onClose }
       case 'success':
         return {
           backgroundColor: '#4caf50',
-          icon: '✅'
+          icon: 'OK'
         };
       case 'error':
         return {
           backgroundColor: '#f44336',
-          icon: '❌'
+          icon: 'X'
         };
       case 'warning':
         return {
           backgroundColor: '#ff9800',
-          icon: '⚠️'
+          icon: '!'
         };
       case 'info':
         return {
           backgroundColor: '#2196f3',
-          icon: 'ℹ️'
+          icon: 'i'
         };
       default:
         return {
           backgroundColor: '#2196f3',
-          icon: 'ℹ️'
+          icon: 'i'
         };
     }
   };

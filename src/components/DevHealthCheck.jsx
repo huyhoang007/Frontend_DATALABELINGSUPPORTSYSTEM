@@ -56,7 +56,7 @@ const DevHealthCheck = () => {
         return (
             <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
                 <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full">
-                    <h2 className="text-2xl font-bold mb-4">🔍 Dev Health Check</h2>
+                    <h2 className="text-2xl font-bold mb-4">Dev Health Check</h2>
                     <p className="text-gray-600">Checking backend connectivity...</p>
                 </div>
             </div>
@@ -66,14 +66,14 @@ const DevHealthCheck = () => {
     return (
         <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full">
-                <h2 className="text-2xl font-bold mb-6">🔍 Dev Health Check</h2>
+                <h2 className="text-2xl font-bold mb-6">Dev Health Check</h2>
 
                 <div className={`p-6 rounded-lg mb-6 ${state.success
                     ? 'bg-green-50 border-2 border-green-200'
                     : 'bg-red-50 border-2 border-red-200'
                     }`}>
                     <h3 className="text-xl font-semibold mb-4">
-                        {state.success ? '✅ Backend Connected' : '❌ Connection Failed'}
+                        {state.success ? 'Backend Connected' : 'Connection Failed'}
                     </h3>
 
                     {state.success && state.data && (

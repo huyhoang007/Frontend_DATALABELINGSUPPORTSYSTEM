@@ -47,12 +47,8 @@ const ModernLoginForm: React.FC<ModernLoginFormProps> = ({
         <Card className="bg-card/80 backdrop-blur-xl border-border/50 p-10 shadow-2xl">
           {/* Logo/Icon */}
           <div className="text-center mb-8">
-            <div className="w-[60px] h-[60px] bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-500/30">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" fill="white" />
-                <path d="M19 15L19.91 18.26L23 19L19.91 19.74L19 23L18.09 19.74L15 19L18.09 18.26L19 15Z" fill="white" />
-                <path d="M5 15L5.91 18.26L9 19L5.91 19.74L5 23L4.09 19.74L1 19L4.09 18.26L5 15Z" fill="white" />
-              </svg>
+            <div className="w-[80px] h-[80px] flex items-center justify-center mx-auto mb-5">
+              <img src="/logo.svg" alt="DataLabeling Logo" className="w-full h-full" />
             </div>
             <h2 className="text-foreground text-2xl font-bold m-0 tracking-wide">
               DATA LABELING SYSTEM
@@ -63,12 +59,12 @@ const ModernLoginForm: React.FC<ModernLoginFormProps> = ({
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Username Field */}
             <div>
-              <label className="block text-muted-foreground text-sm font-medium mb-2">Username</label>
+              <label className="block text-muted-foreground text-sm font-medium mb-2">Tên đăng nhập</label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your username"
+                placeholder="Nhập tên đăng nhập"
                 required
                 className="w-full px-4 py-3.5 bg-background border border-input rounded-lg text-foreground text-base outline-none transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
@@ -76,13 +72,13 @@ const ModernLoginForm: React.FC<ModernLoginFormProps> = ({
 
             {/* Password Field */}
             <div>
-              <label className="block text-muted-foreground text-sm font-medium mb-2">Password</label>
+              <label className="block text-muted-foreground text-sm font-medium mb-2">Mật khẩu</label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder="Nhập mật khẩu"
                   required
                   className="w-full px-4 py-3.5 pr-12 bg-background border border-input rounded-lg text-foreground text-base outline-none transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
@@ -109,13 +105,13 @@ const ModernLoginForm: React.FC<ModernLoginFormProps> = ({
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="mr-2 accent-primary"
                 />
-                Remember me
+                Ghi nhớ đăng nhập
               </label>
               <button
                 type="button"
                 className="bg-transparent border-none text-blue-500 hover:text-blue-600 text-sm cursor-pointer transition-colors font-medium"
               >
-                Forgot password?
+                Quên mật khẩu?
               </button>
             </div>
 
@@ -126,7 +122,7 @@ const ModernLoginForm: React.FC<ModernLoginFormProps> = ({
               className="w-full h-12 text-base font-semibold bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white shadow-lg shadow-blue-500/30"
               leftIcon={isLoading ? "loading" : undefined}
             >
-              {isLoading ? "Logging in..." : "Login"}
+              {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
             </Button>
           </form>
 
@@ -134,13 +130,13 @@ const ModernLoginForm: React.FC<ModernLoginFormProps> = ({
           {onSwitchToRegister && (
             <div className="text-center mt-6 pt-6 border-t border-border/50">
               <span className="text-muted-foreground text-sm">
-                Don't have an account?{" "}
+                Chưa có tài khoản?{" "}
                 <button
                   type="button"
                   onClick={onSwitchToRegister}
                   className="bg-transparent border-none text-blue-500 hover:text-blue-600 text-sm cursor-pointer underline transition-colors font-medium"
                 >
-                  Sign up
+                  Đăng ký ngay
                 </button>
               </span>
             </div>

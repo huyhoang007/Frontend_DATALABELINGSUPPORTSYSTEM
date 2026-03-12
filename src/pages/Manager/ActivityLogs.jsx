@@ -1,20 +1,41 @@
-import * as React from "react";
+import { useState, useEffect } from "react";
 import { activityLogApi } from "../../api/activityLogApi";
-import { Button } from "../../components/ui/Button";
-import { cn } from "../../utils/cn";
 import { useToast } from "../../context/ToastContext";
+
+// Bảng màu Modern Enterprise UI
+const T = {
+  bg: "#F7F8F9",
+  surface: "#FFFFFF",
+  surfaceHover: "#F1F2F4",
+  border: "#DCDFE4",
+  textPrimary: "#172B4D",
+  textSecondary: "#44546F",
+  textMuted: "#626F86",
+  brand: "#0C66E4",
+  brandHover: "#0055CC",
+  brandLight: "#E9F2FF",
+  green: "#1F845A",
+  greenBg: "#DCFFF1",
+  amber: "#A54800",
+  amberBg: "#FFF7D6",
+  purple: "#5E4DB2",
+  purpleBg: "#F3F0FF",
+  red: "#DE350B",
+  redBg: "#FFEBE6",
+};
 
 export default function ActivityLogs() {
     const { addToast } = useToast();
+    const [hoveredRow, setHoveredRow] = useState(null);
 
     // State
-    const [logs, setLogs] = React.useState([]);
-    const [isLoading, setIsLoading] = React.useState(true);
-    const [filters, setFilters] = React.useState({
+    const [logs, setLogs] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [filters, setFilters] = useState({
         q: "",
         action: "ALL"
     });
-    const [pagination, setPagination] = React.useState({
+    const [pagination, setPagination] = useState({
         page: 1,
         limit: 10,
         total: 0,
@@ -46,7 +67,7 @@ export default function ActivityLogs() {
     };
 
     // Effect: Reload on filter/page change
-    React.useEffect(() => {
+    useEffect(() => {
         loadLogs();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pagination.page, filters]); // Reload when page or filters change
@@ -71,13 +92,24 @@ export default function ActivityLogs() {
     // Helper: Role Badge
     const getRoleBadge = (role) => {
         const styles = {
-            admin: "bg-red-500/10 text-red-500 border-red-500/20",
-            manager: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-            annotator: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-            reviewer: "bg-orange-500/10 text-orange-500 border-orange-500/20"
+            admin: { bg: T.redBg, text: T.red, border: T.red + "40" },
+            manager: { bg: T.purpleBg, text: T.purple, border: T.purple + "40" },
+            annotator: { bg: T.brandLight, text: T.brand, border: T.brand + "40" },
+            reviewer: { bg: T.amberBg, text: T.amber, border: T.amber + "40" }
         };
+        const style = styles[role] || { bg: T.surfaceHover, text: T.textMuted, border: T.border };
         return (
-            <span className={cn("text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ml-2", styles[role] || "bg-muted text-muted-foreground")}>
+            <span style={{
+                fontSize: "9px",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                padding: "2px 6px",
+                borderRadius: "4px",
+                border: `1px solid ${style.border}`,
+                marginLeft: "8px",
+                background: style.bg,
+                color: style.text
+            }}>
                 {role}
             </span>
         );
@@ -85,47 +117,132 @@ export default function ActivityLogs() {
 
     // Helper: Action Badge
     const getActionBadge = (action) => {
-        let colorClass = "bg-muted text-muted-foreground border-border";
-        if (action.includes("CREATE")) colorClass = "bg-green-500/10 text-green-500 border-green-500/20";
-        if (action.includes("REJECT")) colorClass = "bg-red-500/10 text-red-500 border-red-500/20";
-        if (action.includes("APPROVE")) colorClass = "bg-blue-500/10 text-blue-500 border-blue-500/20";
-        if (action.includes("SUBMIT")) colorClass = "bg-indigo-500/10 text-indigo-500 border-indigo-500/20";
+        let style = { bg: T.surfaceHover, text: T.textMuted, border: T.border };
+        if (action.includes("CREATE")) style = { bg: T.greenBg, text: T.green, border: T.green + "40" };
+        if (action.includes("REJECT")) style = { bg: T.redBg, text: T.red, border: T.red + "40" };
+        if (action.includes("APPROVE")) style = { bg: T.brandLight, text: T.brand, border: T.brand + "40" };
+        if (action.includes("SUBMIT")) style = { bg: T.purpleBg, text: T.purple, border: T.purple + "40" };
 
         return (
-            <span className={cn("text-[10px] font-mono font-bold px-2 py-1 rounded border", colorClass)}>
+            <span style={{
+                fontSize: "10px",
+                fontFamily: "monospace",
+                fontWeight: 700,
+                padding: "4px 8px",
+                borderRadius: "4px",
+                border: `1px solid ${style.border}`,
+                background: style.bg,
+                color: style.text
+            }}>
                 {action}
             </span>
         );
     };
 
     return (
-        <div className="h-full flex flex-col p-6 max-w-6xl mx-auto w-full">
+        <div style={{
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            padding: "32px 40px",
+            maxWidth: "1400px",
+            margin: "0 auto",
+            width: "100%",
+            background: T.bg,
+            fontFamily: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif"
+        }}>
             {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">Theo dõi nhật ký</h1>
-                <p className="text-sm text-muted-foreground mt-1">Lịch sử hoạt động của hệ thống</p>
+            <div style={{ marginBottom: "32px" }}>
+                <h1 style={{
+                    fontSize: "28px",
+                    fontWeight: 800,
+                    letterSpacing: "-0.02em",
+                    color: T.textPrimary,
+                    marginBottom: "8px"
+                }}>
+                    Theo dõi nhật ký
+                </h1>
+                <p style={{
+                    fontSize: "14px",
+                    color: T.textMuted,
+                    marginTop: "4px"
+                }}>
+                    Lịch sử hoạt động của hệ thống
+                </p>
             </div>
 
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                <div className="relative flex-1 max-w-md">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-muted-foreground text-[20px]">search</span>
+            <div style={{
+                display: "flex",
+                flexDirection: "row",
+                gap: "12px",
+                marginBottom: "24px",
+                flexWrap: "wrap"
+            }}>
+                <div style={{ position: "relative", flex: 1, maxWidth: "400px" }}>
+                    <span className="material-symbols-outlined" style={{
+                        position: "absolute",
+                        left: "12px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        fontSize: "20px",
+                        color: T.textMuted
+                    }}>
+                        search
+                    </span>
                     <input
                         type="text"
-                        placeholder="Search actor, message, ID..."
+                        placeholder="Tìm kiếm actor, message, ID..."
                         value={filters.q}
                         onChange={handleSearchChange}
-                        className="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-annotator-primary placeholder:text-muted-foreground/50 transition-all"
+                        style={{
+                            width: "100%",
+                            paddingLeft: "40px",
+                            paddingRight: "16px",
+                            paddingTop: "10px",
+                            paddingBottom: "10px",
+                            background: T.surface,
+                            border: `1px solid ${T.border}`,
+                            borderRadius: "6px",
+                            fontSize: "13px",
+                            color: T.textPrimary,
+                            outline: "none",
+                            transition: "all .15s",
+                            fontFamily: "inherit"
+                        }}
+                        onFocus={(e) => {
+                            e.currentTarget.style.borderColor = T.brand;
+                            e.currentTarget.style.boxShadow = `0 0 0 3px ${T.brand}20`;
+                        }}
+                        onBlur={(e) => {
+                            e.currentTarget.style.borderColor = T.border;
+                            e.currentTarget.style.boxShadow = "none";
+                        }}
                     />
                 </div>
                 <select
                     value={filters.action}
                     onChange={handleActionChange}
-                    className="w-full sm:w-48 px-3 py-2 bg-card border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-annotator-primary"
+                    style={{
+                        width: "100%",
+                        maxWidth: "200px",
+                        padding: "10px 16px",
+                        background: T.surface,
+                        border: `1px solid ${T.border}`,
+                        borderRadius: "6px",
+                        fontSize: "13px",
+                        color: T.textPrimary,
+                        outline: "none",
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                        fontWeight: 600
+                    }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
+                    onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                 >
-                    <option value="ALL">All Actions</option>
-                    <option value="CREATE_PROJECT">Create Project</option>
-                    <option value="SUBMIT_TASK">Submit Task</option>
+                    <option value="ALL">Tất cả hành động</option>
+                    <option value="CREATE_PROJECT">Tạo dự án</option>
+                    <option value="SUBMIT_TASK">Gửi nhiệm vụ</option>
                     <option value="APPROVE_TASK">Approve Task</option>
                     <option value="REJECT_TASK">Reject Task</option>
                     <option value="CREATE_USER">Create User</option>
@@ -134,84 +251,248 @@ export default function ActivityLogs() {
             </div>
 
             {/* List */}
-            <div className="flex-1 min-h-0 bg-card border border-border rounded-md overflow-hidden flex flex-col">
+            <div style={{
+                flex: 1,
+                minHeight: 0,
+                background: T.surface,
+                border: `1px solid ${T.border}`,
+                borderRadius: "6px",
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+                boxShadow: "0 1px 3px rgba(9,30,66,.08)"
+            }}>
                 {isLoading ? (
-                    <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                        <div className="flex flex-col items-center gap-2">
-                            <span className="material-symbols-outlined animate-spin">refresh</span>
-                            <span className="text-xs">Loading logs...</span>
+                    <div style={{
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: T.textMuted
+                    }}>
+                        <div style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: "8px"
+                        }}>
+                            <span className="material-symbols-outlined" style={{
+                                fontSize: "32px",
+                                animation: "spin 1s linear infinite"
+                            }}>
+                                refresh
+                            </span>
+                            <span style={{ fontSize: "12px" }}>Đang tải logs...</span>
                         </div>
                     </div>
                 ) : logs.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center p-10 text-muted-foreground">
-                        <span className="material-symbols-outlined text-4xl mb-2 opacity-20">history_toggle_off</span>
-                        <p>Không có hoạt động nào phù hợp</p>
+                    <div style={{
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "40px",
+                        color: T.textMuted
+                    }}>
+                        <span className="material-symbols-outlined" style={{
+                            fontSize: "64px",
+                            marginBottom: "8px",
+                            opacity: 0.2
+                        }}>
+                            history_toggle_off
+                        </span>
+                        <p style={{ fontSize: "14px" }}>Không có hoạt động nào phù hợp</p>
                     </div>
                 ) : (
-                    <div className="overflow-auto flex-1">
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-muted/50 text-muted-foreground font-medium border-b border-border sticky top-0 z-10 backdrop-blur-sm">
-                                <tr>
-                                    <th className="px-4 py-3 w-48">Time</th>
-                                    <th className="px-4 py-3 w-64">Actor</th>
-                                    <th className="px-4 py-3 w-48">Action</th>
-                                    <th className="px-4 py-3">Message</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border">
-                                {logs.map((log) => (
-                                    <tr key={log.logId} className="hover:bg-muted/30 transition-colors">
-                                        <td className="px-4 py-3 text-muted-foreground tabular-nums text-xs">
-                                            {new Date(log.createdAt).toLocaleString()}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center">
-                                                <span className="font-medium text-foreground">{log.actorName}</span>
-                                                {log.actorRole && getRoleBadge(log.actorRole)}
-                                            </div>
-                                            <div className="text-[10px] text-muted-foreground font-mono mt-0.5">{log.actorId}</div>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            {getActionBadge(log.action)}
-                                        </td>
-                                        <td className="px-4 py-3 text-muted-foreground">
-                                            {log.message}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                    <div style={{ overflow: "auto", flex: 1 }}>
+                        {/* Table Header */}
+                        <div style={{
+                            display: "grid",
+                            gridTemplateColumns: "200px 280px 200px 1fr",
+                            padding: "12px 24px",
+                            background: "#FAFBFC",
+                            borderBottom: `1px solid ${T.border}`,
+                            position: "sticky",
+                            top: 0,
+                            zIndex: 10,
+                            gap: "16px",
+                            alignItems: "center"
+                        }}>
+                            <p style={{
+                                fontSize: "10px",
+                                fontWeight: 700,
+                                color: T.textMuted,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.08em"
+                            }}>
+                                TIME
+                            </p>
+                            <p style={{
+                                fontSize: "10px",
+                                fontWeight: 700,
+                                color: T.textMuted,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.08em"
+                            }}>
+                                ACTOR
+                            </p>
+                            <p style={{
+                                fontSize: "10px",
+                                fontWeight: 700,
+                                color: T.textMuted,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.08em"
+                            }}>
+                                ACTION
+                            </p>
+                            <p style={{
+                                fontSize: "10px",
+                                fontWeight: 700,
+                                color: T.textMuted,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.08em"
+                            }}>
+                                MESSAGE
+                            </p>
+                        </div>
+
+                        {/* Table Body */}
+                        <div>
+                            {logs.map((log, idx) => (
+                                <div
+                                    key={log.logId}
+                                    onMouseEnter={() => setHoveredRow(idx)}
+                                    onMouseLeave={() => setHoveredRow(null)}
+                                    style={{
+                                        display: "grid",
+                                        gridTemplateColumns: "200px 280px 200px 1fr",
+                                        padding: "16px 24px",
+                                        background: hoveredRow === idx ? T.brandLight : (idx % 2 === 0 ? T.surface : "#FAFBFC"),
+                                        borderBottom: `1px solid ${T.border}`,
+                                        transition: "all .15s",
+                                        gap: "16px",
+                                        alignItems: "center"
+                                    }}
+                                >
+                                    <span style={{
+                                        color: T.textMuted,
+                                        fontFamily: "monospace",
+                                        fontSize: "11px"
+                                    }}>
+                                        {new Date(log.createdAt).toLocaleString()}
+                                    </span>
+                                    <div>
+                                        <div style={{ display: "flex", alignItems: "center" }}>
+                                            <span style={{
+                                                fontWeight: 600,
+                                                color: T.textPrimary,
+                                                fontSize: "13px"
+                                            }}>
+                                                {log.actorName}
+                                            </span>
+                                            {log.actorRole && getRoleBadge(log.actorRole)}
+                                        </div>
+                                        <div style={{
+                                            fontSize: "10px",
+                                            color: T.textMuted,
+                                            fontFamily: "monospace",
+                                            marginTop: "2px"
+                                        }}>
+                                            {log.actorId}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        {getActionBadge(log.action)}
+                                    </div>
+                                    <span style={{
+                                        color: T.textMuted,
+                                        fontSize: "13px"
+                                    }}>
+                                        {log.message}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
 
                 {/* Pagination Footer */}
                 {!isLoading && pagination.total > 0 && (
-                    <div className="border-t border-border p-3 flex items-center justify-between bg-muted/20">
-                        <div className="text-xs text-muted-foreground">
-                            Showing <strong>{(pagination.page - 1) * pagination.limit + 1}</strong> to <strong>{Math.min(pagination.page * pagination.limit, pagination.total)}</strong> of <strong>{pagination.total}</strong> results
+                    <div style={{
+                        borderTop: `1px solid ${T.border}`,
+                        padding: "12px 24px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        background: "#FAFBFC",
+                        flexWrap: "wrap",
+                        gap: "12px"
+                    }}>
+                        <div style={{
+                            fontSize: "12px",
+                            color: T.textMuted
+                        }}>
+                            Hiển thị <strong style={{ color: T.textPrimary }}>{(pagination.page - 1) * pagination.limit + 1}</strong> đến <strong style={{ color: T.textPrimary }}>{Math.min(pagination.page * pagination.limit, pagination.total)}</strong> trong tổng số <strong style={{ color: T.textPrimary }}>{pagination.total}</strong> kết quả
                         </div>
-                        <div className="flex gap-2">
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                className="h-8"
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                            <button
                                 disabled={pagination.page <= 1}
                                 onClick={() => handlePageChange(pagination.page - 1)}
+                                style={{
+                                    height: "32px",
+                                    padding: "0 16px",
+                                    fontSize: "12px",
+                                    fontWeight: 600,
+                                    color: T.textPrimary,
+                                    background: T.surface,
+                                    border: `1px solid ${T.border}`,
+                                    borderRadius: "4px",
+                                    cursor: pagination.page <= 1 ? "not-allowed" : "pointer",
+                                    opacity: pagination.page <= 1 ? 0.5 : 1,
+                                    transition: "all .15s",
+                                    fontFamily: "inherit"
+                                }}
+                                onMouseEnter={(e) => pagination.page > 1 && (e.currentTarget.style.background = T.surfaceHover)}
+                                onMouseLeave={(e) => pagination.page > 1 && (e.currentTarget.style.background = T.surface)}
                             >
-                                Previous
-                            </Button>
-                            <div className="flex items-center px-2 text-sm font-medium">
-                                Page {pagination.page} of {pagination.totalPages}
+                                Trước
+                            </button>
+                            <div style={{
+                                display: "flex",
+                                alignItems: "center",
+                                padding: "0 12px",
+                                fontSize: "12px",
+                                fontWeight: 700,
+                                color: T.brand,
+                                background: T.brandLight,
+                                borderRadius: "4px",
+                                height: "32px"
+                            }}>
+                                Trang {pagination.page} / {pagination.totalPages}
                             </div>
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                className="h-8"
+                            <button
                                 disabled={pagination.page >= pagination.totalPages}
                                 onClick={() => handlePageChange(pagination.page + 1)}
+                                style={{
+                                    height: "32px",
+                                    padding: "0 16px",
+                                    fontSize: "12px",
+                                    fontWeight: 600,
+                                    color: T.textPrimary,
+                                    background: T.surface,
+                                    border: `1px solid ${T.border}`,
+                                    borderRadius: "4px",
+                                    cursor: pagination.page >= pagination.totalPages ? "not-allowed" : "pointer",
+                                    opacity: pagination.page >= pagination.totalPages ? 0.5 : 1,
+                                    transition: "all .15s",
+                                    fontFamily: "inherit"
+                                }}
+                                onMouseEnter={(e) => pagination.page < pagination.totalPages && (e.currentTarget.style.background = T.surfaceHover)}
+                                onMouseLeave={(e) => pagination.page < pagination.totalPages && (e.currentTarget.style.background = T.surface)}
                             >
-                                Next
-                            </Button>
+                                Sau
+                            </button>
                         </div>
                     </div>
                 )}

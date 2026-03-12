@@ -1,11 +1,27 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { getMockData } from "../../utils/mockStorage";
-import { Card } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
-import { ModalDialog } from "../../components/ui/Modal";
-import {
-    Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
-} from "../../components/ui/Table";
+
+// Bảng màu Modern Enterprise UI
+const T = {
+  bg: "#F7F8F9",
+  surface: "#FFFFFF",
+  surfaceHover: "#F1F2F4",
+  border: "#DCDFE4",
+  textPrimary: "#172B4D",
+  textSecondary: "#44546F",
+  textMuted: "#626F86",
+  brand: "#0C66E4",
+  brandHover: "#0055CC",
+  brandLight: "#E9F2FF",
+  green: "#1F845A",
+  greenBg: "#DCFFF1",
+  amber: "#A54800",
+  amberBg: "#FFF7D6",
+  purple: "#5E4DB2",
+  purpleBg: "#F3F0FF",
+  red: "#DE350B",
+  redBg: "#FFEBE6",
+};
 
 // TODO_BACKEND: Replace with real API when available
 
@@ -22,10 +38,10 @@ function seedTasks() {
 }
 
 const STATUS_STYLES = {
-    PENDING: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-    IN_PROGRESS: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-    COMPLETED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-    RETURNED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+    PENDING: { bg: T.amberBg, text: T.amber },
+    IN_PROGRESS: { bg: T.brandLight, text: T.brand },
+    COMPLETED: { bg: T.greenBg, text: T.green },
+    RETURNED: { bg: T.redBg, text: T.red },
 };
 
 const STATUS_OPTIONS = ["ALL", "PENDING", "IN_PROGRESS", "COMPLETED", "RETURNED"];
@@ -34,6 +50,7 @@ export default function Tasks() {
     const [tasks, setTasks] = useState([]);
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [viewTask, setViewTask] = useState(null);
+    const [hoveredRow, setHoveredRow] = useState(null);
 
     useEffect(() => {
         setTasks(getMockData(STORAGE_KEY, seedTasks));
@@ -42,98 +59,308 @@ export default function Tasks() {
     const filtered = statusFilter === "ALL" ? tasks : tasks.filter((t) => t.status === statusFilter);
 
     return (
-        <div className="p-8 space-y-6 max-w-5xl">
-            <h1 className="text-2xl font-bold text-foreground">Quản lí nhiệm vụ</h1>
+        <div style={{
+            padding: "32px 40px",
+            maxWidth: "1400px",
+            minHeight: "100vh",
+            background: T.bg,
+            fontFamily: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif"
+        }}>
+            <h1 style={{
+                fontSize: "28px",
+                fontWeight: 800,
+                color: T.textPrimary,
+                marginBottom: "32px",
+                letterSpacing: "-0.02em"
+            }}>
+                Quản lý nhiệm vụ
+            </h1>
 
-            <Card className="p-6 space-y-4">
+            <div style={{
+                padding: "24px",
+                background: T.surface,
+                border: `1px solid ${T.border}`,
+                borderRadius: "6px",
+                boxShadow: "0 1px 3px rgba(9,30,66,.08)"
+            }}>
                 {/* Filters */}
-                <div className="flex items-center gap-3">
-                    <label className="text-sm text-muted-foreground">Trạng thái:</label>
+                <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    marginBottom: "24px"
+                }}>
+                    <label style={{
+                        fontSize: "13px",
+                        color: T.textMuted,
+                        fontWeight: 600
+                    }}>
+                        Trạng thái:
+                    </label>
                     <select
-                        className="rounded-md border border-border bg-background text-foreground px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        style={{
+                            padding: "8px 16px",
+                            borderRadius: "4px",
+                            border: `1px solid ${T.border}`,
+                            background: T.surface,
+                            color: T.textPrimary,
+                            fontSize: "13px",
+                            fontWeight: 600,
+                            outline: "none",
+                            cursor: "pointer",
+                            fontFamily: "inherit"
+                        }}
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
+                        onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
+                        onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                     >
                         {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s === "ALL" ? "Tất cả" : s}</option>)}
                     </select>
                 </div>
 
                 {filtered.length === 0 ? (
-                    <div className="text-center py-12">
-                        <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2 block">task_alt</span>
-                        <p className="text-muted-foreground">Chưa có nhiệm vụ nào</p>
+                    <div style={{
+                        textAlign: "center",
+                        padding: "64px 0"
+                    }}>
+                        <span className="material-symbols-outlined" style={{
+                            fontSize: "64px",
+                            color: T.textMuted + "40",
+                            marginBottom: "8px",
+                            display: "block"
+                        }}>
+                            task_alt
+                        </span>
+                        <p style={{
+                            color: T.textMuted,
+                            fontSize: "14px"
+                        }}>
+                            Chưa có nhiệm vụ nào
+                        </p>
                     </div>
                 ) : (
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Tên nhiệm vụ</TableHead>
-                                <TableHead>Dự án</TableHead>
-                                <TableHead>Người thực hiện</TableHead>
-                                <TableHead>Trạng thái</TableHead>
-                                <TableHead>Tiến độ</TableHead>
-                                <TableHead>Ngày tạo</TableHead>
-                                <TableHead className="text-right">Hành động</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filtered.map((task) => (
-                                <TableRow key={task.id}>
-                                    <TableCell className="font-medium">{task.taskName}</TableCell>
-                                    <TableCell className="text-muted-foreground">{task.project}</TableCell>
-                                    <TableCell>{task.assignee}</TableCell>
-                                    <TableCell>
-                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${STATUS_STYLES[task.status] || "bg-muted text-muted-foreground"}`}>
+                    <div style={{
+                        border: `1px solid ${T.border}`,
+                        borderRadius: "6px",
+                        overflow: "hidden"
+                    }}>
+                        {/* Table Header */}
+                        <div style={{
+                            display: "grid",
+                            gridTemplateColumns: "2fr 1.5fr 1.2fr 1fr 1fr 1.2fr 100px",
+                            padding: "12px 24px",
+                            background: "#FAFBFC",
+                            borderBottom: `1px solid ${T.border}`,
+                            gap: "16px",
+                            alignItems: "center"
+                        }}>
+                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>TÊN NHIỆM VỤ</p>
+                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>DỰ ÁN</p>
+                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>NGƯỜI THỰC HIỆN</p>
+                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>TRẠNG THÁI</p>
+                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>TIẾN ĐỘ</p>
+                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>NGÀY TẠO</p>
+                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "right" }}>HÀNH ĐỘNG</p>
+                        </div>
+
+                        {/* Table Body */}
+                        <div>
+                            {filtered.map((task, idx) => {
+                                const statusStyle = STATUS_STYLES[task.status] || { bg: T.surfaceHover, text: T.textMuted };
+                                return (
+                                    <div
+                                        key={task.id}
+                                        onMouseEnter={() => setHoveredRow(idx)}
+                                        onMouseLeave={() => setHoveredRow(null)}
+                                        style={{
+                                            display: "grid",
+                                            gridTemplateColumns: "2fr 1.5fr 1.2fr 1fr 1fr 1.2fr 100px",
+                                            padding: "16px 24px",
+                                            background: hoveredRow === idx ? T.brandLight : (idx % 2 === 0 ? T.surface : "#FAFBFC"),
+                                            borderBottom: `1px solid ${T.border}`,
+                                            transition: "all .15s",
+                                            gap: "16px",
+                                            alignItems: "center"
+                                        }}
+                                    >
+                                        <span style={{ fontSize: "13px", fontWeight: 700, color: T.textPrimary }}>{task.taskName}</span>
+                                        <span style={{ fontSize: "13px", color: T.textMuted }}>{task.project}</span>
+                                        <span style={{ fontSize: "13px", color: T.textPrimary }}>{task.assignee}</span>
+                                        <span style={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            padding: "4px 10px",
+                                            borderRadius: "4px",
+                                            fontSize: "10px",
+                                            fontWeight: 700,
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.06em",
+                                            background: statusStyle.bg,
+                                            color: statusStyle.text,
+                                            width: "fit-content"
+                                        }}>
                                             {task.status}
                                         </span>
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full rounded-full bg-primary transition-all"
-                                                    style={{ width: `${task.progress}%` }}
-                                                />
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                            <div style={{
+                                                width: "80px",
+                                                height: "6px",
+                                                background: T.border,
+                                                borderRadius: "99px",
+                                                overflow: "hidden"
+                                            }}>
+                                                <div style={{
+                                                    height: "100%",
+                                                    borderRadius: "99px",
+                                                    background: T.brand,
+                                                    width: `${task.progress}%`,
+                                                    transition: "width .5s ease"
+                                                }} />
                                             </div>
-                                            <span className="text-xs text-muted-foreground w-8">{task.progress}%</span>
+                                            <span style={{
+                                                fontSize: "11px",
+                                                color: T.textMuted,
+                                                width: "32px",
+                                                fontWeight: 700
+                                            }}>
+                                                {task.progress}%
+                                            </span>
                                         </div>
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground text-xs">{new Date(task.createdAt).toLocaleDateString("vi-VN")}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Button variant="ghost" size="sm" onClick={() => setViewTask(task)}>
-                                            <span className="material-symbols-outlined text-base mr-1">visibility</span>
-                                            Xem
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                )}
-            </Card>
-
-            {/* View Task Modal (read-only) */}
-            <ModalDialog
-                isOpen={!!viewTask}
-                onClose={() => setViewTask(null)}
-                title="Chi tiết nhiệm vụ"
-                actions={
-                    <Button variant="secondary" onClick={() => setViewTask(null)}>Đóng</Button>
-                }
-            >
-                {viewTask && (
-                    <div className="space-y-3 text-sm">
-                        <div><span className="font-medium text-foreground">Tên:</span> <span className="text-muted-foreground">{viewTask.taskName}</span></div>
-                        <div><span className="font-medium text-foreground">Dự án:</span> <span className="text-muted-foreground">{viewTask.project}</span></div>
-                        <div><span className="font-medium text-foreground">Người thực hiện:</span> <span className="text-muted-foreground">{viewTask.assignee}</span></div>
-                        <div><span className="font-medium text-foreground">Trạng thái:</span>{" "}
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${STATUS_STYLES[viewTask.status]}`}>{viewTask.status}</span>
+                                        <span style={{ fontSize: "11px", color: T.textMuted }}>
+                                            {new Date(task.createdAt).toLocaleDateString("vi-VN")}
+                                        </span>
+                                        <div style={{ textAlign: "right" }}>
+                                            <button
+                                                onClick={() => setViewTask(task)}
+                                                style={{
+                                                    display: "inline-flex",
+                                                    alignItems: "center",
+                                                    gap: "4px",
+                                                    padding: "6px 12px",
+                                                    fontSize: "12px",
+                                                    fontWeight: 600,
+                                                    color: T.brand,
+                                                    background: "transparent",
+                                                    border: `1px solid ${T.border}`,
+                                                    borderRadius: "4px",
+                                                    cursor: "pointer",
+                                                    transition: "all .15s",
+                                                    fontFamily: "inherit"
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.background = T.brandLight;
+                                                    e.currentTarget.style.borderColor = T.brand + "40";
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.background = "transparent";
+                                                    e.currentTarget.style.borderColor = T.border;
+                                                }}
+                                            >
+                                                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>visibility</span>
+                                                Xem
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
-                        <div><span className="font-medium text-foreground">Tiến độ:</span> <span className="text-muted-foreground">{viewTask.progress}%</span></div>
-                        <div><span className="font-medium text-foreground">Ngày tạo:</span> <span className="text-muted-foreground">{new Date(viewTask.createdAt).toLocaleString("vi-VN")}</span></div>
                     </div>
                 )}
-            </ModalDialog>
+            </div>
+
+            {/* View Task Modal */}
+            {viewTask && (
+                <div style={{
+                    position: "fixed",
+                    inset: 0,
+                    background: "rgba(0,0,0,0.5)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    zIndex: 9999
+                }}>
+                    <div style={{
+                        background: T.surface,
+                        padding: "32px",
+                        borderRadius: "6px",
+                        maxWidth: "500px",
+                        width: "90%",
+                        boxShadow: "0 8px 24px rgba(9,30,66,.25)"
+                    }}>
+                        <h2 style={{
+                            fontSize: "20px",
+                            fontWeight: 700,
+                            color: T.textPrimary,
+                            marginBottom: "24px"
+                        }}>
+                            Chi tiết nhiệm vụ
+                        </h2>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "13px" }}>
+                            <div>
+                                <span style={{ fontWeight: 600, color: T.textPrimary }}>Tên:</span>{" "}
+                                <span style={{ color: T.textMuted }}>{viewTask.taskName}</span>
+                            </div>
+                            <div>
+                                <span style={{ fontWeight: 600, color: T.textPrimary }}>Dự án:</span>{" "}
+                                <span style={{ color: T.textMuted }}>{viewTask.project}</span>
+                            </div>
+                            <div>
+                                <span style={{ fontWeight: 600, color: T.textPrimary }}>Người thực hiện:</span>{" "}
+                                <span style={{ color: T.textMuted }}>{viewTask.assignee}</span>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <span style={{ fontWeight: 600, color: T.textPrimary }}>Trạng thái:</span>
+                                <span style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    padding: "4px 10px",
+                                    borderRadius: "4px",
+                                    fontSize: "10px",
+                                    fontWeight: 700,
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.06em",
+                                    background: STATUS_STYLES[viewTask.status]?.bg || T.surfaceHover,
+                                    color: STATUS_STYLES[viewTask.status]?.text || T.textMuted
+                                }}>
+                                    {viewTask.status}
+                                </span>
+                            </div>
+                            <div>
+                                <span style={{ fontWeight: 600, color: T.textPrimary }}>Tiến độ:</span>{" "}
+                                <span style={{ color: T.textMuted }}>{viewTask.progress}%</span>
+                            </div>
+                            <div>
+                                <span style={{ fontWeight: 600, color: T.textPrimary }}>Ngày tạo:</span>{" "}
+                                <span style={{ color: T.textMuted }}>{new Date(viewTask.createdAt).toLocaleString("vi-VN")}</span>
+                            </div>
+                        </div>
+
+                        <div style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end" }}>
+                            <button
+                                onClick={() => setViewTask(null)}
+                                style={{
+                                    padding: "10px 20px",
+                                    fontSize: "14px",
+                                    fontWeight: 600,
+                                    color: T.textPrimary,
+                                    background: T.surface,
+                                    border: `1px solid ${T.border}`,
+                                    borderRadius: "4px",
+                                    cursor: "pointer",
+                                    transition: "all .15s",
+                                    fontFamily: "inherit"
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = T.surfaceHover}
+                                onMouseLeave={(e) => e.currentTarget.style.background = T.surface}
+                            >
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

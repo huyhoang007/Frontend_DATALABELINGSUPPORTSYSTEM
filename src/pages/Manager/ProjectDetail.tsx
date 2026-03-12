@@ -99,7 +99,7 @@ const ProjectDetail: React.FC = () => {
         return (
             <div className="p-8 min-h-full bg-transparent">
                 <Card className="p-12 bg-card/80 backdrop-blur border-border/60 text-center max-w-lg mx-auto">
-                    <div className="text-4xl mb-4">📂</div>
+                    <div className="text-4xl mb-4">P</div>
                     <h2 className="text-xl font-bold text-foreground mb-2">Không tìm thấy dự án</h2>
                     <p className="text-muted-foreground mb-6 text-sm">
                         Dự án với ID "{projectId}" không tồn tại hoặc đã bị xóa.

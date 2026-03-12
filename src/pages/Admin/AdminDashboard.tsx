@@ -4,6 +4,26 @@ import { userApi } from '../../api/userApi';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 
+// Bảng màu Modern Enterprise UI
+const T = {
+  bg: "#F7F8F9",
+  surface: "#FFFFFF",
+  surfaceHover: "#F1F2F4",
+  border: "#DCDFE4",
+  textPrimary: "#172B4D",
+  textSecondary: "#44546F",
+  textMuted: "#626F86",
+  brand: "#0C66E4",
+  brandHover: "#0055CC",
+  brandLight: "#E9F2FF",
+  green: "#1F845A",
+  greenBg: "#DCFFF1",
+  amber: "#A54800",
+  amberBg: "#FFF7D6",
+  purple: "#5E4DB2",
+  purpleBg: "#F3F0FF",
+};
+
 interface AdminDashboardProps {
   user?: any;
   onLogout?: () => void;
@@ -13,6 +33,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const [totalUsers, setTotalUsers] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [hoveredKpi, setHoveredKpi] = useState<number | null>(null);
+  const [hoveredButton, setHoveredButton] = useState<string | null>(null);
 
   // Fetch real data from backend
   useEffect(() => {
@@ -34,69 +56,167 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
   }, []);
 
   return (
-    <div className="p-8 min-h-full bg-transparent space-y-8">
+    <div style={{
+      padding: "32px 40px",
+      minHeight: "100%",
+      background: T.bg,
+      fontFamily: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif"
+    }}>
       {/* Welcome Header */}
-      <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10 text-4xl shadow-sm border border-primary/20">
-            👑
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Admin Dashboard
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Quản lý toàn bộ hệ thống Data Labeling
-            </p>
-          </div>
+      <div style={{
+        padding: "32px",
+        background: T.surface,
+        border: `1px solid ${T.border}`,
+        borderRadius: "6px",
+        marginBottom: "32px",
+        boxShadow: "0 1px 3px rgba(9,30,66,.08)"
+      }}>
+        <div>
+          <p style={{
+            fontSize: "11px",
+            fontWeight: 700,
+            color: T.textMuted,
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+            marginBottom: "4px"
+          }}>
+            Quản trị hệ thống
+          </p>
+          <h1 style={{
+            fontSize: "28px",
+            fontWeight: 800,
+            color: T.textPrimary,
+            marginBottom: "8px",
+            letterSpacing: "-0.02em"
+          }}>
+            Admin Dashboard
+          </h1>
+          <p style={{
+            fontSize: "14px",
+            color: T.textMuted
+          }}>
+            Quản lý toàn bộ hệ thống Data Labeling
+          </p>
         </div>
-      </Card>
+      </div>
 
-      {/* Quick Actions - Admin Only */}
-      <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-        <h3 className="mb-6 text-sm font-bold text-muted-foreground uppercase tracking-widest">
-          ⚡ Admin Actions
+      {/* Hành động quản trị */}
+      <div style={{
+        padding: "32px",
+        background: T.surface,
+        border: `1px solid ${T.border}`,
+        borderRadius: "6px",
+        marginBottom: "32px",
+        boxShadow: "0 1px 3px rgba(9,30,66,.08)"
+      }}>
+        <h3 style={{
+          marginBottom: "24px",
+          fontSize: "11px",
+          fontWeight: 700,
+          color: T.textMuted,
+          textTransform: "uppercase",
+          letterSpacing: "0.1em"
+        }}>
+          Hành động quản trị
         </h3>
-        <div className="flex flex-wrap gap-4">
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
           {/* Quản lý người dùng */}
-          <Button
-            variant="primary"
-            size="base"
-            className="h-12 px-6 text-sm shadow-md"
+          <button
             onClick={() => navigate('/admin/users')}
-            leftIcon="group"
+            onMouseEnter={() => setHoveredButton('users')}
+            onMouseLeave={() => setHoveredButton(null)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              height: "48px",
+              padding: "0 24px",
+              fontSize: "13px",
+              fontWeight: 700,
+              color: "#FFFFFF",
+              background: hoveredButton === 'users' ? T.brandHover : T.brand,
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              transition: "all .15s",
+              boxShadow: "0 2px 4px rgba(9,30,66,.15)"
+            }}
           >
+            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>group</span>
             Quản lý người dùng
-          </Button>
+          </button>
 
           {/* Theo dõi nhật ký */}
-          <Button
-            variant="secondary"
-            size="base"
-            className="h-12 px-6 text-sm"
+          <button
             onClick={() => navigate('/admin/logs')}
-            leftIcon="bar_chart"
+            onMouseEnter={() => setHoveredButton('logs')}
+            onMouseLeave={() => setHoveredButton(null)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              height: "48px",
+              padding: "0 24px",
+              fontSize: "13px",
+              fontWeight: 700,
+              color: T.textPrimary,
+              background: hoveredButton === 'logs' ? T.surfaceHover : T.surface,
+              border: `1px solid ${T.border}`,
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              transition: "all .15s"
+            }}
           >
+            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>bar_chart</span>
             Theo dõi nhật ký
-          </Button>
+          </button>
         </div>
-      </Card>
+      </div>
 
-      {/* Stats Overview - Only Total Users */}
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-6">
-        <Card className="p-6 transition-all hover:shadow-md bg-white/80 dark:bg-slate-800/80">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xl">
-              👥
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-foreground">
-                {isLoading ? '...' : totalUsers.toLocaleString()}
-              </div>
-              <div className="text-xs font-medium text-muted-foreground">Tổng người dùng</div>
-            </div>
+      {/* Stats Overview */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+        gap: "16px"
+      }}>
+        <div
+          onMouseEnter={() => setHoveredKpi(0)}
+          onMouseLeave={() => setHoveredKpi(null)}
+          style={{
+            padding: "24px",
+            background: T.surface,
+            border: `1px solid ${T.border}`,
+            borderRadius: "6px",
+            borderTop: `3px solid ${T.brand}`,
+            boxShadow: hoveredKpi === 0 ? "0 4px 12px rgba(9,30,66,.12)" : "0 1px 3px rgba(9,30,66,.08)",
+            transition: "all .2s"
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+            <p style={{
+              fontSize: "11px",
+              fontWeight: 700,
+              color: T.textMuted,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em"
+            }}>
+              Tổng người dùng
+            </p>
+            <span className="material-symbols-outlined" style={{ fontSize: "20px", color: T.brand }}>
+              group
+            </span>
           </div>
-        </Card>
+          <div style={{
+            fontSize: "32px",
+            fontWeight: 800,
+            color: T.textPrimary,
+            lineHeight: 1
+          }}>
+            {isLoading ? '...' : totalUsers.toLocaleString()}
+          </div>
+        </div>
       </div>
     </div>
   );

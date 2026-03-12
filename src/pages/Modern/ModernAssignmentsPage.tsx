@@ -60,11 +60,11 @@ const ModernAssignmentsPage: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending': return '⏳';
-      case 'in_progress': return '🔄';
-      case 'completed': return '✅';
-      case 'reviewed': return '👁️';
-      default: return '❓';
+      case 'pending': return 'P';
+      case 'in_progress': return 'W';
+      case 'completed': return 'C';
+      case 'reviewed': return 'R';
+      default: return '?';
     }
   };
 
@@ -79,7 +79,7 @@ const ModernAssignmentsPage: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
-              <span>📋</span> Phân công nhiệm vụ
+              Phân công nhiệm vụ
             </h1>
             <p className="text-lg text-muted-foreground">
               Quản lý phân công annotator và reviewer cho các dataset
@@ -150,22 +150,11 @@ const ModernAssignmentsPage: React.FC = () => {
             )}
           >
             <div className="flex items-start gap-5">
-              {/* Status Icon */}
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0"
-                style={{
-                  backgroundColor: `${getStatusColor(assignment.status)}20`,
-                  color: getStatusColor(assignment.status)
-                }}
-              >
-                {getStatusIcon(assignment.status)}
-              </div>
-
               {/* Assignment Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-3">
                   <h3 className="text-lg font-bold text-foreground">
-                    Assignment #{assignment.assignment_id}
+                    Phân công #{assignment.assignment_id}
                   </h3>
                   <div
                     className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide flex items-center gap-1.5"
@@ -181,7 +170,7 @@ const ModernAssignmentsPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-4">
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">📁 Dự án</div>
+                    <div className="text-xs text-muted-foreground mb-1">Dự án</div>
                     <div className="text-sm font-semibold text-foreground truncate">
                       {assignment.project?.name}
                     </div>
@@ -191,17 +180,17 @@ const ModernAssignmentsPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">💾 Dataset</div>
+                    <div className="text-xs text-muted-foreground mb-1">Dataset</div>
                     <div className="text-sm font-semibold text-foreground truncate">
                       {assignment.dataset?.name}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Created: {assignment.dataset?.created_at}
+                      Tạo: {assignment.dataset?.created_at}
                     </div>
                   </div>
 
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">✏️ Annotator</div>
+                    <div className="text-xs text-muted-foreground mb-1">Người gán nhãn</div>
                     <div className="text-sm font-semibold text-foreground truncate">
                       {assignment.annotator?.full_name}
                     </div>
@@ -211,7 +200,7 @@ const ModernAssignmentsPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">👁️ Reviewer</div>
+                    <div className="text-xs text-muted-foreground mb-1">Người kiểm duyệt</div>
                     <div className="text-sm font-semibold text-foreground truncate">
                       {assignment.reviewer?.full_name}
                     </div>
@@ -258,7 +247,7 @@ const ModernAssignmentsPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
             <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <span>📋</span> Tạo phân công mới
+              Tạo phân công mới
             </h2>
 
             <div className="space-y-4 mb-6">
@@ -283,16 +272,16 @@ const ModernAssignmentsPage: React.FC = () => {
               <div>
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Annotator</label>
                 <select className="w-full px-4 py-2.5 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer">
-                  <option value="">Chọn annotator</option>
+                  <option value="">Chọn người gán nhãn</option>
                   <option value="2">Nguyễn Văn A</option>
                   <option value="4">Lê Văn C</option>
                 </select>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Reviewer</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Người kiểm duyệt</label>
                 <select className="w-full px-4 py-2.5 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer">
-                  <option value="">Chọn reviewer</option>
+                  <option value="">Chọn người kiểm duyệt</option>
                   <option value="3">Trần Thị B</option>
                   <option value="5">Phạm Thị D</option>
                 </select>

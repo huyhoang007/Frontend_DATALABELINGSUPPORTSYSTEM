@@ -101,8 +101,8 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
         <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-6">
           <Card className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-card/80 backdrop-blur border-border/60">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center text-xl text-emerald-500">
-                ✓
+              <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center text-xl text-emerald-500 font-bold">
+                OK
               </div>
               <div>
                 <h3 className="text-3xl font-bold text-foreground">
@@ -130,7 +130,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
           <Card className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-card/80 backdrop-blur border-border/60">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-slate-500/10 rounded-xl flex items-center justify-center text-xl text-slate-500">
-                ⏳
+                P
               </div>
               <div>
                 <h3 className="text-3xl font-bold text-foreground">

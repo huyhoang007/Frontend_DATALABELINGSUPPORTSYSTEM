@@ -127,13 +127,13 @@ const ModernAuditPage: React.FC = () => {
   };
 
   const getActionIcon = (action: string) => {
-    if (action.includes('CREATE')) return '➕';
-    if (action.includes('UPDATE')) return '✏️';
-    if (action.includes('DELETE')) return '🗑️';
-    if (action.includes('APPROVE')) return '✅';
-    if (action.includes('REJECT')) return '❌';
-    if (action.includes('COMPLETE')) return '🎯';
-    return '📝';
+    if (action.includes('CREATE')) return 'C';
+    if (action.includes('UPDATE')) return 'U';
+    if (action.includes('DELETE')) return 'D';
+    if (action.includes('APPROVE')) return 'A';
+    if (action.includes('REJECT')) return 'R';
+    if (action.includes('COMPLETE')) return 'F';
+    return 'X';
   };
 
   const filteredLogs = activityLogs.filter(log => {
@@ -157,7 +157,7 @@ const ModernAuditPage: React.FC = () => {
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
-            <span>📜</span> Nhật ký hệ thống
+            Nhật ký hệ thống
           </h1>
           <p className="text-lg text-muted-foreground">
             Theo dõi tất cả hoạt động và thay đổi trong hệ thống
@@ -201,7 +201,14 @@ const ModernAuditPage: React.FC = () => {
           >
             <option value="all">Tất cả hành động</option>
             {actionTypes.map(action => (
-              <option key={action} value={action}>{action}</option>
+              <option key={action} value={action}>
+                {action === 'CREATE' ? 'Tạo mới' : 
+                 action === 'UPDATE' ? 'Cập nhật' : 
+                 action === 'DELETE' ? 'Xóa' : 
+                 action === 'APPROVE' ? 'Phê duyệt' : 
+                 action === 'REJECT' ? 'Từ chối' : 
+                 action === 'COMPLETE' ? 'Hoàn thành' : action}
+              </option>
             ))}
           </select>
 
@@ -242,17 +249,6 @@ const ModernAuditPage: React.FC = () => {
             )}
           >
             <div className="flex items-start gap-5">
-              {/* Action Icon */}
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0"
-                style={{
-                  backgroundColor: `${getActionColor(log.action)}20`,
-                  color: getActionColor(log.action)
-                }}
-              >
-                {getActionIcon(log.action)}
-              </div>
-
               {/* Log Details */}
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
@@ -272,7 +268,7 @@ const ModernAuditPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">👤 Người thực hiện</div>
+                    <div className="text-xs text-muted-foreground mb-1">Người thực hiện</div>
                     <div className="text-sm font-semibold text-foreground">
                       {log.user?.full_name}
                     </div>
@@ -282,14 +278,14 @@ const ModernAuditPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">🎯 Đối tượng</div>
+                    <div className="text-xs text-muted-foreground mb-1">Đối tượng</div>
                     <div className="text-sm font-semibold text-foreground">
                       {log.target}
                     </div>
                   </div>
 
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">🆔 Activity ID</div>
+                    <div className="text-xs text-muted-foreground mb-1">Mã hoạt động</div>
                     <div className="text-sm font-semibold text-foreground">
                       #{log.activity_id}
                     </div>
@@ -315,7 +311,6 @@ const ModernAuditPage: React.FC = () => {
 
         {filteredLogs.length === 0 && (
           <div className="p-12 text-center text-muted-foreground">
-            <div className="text-5xl mb-4 opacity-50">📭</div>
             <div className="text-lg font-semibold mb-2">
               Không có hoạt động nào
             </div>

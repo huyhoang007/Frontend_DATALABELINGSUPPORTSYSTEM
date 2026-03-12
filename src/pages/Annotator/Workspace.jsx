@@ -451,7 +451,7 @@ export default function Workspace() {
             addToast({ type: "success", message: "ÄÃ£ ná»™p bÃ i thÃ nh cÃ´ng!" });
             navigate("/annotator/tasks");
         } catch (err) {
-            addToast({ type: "error", message: err?.message || "Ná»™p bÃ i tháº¥t báº¡i" });
+            addToast({ type: "error", message: err?.message || "Nộp bài thất bại" });
         }
     };
 

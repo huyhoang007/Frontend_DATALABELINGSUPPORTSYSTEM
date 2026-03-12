@@ -62,25 +62,20 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
     <div className="p-8 min-h-full bg-transparent space-y-8">
       {/* Welcome Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30 text-4xl text-white">
-            👨‍💼
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Manager Dashboard
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Quản lý dự án và team của bạn
-            </p>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            Manager Dashboard
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            Quản lý dự án và team của bạn
+          </p>
         </div>
       </Card>
 
-      {/* Quick Actions */}
+      {/* Hành động nhanh */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
         <h3 className="mb-6 text-sm font-bold text-muted-foreground uppercase tracking-widest">
-          ⚡ Quick Actions
+          Hành động nhanh
         </h3>
         <div className="flex flex-wrap gap-4">
           <Button
@@ -134,7 +129,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
         {/* My Projects */}
         <Card className="p-6 bg-white/80 dark:bg-slate-800/80">
           <h3 className="mb-6 text-lg font-semibold text-foreground flex items-center gap-2">
-            <span>📁</span> Dự án của tôi
+            Dự án của tôi
           </h3>
           {isLoading ? (
             <div className="flex items-center justify-center p-12 text-muted-foreground">
@@ -142,7 +137,6 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
             </div>
           ) : myProjects.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
-              <div className="text-5xl mb-4 opacity-50">📁</div>
               <div className="text-lg font-medium text-foreground mb-2">
                 Chưa có dự án nào
               </div>
@@ -159,9 +153,6 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
                     className="group p-4 rounded-xl border border-border bg-card/50 hover:bg-card hover:border-primary/30 hover:shadow-sm transition-all duration-200"
                   >
                     <div className="flex items-center gap-3 mb-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${project.data_type === 'image' ? 'bg-violet-500/10 text-violet-600 dark:text-violet-400' : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'}`}>
-                        {project.data_type === 'image' ? '🖼️' : '📝'}
-                      </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="m-0 text-base font-semibold text-foreground truncate">
                           {project.name}
@@ -181,7 +172,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
                         variant="ghost"
                         className="h-8 text-xs hover:bg-primary/5 hover:text-primary"
                       >
-                        👁️ Xem chi tiết
+                        Xem chi tiết
                       </Button>
                     </div>
                   </div>
