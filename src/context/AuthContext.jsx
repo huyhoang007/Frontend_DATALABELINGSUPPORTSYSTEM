@@ -3,6 +3,9 @@ import { authApi } from "../api/authApi";
 
 const AuthContext = React.createContext(null);
 
+const SESSION_DURATION = 60 * 1000; // 1 phút (ms)
+const SESSION_KEY = "sessionExpiry";
+
 export function AuthProvider({ children }) {
     const [user, setUser] = React.useState(null);
     const [isLoading, setIsLoading] = React.useState(true);
@@ -11,12 +14,38 @@ export function AuthProvider({ children }) {
         // Check local storage on mount
         const storedUser = localStorage.getItem("user");
         const storedToken = localStorage.getItem("accessToken");
+        const expiry = localStorage.getItem(SESSION_KEY);
 
-        if (storedUser && storedToken) {
+        if (storedUser && storedToken && expiry && Date.now() < Number(expiry)) {
             setUser(JSON.parse(storedUser));
+        } else if (storedUser || storedToken) {
+            // Session expired or missing expiry — clear everything
+            localStorage.removeItem("user");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("token");
+            localStorage.removeItem(SESSION_KEY);
         }
         setIsLoading(false);
     }, []);
+
+    // Session timeout checker
+    React.useEffect(() => {
+        if (!user) return;
+
+        const interval = setInterval(() => {
+            const expiry = localStorage.getItem(SESSION_KEY);
+            if (!expiry || Date.now() >= Number(expiry)) {
+                localStorage.removeItem("user");
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("token");
+                localStorage.removeItem(SESSION_KEY);
+                setUser(null);
+                window.location.href = "/login";
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [user]);
 
     /**
      * Login with username and password
@@ -29,6 +58,7 @@ export function AuthProvider({ children }) {
             const { accessToken, username, role } = response;
 
             localStorage.setItem("accessToken", accessToken);
+            localStorage.setItem(SESSION_KEY, String(Date.now() + SESSION_DURATION));
 
             const userInfo = { username, role };
             localStorage.setItem("user", JSON.stringify(userInfo));
@@ -59,6 +89,7 @@ export function AuthProvider({ children }) {
         localStorage.removeItem("user");
         localStorage.removeItem("accessToken");
         localStorage.removeItem("token"); // Clear legacy token if exists
+        localStorage.removeItem(SESSION_KEY);
     };
 
     return (

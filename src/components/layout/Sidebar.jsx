@@ -9,25 +9,25 @@ export function Sidebar() {
 
     // Define role-specific navigation links
     const adminLinks = [
-        { to: "/admin/dashboard", label: "Dashboard", icon: "dashboard" },
+        { to: "/admin/dashboard", label: "Tổng quan", icon: "dashboard" },
         { to: "/admin/users", label: "Quản lý người dùng", icon: "group" },
         { to: "/admin/logs", label: "Theo dõi nhật ký", icon: "history" },
     ];
 
     const managerLinks = [
-        { to: "/manager/dashboard", label: "Dashboard", icon: "dashboard" },
-        { to: "/manager/projects", label: "Projects", icon: "folder" },
+        { to: "/manager/dashboard", label: "Tổng quan", icon: "dashboard" },
+        { to: "/manager/projects", label: "Dự án", icon: "folder" },
         { to: "/manager/labels", label: "Tạo nhãn", icon: "label" },
         { to: "/manager/policies", label: "Tạo policy", icon: "policy" },
     ];
 
     const annotatorLinks = [
-        { to: "/annotator/dashboard", label: "Dashboard", icon: "dashboard" },
-        { to: "/annotator/tasks", label: "My Tasks", icon: "assignment" },
+        { to: "/annotator/dashboard", label: "Tổng quan", icon: "dashboard" },
+        { to: "/annotator/tasks", label: "Nhiệm vụ của tôi", icon: "assignment" },
     ];
 
     const reviewerLinks = [
-        { to: "/reviewer/queue", label: "Review Queue", icon: "checklist" },
+        { to: "/reviewer/queue", label: "Hàng đợi đánh giá", icon: "checklist" },
     ];
 
     // Select links based on user role (source of truth from AuthContext)
@@ -38,7 +38,7 @@ export function Sidebar() {
     else links = managerLinks;
 
     // Determine role display and badge
-    const roleDisplay = user?.role === "ADMIN" ? "Admin" : user?.role === "ANNOTATOR" ? "Annotator" : user?.role === "REVIEWER" ? "Reviewer" : "Manager";
+    const roleDisplay = user?.role === "ADMIN" ? "Quản trị viên" : user?.role === "ANNOTATOR" ? "Người gán nhãn" : user?.role === "REVIEWER" ? "Người đánh giá" : "Quản lý";
     const roleBadge = user?.role === "ADMIN" ? "AD" : user?.role === "ANNOTATOR" ? "AN" : user?.role === "REVIEWER" ? "RV" : "MG";
 
     const handleLogout = () => {
@@ -107,7 +107,7 @@ export function Sidebar() {
                     </div>
                     <div className="ml-3">
                         <p className="text-sm font-medium text-foreground">{roleDisplay}</p>
-                        <p className="text-xs text-muted-foreground group-hover:text-red-500 transition-colors">Logout</p>
+                        <p className="text-xs text-muted-foreground group-hover:text-red-500 transition-colors">Đăng xuất</p>
                     </div>
                 </div>
             </div>

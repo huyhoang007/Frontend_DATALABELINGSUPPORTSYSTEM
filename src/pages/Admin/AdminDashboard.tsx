@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userApi } from '../../api/userApi';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
+import { activityLogApi } from '../../api/activityLogApi';
 
 // Bảng màu Modern Enterprise UI
 const T = {
@@ -57,6 +56,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
   });
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
 
+  // Helper function to format time ago
+  const formatTimeAgo = (dateString: string) => {
+    if (!dateString) return 'Không rõ';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffMins < 1) return 'Vừa xong';
+    if (diffMins < 60) return `${diffMins} phút trước`;
+    if (diffHours < 24) return `${diffHours} giờ trước`;
+    if (diffDays === 1) return 'Hôm qua';
+    if (diffDays < 7) return `${diffDays} ngày trước`;
+    return date.toLocaleDateString('vi-VN');
+  };
+
   // Fetch real data from backend
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -64,7 +80,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
         setIsLoading(true);
         
         // Fetch all users to calculate role distribution
-        const usersResponse = await userApi.getAllUsers({ page: 0, size: 1000 });
+        const usersResponse = await userApi.getAllUsers({ page: 0, size: 1000 }) as any;
         const users = usersResponse.content || [];
         
         setTotalUsers(usersResponse.totalElements || users.length);
@@ -88,11 +104,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
 
     const fetchRecentActivities = async () => {
       try {
-        // Import activityLogApi
-        const { activityLogApi } = await import('../../api/activityLogApi');
-        
         // Fetch recent activity logs
-        const logsResponse = await activityLogApi.getAllLogs({ page: 0, size: 5 });
+        const logsResponse = await activityLogApi.getAllLogs({ page: 0, size: 5 }) as any;
         const logs = logsResponse.content || logsResponse || [];
         
         // Transform logs to activity format
@@ -138,26 +151,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
     fetchDashboardData();
     fetchRecentActivities();
   }, []);
-
-  // Helper function to format time ago
-  const formatTimeAgo = (dateString: string) => {
-    if (!dateString) return 'Không rõ';
-    
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    
-    if (diffMins < 1) return 'Vừa xong';
-    if (diffMins < 60) return `${diffMins} phút trước`;
-    if (diffHours < 24) return `${diffHours} giờ trước`;
-    if (diffDays === 1) return 'Hôm qua';
-    if (diffDays < 7) return `${diffDays} ngày trước`;
-    
-    return date.toLocaleDateString('vi-VN');
-  };
 
   return (
     <div style={{

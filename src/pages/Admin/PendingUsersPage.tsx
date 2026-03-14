@@ -49,7 +49,7 @@ const PendingUsersPage: React.FC = () => {
       setPendingUsers(response.content || []);
       setTotalPages(response.totalPages || 0);
     } catch (error: any) {
-      addToast(error.message || "Failed to load pending users", "error");
+      addToast(error.message || "Không thể tải danh sách người dùng chờ duyệt", "error");
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +69,7 @@ const PendingUsersPage: React.FC = () => {
       addToast(`Đã duyệt tài khoản ${username}`, "success");
       loadPendingUsers();
     } catch (error: any) {
-      addToast(error.message || "Failed to approve user", "error");
+      addToast(error.message || "Duyệt tài khoản thất bại", "error");
     }
   };
 
@@ -82,7 +82,7 @@ const PendingUsersPage: React.FC = () => {
       addToast(`Đã từ chối tài khoản ${username}`, "info");
       loadPendingUsers();
     } catch (error: any) {
-      addToast(error.message || "Failed to reject user", "error");
+      addToast(error.message || "Từ chối tài khoản thất bại", "error");
     }
   };
 

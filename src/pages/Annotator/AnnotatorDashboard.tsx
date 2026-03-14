@@ -40,6 +40,16 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> =
   COMPLETED: { bg: T.greenBg, text: T.green, dot: T.green },
 };
 
+const STATUS_VI: Record<string, string> = {
+  ALL: "TẤT CẢ",
+  PENDING: "CHỜ XỬ LÝ",
+  IN_PROGRESS: "ĐANG LÀM",
+  SUBMITTED: "ĐÃ NỘP",
+  APPROVED: "ĐÃ DUYỆT",
+  REJECTED: "TỪ CHỐI",
+  COMPLETED: "HOÀN THÀNH",
+};
+
 interface AnnotatorDashboardProps {
   user: any;
 }
@@ -230,7 +240,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                   }
                 }}
               >
-                {tab.replace("_", " ")}
+                {STATUS_VI[tab] || tab.replace("_", " ")}
               </button>
             ))}
           </div>
@@ -370,12 +380,12 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
               alignItems: "center"
             }}>
               <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>ID</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>PROJECT</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>DATASET</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>REVIEWER</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>PROGRESS</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>STATUS</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "right" }}>ACTION</p>
+              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>DỰ ÁN</p>
+              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>BỘ DỮ LIỆU</p>
+              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>NGƯỜI ĐÁNH GIÁ</p>
+              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>TIẾN ĐỘ</p>
+              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>TRẠNG THÁI</p>
+              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "right" }}>THAO TÁC</p>
             </div>
 
             {/* Table rows */}
@@ -497,7 +507,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                         display: "inline-block",
                         background: statusStyle.dot
                       }} />
-                      {status.replace("_", " ")}
+                      {STATUS_VI[status] || status.replace("_", " ")}
                     </span>
 
                     {/* Action */}

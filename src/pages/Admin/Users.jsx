@@ -193,14 +193,14 @@ export default function AdminUsers() {
       !newUser.password ||
       !newUser.fullName
     ) {
-      addToast("Please fill in all required fields", "error");
+      addToast("Vui lòng điền đầy đủ các trường bắt buộc", "error");
       return;
     }
 
     setIsCreating(true);
     try {
       await userApi.createUser(newUser);
-      addToast("User created successfully!", "success");
+      addToast("Tạo người dùng thành công!", "success");
       setShowCreateModal(false);
       setNewUser({
         username: "",
@@ -230,31 +230,21 @@ export default function AdminUsers() {
 
   const getRoleLabel = (roleId) => {
     switch (roleId) {
-      case 1:
-        return { name: "Admin", color: "#ef4444" };
-      case 2:
-        return { name: "Manager", color: "#10b981" };
-      case 3:
-        return { name: "Annotator", color: "#3b82f6" };
-      case 4:
-        return { name: "Reviewer", color: "#f59e0b" };
-      default:
-        return { name: "Unknown", color: "#6b7280" };
+      case 1: return { name: "Quản trị viên", color: "#ef4444" };
+      case 2: return { name: "Quản lý", color: "#10b981" };
+      case 3: return { name: "Người gán nhãn", color: "#3b82f6" };
+      case 4: return { name: "Người đánh giá", color: "#f59e0b" };
+      default: return { name: "Không xác định", color: "#6b7280" };
     }
   };
 
   const getRoleLabelFromName = (roleName) => {
     switch (roleName?.toUpperCase()) {
-      case "ANNOTATOR":
-        return { name: "Annotator", color: "#3b82f6" };
-      case "MANAGER":
-        return { name: "Manager", color: "#10b981" };
-      case "REVIEWER":
-        return { name: "Reviewer", color: "#f59e0b" };
-      case "ADMIN":
-        return { name: "Admin", color: "#ef4444" };
-      default:
-        return { name: roleName || "Unknown", color: "#6b7280" };
+      case "ANNOTATOR": return { name: "Người gán nhãn", color: "#3b82f6" };
+      case "MANAGER": return { name: "Quản lý", color: "#10b981" };
+      case "REVIEWER": return { name: "Người đánh giá", color: "#f59e0b" };
+      case "ADMIN": return { name: "Quản trị viên", color: "#ef4444" };
+      default: return { name: roleName || "Không xác định", color: "#6b7280" };
     }
   };
 
@@ -326,7 +316,7 @@ export default function AdminUsers() {
                 letterSpacing: "-0.02em",
                 marginBottom: "8px"
               }}>
-                User Management
+                Quản lý người dùng
               </h1>
               <p style={{ fontSize: "14px", color: T.textMuted }}>
                 Quản lý người dùng và phân quyền trong hệ thống
@@ -785,14 +775,8 @@ export default function AdminUsers() {
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div>
-                    <label style={{
-                      display: "block",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      color: T.textMuted,
-                      marginBottom: "6px"
-                    }}>
-                      Username <span style={{ color: T.red }}>*</span>
+                    <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: T.textMuted, marginBottom: "6px" }}>
+                      Tên đăng nhập <span style={{ color: T.red }}>*</span>
                     </label>
                     <input
                       type="text"
@@ -851,14 +835,8 @@ export default function AdminUsers() {
                   </div>
 
                   <div>
-                    <label style={{
-                      display: "block",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      color: T.textMuted,
-                      marginBottom: "6px"
-                    }}>
-                      Full Name <span style={{ color: T.red }}>*</span>
+                    <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: T.textMuted, marginBottom: "6px" }}>
+                      Họ và tên <span style={{ color: T.red }}>*</span>
                     </label>
                     <input
                       type="text"
@@ -884,52 +862,25 @@ export default function AdminUsers() {
                   </div>
 
                   <div>
-                    <label style={{
-                      display: "block",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      color: T.textMuted,
-                      marginBottom: "6px"
-                    }}>
-                      Role <span style={{ color: T.red }}>*</span>
+                    <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: T.textMuted, marginBottom: "6px" }}>
+                      Vai trò <span style={{ color: T.red }}>*</span>
                     </label>
                     <select
                       value={newUser.roleId}
-                      onChange={(e) =>
-                        setNewUser({
-                          ...newUser,
-                          roleId: parseInt(e.target.value),
-                        })
-                      }
-                      style={{
-                        width: "100%",
-                        padding: "10px 12px",
-                        background: T.bg,
-                        border: `1px solid ${T.border}`,
-                        borderRadius: "4px",
-                        color: T.textPrimary,
-                        fontSize: "13px",
-                        fontFamily: "inherit",
-                        outline: "none"
-                      }}
+                      onChange={(e) => setNewUser({ ...newUser, roleId: parseInt(e.target.value) })}
+                      style={{ width: "100%", padding: "10px 12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: "4px", color: T.textPrimary, fontSize: "13px", fontFamily: "inherit", outline: "none" }}
                       onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
                       onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                     >
-                      <option value={2}>Manager</option>
-                      <option value={3}>Annotator</option>
-                      <option value={4}>Reviewer</option>
+                      <option value={2}>Quản lý</option>
+                      <option value={3}>Người gán nhãn</option>
+                      <option value={4}>Người đánh giá</option>
                     </select>
                   </div>
 
                   <div>
-                    <label style={{
-                      display: "block",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      color: T.textMuted,
-                      marginBottom: "6px"
-                    }}>
-                      Password <span style={{ color: T.red }}>*</span>
+                    <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: T.textMuted, marginBottom: "6px" }}>
+                      Mật khẩu <span style={{ color: T.red }}>*</span>
                     </label>
                     <input
                       type="password"
@@ -1068,10 +1019,10 @@ export default function AdminUsers() {
                     onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
                     onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                   >
-                    <option value={1}>Admin</option>
-                    <option value={2}>Manager</option>
-                    <option value={3}>Annotator</option>
-                    <option value={4}>Reviewer</option>
+                    <option value={1}>Quản trị viên</option>
+                    <option value={2}>Quản lý</option>
+                    <option value={3}>Người gán nhãn</option>
+                    <option value={4}>Người đánh giá</option>
                   </select>
                 </div>
 

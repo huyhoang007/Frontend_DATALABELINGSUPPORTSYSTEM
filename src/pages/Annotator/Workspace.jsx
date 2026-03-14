@@ -1,4 +1,4 @@
-﻿import * as React from "react";
+﻿﻿import * as React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Workspace3Column } from "../../components/layout/WorkspaceLayout";
 import { Button } from "../../components/ui/Button";
@@ -59,11 +59,11 @@ function ThumbnailImg({ fileUrl, alt }) {
 
 /* ── Tool definitions ── */
 const TOOLS = [
-    { id: "polygon", icon: "pentagon", label: "Polygon" },
-    { id: "bbox", icon: "crop_free", label: "Rectangle" },
-    { id: "points", icon: "scatter_plot", label: "Points" },
-    { id: "polyline", icon: "polyline", label: "Polyline" },
-    { id: "select", icon: "pan_tool_alt", label: "Select" },
+    { id: "polygon", icon: "pentagon", label: "Đa giác" },
+    { id: "bbox", icon: "crop_free", label: "Hộp" },
+    { id: "points", icon: "scatter_plot", label: "Điểm" },
+    { id: "polyline", icon: "polyline", label: "Đường" },
+    { id: "select", icon: "pan_tool_alt", label: "Chọn" },
 ];
 
 export default function Workspace() {
@@ -440,7 +440,7 @@ export default function Workspace() {
     const handleSave = async () => {
         if (isReadOnly) return;
         await anno.saveNow();
-        addToast({ type: "success", message: "ÄÃ£ lÆ°u annotations" });
+        addToast({ type: "success", message: "Đã lưu annotations" });
     };
 
     /* â”€â”€ Submit assignment â”€â”€ */
@@ -449,7 +449,7 @@ export default function Workspace() {
         try {
             await anno.saveNow();
             await annotationApi.submitAssignment(assignmentId);
-            addToast({ type: "success", message: "ÄÃ£ ná»™p bÃ i thÃ nh cÃ´ng!" });
+            addToast({ type: "success", message: "Nộp bài thành công" });
             navigate("/annotator/tasks");
         } catch (err) {
             addToast({ type: "error", message: err?.message || "Nộp bài thất bại" });
@@ -461,10 +461,10 @@ export default function Workspace() {
         if (!currentItem || isReadOnly) return;
         if (anno.isDone(currentItem.itemId)) {
             anno.unmarkDone(currentItem.itemId);
-            addToast({ type: "info", message: "ÄÃ£ bá» Ä‘Ã¡nh dáº¥u Done" });
+            addToast({ type: "info", message: "Đã bỏ đánh dấu Done" });
         } else {
             const ok = anno.markDone(currentItem.itemId);
-            if (ok) addToast({ type: "success", message: "ÄÃ£ Ä‘Ã¡nh dáº¥u Done âœ“" });
+            if (ok) addToast({ type: "success", message: "Đã đánh dấu Done" });
         }
         // force re-render for sidebar
         setWorkspace((w) => ({ ...w }));
@@ -495,7 +495,7 @@ export default function Workspace() {
         return (
             <div className="flex items-center justify-center h-screen bg-background text-foreground">
                 <span className="material-symbols-outlined text-3xl text-muted-foreground animate-spin mr-2">progress_activity</span>
-                <span className="text-muted-foreground">Loading workspace...</span>
+                <span className="text-muted-foreground">Đang tải workspace...</span>
             </div>
         );
     }
@@ -505,8 +505,8 @@ export default function Workspace() {
                 <span className="material-symbols-outlined text-5xl text-destructive">error</span>
                 <p className="text-sm text-destructive">{error}</p>
                 <div className="flex gap-2">
-                    <Button variant="secondary" onClick={() => navigate("/annotator/tasks")} leftIcon="arrow_back">Back to List</Button>
-                    <Button variant="primary" onClick={fetchWorkspace}>Retry</Button>
+                    <Button variant="secondary" onClick={() => navigate("/annotator/tasks")} leftIcon="arrow_back">Quay lại</Button>
+                    <Button variant="primary" onClick={fetchWorkspace}>Thử lại</Button>
                 </div>
             </div>
         );
@@ -515,8 +515,8 @@ export default function Workspace() {
         return (
             <div className="flex flex-col items-center justify-center h-screen bg-background text-foreground gap-4">
                 <span className="material-symbols-outlined text-5xl text-muted-foreground/40">assignment</span>
-                <p className="text-muted-foreground">Assignment not found</p>
-                <Button variant="secondary" onClick={() => navigate("/annotator/tasks")} leftIcon="arrow_back">Back to List</Button>
+                <p className="text-muted-foreground">Không tìm thấy bài tập</p>
+                <Button variant="secondary" onClick={() => navigate("/annotator/tasks")} leftIcon="arrow_back">Quay lại</Button>
             </div>
         );
     }

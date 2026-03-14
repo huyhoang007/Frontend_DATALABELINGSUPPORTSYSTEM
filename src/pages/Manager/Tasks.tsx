@@ -37,7 +37,7 @@ function seedTasks() {
     ];
 }
 
-const STATUS_STYLES = {
+const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
     PENDING: { bg: T.amberBg, text: T.amber },
     IN_PROGRESS: { bg: T.brandLight, text: T.brand },
     COMPLETED: { bg: T.greenBg, text: T.green },
@@ -46,11 +46,19 @@ const STATUS_STYLES = {
 
 const STATUS_OPTIONS = ["ALL", "PENDING", "IN_PROGRESS", "COMPLETED", "RETURNED"];
 
+const STATUS_VI: Record<string, string> = {
+  ALL: "Tất cả",
+  PENDING: "Chờ xử lý",
+  IN_PROGRESS: "Đang thực hiện",
+  COMPLETED: "Hoàn thành",
+  RETURNED: "Trả lại",
+};
+
 export default function Tasks() {
-    const [tasks, setTasks] = useState([]);
+    const [tasks, setTasks] = useState<any[]>([]);
     const [statusFilter, setStatusFilter] = useState("ALL");
-    const [viewTask, setViewTask] = useState(null);
-    const [hoveredRow, setHoveredRow] = useState(null);
+    const [viewTask, setViewTask] = useState<any>(null);
+    const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
     useEffect(() => {
         setTasks(getMockData(STORAGE_KEY, seedTasks));
@@ -115,7 +123,7 @@ export default function Tasks() {
                         onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
                         onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                     >
-                        {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s === "ALL" ? "Tất cả" : s}</option>)}
+                        {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{STATUS_VI[s]}</option>)}
                     </select>
                 </div>
 
@@ -200,7 +208,7 @@ export default function Tasks() {
                                             color: statusStyle.text,
                                             width: "fit-content"
                                         }}>
-                                            {task.status}
+                                            {STATUS_VI[task.status] || task.status}
                                         </span>
                                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                             <div style={{
@@ -324,7 +332,7 @@ export default function Tasks() {
                                     background: STATUS_STYLES[viewTask.status]?.bg || T.surfaceHover,
                                     color: STATUS_STYLES[viewTask.status]?.text || T.textMuted
                                 }}>
-                                    {viewTask.status}
+                                    {STATUS_VI[viewTask.status] || viewTask.status}
                                 </span>
                             </div>
                             <div>
