@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
-import { ThemeToggle } from "./components/ui/ThemeToggle";
 import { getRoleBasedRedirect } from "./utils/roleUtils";
 
 // Pages
@@ -61,8 +60,6 @@ function App() {
     <ThemeProvider>
       <div className="min-h-screen bg-background text-foreground">
         <BrowserRouter>
-          {/* Global Theme Toggle - Fixed Position */}
-          <ThemeToggle />
 
           <Routes>
             <Route

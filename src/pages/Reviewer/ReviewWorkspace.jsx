@@ -247,7 +247,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                         <span className="material-symbols-outlined text-white text-[14px]">category</span>
                     </div>
                     <span className="font-bold text-sm tracking-tight text-white hidden sm:block">
-                        DataLabel<span className="text-teal-400">Core</span>
+                        Data<span className="text-teal-400">Label</span>
                     </span>
                 </button>
 
