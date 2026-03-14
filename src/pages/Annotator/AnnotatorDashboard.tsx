@@ -501,13 +501,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                     </span>
 
                     {/* Action */}
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "flex-end",
-                      gap: "8px",
-                      opacity: hoveredRow === idx ? 1 : 0,
-                      transition: "opacity .15s"
-                    }}>
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
                       {["PENDING", "REJECTED"].includes(status) && (
                         <button
                           onClick={(e) => { e.stopPropagation(); handleOpen(a); }}
@@ -527,7 +521,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                           onMouseEnter={(e) => e.currentTarget.style.background = T.brandHover}
                           onMouseLeave={(e) => e.currentTarget.style.background = T.brand}
                         >
-                          Start
+                          Bắt đầu
                         </button>
                       )}
                       {status === "IN_PROGRESS" && (
@@ -546,40 +540,36 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                             fontFamily: "inherit",
                             transition: "all .15s"
                           }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = T.amber + "20";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = T.amberBg;
-                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = T.amber + "20"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = T.amberBg; }}
                         >
-                          Continue
+                          Tiếp tục
                         </button>
                       )}
                       {["SUBMITTED", "APPROVED", "COMPLETED"].includes(status) && (
                         <button
                           onClick={(e) => { e.stopPropagation(); handleOpen(a); }}
                           style={{
-                            width: "32px",
                             height: "32px",
-                            padding: 0,
-                            background: "transparent",
-                            border: "none",
+                            padding: "0 16px",
+                            fontSize: "12px",
+                            fontWeight: 700,
+                            color: T.textSecondary,
+                            background: T.surfaceHover,
+                            border: `1px solid ${T.border}`,
                             borderRadius: "4px",
                             cursor: "pointer",
+                            fontFamily: "inherit",
                             display: "flex",
                             alignItems: "center",
-                            justifyContent: "center",
+                            gap: "6px",
                             transition: "all .15s"
                           }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = T.surfaceHover;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "transparent";
-                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = T.border; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = T.surfaceHover; }}
                         >
-                          <span className="material-symbols-outlined" style={{ fontSize: "20px", color: T.textMuted }}>visibility</span>
+                          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>visibility</span>
+                          Xem
                         </button>
                       )}
                     </div>
