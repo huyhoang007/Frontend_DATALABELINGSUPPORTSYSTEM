@@ -391,9 +391,7 @@ export default function ReviewQueue() {
                                         <div style={{
                                             display: "flex",
                                             justifyContent: "flex-end",
-                                            gap: "8px",
-                                            opacity: hoveredRow === idx ? 1 : 0,
-                                            transition: "opacity .15s"
+                                            gap: "8px"
                                         }}>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); handleReview(a); }}
