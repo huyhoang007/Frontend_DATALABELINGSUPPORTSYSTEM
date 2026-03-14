@@ -480,9 +480,7 @@ export default function TaskList() {
                     <div style={{
                       display: "flex",
                       justifyContent: "flex-end",
-                      gap: "8px",
-                      opacity: hoveredRow === idx ? 1 : 0,
-                      transition: "opacity .15s"
+                      gap: "8px"
                     }}>
                       {["PENDING", "REJECTED"].includes(status) && (
                         <button
@@ -536,26 +534,30 @@ export default function TaskList() {
                         <button
                           onClick={(e) => { e.stopPropagation(); handleOpen(a); }}
                           style={{
-                            width: "32px",
                             height: "32px",
-                            padding: 0,
-                            background: "transparent",
-                            border: "none",
+                            padding: "0 16px",
+                            fontSize: "12px",
+                            fontWeight: 700,
+                            color: T.textSecondary,
+                            background: T.surfaceHover,
+                            border: `1px solid ${T.border}`,
                             borderRadius: "4px",
                             cursor: "pointer",
+                            fontFamily: "inherit",
                             display: "flex",
                             alignItems: "center",
-                            justifyContent: "center",
+                            gap: "6px",
                             transition: "all .15s"
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background = T.surfaceHover;
+                            e.currentTarget.style.background = T.border;
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget.style.background = T.surfaceHover;
                           }}
                         >
-                          <span className="material-symbols-outlined" style={{ fontSize: "20px", color: T.textMuted }}>visibility</span>
+                          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>visibility</span>
+                          Xem
                         </button>
                       )}
                     </div>

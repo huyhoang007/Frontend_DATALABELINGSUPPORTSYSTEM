@@ -613,26 +613,41 @@ export default function Workspace() {
                         </button>
                     </div>
 
-                    {/* Action icons */}
-                    <div className="flex items-center gap-1">
-                        <button onClick={handleSave} title="LÆ°u"
-                            className="w-8 h-8 flex items-center justify-center rounded transition-colors hover:bg-white/10"
-                            style={{ color: "#64748b" }}>
-                            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>save</span>
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-2">
+                        {/* Save button */}
+                        <button onClick={handleSave}
+                            disabled={isReadOnly}
+                            title="Lưu nháp (Ctrl+S)"
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${isReadOnly ? 'opacity-40 cursor-not-allowed' : 'hover:brightness-110 active:scale-95'}`}
+                            style={{ background: "#1e3a5f", color: "#7dd3fc", border: "1px solid #2563eb44" }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 15 }}>save</span>
+                            <span>Lưu</span>
                         </button>
+
+                        {/* Mark Done button */}
                         <button onClick={handleMarkDone}
-                            title={currentIsDone ? "Bỏ Done" : "Mark Done"}
+                            title={currentIsDone ? "Bỏ đánh dấu hoàn thành" : "Đánh dấu hoàn thành ảnh này"}
                             disabled={(!currentIsDone && anno.annotations.length === 0) || isReadOnly}
-                            className={`w-8 h-8 flex items-center justify-center rounded transition-colors hover:bg-white/10 ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            style={{ color: currentIsDone ? "#00bfa5" : "#64748b" }}>
-                            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${((!currentIsDone && anno.annotations.length === 0) || isReadOnly) ? 'opacity-40 cursor-not-allowed' : 'hover:brightness-110 active:scale-95'}`}
+                            style={currentIsDone
+                                ? { background: "#064e3b", color: "#34d399", border: "1px solid #10b98144" }
+                                : { background: "#1e2f42", color: "#94a3b8", border: "1px solid #3a506844" }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 15 }}>
                                 {currentIsDone ? "check_circle" : "task_alt"}
                             </span>
+                            <span>{currentIsDone ? "Hoàn thành" : "Xong ảnh"}</span>
                         </button>
-                        <button onClick={() => navigate("/annotator/tasks")} title="Cài đặt"
-                            className="w-8 h-8 flex items-center justify-center rounded transition-colors hover:bg-white/10"
+
+                        {/* Divider */}
+                        <div style={{ width: 1, height: 24, background: "#253347" }} />
+
+                        {/* Back to tasks */}
+                        <button onClick={() => navigate("/annotator/tasks")}
+                            title="Quay lại danh sách task"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg transition-all hover:bg-white/10 active:scale-95"
                             style={{ color: "#64748b" }}>
-                            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>settings</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_back</span>
                         </button>
                     </div>
                 </div>
@@ -657,10 +672,14 @@ export default function Workspace() {
                             <button
                                 onClick={handleSubmit}
                                 disabled={isReadOnly}
-                                className={`w-full py-2 rounded text-xs font-bold transition-opacity hover:opacity-80 shadow-md flex items-center justify-center gap-1.5 ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                style={{ background: isReadOnly ? "#3f51b5" : "#00bfa5", color: "#fff" }}>
-                                <span>{isReadOnly ? "Đã nộp" : "Nộp đánh giá"}</span>
-                                {!isReadOnly && <span className="material-symbols-outlined text-[14px]">send</span>}
+                                className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all shadow-lg flex items-center justify-center gap-1.5 ${isReadOnly ? 'opacity-60 cursor-not-allowed' : 'hover:brightness-110 active:scale-95'}`}
+                                style={isReadOnly
+                                    ? { background: "#1e3a5f", color: "#7dd3fc", border: "1px solid #2563eb55" }
+                                    : { background: "linear-gradient(135deg, #00bfa5, #0097a7)", color: "#fff", boxShadow: "0 4px 12px rgba(0,191,165,0.35)" }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: 15 }}>
+                                    {isReadOnly ? "check_circle" : "send"}
+                                </span>
+                                <span>{isReadOnly ? "Đã nộp" : "Nộp bài"}</span>
                             </button>
                         </div>
 
@@ -701,13 +720,12 @@ export default function Workspace() {
                             })}
                         </div>
 
-                        {/* Quick Save button at bottom */}
                         <div className="p-3 border-t shrink-0" style={{ borderColor: "#253347" }}>
                             <button onClick={handleSave}
                                 disabled={isReadOnly}
-                                className={`w-full py-1.5 rounded text-xs font-semibold flex items-center justify-center gap-1.5 ${isReadOnly ? 'opacity-50 cursor-not-allowed' : 'transition-colors hover:bg-white/10'}`}
-                                style={{ background: "transparent", border: "1px solid #3a5068", color: "#94a3b8" }}>
-                                <span className="material-symbols-outlined text-[14px]">save</span>
+                                className={`w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${isReadOnly ? 'opacity-40 cursor-not-allowed' : 'hover:bg-[#1e3a5f] active:scale-95'}`}
+                                style={{ background: "#1a2a3a", border: "1px solid #2a4060", color: "#7dd3fc" }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: 15 }}>save</span>
                                 <span>Lưu nháp</span>
                             </button>
                         </div>
@@ -785,18 +803,24 @@ export default function Workspace() {
                         style={{ width: 260, background: "#182233", borderColor: "#253347" }}>
 
                         {/* Tool icons */}
-                        <div className="flex items-center justify-center gap-1 px-3 py-2 border-b shrink-0"
-                            style={{ borderColor: "#253347" }}>
+                        <div className="flex items-center justify-center gap-1.5 px-3 py-2.5 border-b shrink-0"
+                            style={{ borderColor: "#253347", background: "#111d2c" }}>
                             {(isReadOnly ? TOOLS.filter(t => t.id === "select") : TOOLS).map((tool) => (
                                 <button key={tool.id}
                                     onClick={() => { if (!isReadOnly || tool.id === "select") { setActiveTool(tool.id); setSelectedGroupKey(null); } }}
                                     title={tool.label}
                                     disabled={isReadOnly && tool.id !== "select"}
-                                    className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all ${isReadOnly && tool.id !== "select" ? 'opacity-30 cursor-not-allowed hidden' : ''}`}
-                                    style={activeTool === tool.id
-                                        ? { background: "#00bfa5", color: "#fff" }
-                                        : { background: "transparent", color: "#4a6788" }}>
-                                    <span className="material-symbols-outlined" style={{ fontSize: 20 }}>{tool.icon}</span>
+                                    className={`flex flex-col items-center justify-center gap-0.5 rounded-lg transition-all ${isReadOnly && tool.id !== "select" ? 'opacity-30 cursor-not-allowed hidden' : 'hover:brightness-110 active:scale-95'}`}
+                                    style={{
+                                        width: 44, height: 44, padding: "4px 2px",
+                                        ...(activeTool === tool.id
+                                            ? { background: "#00bfa5", color: "#fff", boxShadow: "0 2px 8px rgba(0,191,165,0.4)" }
+                                            : { background: "#1e2f42", color: "#7a9ab8", border: "1px solid #2a3f55" })
+                                    }}>
+                                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>{tool.icon}</span>
+                                    <span style={{ fontSize: 8, fontWeight: 600, letterSpacing: "0.02em", lineHeight: 1 }}>
+                                        {tool.label?.split(" ")[0]?.substring(0, 5)}
+                                    </span>
                                 </button>
                             ))}
                         </div>
