@@ -113,7 +113,7 @@ const ModernProjectsPage: React.FC = () => {
 
   const handleCreateProject = async () => {
     if (!newName || !newDataType) {
-      addToast("Please enter name and select data type", "error");
+      addToast("Vui lòng nhập tên và chọn loại dữ liệu", "error");
       return;
     }
 
@@ -124,14 +124,14 @@ const ModernProjectsPage: React.FC = () => {
         dataType: newDataType.toUpperCase(), // Backend expects uppercase enum
         description: newDescription.trim(), // Use actual description from form
       });
-      addToast("Project created successfully!", "success");
+      addToast("Tạo dự án thành công!", "success");
       setShowCreateModal(false);
       setNewName("");
       setNewDataType("");
       setNewDescription("");
       fetchProjects(); // Refresh list
     } catch (error: any) {
-      addToast(error.message || "Failed to create project", "error");
+      addToast(error.message || "Không thể tạo dự án", "error");
     } finally {
       setIsCreating(false);
     }
@@ -435,11 +435,11 @@ const ModernProjectsPage: React.FC = () => {
           <table className="w-full text-sm text-left">
             <thead className="bg-muted/50 text-muted-foreground font-semibold uppercase text-xs">
               <tr>
-                <th className="px-6 py-4">Project Name</th>
-                <th className="px-6 py-4">Type</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Manager</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-6 py-4">Tên dự án</th>
+                <th className="px-6 py-4">Loại</th>
+                <th className="px-6 py-4">Trạng thái</th>
+                <th className="px-6 py-4">Quản lý</th>
+                <th className="px-6 py-4 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50 text-foreground">
@@ -613,10 +613,10 @@ const ModernProjectsPage: React.FC = () => {
                   onChange={(e) => setEditStatus(e.target.value)}
                   className="w-full px-4 py-2.5 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none cursor-pointer"
                 >
-                  <option value="draft">Draft</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="paused">Paused</option>
-                  <option value="completed">Completed</option>
+                  <option value="draft">Bản nháp</option>
+                  <option value="in_progress">Đang tiến hành</option>
+                  <option value="paused">Tạm dừng</option>
+                  <option value="completed">Hoàn thành</option>
                 </select>
               </div>
             </div>

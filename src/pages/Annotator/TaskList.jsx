@@ -37,6 +37,16 @@ const STATUS_STYLES = {
   COMPLETED: { bg: T.greenBg, text: T.green, dot: T.green },
 };
 
+const STATUS_VI = {
+  ALL: "TẤT CẢ",
+  PENDING: "CHỜ XỬ LÝ",
+  IN_PROGRESS: "ĐANG LÀM",
+  SUBMITTED: "ĐÃ NỘP",
+  APPROVED: "ĐÃ DUYỆT",
+  REJECTED: "TỪ CHỐI",
+  COMPLETED: "HOÀN THÀNH",
+};
+
 export default function TaskList() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -128,7 +138,7 @@ export default function TaskList() {
               letterSpacing: "-0.02em",
               marginBottom: "8px"
             }}>
-              My Tasks
+              Nhiệm vụ của tôi
             </h1>
             <p style={{ fontSize: "14px", color: T.textMuted }}>
               Chào mừng trở lại, <span style={{ color: T.brand, fontWeight: 600 }}>{user?.displayName || user?.username || user?.name || "User"}</span>.
@@ -213,7 +223,7 @@ export default function TaskList() {
                   }
                 }}
               >
-                {tab.replace("_", " ")}
+                {STATUS_VI[tab] || tab.replace("_", " ")}
               </button>
             ))}
           </div>
@@ -353,12 +363,12 @@ export default function TaskList() {
               alignItems: "center"
             }}>
               <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>ID</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>PROJECT</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>DATASET</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>REVIEWER</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>PROGRESS</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>STATUS</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "right" }}>ACTION</p>
+              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>DỰ ÁN</p>
+              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>BỘ DỮ LIỆU</p>
+              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>NGƯỜI ĐÁNH GIÁ</p>
+              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>TIẾN ĐỘ</p>
+              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>TRẠNG THÁI</p>
+              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "right" }}>THAO TÁC</p>
             </div>
 
             {/* Table rows */}
@@ -474,7 +484,7 @@ export default function TaskList() {
                         display: "inline-block",
                         background: statusStyle.dot
                       }} />
-                      {status.replace("_", " ")}
+                      {STATUS_VI[status] || status.replace("_", " ")}
                     </span>
 
                     <div style={{

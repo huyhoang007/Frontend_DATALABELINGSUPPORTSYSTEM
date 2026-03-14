@@ -88,21 +88,9 @@ export default function AnnotationOverlay({
     }, [activeTool]);
 
     const handleWholeDragStart = React.useCallback((e, group) => {
-        if (activeTool !== "select") return;
-        if (group.reviewStatus === "APPROVED") return;
-        if (group.groupKey !== selectedGroupKey) return;
-        e.stopPropagation();
-        e.preventDefault();
-        const rect = svgRef.current?.getBoundingClientRect();
-        if (!rect) return;
-        const pt = clientToNormalized(e.clientX, e.clientY, rect);
-        setDragState({
-            groupKey: group.groupKey,
-            vertexIdx: null, // whole shape
-            startPt: pt,
-            startGeom: structuredClone(group.geometry),
-        });
-    }, [activeTool, selectedGroupKey]);
+        // Disabled: shapes cannot be moved after drawing
+        return;
+    }, []);
 
     // Global mouse move/up for drag
     React.useEffect(() => {
@@ -128,23 +116,8 @@ export default function AnnotationOverlay({
                         : { ...p }
                 );
                 newGeom = { ...geom, points: newPoints };
-            } else if (dragState.vertexIdx === null) {
-                // Drag whole shape
-                if (geom.points) {
-                    const newPoints = geom.points.map((p) => ({
-                        x: clamp(p.x + dx, 0, 1),
-                        y: clamp(p.y + dy, 0, 1),
-                    }));
-                    newGeom = { ...geom, points: newPoints };
-                } else if (geom.x !== undefined) {
-                    // bbox
-                    newGeom = {
-                        ...geom,
-                        x: clamp(geom.x + dx, 0, 1 - geom.w),
-                        y: clamp(geom.y + dy, 0, 1 - geom.h),
-                    };
-                }
             }
+            // Note: whole-shape drag is disabled
 
             if (newGeom) {
                 onUpdateGeometry?.(dragState.groupKey, newGeom);
@@ -199,7 +172,7 @@ export default function AnnotationOverlay({
         const isRejected = group.reviewStatus === "REJECTED";
         const displayColor = isLocked ? "#22c55e" : isRejected ? "#ef4444" : color;
         const strokeW = isSelected ? 3 : 2;
-        const fillOpacity = isDraft ? 0.1 : isLocked ? 0.15 : 0.08;
+        const fillOpacity = isDraft ? 0.15 : isLocked ? 0.25 : 0.22;
         const dashArray = isDraft ? "6 4" : "none";
 
         const sharedProps = {

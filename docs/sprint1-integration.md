@@ -1,7 +1,7 @@
 # Sprint 1 Frontend-Backend Integration Summary
 
 **Date:** 2026-01-27  
-**Status:** ✅ Completed (with Backend dependencies noted)
+**Status:** Completed (with Backend dependencies noted)
 
 ---
 
@@ -13,7 +13,7 @@ Integrated Frontend (React + Vite + TailwindCSS) with Backend (Spring Boot) for 
 
 ## Completed Features
 
-### 1. ✅ Đăng nhập (Login)
+### 1. Đăng nhập (Login)
 - **Frontend Screen:** `src/pages/Login/Login.jsx`
 - **API Module:** `src/api/authApi.js`
 - **Backend Endpoint:** `POST /api/auth/login`
@@ -21,7 +21,7 @@ Integrated Frontend (React + Vite + TailwindCSS) with Backend (Spring Boot) for 
 - **Response DTO:** `{ accessToken, tokenType, username, role }`
 - **Status:** **READY** - Backend endpoint confirmed in `AuthController.java`
 
-### 2. ✅ Thiết lập Policy
+### 2. Thiết lập Policy
 - **Frontend Screen:** `src/pages/Manager/Policies.jsx`
 - **API Module:** `src/api/policyApi.js` (refactored from mock)
 - **Backend Endpoints:**
@@ -31,7 +31,7 @@ Integrated Frontend (React + Vite + TailwindCSS) with Backend (Spring Boot) for 
   - `PATCH /api/policies/:policyId/status`
 - **Status:** **NEEDS BACKEND** - PolicyController not found
 
-### 3. ✅ Theo dõi nhật ký (Activity Logs)
+### 3. Theo dõi nhật ký (Activity Logs)
 - **Frontend Screen:** `src/pages/Manager/ActivityLogs.jsx`
 - **API Module:** `src/api/activityLogApi.js` (refactored from mock)
 - **Backend Endpoint:** `GET /api/activity-logs?page=&limit=&q=&action=`
@@ -43,12 +43,12 @@ Integrated Frontend (React + Vite + TailwindCSS) with Backend (Spring Boot) for 
 
 | Module | File | Status | Backend Status |
 |--------|------|--------|----------------|
-| Auth | `src/api/authApi.js` | ✅ Complete | ✅ Backend Ready |
-| User | `src/api/userApi.js` | ✅ Complete | ⚠️ Backend Missing |
-| Project | `src/api/projectApi.js` | ✅ Complete | ✅ Backend Ready |
-| Label | `src/api/labelApi.js` | ✅ Complete | ⚠️ Backend Missing |
-| Policy | `src/api/policyApi.js` | ✅ Complete | ⚠️ Backend Missing |
-| Activity Log | `src/api/activityLogApi.js` | ✅ Complete | ⚠️ Backend Missing |
+| Auth | `src/api/authApi.js` | Complete | Backend Ready |
+| User | `src/api/userApi.js` | Complete | Backend Missing |
+| Project | `src/api/projectApi.js` | Complete | Backend Ready |
+| Label | `src/api/labelApi.js` | Complete | Backend Missing |
+| Policy | `src/api/policyApi.js` | Complete | Backend Missing |
+| Activity Log | `src/api/activityLogApi.js` | Complete | Backend Missing |
 
 ---
 
@@ -56,9 +56,9 @@ Integrated Frontend (React + Vite + TailwindCSS) with Backend (Spring Boot) for 
 
 | Screen | Route | API Calls | Auth Required | Backend Status |
 |--------|-------|-----------|---------------|----------------|
-| Login | `/login` | `POST /api/auth/login` | No | ✅ Ready |
-| Policies | `/manager/policies` | `GET /api/policies`<br>`POST /api/policies`<br>`PUT /api/policies/:id`<br>`PATCH /api/policies/:id/status` | Yes (MANAGER) | ⚠️ Missing |
-| Activity Logs | `/manager/activity-logs` | `GET /api/activity-logs` | Yes (MANAGER) | ⚠️ Missing |
+| Login | `/login` | `POST /api/auth/login` | No | Ready |
+| Policies | `/manager/policies` | `GET /api/policies`<br>`POST /api/policies`<br>`PUT /api/policies/:id`<br>`PATCH /api/policies/:id/status` | Yes (MANAGER) | Missing |
+| Activity Logs | `/manager/activity-logs` | `GET /api/activity-logs` | Yes (MANAGER) | Missing |
 
 ---
 
@@ -108,7 +108,7 @@ These features are in Sprint 1 scope but have no UI screens:
 
 ## Infrastructure Changes
 
-### ✅ Created Files
+### Created Files
 
 - `src/api/apiClient.js` - Shared axios client with JWT auto-attach and 401 interceptor
 - `src/api/authApi.js` - Auth endpoints
@@ -123,7 +123,7 @@ These features are in Sprint 1 scope but have no UI screens:
 - `src/types/activityLog.js` - Activity Log DTOs (TODO_BACKEND)
 - `.env` - Environment config with `VITE_API_BASE_URL=http://localhost:8080`
 
-### ✅ Modified Files
+### Modified Files
 
 - `src/context/AuthContext.jsx` - Refactored from mock to real API
 - `src/pages/Login/Login.jsx` - Added real username/password inputs
@@ -178,7 +178,7 @@ These features are in Sprint 1 scope but have no UI screens:
 
 ## Testing Checklist
 
-### ✅ Can Test Now (Backend Ready)
+### Can Test Now (Backend Ready)
 
 - [ ] Login with valid credentials
 - [ ] Login with invalid credentials (401 error)
@@ -186,7 +186,7 @@ These features are in Sprint 1 scope but have no UI screens:
 - [ ] 401 redirect to login
 - [ ] Logout clears token and redirects
 
-### ⚠️ Cannot Test Yet (Backend Missing)
+### Cannot Test Yet (Backend Missing)
 
 - [ ] Policy list/create/update/status
 - [ ] Activity log list with pagination/filters
@@ -259,4 +259,4 @@ npm run dev
 
 ---
 
-**Integration Status:** ✅ Frontend Ready | ⚠️ Waiting for Backend Controllers
+**Integration Status:** Frontend Ready | Waiting for Backend Controllers

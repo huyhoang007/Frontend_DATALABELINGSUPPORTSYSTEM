@@ -84,8 +84,9 @@ export default function ProjectErrors() {
         setActionLoading(policyId);
         try {
             await policiesAPI.assignToProject(pid, policyId);
+            const added = globalPolicies.find((p) => p.policyId === policyId);
+            if (added) setProjectPolicies((prev) => [...prev, added]);
             showToast("Đã thêm vào project");
-            await fetchData();
         } catch (err) {
             console.error("Failed to assign policy:", err);
             showToast("Lỗi khi thêm error type vào project");
@@ -98,8 +99,8 @@ export default function ProjectErrors() {
         setActionLoading(policyId);
         try {
             await policiesAPI.removeFromProject(pid, policyId);
+            setProjectPolicies((prev) => prev.filter((p) => p.policyId !== policyId));
             showToast("Đã gỡ khỏi project");
-            await fetchData();
         } catch (err) {
             console.error("Failed to remove policy:", err);
             showToast("Lỗi khi gỡ error type khỏi project");

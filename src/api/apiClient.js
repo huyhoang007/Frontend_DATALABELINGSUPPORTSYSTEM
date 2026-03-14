@@ -110,7 +110,7 @@ apiClient.interceptors.response.use(
             // Translate common HTTP error messages to Vietnamese
             const status = err.response?.status;
             if (status === 401) {
-                return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+                return "Sai tên đăng nhập hoặc mật khẩu. Vui lòng đăng nhập lại.";
             }
             if (status === 403) {
                 return "Bạn không có quyền thực hiện hành động này.";

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { projectApi } from "../../api/projectApi";
 import { datasetApi } from "../../api/datasetApi";
 
@@ -25,17 +25,17 @@ const T = {
 };
 
 export default function UploadData() {
-    const [projects, setProjects] = useState([]);
+    const [projects, setProjects] = useState<any[]>([]);
     const [selectedProjectId, setSelectedProjectId] = useState("");
     const [batchName, setBatchName] = useState("");
-    const [files, setFiles] = useState([]);
-    const [datasets, setDatasets] = useState([]);
+    const [files, setFiles] = useState<File[]>([]);
+    const [datasets, setDatasets] = useState<any[]>([]);
     const [status, setStatus] = useState("idle"); // idle | uploading | success | error
     const [error, setError] = useState("");
     const [dragActive, setDragActive] = useState(false);
     const [loadingProjects, setLoadingProjects] = useState(true);
     const [loadingDatasets, setLoadingDatasets] = useState(false);
-    const [hoveredRow, setHoveredRow] = useState(null);
+    const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
     // Load projects
     useEffect(() => {
@@ -52,11 +52,11 @@ export default function UploadData() {
     }, []);
 
     // Load datasets when project changes
-    const loadDatasets = useCallback(async (projectId) => {
+    const loadDatasets = useCallback(async (projectId: string) => {
         if (!projectId) { setDatasets([]); return; }
         setLoadingDatasets(true);
         try {
-            const data = await datasetApi.getDatasetsByProject(projectId);
+            const data = await datasetApi.getDatasetsByProject(Number(projectId));
             setDatasets(Array.isArray(data) ? data : []);
         } catch {
             setDatasets([]);
@@ -70,20 +70,20 @@ export default function UploadData() {
     }, [selectedProjectId, loadDatasets]);
 
     // File handlers
-    const handleFiles = (newFiles) => {
+    const handleFiles = (newFiles: FileList) => {
         const fileArray = Array.from(newFiles);
         setFiles((prev) => [...prev, ...fileArray]);
     };
 
-    const handleDrop = (e) => {
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setDragActive(false);
         if (e.dataTransfer.files?.length) handleFiles(e.dataTransfer.files);
     };
 
-    const removeFile = (idx) => setFiles((prev) => prev.filter((_, i) => i !== idx));
+    const removeFile = (idx: number) => setFiles((prev) => prev.filter((_, i) => i !== idx));
 
-    const formatSize = (bytes) => {
+    const formatSize = (bytes: number) => {
         if (bytes < 1024) return bytes + " B";
         if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
         return (bytes / 1048576).toFixed(1) + " MB";
@@ -101,9 +101,9 @@ export default function UploadData() {
             setFiles([]);
             loadDatasets(selectedProjectId);
             setTimeout(() => setStatus("idle"), 3000);
-        } catch (err) {
+        } catch (err: any) {
             setStatus("error");
-            setError(err?.message || "Upload thất bại");
+            setError(err?.message || "Tải lên thất bại");
         }
     };
 
@@ -124,7 +124,7 @@ export default function UploadData() {
                 marginBottom: "32px",
                 letterSpacing: "-0.02em"
             }}>
-                Upload Data
+                Upload dữ liệu
             </h1>
 
             {/* Project & Batch */}
@@ -233,7 +233,7 @@ export default function UploadData() {
                     onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                     onDragLeave={() => setDragActive(false)}
                     onDrop={handleDrop}
-                    onClick={() => document.getElementById("file-input").click()}
+                    onClick={() => document.getElementById("file-input")?.click()}
                 >
                     <span className="material-symbols-outlined" style={{
                         fontSize: "48px",
@@ -331,9 +331,9 @@ export default function UploadData() {
                         <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
                             {status === "uploading" ? "progress_activity" : "upload"}
                         </span>
-                        {status === "uploading" ? "Đang upload..." : "Upload"}
+                        {status === "uploading" ? "Đang tải lên..." : "Tải lên"}
                     </button>
-                    {status === "success" && <span style={{ fontSize: "13px", color: T.green, fontWeight: 600 }}>Upload thành công</span>}
+                    {status === "success" && <span style={{ fontSize: "13px", color: T.green, fontWeight: 600 }}>Tải lên thành công</span>}
                     {status === "error" && <span style={{ fontSize: "13px", color: T.red, fontWeight: 600 }}>{error}</span>}
                 </div>
             </div>
@@ -375,10 +375,10 @@ export default function UploadData() {
                                 gap: "16px",
                                 alignItems: "center"
                             }}>
-                                <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>BATCH NAME</p>
-                                <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>FILES</p>
-                                <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>STATUS</p>
-                                <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>CREATED AT</p>
+                                <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>TÊN BATCH</p>
+                                <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>SỐ FILE</p>
+                                <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>TRẠNG THÁI</p>
+                                <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>NGÀY TẠO</p>
                             </div>
 
                             {/* Table Body */}
@@ -418,7 +418,7 @@ export default function UploadData() {
                                                 color: statusStyle.text,
                                                 width: "fit-content"
                                             }}>
-                                                {ds.status}
+                                                {(({ COMPLETED: "Hoàn thành", FAILED: "Thất bại", PROCESSING: "Đang xử lý" } as Record<string, string>)[ds.status]) || ds.status}
                                             </span>
                                             <span style={{ fontSize: "12px", color: T.textMuted }}>
                                                 {ds.createdAt ? new Date(ds.createdAt).toLocaleDateString("vi-VN") : "—"}
