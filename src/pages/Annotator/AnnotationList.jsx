@@ -20,6 +20,7 @@ export default function AnnotationList({
     onSelect,
     onDelete,
     onToggleHidden,
+    onRelabel,
     readOnly,
 }) {
     // Filter by label if active
@@ -33,6 +34,8 @@ export default function AnnotationList({
             {visibleAnnotations.map((group, i) => {
                 const isSelected = group.groupKey === selectedGroupKey;
                 const icon = SHAPE_ICONS[group.shapeType] || "shape_line";
+                const isApproved = group.reviewStatus === "APPROVED";
+                const isRejected = group.reviewStatus === "REJECTED";
 
                 return (
                     <div
@@ -40,13 +43,25 @@ export default function AnnotationList({
                         onClick={() => onSelect?.(group.groupKey)}
                         className={cn(
                             "p-3 rounded-lg border flex items-center group transition-all cursor-pointer",
-                            group.isHidden
-                                ? "bg-muted/10 border-transparent opacity-60"
-                                : isSelected
-                                    ? "bg-annotator-primary/10 border-annotator-primary/30 shadow-sm"
-                                    : "bg-muted/30 border-border hover:border-annotator-primary/30 hover:bg-muted/60"
+                            isApproved
+                                ? "bg-emerald-500/10 border-emerald-500/30"
+                                : isRejected
+                                    ? "bg-red-500/10 border-red-500/30"
+                                    : group.isHidden
+                                        ? "bg-muted/10 border-transparent opacity-60"
+                                        : isSelected
+                                            ? "bg-annotator-primary/10 border-annotator-primary/30 shadow-sm"
+                                            : "bg-muted/30 border-border hover:border-annotator-primary/30 hover:bg-muted/60"
                         )}
                     >
+                        {/* Status icon */}
+                        {isApproved && (
+                            <span className="material-symbols-outlined text-[14px] text-emerald-500 mr-1" title="Approved">lock</span>
+                        )}
+                        {isRejected && (
+                            <span className="material-symbols-outlined text-[14px] text-red-500 mr-1" title="Rejected">warning</span>
+                        )}
+
                         {/* Index */}
                         <span className="text-[10px] font-mono text-muted-foreground w-6 opacity-50">
                             #{i + 1}
@@ -80,6 +95,11 @@ export default function AnnotationList({
                             <p className="text-[10px] text-muted-foreground capitalize pl-0.5">
                                 {group.shapeType}
                             </p>
+                            {isRejected && group.policyName && (
+                                <p className="text-[10px] text-red-400 mt-0.5 pl-0.5">
+                                    ⚠ {group.policyName}
+                                </p>
+                            )}
                         </div>
 
                         {/* Action buttons */}
@@ -96,7 +116,19 @@ export default function AnnotationList({
                                     {group.isHidden ? "visibility_off" : "visibility"}
                                 </span>
                             </button>
-                            {!readOnly && (
+                            {!readOnly && !isApproved && onRelabel && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onRelabel(group.groupKey);
+                                    }}
+                                    className="p-1 hover:bg-blue-500/10 rounded text-muted-foreground hover:text-blue-500 transition-colors"
+                                    title="Đổi label"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">label</span>
+                                </button>
+                            )}
+                            {!readOnly && !isApproved && (
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
