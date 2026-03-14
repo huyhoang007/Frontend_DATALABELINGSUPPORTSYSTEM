@@ -221,19 +221,7 @@ export default function Login() {
               bởi các nhóm ở mọi quy mô, cho dữ liệu ở mọi quy mô.
             </p>
 
-            {/* Stats row */}
-            <div style={{ display: 'flex', gap: '32px' }}>
-              {[
-                { num: '4', label: 'Vai trò' },
-                { num: '5+', label: 'Định dạng export' },
-                { num: '100%', label: 'Nội bộ' },
-              ].map(({ num, label }) => (
-                <div key={label}>
-                  <div style={{ fontSize: '22px', fontWeight: 800, color: '#60a5fa', lineHeight: 1 }}>{num}</div>
-                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', marginTop: '4px', letterSpacing: '0.05em' }}>{label}</div>
-                </div>
-              ))}
-            </div>
+
           </div>
 
           {/* ════ RIGHT: Login card ════ */}
