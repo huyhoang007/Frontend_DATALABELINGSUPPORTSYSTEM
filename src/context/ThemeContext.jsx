@@ -1,44 +1,22 @@
 import * as React from "react";
 
 const ThemeContext = React.createContext({
-    theme: "dark",
+    theme: "light",
     toggleTheme: () => { },
 });
 
 export function ThemeProvider({ children }) {
-    // 1. Initialize state from localStorage or system preference
-    const [theme, setTheme] = React.useState(() => {
-        if (typeof window !== "undefined" && window.localStorage) {
-            const savedTheme = window.localStorage.getItem("theme");
-            if (savedTheme) {
-                return savedTheme;
-            }
-            // Default to system preference if no saved theme
-            return window.matchMedia("(prefers-color-scheme: dark)").matches
-                ? "dark"
-                : "light";
-        }
-        return "dark"; // Fallback
-    });
+    // Always light mode
+    const theme = "light";
 
-    // 2. Sync with DOM and localStorage
+    // Remove dark class on mount and keep it removed
     React.useLayoutEffect(() => {
         const root = window.document.documentElement;
-        // "light" is default (no class), "dark" adds class
-        if (theme === "dark") {
-            root.classList.add("dark");
-        } else {
-            root.classList.remove("dark");
-        }
+        root.classList.remove("dark");
+        localStorage.setItem("theme", "light");
+    }, []);
 
-        // Persist
-        localStorage.setItem("theme", theme);
-    }, [theme]);
-
-    // 3. Toggle handler
-    const toggleTheme = () => {
-        setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-    };
+    const toggleTheme = () => { }; // no-op
 
     return (
         <ThemeContext.Provider value={{ theme, toggleTheme }}>
@@ -47,7 +25,6 @@ export function ThemeProvider({ children }) {
     );
 }
 
-// Hook for easy consumption
 export const useTheme = () => {
     const context = React.useContext(ThemeContext);
     if (!context) {

@@ -9,6 +9,7 @@ export function Sidebar() {
 
     // Define role-specific navigation links
     const adminLinks = [
+        { to: "/admin/dashboard", label: "Dashboard", icon: "dashboard" },
         { to: "/admin/users", label: "Quản lý người dùng", icon: "group" },
         { to: "/admin/logs", label: "Theo dõi nhật ký", icon: "history" },
     ];
@@ -69,7 +70,7 @@ export function Sidebar() {
                 >
                     <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
                     <span className="font-bold text-xl tracking-tight">
-                        <span className="text-foreground">DataLabel</span><span className="text-primary">Core</span>
+                        <span className="text-foreground">Data</span><span className="text-primary">Label</span>
                     </span>
                 </div>
             </div>
