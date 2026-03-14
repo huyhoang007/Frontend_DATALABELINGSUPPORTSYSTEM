@@ -21,7 +21,7 @@ const DONE_KEY = (assignmentId, itemId) =>
  * - Undo/Redo via useUndoRedo
  * - localStorage doneFlag per item
  */
-export function useAnnotations({ assignmentId, addToast }) {
+export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
   const [annotations, setAnnotations] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const currentItemIdRef = useRef(null);
@@ -77,10 +77,19 @@ export function useAnnotations({ assignmentId, addToast }) {
           }
           return;
         }
-        await annotationApi.saveAnnotations(assignmentId, {
-          itemId: Number(itemId),
-          annotations: rows,
-        });
+        const isRejected = assignmentStatus?.toUpperCase() === "REJECTED";
+        if (!isRejected) {
+          await annotationApi.saveAnnotations(assignmentId, {
+            itemId: Number(itemId),
+            annotations: rows,
+          });
+        } else {
+          // REJECTED → use fix endpoint
+          await annotationApi.fixRejectedAnnotations(assignmentId, {
+            itemId: Number(itemId),
+            annotations: rows,
+          });
+        }
         if (import.meta.env.DEV) {
           console.log("[ANNO] saved", rows.length, "rows for item", itemId);
         }
@@ -97,7 +106,7 @@ export function useAnnotations({ assignmentId, addToast }) {
         }
       }
     },
-    [assignmentId, addToast],
+    [assignmentId, assignmentStatus, addToast],
   );
 
   // ── Debounced Save ──
@@ -190,6 +199,16 @@ export function useAnnotations({ assignmentId, addToast }) {
   // ── Delete annotation ──
   const deleteAnnotation = useCallback(
     (groupKey) => {
+      const target = latestAnnotationsRef.current.find(
+        (g) => g.groupKey === groupKey,
+      );
+      if (target?.reviewStatus === "APPROVED") {
+        addToast?.({
+          type: "warning",
+          message: "Annotation đã được duyệt, không thể xóa",
+        });
+        return;
+      }
       setAnnotations((prev) => {
         history.push(prev);
         const next = prev.filter((g) => g.groupKey !== groupKey);
@@ -209,10 +228,43 @@ export function useAnnotations({ assignmentId, addToast }) {
   // ── Update geometry ──
   const updateGeometry = useCallback(
     (groupKey, newGeom) => {
+      const target = latestAnnotationsRef.current.find(
+        (g) => g.groupKey === groupKey,
+      );
+      if (target?.reviewStatus === "APPROVED") return;
       setAnnotations((prev) => {
         history.push(prev);
         const next = prev.map((g) =>
           g.groupKey === groupKey ? { ...g, geometry: newGeom } : g,
+        );
+        debouncedSave(next);
+        return next;
+      });
+    },
+    [history, debouncedSave],
+  );
+
+  // ── Update labels (relabel) ──
+  const updateLabels = useCallback(
+    (groupKey, labelIds, allLabels) => {
+      const target = latestAnnotationsRef.current.find(
+        (g) => g.groupKey === groupKey,
+      );
+      if (target?.reviewStatus === "APPROVED") return;
+      const labelNames = labelIds.map((id) => {
+        const l = allLabels.find((lb) => lb.id === id);
+        return l?.name || "Unknown";
+      });
+      const colorCodes = labelIds.map((id) => {
+        const l = allLabels.find((lb) => lb.id === id);
+        return l?.color || "#6b7280";
+      });
+      setAnnotations((prev) => {
+        history.push(prev);
+        const next = prev.map((g) =>
+          g.groupKey === groupKey
+            ? { ...g, labelIds: [...labelIds], labelNames, colorCodes }
+            : g,
         );
         debouncedSave(next);
         return next;
@@ -274,6 +326,7 @@ export function useAnnotations({ assignmentId, addToast }) {
     addAnnotation,
     deleteAnnotation,
     updateGeometry,
+    updateLabels,
     toggleHidden,
     saveNow,
     isDone,

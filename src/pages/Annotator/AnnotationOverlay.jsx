@@ -73,6 +73,7 @@ export default function AnnotationOverlay({
 
     const handleVertexMouseDown = React.useCallback((e, group, vertexIdx) => {
         if (activeTool !== "select") return;
+        if (group.reviewStatus === "APPROVED") return;
         e.stopPropagation();
         e.preventDefault();
         const rect = svgRef.current?.getBoundingClientRect();
@@ -88,6 +89,7 @@ export default function AnnotationOverlay({
 
     const handleWholeDragStart = React.useCallback((e, group) => {
         if (activeTool !== "select") return;
+        if (group.reviewStatus === "APPROVED") return;
         if (group.groupKey !== selectedGroupKey) return;
         e.stopPropagation();
         e.preventDefault();
@@ -193,16 +195,19 @@ export default function AnnotationOverlay({
     const renderShape = (group, isSelected, isDraft = false) => {
         const geom = group.geometry;
         const color = group.colorCodes?.[0] || "#6b7280";
+        const isLocked = group.reviewStatus === "APPROVED";
+        const isRejected = group.reviewStatus === "REJECTED";
+        const displayColor = isLocked ? "#22c55e" : isRejected ? "#ef4444" : color;
         const strokeW = isSelected ? 3 : 2;
-        const fillOpacity = isDraft ? 0.1 : 0.08;
+        const fillOpacity = isDraft ? 0.1 : isLocked ? 0.15 : 0.08;
         const dashArray = isDraft ? "6 4" : "none";
 
         const sharedProps = {
-            stroke: color,
+            stroke: displayColor,
             strokeWidth: strokeW,
-            fill: `${color}${Math.round(fillOpacity * 255).toString(16).padStart(2, "0")}`,
+            fill: `${displayColor}${Math.round(fillOpacity * 255).toString(16).padStart(2, "0")}`,
             strokeDasharray: dashArray,
-            style: { cursor: activeTool === "select" ? "pointer" : "crosshair" },
+            style: { cursor: isLocked ? "not-allowed" : activeTool === "select" ? "pointer" : "crosshair" },
         };
 
         // ── BBOX ──
@@ -221,7 +226,7 @@ export default function AnnotationOverlay({
                         }}
                     />
                     {/* Corner handles for selected bbox */}
-                    {isSelected && activeTool === "select" && !readOnly && (
+                    {isSelected && activeTool === "select" && !readOnly && !isLocked && (
                         <>
                             {[[geom.x, geom.y], [geom.x + geom.w, geom.y], [geom.x, geom.y + geom.h], [geom.x + geom.w, geom.y + geom.h]].map(([cx, cy], i) => (
                                 <circle key={i} cx={px(cx, "x")} cy={px(cy, "y")} r={5}
@@ -248,7 +253,7 @@ export default function AnnotationOverlay({
                             if (isSelected) handleWholeDragStart(e, group);
                         }}
                     />
-                    {isSelected && activeTool === "select" && !readOnly && geom.points.map((p, i) => (
+                    {isSelected && activeTool === "select" && !readOnly && !isLocked && geom.points.map((p, i) => (
                         <circle key={i} cx={px(p.x, "x")} cy={px(p.y, "y")} r={5}
                             fill="white" stroke={color} strokeWidth={2}
                             style={{ cursor: "move" }}
@@ -278,7 +283,7 @@ export default function AnnotationOverlay({
                         }}
                     />
                     {/* Always show vertex dots for polylines */}
-                    {!readOnly && geom.points.map((p, i) => (
+                    {!readOnly && !isLocked && geom.points.map((p, i) => (
                         <circle key={i} cx={px(p.x, "x")} cy={px(p.y, "y")} r={isSelected ? 6 : 4}
                             fill={color} stroke="white" strokeWidth={1.5}
                             style={{ cursor: activeTool === "select" ? "move" : "crosshair" }}
