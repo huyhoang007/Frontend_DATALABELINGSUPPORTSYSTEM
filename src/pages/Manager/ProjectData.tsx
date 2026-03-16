@@ -31,6 +31,7 @@ export default function ProjectData() {
 
     const [batchName, setBatchName] = useState("");
     const [files, setFiles] = useState<File[]>([]);
+    const [uploadMode, setUploadMode] = useState<"files" | "folder">("files");
     const [datasets, setDatasets] = useState<any[]>([]);
     const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
     const [error, setError] = useState("");
@@ -68,7 +69,7 @@ export default function ProjectData() {
         return null;
     };
 
-    const handleFiles = (newFiles: FileList) => {
+    const handleFiles = (newFiles: FileList | File[]) => {
         const arr = Array.from(newFiles);
         const errors: string[] = [];
         const valid: File[] = [];
@@ -92,6 +93,50 @@ export default function ProjectData() {
         e.preventDefault();
         setDragActive(false);
         if (e.dataTransfer.files?.length) handleFiles(e.dataTransfer.files);
+    };
+
+    const readAllFilesFromEntry = async (entry: any): Promise<File[]> => {
+        if (entry.isFile) {
+            return new Promise((resolve) => entry.file((f: File) => resolve([f])));
+        }
+        if (entry.isDirectory) {
+            const reader = entry.createReader();
+            const allFiles: File[] = [];
+            await new Promise<void>((resolve) => {
+                const readBatch = () => {
+                    reader.readEntries(async (entries: any[]) => {
+                        if (!entries.length) { resolve(); return; }
+                        const nested = await Promise.all(entries.map(readAllFilesFromEntry));
+                        allFiles.push(...nested.flat());
+                        readBatch();
+                    });
+                };
+                readBatch();
+            });
+            return allFiles;
+        }
+        return [];
+    };
+
+    const handleFolderDrop = async (e: React.DragEvent) => {
+        e.preventDefault();
+        setDragActive(false);
+        if (!e.dataTransfer.items) return;
+        const items = Array.from(e.dataTransfer.items);
+        const allFiles: File[] = [];
+        let folderName = "";
+        for (const item of items) {
+            const entry = (item as any).webkitGetAsEntry?.();
+            if (entry) {
+                if (entry.isDirectory && !folderName) folderName = entry.name;
+                const entryFiles = await readAllFilesFromEntry(entry);
+                allFiles.push(...entryFiles.filter((f: File) => /\.(png|jpg|jpeg|gif|bmp|webp)$/i.test(f.name)));
+            }
+        }
+        if (allFiles.length > 0) {
+            handleFiles(allFiles);
+            if (!batchName.trim() && folderName) setBatchName(folderName);
+        }
     };
 
     const removeFile = (idx: number) => setFiles((prev) => prev.filter((_, i) => i !== idx));
@@ -180,28 +225,97 @@ export default function ProjectData() {
                     <Input placeholder="VD: Human_Images_v1" value={batchName} onChange={(e: any) => setBatchName(e.target.value)} maxLength={100} />
                 </div>
 
+                {/* Upload Mode Toggle */}
+                <div className="flex gap-2">
+                    {(["files", "folder"] as const).map((mode) => (
+                        <button
+                            key={mode}
+                            type="button"
+                            onClick={() => { setUploadMode(mode); setFiles([]); }}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold border transition-colors ${
+                                uploadMode === mode
+                                    ? "border-primary bg-primary/10 text-primary"
+                                    : "border-border bg-background text-muted-foreground hover:border-muted-foreground"
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-base">
+                                {mode === "files" ? "insert_drive_file" : "folder_open"}
+                            </span>
+                            {mode === "files" ? "Chọn file" : "Chọn thư mục"}
+                        </button>
+                    ))}
+                </div>
+
                 {/* Dropzone */}
                 <div
-                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${dragActive ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}
+                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
+                        dragActive ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"
+                    }`}
                     onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                     onDragLeave={() => setDragActive(false)}
-                    onDrop={handleDrop}
-                    onClick={() => document.getElementById("file-input-data")?.click()}
+                    onDrop={uploadMode === "folder" ? handleFolderDrop : handleDrop}
+                    onClick={() => document.getElementById(uploadMode === "folder" ? "folder-input-data" : "file-input-data")?.click()}
                 >
-                    <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2 block">cloud_upload</span>
-                    <p className="text-sm text-muted-foreground">
-                        Kéo thả file vào đây hoặc <span className="text-primary font-medium">chọn file</span>
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">PNG, JPG, PDF, CSV, ZIP — tối đa 10 MB/file, 100 MB tổng</p>
+                    <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2 block">
+                        {uploadMode === "folder" ? "folder_open" : "cloud_upload"}
+                    </span>
+                    {uploadMode === "folder" ? (
+                        <>
+                            <p className="text-sm text-muted-foreground">
+                                Kéo thả <strong className="text-foreground">thư mục</strong> vào đây hoặc{" "}
+                                <span className="text-primary font-medium">chọn thư mục</span>
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Toàn bộ ảnh (PNG, JPG, JPEG) trong thư mục sẽ được tải lên
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <p className="text-sm text-muted-foreground">
+                                Kéo thả file vào đây hoặc <span className="text-primary font-medium">chọn file</span>
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">PNG, JPG, PDF, CSV, ZIP — tối đa 10 MB/file, 100 MB tổng</p>
+                        </>
+                    )}
                     <input id="file-input-data" type="file" multiple accept={ACCEPTED_EXTS.join(",")} className="hidden"
                         onChange={(e) => { if (e.target.files?.length) handleFiles(e.target.files); (e.target as any).value = ""; }} />
+                    <input
+                        id="folder-input-data"
+                        type="file"
+                        {...{ webkitdirectory: "", mozdirectory: "" } as any}
+                        multiple
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                            if (e.target.files?.length) {
+                                const imageFiles = Array.from(e.target.files).filter((f) =>
+                                    /\.(png|jpg|jpeg|gif|bmp|webp)$/i.test(f.name)
+                                );
+                                if (imageFiles.length > 0) {
+                                    handleFiles(imageFiles);
+                                    if (!batchName.trim()) {
+                                        const rel = (imageFiles[0] as any).webkitRelativePath as string;
+                                        if (rel) setBatchName(rel.split("/")[0]);
+                                    }
+                                }
+                            }
+                            (e.target as any).value = "";
+                        }}
+                    />
                 </div>
 
                 {/* File list */}
                 {files.length > 0 && (
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-foreground">{files.length} file đã chọn</p>
+                            <p className="text-sm font-medium text-foreground">
+                                {uploadMode === "folder" ? (
+                                    <span className="flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-base text-primary">folder</span>
+                                        {files.length} ảnh từ thư mục{batchName ? ` "​${batchName}"` : ""}
+                                    </span>
+                                ) : `${files.length} file đã chọn`}
+                            </p>
                             <p className="text-xs text-muted-foreground">Tổng: {formatSize(totalSize)}{totalSize > MAX_REQUEST_SIZE && <span className="text-destructive ml-1">(vượt giới hạn!)</span>}</p>
                         </div>
                         <div className="max-h-40 overflow-auto space-y-1">
