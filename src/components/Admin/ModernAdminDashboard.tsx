@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import ModernAdminLayout from '../Layout/ModernAdminLayout';
+import ModernAdminLayout from '../layout/ModernAdminLayout';
 import ModernDashboardPage from '../../pages/Modern/ModernDashboardPage';
 import ModernUsersPage from '../../pages/Modern/ModernUsersPage';
 import ModernProjectsPage from '../../pages/Modern/ModernProjectsPage';
@@ -8,6 +8,7 @@ import ModernLabelsPage from '../../pages/Modern/ModernLabelsPage';
 import ModernReviewingPage from '../../pages/Modern/ModernReviewingPage';
 import ModernPoliciesPage from '../../pages/Modern/ModernPoliciesPage';
 import ModernAuditPage from '../../pages/Modern/ModernAuditPage';
+import ModernSettingsPage from '../../pages/Modern/ModernSettingsPage';
 
 interface ModernAdminDashboardProps {
   user: any;
@@ -35,6 +36,8 @@ const ModernAdminDashboard: React.FC<ModernAdminDashboardProps> = ({ user, onLog
         return <ModernPoliciesPage />;
       case 'audit':
         return <ModernAuditPage />;
+      case 'settings':
+        return <ModernSettingsPage />;
       default:
         return <ModernDashboardPage />;
     }

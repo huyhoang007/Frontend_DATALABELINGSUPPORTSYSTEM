@@ -1,6 +1,4 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Box, Typography, Button, Card, CardContent } from '@mui/material';
-import { Error as ErrorIcon } from '@mui/icons-material';
 
 interface Props {
   children: ReactNode;
@@ -31,45 +29,51 @@ class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '100vh',
-            backgroundColor: '#f5f5f5',
-          }}
-        >
-          <Card sx={{ maxWidth: 500, width: '100%', mx: 2 }}>
-            <CardContent sx={{ p: 4, textAlign: 'center' }}>
-              <ErrorIcon sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
-              
-              <Typography variant="h4" component="h1" gutterBottom color="error">
-                Oops! Có lỗi xảy ra
-              </Typography>
-              
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                Ứng dụng gặp lỗi không mong muốn. Vui lòng thử lại hoặc liên hệ hỗ trợ.
-              </Typography>
+        <div style={{
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+          minHeight: '100vh', backgroundColor: '#f5f5f5',
+        }}>
+          <div style={{
+            maxWidth: 500, width: '100%', margin: '0 16px',
+            background: '#fff', borderRadius: 12,
+            boxShadow: '0 4px 24px rgba(0,0,0,0.1)',
+            padding: '40px 32px', textAlign: 'center',
+          }}>
+            {/* Error icon */}
+            <div style={{ fontSize: 56, marginBottom: 16 }}>⚠️</div>
 
-              {process.env.NODE_ENV === 'development' && this.state.error && (
-                <Box sx={{ mb: 3, p: 2, backgroundColor: '#f5f5f5', borderRadius: 1 }}>
-                  <Typography variant="body2" color="error" sx={{ fontFamily: 'monospace' }}>
-                    {this.state.error.message}
-                  </Typography>
-                </Box>
-              )}
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#dc2626', marginBottom: 12 }}>
+              Oops! Có lỗi xảy ra
+            </h1>
 
-              <Button
-                variant="contained"
-                onClick={this.handleReload}
-                size="large"
-              >
-                Tải lại trang
-              </Button>
-            </CardContent>
-          </Card>
-        </Box>
+            <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 24, lineHeight: 1.6 }}>
+              Ứng dụng gặp lỗi không mong muốn. Vui lòng thử lại hoặc liên hệ hỗ trợ.
+            </p>
+
+            {(import.meta as any).env?.DEV && this.state.error && (
+              <div style={{
+                marginBottom: 24, padding: '12px 16px',
+                backgroundColor: '#fef2f2', borderRadius: 8,
+                border: '1px solid #fecaca', textAlign: 'left',
+              }}>
+                <code style={{ fontSize: 12, color: '#dc2626', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                  {this.state.error.message}
+                </code>
+              </div>
+            )}
+
+            <button
+              onClick={this.handleReload}
+              style={{
+                padding: '10px 28px', background: '#2563eb', color: '#fff',
+                border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Tải lại trang
+            </button>
+          </div>
+        </div>
       );
     }
 

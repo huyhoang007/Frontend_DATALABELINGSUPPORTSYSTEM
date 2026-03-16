@@ -1,110 +1,89 @@
-import React from 'react';
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Box,
-  IconButton,
-  Menu,
-  MenuItem,
-} from '@mui/material';
-import { AccountCircle, ExitToApp } from '@mui/icons-material';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Navbar: React.FC = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-
-  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
-    handleClose();
+    setMenuOpen(false);
   };
 
-  const handleProfile = () => {
-    navigate('/profile');
-    handleClose();
-  };
+  const roleName: string = user?.role
+    ? (typeof user.role === 'object' ? (user.role as any).roleName ?? '' : String(user.role))
+    : '';
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: '#1976d2' }}>
-      <Toolbar>
-        <Typography 
-          variant="h6" 
-          component="div" 
-          sx={{ flexGrow: 1, cursor: 'pointer' }}
-          onClick={() => navigate('/')}
-        >
-          Data Labeling Support System
-        </Typography>
+    <nav style={{
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1100,
+      height: 60, backgroundColor: '#1976d2',
+      display: 'flex', alignItems: 'center', padding: '0 16px',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+    }}>
+      <span
+        style={{ flex: 1, color: '#fff', fontWeight: 600, fontSize: 18, cursor: 'pointer' }}
+        onClick={() => navigate('/')}
+      >
+        Data Labeling Support System
+      </span>
 
-        {isAuthenticated ? (
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography variant="body2" sx={{ mr: 2 }}>
-              Xin chào, {user?.username} ({user?.role.roleName})
-            </Typography>
-            <IconButton
-              size="large"
-              aria-label="account of current user"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              onClick={handleMenu}
-              color="inherit"
-            >
-              <AccountCircle />
-            </IconButton>
-            <Menu
-              id="menu-appbar"
-              anchorEl={anchorEl}
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-            >
-              <MenuItem onClick={handleProfile}>Thông tin cá nhân</MenuItem>
-              <MenuItem onClick={handleLogout}>
-                <ExitToApp sx={{ mr: 1 }} />
-                Đăng xuất
-              </MenuItem>
-            </Menu>
-          </Box>
-        ) : (
-          <Box>
-            <Button 
-              color="inherit" 
-              onClick={() => navigate('/login')}
-              sx={{ mr: 1 }}
-            >
-              Đăng nhập
-            </Button>
-            <Button 
-              color="inherit" 
-              onClick={() => navigate('/register')}
-            >
-              Đăng ký
-            </Button>
-          </Box>
-        )}
-      </Toolbar>
-    </AppBar>
+      {isAuthenticated ? (
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            style={{
+              background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff',
+              padding: '6px 14px', borderRadius: 6, cursor: 'pointer', fontSize: 14,
+            }}
+          >
+            {user?.username} {roleName ? `(${roleName})` : ''} ▾
+          </button>
+          {menuOpen && (
+            <div style={{
+              position: 'absolute', right: 0, top: '110%',
+              background: '#fff', borderRadius: 8, minWidth: 160,
+              boxShadow: '0 4px 16px rgba(0,0,0,0.15)', overflow: 'hidden',
+            }}>
+              <button
+                onClick={handleLogout}
+                style={{
+                  width: '100%', padding: '10px 16px', background: 'none',
+                  border: 'none', textAlign: 'left', cursor: 'pointer',
+                  fontSize: 14, color: '#dc2626',
+                }}
+              >
+                🚪 Đăng xuất
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => navigate('/login')}
+            style={{
+              background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff',
+              padding: '6px 14px', borderRadius: 6, cursor: 'pointer',
+            }}
+          >
+            Đăng nhập
+          </button>
+          <button
+            onClick={() => navigate('/register')}
+            style={{
+              background: '#fff', border: 'none', color: '#1976d2',
+              padding: '6px 14px', borderRadius: 6, cursor: 'pointer', fontWeight: 600,
+            }}
+          >
+            Đăng ký
+          </button>
+        </div>
+      )}
+    </nav>
   );
 };
 
