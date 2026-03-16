@@ -7,7 +7,7 @@ import { cn } from "../../utils/cn";
 // - row: body size, hover enabled (subtle_bg, optional_left_border_accent)
 // - dense: true
 
-export function Table({ children, className }) {
+export function Table({ children, className = '' }) {
     return (
         <div className={cn("w-full overflow-auto", className)}>
             <table className="w-full caption-bottom text-sm text-left">
@@ -33,7 +33,7 @@ export function TableBody({ children }) {
     );
 }
 
-export function TableRow({ children, className, onClick }) {
+export function TableRow({ children, className = '', onClick = undefined }) {
     return (
         <tr
             className={cn(
@@ -48,7 +48,7 @@ export function TableRow({ children, className, onClick }) {
     );
 }
 
-export function TableHead({ children, className }) {
+export function TableHead({ children, className = '' }) {
     return (
         <th className={cn(
             "h-10 px-4 text-left align-middle font-semibold text-[10px] uppercase tracking-wider text-muted-foreground select-none",
@@ -59,7 +59,7 @@ export function TableHead({ children, className }) {
     );
 }
 
-export function TableCell({ children, className }) {
+export function TableCell({ children, className = '' }) {
     return (
         <td className={cn(
             "px-4 py-3 align-middle text-sm text-foreground",

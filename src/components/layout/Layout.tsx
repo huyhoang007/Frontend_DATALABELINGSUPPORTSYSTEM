@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { Box, IconButton } from '@mui/material';
-import { Menu as MenuIcon } from '@mui/icons-material';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import { useAuth } from '../../context/AuthContext';
@@ -13,52 +11,35 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isAuthenticated } = useAuth();
 
-  const handleSidebarToggle = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Navbar />
-      
-      <Box sx={{ display: 'flex', flex: 1 }}>
+
+      <div style={{ display: 'flex', flex: 1, marginTop: 60 }}>
         {isAuthenticated && (
           <>
-            <IconButton
-              color="inherit"
+            <button
               aria-label="open drawer"
-              onClick={handleSidebarToggle}
-              sx={{
-                position: 'fixed',
-                top: 70,
-                left: 10,
-                zIndex: 1200,
-                backgroundColor: 'primary.main',
-                color: 'white',
-                '&:hover': {
-                  backgroundColor: 'primary.dark',
-                },
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              style={{
+                position: 'fixed', top: 70, left: 10, zIndex: 1200,
+                width: 36, height: 36, borderRadius: 8,
+                backgroundColor: '#1976d2', color: '#fff',
+                border: 'none', cursor: 'pointer', fontSize: 18,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
-              <MenuIcon />
-            </IconButton>
-            
+              ☰
+            </button>
             <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           </>
         )}
-        
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            p: 3,
-            marginTop: isAuthenticated ? '60px' : '0',
-          }}
-        >
+
+        <main style={{ flexGrow: 1, padding: 24 }}>
           {children}
-        </Box>
-      </Box>
-    </Box>
+        </main>
+      </div>
+    </div>
   );
 };
 
