@@ -1,4 +1,4 @@
-﻿﻿import * as React from "react";
+﻿﻿﻿﻿import * as React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Workspace3Column } from "../../components/layout/WorkspaceLayout";
 import { Button } from "../../components/ui/Button";
@@ -14,6 +14,8 @@ import AnnotationOverlay from "./AnnotationOverlay";
 import LabelSelectModal from "./LabelSelectModal";
 import AnnotationList from "./AnnotationList";
 import LabelSummaryPanel from "../../components/LabelSummaryPanel";
+import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
+import ShortcutHelpModal from "./ShortcutHelpModal";
 
 /* â”€â”€ Helpers â”€â”€ */
 function resolveImagePath(fileUrl) {
@@ -112,6 +114,7 @@ export default function Workspace() {
     const [relabelGroupKey, setRelabelGroupKey] = React.useState(null);
     const [zoom, setZoom] = React.useState(100);
     const [rightTab, setRightTab] = React.useState("annotations"); // "annotations" | "summary"
+    const [showShortcuts, setShowShortcuts] = React.useState(false);
 
     React.useEffect(() => {
         if (isReadOnly && activeTool !== "select") {
@@ -457,6 +460,22 @@ export default function Workspace() {
     };
 
     /* â”€â”€ Mark as Done â”€â”€ */
+    /* ── Keyboard shortcuts ── */
+    useKeyboardShortcuts({
+        isReadOnly,
+        activeTool,
+        setActiveTool,
+        selectedGroupKey,
+        setSelectedGroupKey,
+        deleteAnnotation: anno.deleteAnnotation,
+        toggleHidden: anno.toggleHidden,
+        goToNext: () => handleNavigate("next"),
+        goToPrev: () => handleNavigate("prev"),
+        setZoom,
+        onSubmit: handleSubmit,
+        modalOpen: !!pendingShape || !!relabelGroupKey || showShortcuts,
+    });
+
     const handleMarkDone = () => {
         if (!currentItem || isReadOnly) return;
         if (anno.isDone(currentItem.itemId)) {
@@ -617,6 +636,14 @@ export default function Workspace() {
                             <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add</span>
                         </button>
                     </div>
+
+                    {/* Shortcut help button */}
+                    <button
+                        onClick={() => setShowShortcuts(true)}
+                        title="Phím tắt (?)"
+                        className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition-colors mr-1"
+                        style={{ color: "#64748b", fontSize: 13, fontWeight: 700 }}
+                    >?</button>
 
                     {/* Action buttons */}
                     <div className="flex items-center gap-2">
@@ -893,6 +920,8 @@ export default function Workspace() {
                 </div>
             </div>
 
+            {/* Shortcut help modal */}
+            {showShortcuts && <ShortcutHelpModal onClose={() => setShowShortcuts(false)} />}
         </>
     );
 }
