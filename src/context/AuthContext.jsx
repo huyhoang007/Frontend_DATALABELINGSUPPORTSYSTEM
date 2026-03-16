@@ -3,7 +3,7 @@ import { authApi } from "../api/authApi";
 
 const AuthContext = React.createContext(null);
 
-const SESSION_DURATION = 60 * 1000; // 1 phút (ms)
+const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 giờ (khớp với JWT expiration của backend)
 const SESSION_KEY = "sessionExpiry";
 
 export function AuthProvider({ children }) {

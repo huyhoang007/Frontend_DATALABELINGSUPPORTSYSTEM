@@ -28,6 +28,7 @@ const T = {
 
 const STATUS_STYLES = {
   SUBMITTED: { bg: T.purpleBg, text: T.purple, dot: T.purple },
+  RE_SUBMITTED: { bg: "#FFF0E6", text: "#BF5700", dot: "#E07000" },
   APPROVED: { bg: T.greenBg, text: T.green, dot: T.green },
   REJECTED: { bg: T.redBg, text: T.red, dot: T.red },
   PENDING: { bg: T.amberBg, text: T.amber, dot: "#FF8B00" },
@@ -62,9 +63,9 @@ export default function ReviewQueue() {
         return () => { cancelled = true; };
     }, []);
 
-    // Filter: show only SUBMITTED by default (reviewable), also search
+    // Filter: show reviewable assignments (SUBMITTED, RE_SUBMITTED) plus search
     const reviewableAssignments = React.useMemo(() => {
-        let list = assignments.filter(a => a.status === "SUBMITTED" || a.status === "REJECTED");
+        let list = assignments.filter(a => a.status === "SUBMITTED" || a.status === "RE_SUBMITTED" || a.status === "REJECTED");
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase();
             list = list.filter(a =>
@@ -80,7 +81,8 @@ export default function ReviewQueue() {
     };
 
     // Stats
-    const pendingCount = assignments.filter(a => a.status === "SUBMITTED").length;
+    const pendingCount = assignments.filter(a => a.status === "SUBMITTED" || a.status === "RE_SUBMITTED").length;
+    const resubmittedCount = assignments.filter(a => a.status === "RE_SUBMITTED").length;
     const approvedCount = assignments.filter(a => a.status === "APPROVED").length;
     const rejectedCount = assignments.filter(a => a.status === "REJECTED").length;
 
@@ -129,6 +131,7 @@ export default function ReviewQueue() {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", marginBottom: "32px" }}>
                     {[
                         { label: "Chờ đánh giá", value: pendingCount, color: T.purple, bg: T.purpleBg },
+                        { label: "Nộp lại", value: resubmittedCount, color: "#BF5700", bg: "#FFF0E6" },
                         { label: "Đã chấp nhận", value: approvedCount, color: T.green, bg: T.greenBg },
                         { label: "Đã từ chối", value: rejectedCount, color: T.red, bg: T.redBg },
                         { label: "Tổng cộng", value: assignments.length, color: T.brand, bg: T.brandLight },
@@ -377,7 +380,10 @@ export default function ReviewQueue() {
                                                 display: "inline-block",
                                                 background: statusStyle.dot
                                             }} />
-                                            {status === "SUBMITTED" ? "CHỜ DUYỆT" : status === "REJECTED" ? "TỪ CHỐI" : status}
+                                            {status === "SUBMITTED" ? "CHờ DUYỆT" 
+                                             : status === "RE_SUBMITTED" ? "NỘP LẠI ▲" 
+                                             : status === "REJECTED" ? "TỪ CHỐI" 
+                                             : status}
                                         </span>
 
                                         <span style={{

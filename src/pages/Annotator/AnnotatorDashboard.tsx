@@ -28,13 +28,14 @@ const T = {
 };
 
 /* ── Status tabs matching BE statuses ── */
-const TABS = ["ALL", "PENDING", "IN_PROGRESS", "SUBMITTED", "APPROVED", "REJECTED", "COMPLETED"];
+const TABS = ["ALL", "PENDING", "IN_PROGRESS", "SUBMITTED", "RE_SUBMITTED", "APPROVED", "REJECTED", "COMPLETED"];
 
 /* ── Status badge styles ── */
 const STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> = {
   PENDING: { bg: T.amberBg, text: T.amber, dot: "#FF8B00" },
   IN_PROGRESS: { bg: T.brandLight, text: T.brand, dot: T.brand },
   SUBMITTED: { bg: T.purpleBg, text: T.purple, dot: T.purple },
+  RE_SUBMITTED: { bg: "#FFF3E0", text: "#BF5700", dot: "#BF5700" },
   APPROVED: { bg: T.greenBg, text: T.green, dot: T.green },
   REJECTED: { bg: T.redBg, text: T.red, dot: T.red },
   COMPLETED: { bg: T.greenBg, text: T.green, dot: T.green },
@@ -45,6 +46,7 @@ const STATUS_VI: Record<string, string> = {
   PENDING: "CHỜ XỬ LÝ",
   IN_PROGRESS: "ĐANG LÀM",
   SUBMITTED: "ĐÃ NỘP",
+  RE_SUBMITTED: "NỘP LẠI",
   APPROVED: "ĐÃ DUYỆT",
   REJECTED: "TỪ CHỐI",
   COMPLETED: "HOÀN THÀNH",

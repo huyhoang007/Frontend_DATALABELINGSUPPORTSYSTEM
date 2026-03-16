@@ -29,6 +29,7 @@ export default function UploadData() {
     const [selectedProjectId, setSelectedProjectId] = useState("");
     const [batchName, setBatchName] = useState("");
     const [files, setFiles] = useState<File[]>([]);
+    const [uploadMode, setUploadMode] = useState<"files" | "folder">("files");
     const [datasets, setDatasets] = useState<any[]>([]);
     const [status, setStatus] = useState("idle"); // idle | uploading | success | error
     const [error, setError] = useState("");
@@ -70,15 +71,56 @@ export default function UploadData() {
     }, [selectedProjectId, loadDatasets]);
 
     // File handlers
-    const handleFiles = (newFiles: FileList) => {
+    const handleFiles = (newFiles: FileList | File[]) => {
         const fileArray = Array.from(newFiles);
         setFiles((prev) => [...prev, ...fileArray]);
     };
 
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    const readAllFilesFromEntry = async (entry: any): Promise<File[]> => {
+        if (entry.isFile) {
+            return new Promise((resolve) => entry.file((f: File) => resolve([f])));
+        }
+        if (entry.isDirectory) {
+            const reader = entry.createReader();
+            const allFiles: File[] = [];
+            await new Promise<void>((resolve) => {
+                const readBatch = () => {
+                    reader.readEntries(async (entries: any[]) => {
+                        if (!entries.length) { resolve(); return; }
+                        const nested = await Promise.all(entries.map(readAllFilesFromEntry));
+                        allFiles.push(...nested.flat());
+                        readBatch();
+                    });
+                };
+                readBatch();
+            });
+            return allFiles;
+        }
+        return [];
+    };
+
+    const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setDragActive(false);
-        if (e.dataTransfer.files?.length) handleFiles(e.dataTransfer.files);
+        if (uploadMode === "folder" && e.dataTransfer.items) {
+            const items = Array.from(e.dataTransfer.items);
+            const allFiles: File[] = [];
+            let folderName = "";
+            for (const item of items) {
+                const entry = (item as any).webkitGetAsEntry?.();
+                if (entry) {
+                    if (entry.isDirectory && !folderName) folderName = entry.name;
+                    const entryFiles = await readAllFilesFromEntry(entry);
+                    allFiles.push(...entryFiles.filter((f: File) => /\.(png|jpg|jpeg|gif|bmp|webp)$/i.test(f.name)));
+                }
+            }
+            if (allFiles.length > 0) {
+                handleFiles(allFiles);
+                if (!batchName.trim() && folderName) setBatchName(folderName);
+            }
+        } else if (e.dataTransfer.files?.length) {
+            handleFiles(e.dataTransfer.files);
+        }
     };
 
     const removeFile = (idx: number) => setFiles((prev) => prev.filter((_, i) => i !== idx));
@@ -219,6 +261,36 @@ export default function UploadData() {
                     </div>
                 </div>
 
+                {/* Upload Mode Toggle */}
+                <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+                    {(["files", "folder"] as const).map((mode) => (
+                        <button
+                            key={mode}
+                            onClick={() => { setUploadMode(mode); setFiles([]); }}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                padding: "7px 16px",
+                                fontSize: "12px",
+                                fontWeight: 600,
+                                borderRadius: "4px",
+                                border: `1px solid ${uploadMode === mode ? T.brand : T.border}`,
+                                background: uploadMode === mode ? T.brandLight : T.surface,
+                                color: uploadMode === mode ? T.brand : T.textMuted,
+                                cursor: "pointer",
+                                transition: "all .15s",
+                                fontFamily: "inherit"
+                            }}
+                        >
+                            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                                {mode === "files" ? "insert_drive_file" : "folder_open"}
+                            </span>
+                            {mode === "files" ? "Chọn file" : "Chọn thư mục"}
+                        </button>
+                    ))}
+                </div>
+
                 {/* Dropzone */}
                 <div
                     style={{
@@ -233,7 +305,7 @@ export default function UploadData() {
                     onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                     onDragLeave={() => setDragActive(false)}
                     onDrop={handleDrop}
-                    onClick={() => document.getElementById("file-input")?.click()}
+                    onClick={() => document.getElementById(uploadMode === "folder" ? "folder-input" : "file-input")?.click()}
                 >
                     <span className="material-symbols-outlined" style={{
                         fontSize: "48px",
@@ -241,14 +313,28 @@ export default function UploadData() {
                         marginBottom: "8px",
                         display: "block"
                     }}>
-                        cloud_upload
+                        {uploadMode === "folder" ? "folder_open" : "cloud_upload"}
                     </span>
-                    <p style={{ fontSize: "13px", color: T.textMuted }}>
-                        Kéo thả file vào đây hoặc <span style={{ color: T.brand, fontWeight: 600 }}>chọn file</span>
-                    </p>
-                    <p style={{ fontSize: "11px", color: T.textMuted, marginTop: "4px" }}>
-                        PNG, JPG, PDF, CSV, ZIP
-                    </p>
+                    {uploadMode === "folder" ? (
+                        <>
+                            <p style={{ fontSize: "13px", color: T.textMuted }}>
+                                Kéo thả <strong style={{ color: T.textPrimary }}>thư mục</strong> vào đây hoặc{" "}
+                                <span style={{ color: T.brand, fontWeight: 600 }}>chọn thư mục</span>
+                            </p>
+                            <p style={{ fontSize: "11px", color: T.textMuted, marginTop: "4px" }}>
+                                Toàn bộ ảnh (PNG, JPG, JPEG) trong thư mục sẽ được tải lên
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <p style={{ fontSize: "13px", color: T.textMuted }}>
+                                Kéo thả file vào đây hoặc <span style={{ color: T.brand, fontWeight: 600 }}>chọn file</span>
+                            </p>
+                            <p style={{ fontSize: "11px", color: T.textMuted, marginTop: "4px" }}>
+                                PNG, JPG, PDF, CSV, ZIP
+                            </p>
+                        </>
+                    )}
                     <input
                         id="file-input"
                         type="file"
@@ -257,13 +343,41 @@ export default function UploadData() {
                         style={{ display: "none" }}
                         onChange={(e) => { if (e.target.files?.length) handleFiles(e.target.files); e.target.value = ""; }}
                     />
+                    <input
+                        id="folder-input"
+                        type="file"
+                        {...{ webkitdirectory: "", mozdirectory: "" } as any}
+                        multiple
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={(e) => {
+                            if (e.target.files?.length) {
+                                const imageFiles = Array.from(e.target.files).filter((f) =>
+                                    /\.(png|jpg|jpeg|gif|bmp|webp)$/i.test(f.name)
+                                );
+                                if (imageFiles.length > 0) {
+                                    handleFiles(imageFiles);
+                                    if (!batchName.trim()) {
+                                        const rel = (imageFiles[0] as any).webkitRelativePath as string;
+                                        if (rel) setBatchName(rel.split("/")[0]);
+                                    }
+                                }
+                            }
+                            e.target.value = "";
+                        }}
+                    />
                 </div>
 
                 {/* File list */}
                 {files.length > 0 && (
                     <div style={{ marginTop: "24px" }}>
                         <p style={{ fontSize: "13px", fontWeight: 600, color: T.textPrimary, marginBottom: "8px" }}>
-                            {files.length} file đã chọn
+                            {uploadMode === "folder" ? (
+                                <>
+                                    <span className="material-symbols-outlined" style={{ fontSize: "16px", verticalAlign: "middle", marginRight: "4px", color: T.brand }}>folder</span>
+                                    {files.length} ảnh từ thư mục{batchName ? ` "${batchName}"` : ""}
+                                </>
+                            ) : `${files.length} file đã chọn`}
                         </p>
                         <div style={{ maxHeight: "160px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "4px" }}>
                             {files.map((f, i) => (

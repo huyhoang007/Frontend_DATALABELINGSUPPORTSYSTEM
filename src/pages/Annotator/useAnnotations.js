@@ -31,7 +31,24 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
   const isSavingRef = useRef(false);
   const pendingSnapshotRef = useRef(null);
   const latestAnnotationsRef = useRef(annotations);
+  const saveWaitersRef = useRef([]);
   latestAnnotationsRef.current = annotations;
+
+  const resolveSaveWaiters = useCallback(() => {
+    if (isSavingRef.current || pendingSnapshotRef.current) return;
+    const waiters = saveWaitersRef.current;
+    saveWaitersRef.current = [];
+    waiters.forEach((resolve) => resolve());
+  }, []);
+
+  const waitForAllSaves = useCallback(() => {
+    if (!isSavingRef.current && !pendingSnapshotRef.current) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve) => {
+      saveWaitersRef.current.push(resolve);
+    });
+  }, []);
 
   // ── Undo/Redo ──
   const handleUndo = useCallback(() => {
@@ -103,10 +120,12 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
           const pending = pendingSnapshotRef.current;
           pendingSnapshotRef.current = null;
           executeSave(pending);
+        } else {
+          resolveSaveWaiters();
         }
       }
     },
-    [assignmentId, assignmentStatus, addToast],
+    [assignmentId, assignmentStatus, addToast, resolveSaveWaiters],
   );
 
   // ── Debounced Save ──
@@ -124,7 +143,8 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
   const saveNow = useCallback(async () => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     await executeSave(latestAnnotationsRef.current);
-  }, [executeSave]);
+    await waitForAllSaves();
+  }, [executeSave, waitForAllSaves]);
 
   // ── Load annotations for an item ──
   const loadAnnotations = useCallback(
@@ -263,7 +283,15 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
         history.push(prev);
         const next = prev.map((g) =>
           g.groupKey === groupKey
-            ? { ...g, labelIds: [...labelIds], labelNames, colorCodes }
+            ? {
+                ...g,
+                labelIds: [...labelIds],
+                labelNames,
+                colorCodes,
+                // Xóa trạng thái rejected khi annotator đã thay thế label
+                reviewStatus: null,
+                policyName: null,
+              }
             : g,
         );
         debouncedSave(next);

@@ -56,6 +56,10 @@ apiClient.interceptors.request.use(
     }
 );
 
+// Session renewal constants (must match AuthContext.jsx)
+const SESSION_KEY = "sessionExpiry";
+const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 giờ
+
 // Response Interceptor: Handle 401, 403 and standardize errors
 apiClient.interceptors.response.use(
     (response) => {
@@ -66,6 +70,11 @@ apiClient.interceptors.response.use(
                 status: response.status,
                 data: response.data,
             });
+        }
+
+        // Renew session expiry on every successful API call
+        if (localStorage.getItem(SESSION_KEY)) {
+            localStorage.setItem(SESSION_KEY, String(Date.now() + SESSION_DURATION));
         }
 
         // Success response - return data directly
