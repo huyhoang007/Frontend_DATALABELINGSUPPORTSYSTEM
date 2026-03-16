@@ -26,7 +26,16 @@ const T = {
   redBg: "#FFEBE6",
 };
 
-const TABS = ["ALL", "PENDING", "IN_PROGRESS", "SUBMITTED", "RE_SUBMITTED", "APPROVED", "REJECTED", "COMPLETED"];
+const TABS = [
+  "ALL",
+  "PENDING",
+  "IN_PROGRESS",
+  "SUBMITTED",
+  "RE_SUBMITTED",
+  "APPROVED",
+  "REJECTED",
+  "COMPLETED",
+];
 
 const STATUS_STYLES = {
   PENDING: { bg: T.amberBg, text: T.amber, dot: "#FF8B00" },
@@ -66,7 +75,9 @@ export default function TaskList() {
 
     try {
       const data = await annotationApi.getMyAssignments();
-      const apiList = Array.isArray(data) ? data : (data?.content || data?.data || []);
+      const apiList = Array.isArray(data)
+        ? data
+        : data?.content || data?.data || [];
       setAssignments(apiList);
     } catch (err) {
       const status = err?.status;
@@ -88,7 +99,8 @@ export default function TaskList() {
 
   const filteredAssignments = useMemo(() => {
     return assignments.filter((a) => {
-      const matchesTab = activeTab === "ALL" || (a.status || "").toUpperCase() === activeTab;
+      const matchesTab =
+        activeTab === "ALL" || (a.status || "").toUpperCase() === activeTab;
       const q = search.toLowerCase();
       const matchesSearch =
         String(a.assignmentId || "").includes(q) ||
@@ -104,53 +116,88 @@ export default function TaskList() {
   };
 
   const activeCount = assignments.filter((a) =>
-    ["PENDING", "IN_PROGRESS", "REJECTED"].includes((a.status || "").toUpperCase())
+    ["PENDING", "IN_PROGRESS", "REJECTED"].includes(
+      (a.status || "").toUpperCase(),
+    ),
   ).length;
 
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif", color: T.textPrimary }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: T.bg,
+        fontFamily: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif",
+        color: T.textPrimary,
+      }}
+    >
       <div style={{ padding: "32px 40px", width: "100%" }}>
         {/* Header */}
-        <div style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "flex-end",
-          justifyContent: "space-between",
-          marginBottom: "32px",
-          paddingBottom: "24px",
-          borderBottom: `2px solid ${T.border}`,
-          gap: "16px",
-          flexWrap: "wrap"
-        }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "flex-end",
+            justifyContent: "space-between",
+            marginBottom: "32px",
+            paddingBottom: "24px",
+            borderBottom: `2px solid ${T.border}`,
+            gap: "16px",
+            flexWrap: "wrap",
+          }}
+        >
           <div>
-            <p style={{
-              fontSize: "11px",
-              fontWeight: 700,
-              color: T.textMuted,
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              marginBottom: "4px"
-            }}>
+            <p
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                color: T.textMuted,
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                marginBottom: "4px",
+              }}
+            >
               Danh sách nhiệm vụ
             </p>
-            <h1 style={{
-              fontSize: "28px",
-              fontWeight: 800,
-              color: T.textPrimary,
-              letterSpacing: "-0.02em",
-              marginBottom: "8px"
-            }}>
+            <h1
+              style={{
+                fontSize: "28px",
+                fontWeight: 800,
+                color: T.textPrimary,
+                letterSpacing: "-0.02em",
+                marginBottom: "8px",
+              }}
+            >
               Nhiệm vụ của tôi
             </h1>
             <p style={{ fontSize: "14px", color: T.textMuted }}>
-              Chào mừng trở lại, <span style={{ color: T.brand, fontWeight: 600 }}>{user?.displayName || user?.username || user?.name || "User"}</span>.
+              Chào mừng trở lại,{" "}
+              <span style={{ color: T.brand, fontWeight: 600 }}>
+                {user?.displayName || user?.username || user?.name || "User"}
+              </span>
+              .
               {!loading && (
-                <> Bạn có <span style={{ fontFamily: "monospace", color: T.textPrimary, fontWeight: 700 }}>{activeCount}</span> nhiệm vụ đang hoạt động.</>
+                <>
+                  {" "}
+                  Bạn có{" "}
+                  <span
+                    style={{
+                      fontFamily: "monospace",
+                      color: T.textPrimary,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {activeCount}
+                  </span>{" "}
+                  nhiệm vụ đang hoạt động.
+                </>
               )}
             </p>
           </div>
           <button
-            onClick={() => { logout(); navigate('/login'); }}
+            onClick={() => {
+              logout();
+              navigate("/login");
+            }}
             style={{
               display: "flex",
               alignItems: "center",
@@ -165,7 +212,7 @@ export default function TaskList() {
               borderRadius: "4px",
               cursor: "pointer",
               fontFamily: "inherit",
-              transition: "all .15s"
+              transition: "all .15s",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = T.redBg;
@@ -176,23 +223,40 @@ export default function TaskList() {
               e.currentTarget.style.borderColor = T.border;
             }}
           >
-            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>logout</span>
+            <span
+              className="material-symbols-outlined"
+              style={{ fontSize: "18px" }}
+            >
+              logout
+            </span>
             Đăng xuất
           </button>
         </div>
 
         {/* Controls */}
-        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: "16px", marginBottom: "24px", flexWrap: "wrap" }}>
-          {/* Status Tabs */}
-          <div style={{
-            display: "inline-flex",
-            padding: "4px",
-            background: T.surfaceHover,
-            borderRadius: "6px",
-            border: `1px solid ${T.border}`,
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "16px",
+            marginBottom: "24px",
             flexWrap: "wrap",
-            gap: "4px"
-          }}>
+          }}
+        >
+          {/* Status Tabs */}
+          <div
+            style={{
+              display: "inline-flex",
+              padding: "4px",
+              background: T.surfaceHover,
+              borderRadius: "6px",
+              border: `1px solid ${T.border}`,
+              flexWrap: "wrap",
+              gap: "4px",
+            }}
+          >
             {TABS.map((tab) => (
               <button
                 key={tab}
@@ -207,10 +271,14 @@ export default function TaskList() {
                   transition: "all .15s",
                   background: activeTab === tab ? T.surface : "transparent",
                   color: activeTab === tab ? T.brand : T.textMuted,
-                  border: activeTab === tab ? `1px solid ${T.brand}20` : "1px solid transparent",
+                  border:
+                    activeTab === tab
+                      ? `1px solid ${T.brand}20`
+                      : "1px solid transparent",
                   cursor: "pointer",
                   fontFamily: "inherit",
-                  boxShadow: activeTab === tab ? "0 1px 3px rgba(9,30,66,.08)" : "none"
+                  boxShadow:
+                    activeTab === tab ? "0 1px 3px rgba(9,30,66,.08)" : "none",
                 }}
                 onMouseEnter={(e) => {
                   if (activeTab !== tab) {
@@ -231,15 +299,24 @@ export default function TaskList() {
           </div>
 
           {/* Search */}
-          <div style={{ width: "100%", maxWidth: "320px", position: "relative" }}>
-            <div style={{
-              position: "absolute",
-              top: "50%",
-              left: "12px",
-              transform: "translateY(-50%)",
-              pointerEvents: "none"
-            }}>
-              <span className="material-symbols-outlined" style={{ fontSize: "18px", color: T.textMuted }}>search</span>
+          <div
+            style={{ width: "100%", maxWidth: "320px", position: "relative" }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "12px",
+                transform: "translateY(-50%)",
+                pointerEvents: "none",
+              }}
+            >
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: "18px", color: T.textMuted }}
+              >
+                search
+              </span>
             </div>
             <input
               type="text"
@@ -256,7 +333,7 @@ export default function TaskList() {
                 color: T.textPrimary,
                 fontFamily: "inherit",
                 outline: "none",
-                transition: "all .15s"
+                transition: "all .15s",
               }}
               placeholder="Tìm kiếm theo project, dataset..."
               value={search}
@@ -275,25 +352,56 @@ export default function TaskList() {
 
         {/* Loading */}
         {loading && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "64px 0" }}>
-            <span className="material-symbols-outlined" style={{ fontSize: "32px", color: T.textMuted, animation: "spin 1s linear infinite" }}>progress_activity</span>
-            <span style={{ marginLeft: "8px", color: T.textMuted, fontSize: "13px" }}>Đang tải...</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "64px 0",
+            }}
+          >
+            <span
+              className="material-symbols-outlined"
+              style={{
+                fontSize: "32px",
+                color: T.textMuted,
+                animation: "spin 1s linear infinite",
+              }}
+            >
+              progress_activity
+            </span>
+            <span
+              style={{
+                marginLeft: "8px",
+                color: T.textMuted,
+                fontSize: "13px",
+              }}
+            >
+              Đang tải...
+            </span>
           </div>
         )}
 
         {/* Error */}
         {error && (
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "12px 16px",
-            borderRadius: "6px",
-            background: T.redBg,
-            border: `1px solid ${T.red}40`,
-            marginBottom: "16px"
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: "18px", color: T.red }}>error</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "12px 16px",
+              borderRadius: "6px",
+              background: T.redBg,
+              border: `1px solid ${T.red}40`,
+              marginBottom: "16px",
+            }}
+          >
+            <span
+              className="material-symbols-outlined"
+              style={{ fontSize: "18px", color: T.red }}
+            >
+              error
+            </span>
             <p style={{ fontSize: "13px", color: T.red, flex: 1 }}>{error}</p>
             <button
               onClick={fetchAssignments}
@@ -304,7 +412,7 @@ export default function TaskList() {
                 background: "transparent",
                 border: "none",
                 cursor: "pointer",
-                fontFamily: "inherit"
+                fontFamily: "inherit",
               }}
             >
               Thử lại
@@ -314,32 +422,57 @@ export default function TaskList() {
 
         {/* Empty State */}
         {!loading && filteredAssignments.length === 0 && (
-          <div style={{
-            borderRadius: "6px",
-            border: `1px solid ${T.border}`,
-            background: T.surface,
-            overflow: "hidden",
-            boxShadow: "0 1px 3px rgba(9,30,66,.08)"
-          }}>
-            <div style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "600px",
-              width: "100%"
-            }}>
-              <span className="material-symbols-outlined" style={{ fontSize: "64px", color: T.textMuted + "40", marginBottom: "16px" }}>assignment</span>
-              <h4 style={{ fontSize: "20px", fontWeight: 700, color: T.textPrimary, marginBottom: "8px" }}>Chưa có nhiệm vụ nào</h4>
-              <p style={{
-                fontSize: "14px",
-                color: T.textMuted,
-                textAlign: "center",
-                maxWidth: "480px",
-                margin: "0 auto",
-                padding: "0 16px"
-              }}>
-                Manager sẽ phân công task cho bạn. Khi có task mới, bạn sẽ thấy tại đây.
+          <div
+            style={{
+              borderRadius: "6px",
+              border: `1px solid ${T.border}`,
+              background: T.surface,
+              overflow: "hidden",
+              boxShadow: "0 1px 3px rgba(9,30,66,.08)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "600px",
+                width: "100%",
+              }}
+            >
+              <span
+                className="material-symbols-outlined"
+                style={{
+                  fontSize: "64px",
+                  color: T.textMuted + "40",
+                  marginBottom: "16px",
+                }}
+              >
+                assignment
+              </span>
+              <h4
+                style={{
+                  fontSize: "20px",
+                  fontWeight: 700,
+                  color: T.textPrimary,
+                  marginBottom: "8px",
+                }}
+              >
+                Chưa có nhiệm vụ nào
+              </h4>
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: T.textMuted,
+                  textAlign: "center",
+                  maxWidth: "480px",
+                  margin: "0 auto",
+                  padding: "0 16px",
+                }}
+              >
+                Manager sẽ phân công task cho bạn. Khi có task mới, bạn sẽ thấy
+                tại đây.
               </p>
             </div>
           </div>
@@ -347,38 +480,117 @@ export default function TaskList() {
 
         {/* Task List Table with data */}
         {!loading && filteredAssignments.length > 0 && (
-          <div style={{
-            borderRadius: "6px",
-            border: `1px solid ${T.border}`,
-            background: T.surface,
-            overflow: "hidden",
-            boxShadow: "0 1px 3px rgba(9,30,66,.08)"
-          }}>
+          <div
+            style={{
+              borderRadius: "6px",
+              border: `1px solid ${T.border}`,
+              background: T.surface,
+              overflow: "hidden",
+              boxShadow: "0 1px 3px rgba(9,30,66,.08)",
+            }}
+          >
             {/* Table header */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "60px 2fr 1.5fr 1.2fr 1.5fr 1fr 100px",
-              padding: "12px 24px",
-              borderBottom: `1px solid ${T.border}`,
-              background: "#FAFBFC",
-              gap: "16px",
-              alignItems: "center"
-            }}>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>ID</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>DỰ ÁN</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>BỘ DỮ LIỆU</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>NGƯỜI ĐÁNH GIÁ</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>TIẾN ĐỘ</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>TRẠNG THÁI</p>
-              <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "right" }}>THAO TÁC</p>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "60px 2fr 1.5fr 1.2fr 1.5fr 1fr 100px",
+                padding: "12px 24px",
+                borderBottom: `1px solid ${T.border}`,
+                background: "#FAFBFC",
+                gap: "16px",
+                alignItems: "center",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  color: T.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                ID
+              </p>
+              <p
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  color: T.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                DỰ ÁN
+              </p>
+              <p
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  color: T.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                BỘ DỮ LIỆU
+              </p>
+              <p
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  color: T.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                NGƯỜI ĐÁNH GIÁ
+              </p>
+              <p
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  color: T.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                TIẾN ĐỘ
+              </p>
+              <p
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  color: T.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                TRẠNG THÁI
+              </p>
+              <p
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  color: T.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  textAlign: "right",
+                }}
+              >
+                THAO TÁC
+              </p>
             </div>
 
             {/* Table rows */}
             <div>
               {filteredAssignments.map((a, idx) => {
                 const status = (a.status || "PENDING").toUpperCase();
-                const statusStyle = STATUS_STYLES[status] || { bg: T.surfaceHover, text: T.textMuted, dot: T.textMuted };
-                
+                const statusStyle = STATUS_STYLES[status] || {
+                  bg: T.surfaceHover,
+                  text: T.textMuted,
+                  dot: T.textMuted,
+                };
+
                 return (
                   <div
                     key={a.assignmentId}
@@ -387,116 +599,151 @@ export default function TaskList() {
                     onClick={() => handleOpen(a)}
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "60px 2fr 1.5fr 1.2fr 1.5fr 1fr 100px",
+                      gridTemplateColumns:
+                        "60px 2fr 1.5fr 1.2fr 1.5fr 1fr 100px",
                       alignItems: "center",
                       padding: "16px 24px",
-                      background: hoveredRow === idx ? T.brandLight : (idx % 2 === 0 ? T.surface : "#FAFBFC"),
+                      background:
+                        hoveredRow === idx
+                          ? T.brandLight
+                          : idx % 2 === 0
+                            ? T.surface
+                            : "#FAFBFC",
                       borderBottom: `1px solid ${T.border}`,
                       cursor: "pointer",
                       transition: "all .15s",
-                      gap: "16px"
+                      gap: "16px",
                     }}
                   >
-                    <span style={{
-                      fontFamily: "monospace",
-                      fontSize: "12px",
-                      color: hoveredRow === idx ? T.textPrimary : T.textMuted,
-                      transition: "color .15s"
-                    }}>
+                    <span
+                      style={{
+                        fontFamily: "monospace",
+                        fontSize: "12px",
+                        color: hoveredRow === idx ? T.textPrimary : T.textMuted,
+                        transition: "color .15s",
+                      }}
+                    >
                       #{a.assignmentId}
                     </span>
 
-                    <span style={{
-                      fontSize: "13px",
-                      fontWeight: 700,
-                      color: hoveredRow === idx ? T.brand : T.textPrimary,
-                      transition: "color .15s",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis"
-                    }}>
+                    <span
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        color: hoveredRow === idx ? T.brand : T.textPrimary,
+                        transition: "color .15s",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
                       {a.projectName || "—"}
                     </span>
 
-                    <span style={{
-                      fontSize: "13px",
-                      color: T.textMuted,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis"
-                    }}>
+                    <span
+                      style={{
+                        fontSize: "13px",
+                        color: T.textMuted,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
                       {a.datasetName || "—"}
                     </span>
 
-                    <span style={{
-                      fontSize: "13px",
-                      color: T.textMuted,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis"
-                    }}>
+                    <span
+                      style={{
+                        fontSize: "13px",
+                        color: T.textMuted,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
                       {a.reviewerName || "—"}
                     </span>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <div style={{
-                        flex: 1,
-                        height: "6px",
-                        background: T.border,
-                        borderRadius: "99px",
-                        overflow: "hidden",
-                        minWidth: "100px"
-                      }}>
-                        <div style={{
-                          height: "100%",
-                          background: `linear-gradient(to right, ${T.brand}, ${T.brandHover})`,
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          flex: 1,
+                          height: "6px",
+                          background: T.border,
                           borderRadius: "99px",
-                          width: `${a.progress || 0}%`,
-                          transition: "width .5s ease"
-                        }} />
+                          overflow: "hidden",
+                          minWidth: "100px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            height: "100%",
+                            background: `linear-gradient(to right, ${T.brand}, ${T.brandHover})`,
+                            borderRadius: "99px",
+                            width: `${a.progress || 0}%`,
+                            transition: "width .5s ease",
+                          }}
+                        />
                       </div>
-                      <span style={{
-                        fontSize: "12px",
-                        fontWeight: 800,
-                        color: T.textPrimary,
-                        minWidth: "45px",
-                        textAlign: "right"
-                      }}>
+                      <span
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 800,
+                          color: T.textPrimary,
+                          minWidth: "45px",
+                          textAlign: "right",
+                        }}
+                      >
                         {a.progress || 0}%
                       </span>
                     </div>
 
-                    <span style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "4px",
-                      padding: "4px 10px",
-                      borderRadius: "4px",
-                      fontSize: "10px",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.06em",
-                      background: statusStyle.bg,
-                      color: statusStyle.text
-                    }}>
-                      <span style={{
-                        width: "6px",
-                        height: "6px",
-                        borderRadius: "50%",
-                        display: "inline-block",
-                        background: statusStyle.dot
-                      }} />
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        padding: "4px 10px",
+                        borderRadius: "4px",
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                        background: statusStyle.bg,
+                        color: statusStyle.text,
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: "6px",
+                          height: "6px",
+                          borderRadius: "50%",
+                          display: "inline-block",
+                          background: statusStyle.dot,
+                        }}
+                      />
                       {STATUS_VI[status] || status.replace("_", " ")}
                     </span>
 
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "flex-end",
-                      gap: "8px"
-                    }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: "8px",
+                      }}
+                    >
                       {["PENDING", "REJECTED"].includes(status) && (
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleOpen(a); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpen(a);
+                          }}
                           style={{
                             height: "32px",
                             padding: "0 16px",
@@ -508,17 +755,24 @@ export default function TaskList() {
                             borderRadius: "4px",
                             cursor: "pointer",
                             fontFamily: "inherit",
-                            transition: "all .15s"
+                            transition: "all .15s",
                           }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = T.brandHover}
-                          onMouseLeave={(e) => e.currentTarget.style.background = T.brand}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.background = T.brandHover)
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.background = T.brand)
+                          }
                         >
                           Bắt đầu
                         </button>
                       )}
                       {status === "IN_PROGRESS" && (
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleOpen(a); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpen(a);
+                          }}
                           style={{
                             height: "32px",
                             padding: "0 16px",
@@ -530,7 +784,7 @@ export default function TaskList() {
                             borderRadius: "4px",
                             cursor: "pointer",
                             fontFamily: "inherit",
-                            transition: "all .15s"
+                            transition: "all .15s",
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.background = T.amber + "20";
@@ -542,9 +796,14 @@ export default function TaskList() {
                           Tiếp tục
                         </button>
                       )}
-                      {["SUBMITTED", "APPROVED", "COMPLETED"].includes(status) && (
+                      {["SUBMITTED", "APPROVED", "COMPLETED"].includes(
+                        status,
+                      ) && (
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleOpen(a); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpen(a);
+                          }}
                           style={{
                             height: "32px",
                             padding: "0 16px",
@@ -559,7 +818,7 @@ export default function TaskList() {
                             display: "flex",
                             alignItems: "center",
                             gap: "6px",
-                            transition: "all .15s"
+                            transition: "all .15s",
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.background = T.border;
@@ -568,7 +827,12 @@ export default function TaskList() {
                             e.currentTarget.style.background = T.surfaceHover;
                           }}
                         >
-                          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>visibility</span>
+                          <span
+                            className="material-symbols-outlined"
+                            style={{ fontSize: "16px" }}
+                          >
+                            visibility
+                          </span>
                           Xem
                         </button>
                       )}
@@ -582,8 +846,16 @@ export default function TaskList() {
 
         {/* Count */}
         {!loading && assignments.length > 0 && (
-          <p style={{ fontSize: "13px", color: T.textMuted, marginTop: "16px", fontWeight: 500 }}>
-            Hiển thị {filteredAssignments.length} trong tổng số {assignments.length} nhiệm vụ
+          <p
+            style={{
+              fontSize: "13px",
+              color: T.textMuted,
+              marginTop: "16px",
+              fontWeight: 500,
+            }}
+          >
+            Hiển thị {filteredAssignments.length} trong tổng số{" "}
+            {assignments.length} nhiệm vụ
           </p>
         )}
       </div>
