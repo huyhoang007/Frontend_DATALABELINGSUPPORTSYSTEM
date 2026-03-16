@@ -54,8 +54,9 @@ export const getRoleId = (roleName) => {
 export const adaptPolicyListResponse = (springPage) => {
     if (!springPage) return { data: [], meta: { page: 0, limit: 20, total: 0, totalPages: 0 } };
 
+    const rawList = springPage.content || [];
     return {
-        data: springPage.content || [],
+        data: rawList.map((item) => fromPolicyDto(item)),
         meta: {
             page: springPage.number || 0,
             limit: springPage.size || 20,
@@ -87,11 +88,15 @@ export const toCreatePolicyRequest = (formData) => {
 export const fromPolicyDto = (dto) => {
     return {
         id: dto.policyId,
+        policyId: dto.policyId,
         name: dto.errorName,
+        errorName: dto.errorName,
         description: dto.description,
         errorLevel: dto.errorLevel,
         createdAt: dto.createdAt,
         updatedAt: dto.updatedAt,
+        // Giữ lại projects nếu backend trả về
+        projects: dto.projects || [],
     };
 };
 
