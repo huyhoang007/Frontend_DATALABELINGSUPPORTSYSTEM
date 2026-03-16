@@ -3,15 +3,18 @@ import { authApi } from "../api/authApi";
 
 const AuthContext = React.createContext(null);
 
-const SESSION_DURATION = 60 * 1000; // 1 phút (ms)
+const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 phút không thao tác
 const SESSION_KEY = "sessionExpiry";
+
+// Các sự kiện được coi là "đang thao tác"
+const ACTIVITY_EVENTS = ["mousemove", "mousedown", "keydown", "touchstart", "scroll", "click"];
 
 export function AuthProvider({ children }) {
     const [user, setUser] = React.useState(null);
     const [isLoading, setIsLoading] = React.useState(true);
 
+    // Khởi tạo: kiểm tra session còn hạn không
     React.useEffect(() => {
-        // Check local storage on mount
         const storedUser = localStorage.getItem("user");
         const storedToken = localStorage.getItem("accessToken");
         const expiry = localStorage.getItem(SESSION_KEY);
@@ -19,7 +22,6 @@ export function AuthProvider({ children }) {
         if (storedUser && storedToken && expiry && Date.now() < Number(expiry)) {
             setUser(JSON.parse(storedUser));
         } else if (storedUser || storedToken) {
-            // Session expired or missing expiry — clear everything
             localStorage.removeItem("user");
             localStorage.removeItem("accessToken");
             localStorage.removeItem("token");
@@ -28,13 +30,22 @@ export function AuthProvider({ children }) {
         setIsLoading(false);
     }, []);
 
-    // Session timeout checker
+    // Idle timeout: reset expiry mỗi khi user thao tác
     React.useEffect(() => {
         if (!user) return;
 
+        const resetExpiry = () => {
+            localStorage.setItem(SESSION_KEY, String(Date.now() + IDLE_TIMEOUT));
+        };
+
+        // Gắn listeners cho tất cả activity events
+        ACTIVITY_EVENTS.forEach((ev) => window.addEventListener(ev, resetExpiry, { passive: true }));
+
+        // Kiểm tra mỗi 30 giây xem session có hết hạn chưa
         const interval = setInterval(() => {
             const expiry = localStorage.getItem(SESSION_KEY);
             if (!expiry || Date.now() >= Number(expiry)) {
+                ACTIVITY_EVENTS.forEach((ev) => window.removeEventListener(ev, resetExpiry));
                 localStorage.removeItem("user");
                 localStorage.removeItem("accessToken");
                 localStorage.removeItem("token");
@@ -42,23 +53,21 @@ export function AuthProvider({ children }) {
                 setUser(null);
                 window.location.href = "/login";
             }
-        }, 1000);
+        }, 30 * 1000);
 
-        return () => clearInterval(interval);
+        return () => {
+            ACTIVITY_EVENTS.forEach((ev) => window.removeEventListener(ev, resetExpiry));
+            clearInterval(interval);
+        };
     }, [user]);
 
-    /**
-     * Login with username and password
-     * Backend will check account status (PENDING/BANNED/ACTIVE)
-     * @param {Object} credentials - { username, password }
-     */
     const login = async (credentials) => {
         try {
             const response = await authApi.login(credentials);
             const { accessToken, username, role } = response;
 
             localStorage.setItem("accessToken", accessToken);
-            localStorage.setItem(SESSION_KEY, String(Date.now() + SESSION_DURATION));
+            localStorage.setItem(SESSION_KEY, String(Date.now() + IDLE_TIMEOUT));
 
             const userInfo = { username, role };
             localStorage.setItem("user", JSON.stringify(userInfo));
@@ -70,15 +79,9 @@ export function AuthProvider({ children }) {
         }
     };
 
-    /**
-     * Register new user
-     * Backend auto-assigns role ANNOTATOR
-     * @param {Object} payload - { username, email, password }
-     */
     const register = async (payload) => {
         try {
-            const response = await authApi.register(payload);
-            return response;
+            return await authApi.register(payload);
         } catch (error) {
             throw error;
         }
@@ -88,7 +91,7 @@ export function AuthProvider({ children }) {
         setUser(null);
         localStorage.removeItem("user");
         localStorage.removeItem("accessToken");
-        localStorage.removeItem("token"); // Clear legacy token if exists
+        localStorage.removeItem("token");
         localStorage.removeItem(SESSION_KEY);
     };
 

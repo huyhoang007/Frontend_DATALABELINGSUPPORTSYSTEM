@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { policyApi } from '../../api/policyApi';
+import { projectApi } from '../../api/projectApi';
 import { useToast } from '../../context/ToastContext';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -80,9 +81,48 @@ const ModernPoliciesPage: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await policyApi.list() as { data: Policy[], meta: any };
-      // adaptPolicyListResponse returns { data: Policy[], meta: {...} }
-      const policyList = response?.data || [];
-      setPolicies(Array.isArray(policyList) ? policyList : []);
+      const policyList: Policy[] = Array.isArray(response?.data) ? response.data : [];
+
+      // Nếu backend không trả về projects trong policy,
+      // fetch danh sách project rồi build ngược lại map policyId → projects[]
+      const hasProjects = policyList.some(p => (p.projects?.length || 0) > 0);
+      if (!hasProjects && policyList.length > 0) {
+        try {
+          const projects: any[] = await projectApi.getMyProjects() as any[];
+          // Với mỗi project, lấy policies áp dụng
+          const projectPolicies = await Promise.all(
+            projects.map(async (proj) => {
+              // BE trả về projectId (camelCase)
+              const pid = proj.projectId || proj.project_id;
+              try {
+                const pp = await policyApi.getByProject(pid);
+                // BE có thể trả về object đơn hoặc array → normalize
+                const ppList: Policy[] = Array.isArray(pp) ? pp : (pp ? [pp as Policy] : []);
+                return { project: proj, policyIds: ppList.map((p: Policy) => p.policyId || p.policy_id) };
+              } catch { return { project: proj, policyIds: [] }; }
+            })
+          );
+          // Build map: policyId → Project[]
+          const policyProjectMap: Record<number, Project[]> = {};
+          projectPolicies.forEach(({ project, policyIds }) => {
+            policyIds.forEach(pid => {
+              if (pid == null) return;
+              if (!policyProjectMap[pid]) policyProjectMap[pid] = [];
+              policyProjectMap[pid].push(project);
+            });
+          });
+          // Gắn projects vào từng policy
+          const enriched = policyList.map(p => ({
+            ...p,
+            projects: policyProjectMap[p.policyId || p.policy_id || 0] || [],
+          }));
+          setPolicies(enriched);
+        } catch {
+          setPolicies(policyList);
+        }
+      } else {
+        setPolicies(policyList);
+      }
     } catch (error) {
       console.error('Failed to fetch policies:', error);
     } finally {
