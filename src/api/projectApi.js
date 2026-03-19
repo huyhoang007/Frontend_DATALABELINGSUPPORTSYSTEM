@@ -44,7 +44,7 @@ export const projectApi = {
     /**
      * Update project status
      * @param {number} projectId
-     * @param {string} status - "ACTIVE" | "INACTIVE" | "COMPLETED"
+     * @param {string} status - "DRAFT" | "IN_PROGRESS" | "PAUSED" | "COMPLETED"
      * @returns {Promise<Object>} ProjectResponse
      */
     updateProjectStatus: async (projectId, status) => {
