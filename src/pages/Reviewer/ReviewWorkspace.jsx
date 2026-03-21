@@ -21,6 +21,14 @@ function isAwaitingRereview(annotation) {
     return annotation?.status === "REJECTED" && annotation?.isImproved === true;
 }
 
+function getPendingReviewCount(annotations = []) {
+    return annotations.filter((annotation) => !annotation?.status || annotation.status === "PENDING" || isAwaitingRereview(annotation)).length;
+}
+
+function getRejectedReviewCount(annotations = []) {
+    return annotations.filter((annotation) => annotation?.status === "REJECTED" && !isAwaitingRereview(annotation)).length;
+}
+
 /* ── Authenticated thumbnail component ── */
 function ThumbnailImg({ fileUrl, alt }) {
     const [src, setSrc] = React.useState(null);
@@ -533,7 +541,11 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                     <div className="p-3 border-t shrink-0" style={{ borderColor: "#253347", display: isMobile ? "none" : "block" }}>
                         <div className="flex items-center justify-between text-[10px] mb-1.5" style={{ color: "#4a6788" }}>
                             <span>Tiến độ</span>
-                            <span className="font-mono">{reviewStats.reviewed}/{reviewStats.total}</span>
+                            <span className="font-mono">
+                                {currentItemStats.total > 0
+                                    ? `${currentItemStats.approved + currentItemStats.rejected}/${currentItemStats.total}`
+                                    : "0/0"}
+                            </span>
                         </div>
                         <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: "#253347" }}>
                             <div className="h-full rounded-full transition-all"
@@ -880,7 +892,7 @@ function ReviewSummaryPanel({ items, annoCache, allLabels, reviewStats, currentI
             const e = map.get(ann.labelId);
             e.total++;
             if (ann.status === "APPROVED") e.approved++;
-            else if (ann.status === "REJECTED") e.rejected++;
+            else if (ann.status === "REJECTED" && !isAwaitingRereview(ann)) e.rejected++;
             else e.pending++;
         });
         return Array.from(map.values()).sort((a, b) => b.total - a.total);
@@ -929,8 +941,8 @@ function ReviewSummaryPanel({ items, annoCache, allLabels, reviewStats, currentI
                     {items.map((item, idx) => {
                         const annos = annoCache[item.itemId] ?? [];
                         const approved = annos.filter(a => a.status === "APPROVED").length;
-                        const rejected = annos.filter(a => a.status === "REJECTED").length;
-                        const pending = annos.filter(a => !a.status || a.status === "PENDING").length;
+                        const rejected = getRejectedReviewCount(annos);
+                        const pending = getPendingReviewCount(annos);
                         const isActive = idx === currentItemIndex;
                         return (
                             <button key={item.itemId}
