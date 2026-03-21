@@ -106,6 +106,13 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
     const [zoom, setZoom] = React.useState(100);
     const [rightTab, setRightTab] = React.useState("review"); // "review" | "summary"
     const [showGuidelinePopover, setShowGuidelinePopover] = React.useState(false);
+    const [isMobile, setIsMobile] = React.useState(() => window.innerWidth < 768);
+
+    React.useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     /* ── Live clock ── */
     const [now, setNow] = React.useState(new Date());
@@ -260,7 +267,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
 
             {/* ══ TOP BAR ══ */}
             <div className="flex items-center gap-2 px-3 shrink-0 border-b"
-                style={{ height: 48, background: "#182233", borderColor: "#253347" }}>
+                style={{ minHeight: 48, background: "#182233", borderColor: "#253347", flexWrap: isMobile ? "wrap" : "nowrap", paddingTop: isMobile ? 8 : undefined, paddingBottom: isMobile ? 8 : undefined }}>
 
                 {/* Logo / Back */}
                 <button onClick={() => navigate("/reviewer/queue")}
@@ -274,7 +281,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                 </button>
 
                 {/* Review progress bar */}
-                <div className="flex items-center gap-2 mx-3">
+                <div className="flex items-center gap-2 mx-3" style={{ order: isMobile ? 3 : 0 }}>
                     <div className="w-28 h-1.5 rounded-full overflow-hidden" style={{ background: "#253347" }}>
                         <div className="h-full rounded-full transition-all duration-500"
                             style={{
@@ -290,7 +297,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                 </div>
 
                 {/* Image navigation */}
-                <div className="flex items-center rounded overflow-hidden" style={{ background: "#1e2f42" }}>
+                <div className="flex items-center rounded overflow-hidden" style={{ background: "#1e2f42", order: isMobile ? 4 : 0 }}>
                     {[{ icon: "first_page", dir: "first" }, { icon: "chevron_left", dir: "prev" }].map(({ icon, dir }) => (
                         <button key={dir} onClick={() => handleNavigate(dir)}
                             className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-white/10"
@@ -313,7 +320,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                 <div className="flex-1" />
 
                 {/* Clock */}
-                <div className="flex items-center gap-1 mr-3">
+                <div className="flex items-center gap-1 mr-3" style={{ order: isMobile ? 2 : 0 }}>
                     {[hh, mm, ss].map((unit, i) => (
                         <span key={i} className="text-xs font-mono font-bold tabular-nums px-1.5 py-0.5 rounded"
                             style={{ background: "#1e2f42", color: "#94a3b8", letterSpacing: "0.05em" }}>
@@ -323,7 +330,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                 </div>
 
                 {/* Zoom */}
-                <div className="flex items-center gap-1 mr-2">
+                <div className="flex items-center gap-1 mr-2" style={{ order: isMobile ? 2 : 0 }}>
                     <button onClick={() => setZoom((z) => Math.max(10, z - 10))}
                         className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
                         style={{ color: "#64748b" }}>
@@ -339,7 +346,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                 </div>
 
                 {/* Guideline quick access */}
-                <div className="relative mr-2">
+                <div className="relative mr-2" style={{ order: isMobile ? 2 : 0 }}>
                     <button
                         onClick={() => setShowGuidelinePopover((v) => !v)}
                         title="Hướng dẫn gán nhãn"
@@ -394,6 +401,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                         border: canSubmit ? "none" : "1px solid #253347",
                         cursor: canSubmit && !reviewSubmitting ? "pointer" : "not-allowed",
                         opacity: reviewSubmitting ? 0.6 : 1,
+                        order: isMobile ? 5 : 0,
+                        width: isMobile ? "100%" : undefined,
+                        justifyContent: "center",
                     }}
                     title={
                         isFinalizedAssignment
@@ -418,11 +428,11 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
             </div>
 
             {/* ══ BODY ══ */}
-            <div className="flex flex-1 overflow-hidden">
+            <div className="flex flex-1 overflow-hidden" style={{ flexDirection: isMobile ? "column" : "row" }}>
 
                 {/* ── LEFT: Thumbnails + Project info ── */}
                 <div className="flex flex-col shrink-0 border-r"
-                    style={{ width: 148, background: "#182233", borderColor: "#253347" }}>
+                    style={{ width: isMobile ? "100%" : 148, background: "#182233", borderColor: "#253347", borderRightWidth: isMobile ? 0 : 1, borderBottomWidth: isMobile ? 1 : 0 }}>
 
                     {/* Project & submit */}
                     <div className="p-3 border-b shrink-0 flex flex-col gap-2" style={{ borderColor: "#253347" }}>
@@ -464,7 +474,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                     </div>
 
                     {/* Image list */}
-                    <div className="flex-1 p-2 space-y-2 overflow-y-auto">
+                    <div className="flex-1 p-2 overflow-y-auto" style={{ display: "flex", flexDirection: isMobile ? "row" : "column", gap: 8, overflowX: isMobile ? "auto" : "hidden" }}>
                         {items.map((item, idx) => {
                             const stats = getItemStats(item.itemId);
                             const isActive = idx === currentItemIndex;
@@ -477,6 +487,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                     style={{
                                         border: isActive ? "2px solid #00bfa5" : "2px solid transparent",
                                         background: "#1e2f42",
+                                        minWidth: isMobile ? 96 : undefined,
                                     }}>
                                     {/* Number badge */}
                                     <div className="absolute top-1 left-1 z-10 w-5 h-5 rounded text-[10px] font-bold flex items-center justify-center bg-black/40 backdrop-blur-sm"
@@ -502,7 +513,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                         </div>
                                     )}
                                     {/* Thumbnail */}
-                                    <div className="w-full overflow-hidden" style={{ height: 80 }}>
+                                    <div className="w-full overflow-hidden" style={{ height: 80, width: isMobile ? 92 : undefined }}>
                                         <ThumbnailImg fileUrl={item.fileUrl} alt={item.fileName || `Ảnh ${idx + 1}`} />
                                     </div>
                                     {/* Active glow */}
@@ -515,7 +526,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                     </div>
 
                     {/* Progress summary */}
-                    <div className="p-3 border-t shrink-0" style={{ borderColor: "#253347" }}>
+                    <div className="p-3 border-t shrink-0" style={{ borderColor: "#253347", display: isMobile ? "none" : "block" }}>
                         <div className="flex items-center justify-between text-[10px] mb-1.5" style={{ color: "#4a6788" }}>
                             <span>Tiến độ</span>
                             <span className="font-mono">{reviewStats.reviewed}/{reviewStats.total}</span>
@@ -538,11 +549,11 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                 </div>
 
                 {/* ── CENTER: Read-only canvas ── */}
-                <div className="flex-1 overflow-auto relative" style={{ background: "#0e1621" }}>
+                <div className="flex-1 overflow-auto relative" style={{ background: "#0e1621", minHeight: isMobile ? 0 : undefined }}>
                     <div style={{
                         minHeight: "100%", minWidth: "100%", display: "flex",
                         alignItems: "center", justifyContent: "center",
-                        padding: 32, boxSizing: "border-box",
+                        padding: isMobile ? 12 : 32, boxSizing: "border-box",
                     }}>
                         <div className="relative shadow-2xl shrink-0"
                             style={{
@@ -600,7 +611,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
 
                 {/* ── RIGHT: Review/Summary panel ── */}
                 <div className="flex flex-col shrink-0 border-l overflow-hidden"
-                    style={{ width: 280, background: "#182233", borderColor: "#253347" }}>
+                    style={{ width: isMobile ? "100%" : 280, maxHeight: isMobile ? "42vh" : undefined, background: "#182233", borderColor: "#253347", borderLeftWidth: isMobile ? 0 : 1, borderTopWidth: isMobile ? 1 : 0 }}>
 
                     {/* Header line */}
                     <div className="flex items-center gap-2 px-3 py-2 border-b shrink-0"
