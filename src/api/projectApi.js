@@ -8,7 +8,7 @@ import apiClient from "./apiClient";
 export const projectApi = {
     /**
      * Create new project
-     * @param {Object} payload - { name, dataType, description }
+        * @param {Object} payload - { name, dataType, description, guidelineContent?, guidelineVersion? }
      * @returns {Promise<Object>} ProjectResponse
      */
     createProject: async (payload) => {
@@ -56,7 +56,7 @@ export const projectApi = {
     /**
      * Update project
      * @param {number} projectId
-     * @param {Object} payload - { name, dataType, description, status }
+        * @param {Object} payload - { name, dataType, description, status, guidelineContent?, guidelineVersion? }
      * @returns {Promise<Object>} ProjectResponse
      */
     updateProject: async (projectId, payload) => {

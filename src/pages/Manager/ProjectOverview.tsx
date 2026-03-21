@@ -3,12 +3,35 @@ import { useOutletContext } from "react-router-dom";
 import { Card } from "../../components/ui/Card";
 import { cn } from "../../utils/cn";
 import { analyticsApi } from "../../api/analyticsApi";
+import { projectApi } from "../../api/projectApi";
 
 export default function ProjectOverview() {
     const { project } = useOutletContext<{ project: any }>();
     const [summary, setSummary] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [guidelineContent, setGuidelineContent] = useState("");
+    const [guidelineVersion, setGuidelineVersion] = useState("v1.0");
+    const [guidelineFileUrl, setGuidelineFileUrl] = useState("");
+    const [savingGuideline, setSavingGuideline] = useState(false);
+    const [guidelineMessage, setGuidelineMessage] = useState<string | null>(null);
+    const [guidelineMessageType, setGuidelineMessageType] = useState<"success" | "error" | null>(null);
+
+    useEffect(() => {
+        setGuidelineContent(project?.guidelineContent || "");
+        setGuidelineVersion(project?.guidelineVersion || "v1.0");
+        setGuidelineFileUrl(project?.guidelineFileUrl || "");
+    }, [project?.projectId, project?.guidelineContent, project?.guidelineVersion, project?.guidelineFileUrl]);
+
+    useEffect(() => {
+        if (guidelineMessage) {
+            const timer = setTimeout(() => {
+                setGuidelineMessage(null);
+                setGuidelineMessageType(null);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [guidelineMessage]);
 
     useEffect(() => {
         let cancelled = false;
@@ -52,6 +75,27 @@ export default function ProjectOverview() {
     const quality = summary?.qualityMetrics;
     const contributors = summary?.topContributors || [];
 
+    const handleSaveGuideline = async () => {
+        const projectId = project.projectId ?? project.project_id;
+        if (!projectId) return;
+        setSavingGuideline(true);
+        setGuidelineMessage(null);
+        try {
+            await projectApi.updateProject(projectId, {
+                guidelineContent,
+                guidelineFileUrl,
+                guidelineVersion,
+            });
+            setGuidelineMessage("Đã lưu hướng dẫn gán nhãn thành công.");
+            setGuidelineMessageType("success");
+        } catch (err: any) {
+            setGuidelineMessage(err?.message || "Không thể lưu hướng dẫn gán nhãn.");
+            setGuidelineMessageType("error");
+        } finally {
+            setSavingGuideline(false);
+        }
+    };
+
     // Safe values with defaults
     const totalItems = progress?.totalItems ?? 0;
     const labeledItems = progress?.labeledItems ?? 0;
@@ -75,6 +119,23 @@ export default function ProjectOverview() {
 
     return (
         <>
+            {/* Toast Notification */}
+            {guidelineMessage && (
+                <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg animate-in fade-in slide-in-from-top-4 duration-300 ${
+                    guidelineMessageType === "success"
+                        ? "bg-emerald-600 text-white border border-emerald-400"
+                        : "bg-red-600 text-white border border-red-400"
+                }`}>
+                    <div className="flex items-center gap-2">
+                        {guidelineMessageType === "success" ? (
+                            <span className="material-symbols-outlined text-sm">check_circle</span>
+                        ) : (
+                            <span className="material-symbols-outlined text-sm">error</span>
+                        )}
+                        <span className="text-sm font-medium">{guidelineMessage}</span>
+                    </div>
+                </div>
+            )}
             {/* KPI Cards */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <Card className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
@@ -259,6 +320,51 @@ export default function ProjectOverview() {
                     <p className="text-sm text-muted-foreground leading-relaxed">{project.description}</p>
                 </Card>
             )}
+
+            {/* Annotation Guideline */}
+            <Card className="p-6 bg-card/80 backdrop-blur border-border/60">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-base font-bold text-foreground">Hướng dẫn gán nhãn</h3>
+                    <div className="flex items-center gap-2">
+                        <label className="text-xs text-muted-foreground">Version</label>
+                        <input
+                            value={guidelineVersion}
+                            onChange={(e) => setGuidelineVersion(e.target.value)}
+                            className="px-2 py-1 rounded border border-border bg-background text-xs text-foreground w-20"
+                            placeholder="v1.0"
+                        />
+                    </div>
+                </div>
+                <textarea
+                    value={guidelineContent}
+                    onChange={(e) => setGuidelineContent(e.target.value)}
+                    rows={8}
+                    className="w-full px-3 py-2 rounded border border-border bg-background text-sm text-foreground resize-y"
+                    placeholder="Nhập hướng dẫn gán nhãn tổng quát cho dự án: quy tắc vẽ, xử lý che khuất, tiêu chí reject..."
+                />
+                <div className="mt-3">
+                    <label className="text-xs text-muted-foreground block mb-2">Đường dẫn file hướng dẫn (PDF, Word, v.v.)</label>
+                    <input
+                        value={guidelineFileUrl}
+                        onChange={(e) => setGuidelineFileUrl(e.target.value)}
+                        type="url"
+                        className="w-full px-3 py-2 rounded border border-border bg-background text-sm text-foreground"
+                        placeholder="https://example.com/guideline.pdf hoặc đường dẫn file cục bộ"
+                    />
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                        Nội dung này sẽ hiển thị trong workspace của Annotator và Reviewer.
+                    </p>
+                    <button
+                        onClick={handleSaveGuideline}
+                        disabled={savingGuideline}
+                        className="px-4 py-2 rounded bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-60"
+                    >
+                        {savingGuideline ? "Đang lưu..." : "Lưu hướng dẫn"}
+                    </button>
+                </div>
+            </Card>
         </>
     );
 }

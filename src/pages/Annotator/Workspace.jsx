@@ -115,6 +115,7 @@ export default function Workspace() {
     const [zoom, setZoom] = React.useState(100);
     const [rightTab, setRightTab] = React.useState("annotations"); // "annotations" | "summary"
     const [showShortcuts, setShowShortcuts] = React.useState(false);
+    const [showGuidelinePopover, setShowGuidelinePopover] = React.useState(false);
 
     React.useEffect(() => {
         if (isReadOnly && activeTool !== "select") {
@@ -637,6 +638,51 @@ export default function Workspace() {
                         </button>
                     </div>
 
+                    {/* Guideline quick access */}
+                    <div className="relative mr-1">
+                        <button
+                            onClick={() => setShowGuidelinePopover((v) => !v)}
+                            title="Hướng dẫn gán nhãn"
+                            className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
+                            style={{ color: "#7dd3fc" }}
+                        >
+                            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>menu_book</span>
+                        </button>
+                        {showGuidelinePopover && (
+                            <div className="absolute right-0 top-9 z-50 w-80 rounded-lg border p-3 shadow-2xl"
+                                style={{ background: "#111d2c", borderColor: "#253347" }}>
+                                <div className="flex items-center justify-between mb-2">
+                                    <p className="text-xs font-bold" style={{ color: "#cbd5e1" }}>Hướng dẫn gán nhãn</p>
+                                    <button
+                                        onClick={() => setShowGuidelinePopover(false)}
+                                        className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10"
+                                        style={{ color: "#64748b" }}
+                                    >
+                                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>close</span>
+                                    </button>
+                                </div>
+                                <div className="text-xs rounded border p-2 max-h-40 overflow-y-auto"
+                                    style={{ borderColor: "#253347", color: "#94a3b8", background: "#0f1823" }}>
+                                    <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                                        {workspace?.projectGuidelineContent || "Chưa có hướng dẫn cho dự án này."}
+                                    </p>
+                                </div>
+                                {workspace?.projectGuidelineFileUrl && (
+                                    <a
+                                        href={workspace.projectGuidelineFileUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="mt-2 inline-flex items-center gap-1.5 text-xs hover:text-white"
+                                        style={{ color: "#7dd3fc", textDecoration: "underline" }}
+                                    >
+                                        <span className="material-symbols-outlined" style={{ fontSize: 12 }}>download</span>
+                                        Tải file hướng dẫn
+                                    </a>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
                     {/* Shortcut help button */}
                     <button
                         onClick={() => setShowShortcuts(true)}
@@ -830,24 +876,24 @@ export default function Workspace() {
 
                     </div>
 
-                    {/* â”€â”€ RIGHT: Tools + Annotations â”€â”€ */}
+                    {/* RIGHT: Tools + Annotations */}
                     <div className="flex flex-col shrink-0 border-l overflow-hidden"
                         style={{ width: 260, background: "#182233", borderColor: "#253347" }}>
 
                         {/* Tool icons */}
                         <div className="flex items-center justify-center gap-1.5 px-3 py-2.5 border-b shrink-0"
                             style={{ borderColor: "#253347", background: "#111d2c" }}>
-                            {(isReadOnly ? TOOLS.filter(t => t.id === "select") : TOOLS).map((tool) => (
+                            {(isReadOnly ? TOOLS.filter((t) => t.id === "select") : TOOLS).map((tool) => (
                                 <button key={tool.id}
                                     onClick={() => { if (!isReadOnly || tool.id === "select") { setActiveTool(tool.id); setSelectedGroupKey(null); } }}
                                     title={tool.label}
                                     disabled={isReadOnly && tool.id !== "select"}
-                                    className={`flex flex-col items-center justify-center gap-0.5 rounded-lg transition-all ${isReadOnly && tool.id !== "select" ? 'opacity-30 cursor-not-allowed hidden' : 'hover:brightness-110 active:scale-95'}`}
+                                    className={`flex flex-col items-center justify-center gap-0.5 rounded-lg transition-all ${isReadOnly && tool.id !== "select" ? "opacity-30 cursor-not-allowed hidden" : "hover:brightness-110 active:scale-95"}`}
                                     style={{
                                         width: 44, height: 44, padding: "4px 2px",
                                         ...(activeTool === tool.id
                                             ? { background: "#00bfa5", color: "#fff", boxShadow: "0 2px 8px rgba(0,191,165,0.4)" }
-                                            : { background: "#1e2f42", color: "#7a9ab8", border: "1px solid #2a3f55" })
+                                            : { background: "#1e2f42", color: "#7a9ab8", border: "1px solid #2a3f55" }),
                                     }}>
                                     <span className="material-symbols-outlined" style={{ fontSize: 18 }}>{tool.icon}</span>
                                     <span style={{ fontSize: 8, fontWeight: 600, letterSpacing: "0.02em", lineHeight: 1 }}>
@@ -857,7 +903,7 @@ export default function Workspace() {
                             ))}
                         </div>
 
-                        {/* ── Tab bar ── */}
+                        {/* Tabs */}
                         <div className="flex shrink-0 border-b" style={{ borderColor: "#253347" }}>
                             <button
                                 onClick={() => setRightTab("annotations")}
@@ -881,18 +927,18 @@ export default function Workspace() {
                             </button>
                         </div>
 
-                        {/* ── Tab content ── */}
+                        {/* Tab content */}
                         <div className="flex-1 overflow-y-auto">
                             {rightTab === "annotations" ? (
                                 labelsLoading && allLabels.length === 0 ? (
                                     <div className="flex items-center justify-center h-24 gap-2 opacity-50">
                                         <span className="material-symbols-outlined animate-spin" style={{ fontSize: 18, color: "#3a5068" }}>progress_activity</span>
-                                        <p className="text-xs" style={{ color: "#3a5068" }}>Đang tải...</p>
+                                        <p className="text-xs" style={{ color: "#3a5068" }}>Dang tai...</p>
                                     </div>
                                 ) : anno.annotations.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center h-32 gap-2 opacity-30">
                                         <span className="material-symbols-outlined" style={{ fontSize: 32, color: "#3a5068" }}>layers</span>
-                                        <p className="text-xs" style={{ color: "#3a5068" }}>Chưa có annotation</p>
+                                        <p className="text-xs" style={{ color: "#3a5068" }}>Chua co annotation</p>
                                     </div>
                                 ) : (
                                     <AnnotationList

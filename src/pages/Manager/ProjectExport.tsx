@@ -8,7 +8,6 @@ import {
 } from "../../components/ui/Table";
 
 const FORMATS = ["COCO JSON", "YOLO", "Pascal VOC", "CSV"];
-const STATUS_OPTIONS = ["ALL", "APPROVED", "PENDING", "REJECTED", "IMPROVED"];
 
 type HistoryEntry = {
     id: string;
@@ -42,7 +41,6 @@ export default function ProjectExport() {
     const [loadingDatasets, setLoadingDatasets] = useState(true);
     const [selectedDatasetId, setSelectedDatasetId] = useState<string>("");
     const [format, setFormat] = useState("COCO JSON");
-    const [statusFilter, setStatusFilter] = useState("APPROVED");
     const [exporting, setExporting] = useState(false);
     const [error, setError] = useState("");
 
@@ -87,7 +85,7 @@ export default function ProjectExport() {
         setExporting(true);
 
         const datasetId = Number(selectedDatasetId);
-        const statusParam = statusFilter === "ALL" ? null : statusFilter;
+        const statusParam = "APPROVED";
         const selectedDataset = datasets.find(
             (d) => String(d.datasetId ?? d.dataset_id) === selectedDatasetId
         );
@@ -155,7 +153,7 @@ export default function ProjectExport() {
     return (
         <div className="space-y-6">
             <Card className="p-6 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
                     {/* Dataset selector */}
                     <div>
                         <label className="block text-sm font-medium text-muted-foreground mb-1">Dataset / Batch</label>
@@ -190,17 +188,6 @@ export default function ProjectExport() {
                         </select>
                     </div>
 
-                    {/* Status filter */}
-                    <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">Lọc theo trạng thái</label>
-                        <select
-                            className="w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                        >
-                            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                    </div>
                 </div>
 
                 {/* Format description */}
@@ -210,6 +197,7 @@ export default function ProjectExport() {
                     {format === "Pascal VOC" && "Xuất file ZIP gồm Annotations/*.xml (bndbox) và ảnh gốc trong JPEGImages/*."}
                     {format === "CSV" && "Xuất CSV phẳng — mỗi dòng là 1 annotation kèm tọa độ geometry thô."}
                 </p>
+                <p className="text-xs text-muted-foreground">Chỉ export các annotation đã được duyệt (APPROVED).</p>
 
                 {error && (
                     <p className="text-sm text-destructive">{error}</p>

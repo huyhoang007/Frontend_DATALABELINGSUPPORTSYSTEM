@@ -105,6 +105,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
     const [rejectNote, setRejectNote] = React.useState("");
     const [zoom, setZoom] = React.useState(100);
     const [rightTab, setRightTab] = React.useState("review"); // "review" | "summary"
+    const [showGuidelinePopover, setShowGuidelinePopover] = React.useState(false);
 
     /* ── Live clock ── */
     const [now, setNow] = React.useState(new Date());
@@ -314,6 +315,51 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                         style={{ color: "#64748b" }}>
                         <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add</span>
                     </button>
+                </div>
+
+                {/* Guideline quick access */}
+                <div className="relative mr-2">
+                    <button
+                        onClick={() => setShowGuidelinePopover((v) => !v)}
+                        title="Hướng dẫn gán nhãn"
+                        className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
+                        style={{ color: "#7dd3fc" }}
+                    >
+                        <span className="material-symbols-outlined" style={{ fontSize: 16 }}>menu_book</span>
+                    </button>
+                    {showGuidelinePopover && (
+                        <div className="absolute right-0 top-9 z-50 w-80 rounded-lg border p-3 shadow-2xl"
+                            style={{ background: "#111d2c", borderColor: "#253347" }}>
+                            <div className="flex items-center justify-between mb-2">
+                                <p className="text-xs font-bold" style={{ color: "#cbd5e1" }}>Hướng dẫn gán nhãn</p>
+                                <button
+                                    onClick={() => setShowGuidelinePopover(false)}
+                                    className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10"
+                                    style={{ color: "#64748b" }}
+                                >
+                                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>close</span>
+                                </button>
+                            </div>
+                            <div className="text-xs rounded border p-2 max-h-40 overflow-y-auto"
+                                style={{ borderColor: "#253347", color: "#94a3b8", background: "#0f1823" }}>
+                                <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                                    {workspace?.projectGuidelineContent || "Chưa có hướng dẫn cho dự án này."}
+                                </p>
+                            </div>
+                            {workspace?.projectGuidelineFileUrl && (
+                                <a
+                                    href={workspace.projectGuidelineFileUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="mt-2 inline-flex items-center gap-1.5 text-xs hover:text-white"
+                                    style={{ color: "#7dd3fc", textDecoration: "underline" }}
+                                >
+                                    <span className="material-symbols-outlined" style={{ fontSize: 12 }}>download</span>
+                                    Tải file hướng dẫn
+                                </a>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Hoàn tất đánh giá button */}
@@ -629,7 +675,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                                 {anno.policyName && (
                                                     <span style={{ color: "#f87171" }} className="truncate">● {anno.policyName}</span>
                                                 )}
-                                                {anno.isImproved && (
+                                                {anno.isImproved && anno.status !== "APPROVED" && (
                                                     <span style={{ color: "#60a5fa" }}>↺ Đã sửa</span>
                                                 )}
                                             </div>
@@ -732,7 +778,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                     );
                                 })}
                             </div>
-                        ) : (
+                        ) : rightTab === "summary" ? (
                             /* ─── Tổng kết tab ─── */
                             <ReviewSummaryPanel
                                 items={items}
@@ -742,7 +788,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                 currentItemIndex={currentItemIndex}
                                 setCurrentItemIndex={setCurrentItemIndex}
                             />
-                        )}
+                        ) : null}
                     </div>
                 </div>
             </div>

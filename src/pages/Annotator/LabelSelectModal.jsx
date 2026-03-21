@@ -64,9 +64,7 @@ export default function LabelSelectModal({ labelGroups = [], onSave, onCancel })
     const currentGroup = labelGroups[activeRuleIdx] || null;
 
     const toggle = (id) => {
-        setSelectedIds((prev) =>
-            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-        );
+        setSelectedIds((prev) => (prev.includes(id) ? [] : [id]));
     };
 
     const handleSave = () => {
@@ -334,6 +332,9 @@ export default function LabelSelectModal({ labelGroups = [], onSave, onCancel })
                     style={{ borderTop: "1px solid #1e2f42" }}
                 >
                     <div className="flex-1 flex flex-wrap gap-1 min-w-0 overflow-hidden">
+                        <span className="text-[10px] w-full" style={{ color: "#4a6788" }}>
+                            Mỗi đối tượng chỉ chọn 1 label.
+                        </span>
                         {selectedNames.length === 0 ? (
                             <span className="text-[11px]" style={{ color: "#4a6788" }}>
                                 Chưa chọn label nào

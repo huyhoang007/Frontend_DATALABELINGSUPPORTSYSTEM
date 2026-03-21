@@ -42,6 +42,7 @@ interface Label {
   labelType?: string;
   description?: string;
   shortcutKey?: string;
+  isActive?: boolean;
 }
 
 interface LabelSummary {
@@ -70,6 +71,7 @@ const ModernLabelsPage: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isActivating, setIsActivating] = useState(false);
   const [isCreatingRule, setIsCreatingRule] = useState(false);
   const [isUpdatingRule, setIsUpdatingRule] = useState(false);
   const [isAttachingLabels, setIsAttachingLabels] = useState(false);
@@ -77,6 +79,7 @@ const ModernLabelsPage: React.FC = () => {
 
   // Real data from backend
   const [labels, setLabels] = useState<Label[]>([]);
+  const [labelView, setLabelView] = useState<'all' | 'active' | 'inactive'>('all');
   const [labelRules, setLabelRules] = useState<LabelRule[]>([]);
   const [editingLabel, setEditingLabel] = useState<Label | null>(null);
   const [editingRule, setEditingRule] = useState<LabelRule | null>(null);
@@ -131,7 +134,8 @@ const ModernLabelsPage: React.FC = () => {
   const fetchLabels = async () => {
     setIsLoading(true);
     try {
-      const data = await labelApi.getActiveLabels(); // Chỉ lấy labels còn active
+      // Lấy tất cả labels để manager có thể kích hoạt lại label đã bị ngưng sử dụng
+      const data = await labelApi.getAllLabels();
       setLabels(data || []);
     } catch (error) {
       console.error('Failed to fetch labels:', error);
@@ -211,19 +215,36 @@ const ModernLabelsPage: React.FC = () => {
   };
 
   const handleDeleteLabel = async (labelId: number) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa nhãn này?')) {
+    if (!window.confirm('Bạn có chắc chắn muốn ngưng sử dụng nhãn này?')) {
       return;
     }
 
     setIsDeleting(true);
     try {
       await labelApi.deleteLabel(labelId);
-      addToast('Xóa nhãn thành công!', 'success');
+      addToast('Đã ngưng sử dụng nhãn!', 'success');
       fetchLabels(); // Refresh list
     } catch (error: any) {
       addToast(error.message || 'Không thể xóa nhãn', 'error');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleActivateLabel = async (labelId: number) => {
+    if (!window.confirm('Kích hoạt lại nhãn này?')) {
+      return;
+    }
+
+    setIsActivating(true);
+    try {
+      await labelApi.activateLabel(labelId);
+      addToast('Kích hoạt lại nhãn thành công!', 'success');
+      fetchLabels();
+    } catch (error: any) {
+      addToast(error.message || 'Không thể kích hoạt lại nhãn', 'error');
+    } finally {
+      setIsActivating(false);
     }
   };
 
@@ -337,6 +358,15 @@ const ModernLabelsPage: React.FC = () => {
   const getLabelName = (label: Label) => label.labelName || label.label_name || 'Unknown';
   const getLabelColor = (label: Label) => label.colorCode || label.color_code || '#3b82f6';
   const getLabelId = (label: Label) => label.labelId || label.label_id || 0;
+  const isLabelActive = (label: Label) => label.isActive !== false;
+
+  const visibleLabels = labels.filter((label) => {
+    if (labelView === 'active') return isLabelActive(label);
+    if (labelView === 'inactive') return !isLabelActive(label);
+    return true;
+  });
+
+  const activeLabels = labels.filter((label) => isLabelActive(label));
 
   return (
     <div style={{
@@ -416,8 +446,32 @@ const ModernLabelsPage: React.FC = () => {
       {/* Content */}
       {activeTab === 'labels' ? (
         // Labels Grid
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
-          {labels.map((label) => (
+        <>
+          <Card className="p-4 mb-6 bg-card dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="text-sm text-muted-foreground">
+                Tổng nhãn: <span className="font-semibold text-foreground">{labels.length}</span>
+                {' · '}
+                Đang hoạt động: <span className="font-semibold text-emerald-600">{activeLabels.length}</span>
+                {' · '}
+                Ngưng sử dụng: <span className="font-semibold text-amber-600">{labels.length - activeLabels.length}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant={labelView === 'all' ? 'primary' : 'secondary'} size="sm" onClick={() => setLabelView('all')}>
+                  Tất cả
+                </Button>
+                <Button variant={labelView === 'active' ? 'primary' : 'secondary'} size="sm" onClick={() => setLabelView('active')}>
+                  Đang hoạt động
+                </Button>
+                <Button variant={labelView === 'inactive' ? 'primary' : 'secondary'} size="sm" onClick={() => setLabelView('inactive')}>
+                  Ngưng sử dụng
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
+          {visibleLabels.map((label) => (
             <Card
               key={getLabelId(label)}
               className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-card/80 backdrop-blur border-border/60 group cursor-pointer"
@@ -434,6 +488,17 @@ const ModernLabelsPage: React.FC = () => {
                   <div className="text-xs text-muted-foreground font-mono">
                     {getLabelColor(label)}
                   </div>
+                </div>
+                <div className="mt-3">
+                  <span
+                    className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
+                    style={{
+                      backgroundColor: isLabelActive(label) ? `${T.green}20` : `${T.amber}20`,
+                      color: isLabelActive(label) ? T.green : T.amber,
+                    }}
+                  >
+                    {isLabelActive(label) ? 'Đang hoạt động' : 'Ngưng sử dụng'}
+                  </span>
                 </div>
               </div>
 
@@ -453,24 +518,37 @@ const ModernLabelsPage: React.FC = () => {
                     size="sm"
                     className="h-8 px-2 text-xs text-blue-500 hover:bg-blue-500/10"
                     onClick={(e) => { e.stopPropagation(); handleEditClick(label); }}
-                    disabled={isDeleting}
+                    disabled={isDeleting || isActivating}
                   >
                     Sửa
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2 text-xs text-red-500 hover:bg-red-500/10"
-                    onClick={(e) => { e.stopPropagation(); handleDeleteLabel(getLabelId(label)); }}
-                    disabled={isDeleting}
-                  >
-                    Xóa
-                  </Button>
+                  {isLabelActive(label) ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-xs text-amber-600 hover:bg-amber-500/10"
+                      onClick={(e) => { e.stopPropagation(); handleDeleteLabel(getLabelId(label)); }}
+                      disabled={isDeleting || isActivating}
+                    >
+                      Ngưng dùng
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-xs text-emerald-600 hover:bg-emerald-500/10"
+                      onClick={(e) => { e.stopPropagation(); handleActivateLabel(getLabelId(label)); }}
+                      disabled={isDeleting || isActivating}
+                    >
+                      Kích hoạt lại
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>
           ))}
-        </div>
+          </div>
+        </>
       ) : (
         // Label Rules List
         <Card className="bg-card dark:bg-slate-800/60 backdrop-blur-xl border-border/50 overflow-hidden">
@@ -772,11 +850,11 @@ const ModernLabelsPage: React.FC = () => {
                     ({selectedLabelIds.length} đã chọn)
                   </span>
                 </label>
-                {labels.length === 0 ? (
+                {activeLabels.length === 0 ? (
                   <p className="text-xs text-muted-foreground italic py-2">Chưa có label nào. Hãy tạo label trước.</p>
                 ) : (
                   <div className="max-h-48 overflow-y-auto border border-input rounded-lg divide-y divide-border/50 bg-background">
-                    {labels.map((label) => {
+                    {activeLabels.map((label) => {
                       const id = getLabelId(label);
                       const color = getLabelColor(label);
                       const name = getLabelName(label);
@@ -896,11 +974,11 @@ const ModernLabelsPage: React.FC = () => {
                 Chọn labels để thêm{' '}
                 <span className="text-primary font-semibold">({attachLabelIds.length} đã chọn)</span>
               </label>
-              {labels.length === 0 ? (
+              {activeLabels.length === 0 ? (
                 <p className="text-xs text-muted-foreground italic py-2">Chưa có label nào.</p>
               ) : (
                 <div className="max-h-56 overflow-y-auto border border-input rounded-lg divide-y divide-border/50 bg-background mb-6">
-                  {labels.map((label) => {
+                  {activeLabels.map((label) => {
                     const id = getLabelId(label);
                     const color = getLabelColor(label);
                     const name = getLabelName(label);

@@ -11,6 +11,8 @@ interface ProjectData {
     data_type: string;
     status: string;
     description?: string;
+    guidelineContent?: string;
+    guidelineVersion?: string;
     manager_name?: string;
     created_at?: string;
 }
@@ -54,6 +56,8 @@ const ProjectDetail: React.FC = () => {
                 data_type: (raw.type ?? raw.dataType ?? "unknown").toLowerCase(),
                 status: (raw.status ?? "unknown").toLowerCase(),
                 description: raw.description ?? "",
+                guidelineContent: raw.guidelineContent ?? "",
+                guidelineVersion: raw.guidelineVersion ?? "v1.0",
                 manager_name: raw.managerName ?? raw.manager_name ?? "",
                 created_at: raw.createdAt ?? raw.created_at ?? "",
             });
