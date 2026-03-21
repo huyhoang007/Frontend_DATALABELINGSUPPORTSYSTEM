@@ -118,7 +118,7 @@ export default function ProjectErrors() {
             <TableHeader>
                 <TableRow>
                     <TableHead>Tên</TableHead>
-                    <TableHead>Severity</TableHead>
+                    <TableHead>Mức độ</TableHead>
                     <TableHead>Mô tả</TableHead>
                     <TableHead className="text-right">Hành động</TableHead>
                 </TableRow>
@@ -173,7 +173,7 @@ export default function ProjectErrors() {
             )}
 
             <div>
-                <h2 className="text-base font-bold text-foreground">Errors</h2>
+                <h2 className="text-base font-bold text-foreground">Lỗi</h2>
                 <p className="text-sm text-muted-foreground mt-1">Danh sách lỗi/loại lỗi dùng trong project</p>
             </div>
 
@@ -181,8 +181,7 @@ export default function ProjectErrors() {
             <Card className="p-6 space-y-4">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-[16px]">bug_report</span>
-                    Error Types của project
-                </h3>
+                    Loại lỗi của dự án                </h3>
                 {loading ? (
                     <div className="text-center py-8">
                         <span className="material-symbols-outlined text-2xl text-muted-foreground animate-spin block mb-2">progress_activity</span>
@@ -191,7 +190,7 @@ export default function ProjectErrors() {
                 ) : projectPolicies.length === 0 ? (
                     <div className="text-center py-8">
                         <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2 block">bug_report</span>
-                        <p className="text-muted-foreground text-sm">Chưa có error type nào được thêm vào project</p>
+                        <p className="text-muted-foreground text-sm">Chưa có loại lỗi nào được thêm vào dự án</p>
                     </div>
                 ) : renderTable(projectPolicies, "project")}
             </Card>
@@ -200,7 +199,7 @@ export default function ProjectErrors() {
             <Card className="p-6 space-y-4">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-[16px]">list</span>
-                    Tất cả Error Types
+                    Tất cả loại lỗi
                 </h3>
                 <Input
                     placeholder="Tìm kiếm error type..."

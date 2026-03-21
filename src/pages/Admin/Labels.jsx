@@ -38,7 +38,7 @@ export default function AdminLabels() {
 
     const handleCreateLabel = async () => {
         if (!newLabel.labelName || !newLabel.colorCode || !newLabel.labelType) {
-            addToast('Label name, color, and type are required', 'error');
+            addToast('Tên nhãn, màu sắc và loại là bắt buộc', 'error');
             return;
         }
 
@@ -51,7 +51,7 @@ export default function AdminLabels() {
                 description: newLabel.description || null,
                 shortcutKey: newLabel.shortcutKey || null
             });
-            addToast('Label created successfully!', 'success');
+            addToast('Tạo nhãn thành công!', 'success');
             setShowCreateModal(false);
             setNewLabel({
                 labelName: '',
@@ -62,7 +62,7 @@ export default function AdminLabels() {
             });
             fetchLabels(); // Refresh list
         } catch (error) {
-            addToast(error.message || 'Failed to create label', 'error');
+            addToast(error.message || 'Tạo nhãn thất bại', 'error');
         } finally {
             setIsCreating(false);
         }
@@ -84,17 +84,17 @@ export default function AdminLabels() {
                     <div className="mb-8 flex items-center justify-between">
                         <div>
                             <h1 className="text-3xl font-bold text-foreground mb-2">
-                                Label Management
+                                Quản lý nhãn
                             </h1>
                             <p className="text-muted-foreground">
-                                Manage global label taxonomy
+                                Quản lý danh mục nhãn toàn hệ thống
                             </p>
                         </div>
                         <button
                             onClick={() => setShowCreateModal(true)}
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
                         >
-                            Create Label
+                            Tạo nhãn
                         </button>
                     </div>
 
@@ -103,13 +103,13 @@ export default function AdminLabels() {
                         {isLoading ? (
                             <div className="text-center text-muted-foreground py-12">
                                 <div className="text-4xl mb-4 animate-spin">...</div>
-                                <p>Loading labels...</p>
+                                <p>Đang tải nhãn...</p>
                             </div>
                         ) : labels.length === 0 ? (
                             <div className="text-center text-muted-foreground py-12">
                                 <div className="text-6xl mb-4">L</div>
-                                <p className="text-lg font-medium mb-2">No labels configured</p>
-                                <p className="text-sm">Click "Create Label" to add your first label</p>
+                                <p className="text-lg font-medium mb-2">Chưa có nhãn nào</p>
+                                <p className="text-sm">Nhấn "Tạo nhãn" để thêm nhãn đầu tiên</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -151,25 +151,25 @@ export default function AdminLabels() {
                     {showCreateModal && (
                         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                             <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
-                                <h2 className="text-xl font-bold text-foreground mb-4">Create New Label</h2>
+                                <h2 className="text-xl font-bold text-foreground mb-4">Tạo nhãn mới</h2>
 
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-muted-foreground mb-1">
-                                            Label Name <span className="text-red-500">*</span>
+                                            Tên nhãn <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="text"
                                             value={newLabel.labelName}
                                             onChange={(e) => setNewLabel({ ...newLabel, labelName: e.target.value })}
                                             className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
-                                            placeholder="e.g., Person, Vehicle, Animal"
+                                            placeholder="VD: Người, Xe, Động vật"
                                         />
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium text-muted-foreground mb-1">
-                                            Color Code <span className="text-red-500">*</span>
+                                            Mã màu <span className="text-red-500">*</span>
                                         </label>
                                         <div className="flex gap-2">
                                             <input
@@ -190,42 +190,42 @@ export default function AdminLabels() {
 
                                     <div>
                                         <label className="block text-sm font-medium text-muted-foreground mb-1">
-                                            Label Type <span className="text-red-500">*</span>
+                                            Loại nhãn <span className="text-red-500">*</span>
                                         </label>
                                         <select
                                             value={newLabel.labelType}
                                             onChange={(e) => setNewLabel({ ...newLabel, labelType: e.target.value })}
                                             className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
                                         >
-                                            <option value="OBJECT">Object Detection</option>
-                                            <option value="CLASSIFICATION">Classification</option>
-                                            <option value="SEGMENTATION">Segmentation</option>
+                                            <option value="OBJECT">Phát hiện đối tượng</option>
+                                            <option value="CLASSIFICATION">Phân loại</option>
+                                            <option value="SEGMENTATION">Phân đoạn</option>
                                         </select>
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium text-muted-foreground mb-1">
-                                            Shortcut Key (optional)
+                                            Phím tắt (tùy chọn)
                                         </label>
                                         <input
                                             type="text"
                                             value={newLabel.shortcutKey}
                                             onChange={(e) => setNewLabel({ ...newLabel, shortcutKey: e.target.value.slice(0, 1).toUpperCase() })}
                                             className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
-                                            placeholder="e.g., P"
+                                            placeholder="VD: P"
                                             maxLength={1}
                                         />
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium text-muted-foreground mb-1">
-                                            Description (optional)
+                                            Mô tả (tùy chọn)
                                         </label>
                                         <textarea
                                             value={newLabel.description}
                                             onChange={(e) => setNewLabel({ ...newLabel, description: e.target.value })}
                                             className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground resize-none"
-                                            placeholder="Brief description of this label"
+                                            placeholder="Mô tả ngắn về nhãn này"
                                             rows={2}
                                         />
                                     </div>
@@ -237,14 +237,14 @@ export default function AdminLabels() {
                                         className="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-accent transition-colors"
                                         disabled={isCreating}
                                     >
-                                        Cancel
+                                        Hủy
                                     </button>
                                     <button
                                         onClick={handleCreateLabel}
                                         disabled={isCreating}
                                         className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white rounded-lg font-medium transition-colors"
                                     >
-                                        {isCreating ? 'Creating...' : 'Create'}
+                                        {isCreating ? 'Đang tạo...' : 'Tạo'}
                                     </button>
                                 </div>
                             </div>

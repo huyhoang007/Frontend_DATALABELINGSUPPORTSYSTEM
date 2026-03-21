@@ -61,7 +61,7 @@ export default function ErrorTypes() {
     return (
         <div className="p-8 space-y-6 max-w-5xl">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-foreground">Error Types</h1>
+                <h1 className="text-2xl font-bold text-foreground">Loại lỗi</h1>
                 <Button variant="secondary" onClick={() => navigate("/manager/error-types/new")}>
                     <span className="material-symbols-outlined text-base mr-1">add</span>
                     Thêm loại lỗi
@@ -84,7 +84,7 @@ export default function ErrorTypes() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Tên</TableHead>
-                                <TableHead>Severity</TableHead>
+                                <TableHead>Mức độ</TableHead>
                                 <TableHead>Mô tả</TableHead>
                                 <TableHead className="text-right">Hành động</TableHead>
                             </TableRow>

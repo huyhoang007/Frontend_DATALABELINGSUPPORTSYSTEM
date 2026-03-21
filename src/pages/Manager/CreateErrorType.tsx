@@ -67,7 +67,7 @@ export default function CreateErrorType() {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Severity</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">Mức độ nghiêm trọng</label>
                     <select
                         className="w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         value={form.errorLevel}

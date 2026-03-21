@@ -18,12 +18,12 @@ interface ProjectData {
 }
 
 const TABS = [
-    { key: "", label: "Overview", icon: "dashboard" },
-    { key: "data", label: "Data", icon: "cloud_upload" },
-    { key: "labels", label: "Label Rules", icon: "rule" },
-    { key: "assignments", label: "Assignments", icon: "assignment" },
-    { key: "export", label: "Export", icon: "download" },
-    { key: "errors", label: "Errors", icon: "bug_report" },
+    { key: "", label: "Tổng quan", icon: "dashboard" },
+    { key: "data", label: "Dữ liệu", icon: "cloud_upload" },
+    { key: "labels", label: "Quy tắc nhãn", icon: "rule" },
+    { key: "assignments", label: "Phân công", icon: "assignment" },
+    { key: "export", label: "Xuất dữ liệu", icon: "download" },
+    { key: "errors", label: "Lỗi", icon: "bug_report" },
 ];
 
 const ProjectDetail: React.FC = () => {
@@ -131,15 +131,15 @@ const ProjectDetail: React.FC = () => {
                         <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                             <span className="flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-[16px]">category</span>
-                                Type: {getDataTypeLabel(project.data_type)}
+                                Loại: {getDataTypeLabel(project.data_type)}
                             </span>
                             <span className="flex items-center gap-1.5">
                                 <span className={cn("w-2 h-2 rounded-full", getStatusDot(project.status))} />
-                                Status: <span className="capitalize">{project.status.replace("_", " ")}</span>
+                                Trạng thái: <span className="capitalize">{project.status.replace("_", " ")}</span>
                             </span>
                             <span className="flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-[16px]">calendar_today</span>
-                                Created: {formatDate(project.created_at)}
+                                Ngày tạo: {formatDate(project.created_at)}
                             </span>
                         </div>
                     </div>
