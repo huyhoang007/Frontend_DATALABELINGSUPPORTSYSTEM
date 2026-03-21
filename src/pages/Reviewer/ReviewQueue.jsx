@@ -44,6 +44,13 @@ export default function ReviewQueue() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [hoveredRow, setHoveredRow] = useState(null);
   const [hoveredKpi, setHoveredKpi] = useState(null);
+  const [isMobile, setIsMobile] = React.useState(() => window.innerWidth < 768);
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -95,6 +102,14 @@ export default function ReviewQueue() {
 
   const handleReview = (assignment) => {
     navigate(`/reviewer/review/${assignment.assignmentId}`);
+  };
+
+  const getStatusLabel = (status) => {
+    if (status === "SUBMITTED") return "CHỜ DUYỆT";
+    if (status === "RE_SUBMITTED") return "NỘP LẠI";
+    if (status === "REJECTED") return "TỪ CHỐI";
+    if (status === "APPROVED") return "ĐÃ CHẤP NHẬN";
+    return status;
   };
 
   // Stats
@@ -440,7 +455,7 @@ export default function ReviewQueue() {
               boxShadow: "0 1px 3px rgba(9,30,66,.08)",
             }}
           >
-            {/* Table header */}
+            {!isMobile && (
             <div
               style={{
                 display: "grid",
@@ -516,7 +531,7 @@ export default function ReviewQueue() {
                   letterSpacing: "0.08em",
                 }}
               >
-                TIẾN ĐỘ
+                TIẾN ĐỘ GÁN NHÃN
               </p>
               <p
                 style={{
@@ -531,6 +546,7 @@ export default function ReviewQueue() {
                 THAO TÁC
               </p>
             </div>
+            )}
 
             {/* Table rows */}
             <div>
@@ -541,6 +557,95 @@ export default function ReviewQueue() {
                   text: T.textMuted,
                   dot: T.textMuted,
                 };
+                const rowBg =
+                  hoveredRow === idx
+                    ? T.brandLight
+                    : idx % 2 === 0
+                      ? T.surface
+                      : "#FAFBFC";
+
+                if (isMobile) {
+                  return (
+                    <div
+                      key={a.assignmentId}
+                      onClick={() => handleReview(a)}
+                      style={{
+                        padding: "16px",
+                        borderBottom: `1px solid ${T.border}`,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "12px",
+                        background: rowBg,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "flex-start" }}>
+                        <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: "4px" }}>
+                          <span style={{ fontFamily: "monospace", fontSize: "12px", color: T.textMuted }}>#{a.assignmentId}</span>
+                          <span style={{ fontSize: "14px", fontWeight: 700, color: T.textPrimary }}>{a.projectName || "—"}</span>
+                          <span style={{ fontSize: "12px", color: T.textMuted }}>{a.datasetName || "—"}</span>
+                        </div>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            padding: "4px 10px",
+                            borderRadius: "999px",
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.06em",
+                            background: statusStyle.bg,
+                            color: statusStyle.text,
+                            flexShrink: 0,
+                          }}
+                        >
+                          <span style={{ width: "6px", height: "6px", borderRadius: "50%", display: "inline-block", background: statusStyle.dot }} />
+                          {getStatusLabel(status)}
+                        </span>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                        <div>
+                          <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Người gán nhãn</p>
+                          <p style={{ fontSize: "12px", color: T.textSecondary }}>{a.annotatorName || "—"}</p>
+                        </div>
+                        <div>
+                          <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Tiến độ gán nhãn</p>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ flex: 1, height: "6px", background: T.border, borderRadius: "99px", overflow: "hidden" }}>
+                              <div style={{ height: "100%", background: `linear-gradient(to right, ${T.brand}, ${T.brandHover})`, borderRadius: "99px", width: `${a.progress ?? 0}%` }} />
+                            </div>
+                            <span style={{ fontSize: "12px", fontWeight: 800, color: T.textPrimary }}>{a.progress ?? 0}%</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReview(a);
+                        }}
+                        style={{
+                          height: "36px",
+                          width: "100%",
+                          padding: "0 16px",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          color: "#FFFFFF",
+                          background: T.brand,
+                          border: "none",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        Đánh giá
+                      </button>
+                    </div>
+                  );
+                }
 
                 return (
                   <div
@@ -554,12 +659,7 @@ export default function ReviewQueue() {
                         "60px 2fr 1.2fr 1.5fr 1fr 0.8fr 100px",
                       alignItems: "center",
                       padding: "16px 24px",
-                      background:
-                        hoveredRow === idx
-                          ? T.brandLight
-                          : idx % 2 === 0
-                            ? T.surface
-                            : "#FAFBFC",
+                      background: rowBg,
                       borderBottom: `1px solid ${T.border}`,
                       cursor: "pointer",
                       transition: "all .15s",
@@ -639,24 +739,30 @@ export default function ReviewQueue() {
                           background: statusStyle.dot,
                         }}
                       />
-                      {status === "SUBMITTED"
-                        ? "CHờ DUYỆT"
-                        : status === "RE_SUBMITTED"
-                          ? "NỘP LẠI ▲"
-                          : status === "REJECTED"
-                            ? "TỪ CHỐI"
-                            : status}
+                      {getStatusLabel(status)}
                     </span>
 
-                    <span
-                      style={{
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        color: T.textPrimary,
-                      }}
-                    >
-                      {a.progress ?? 0}%
-                    </span>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                      <span
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          color: T.textPrimary,
+                        }}
+                      >
+                        {a.progress ?? 0}%
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          color: T.textMuted,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                        }}
+                      >
+                        Gán nhãn
+                      </span>
+                    </div>
 
                     <div
                       style={{
