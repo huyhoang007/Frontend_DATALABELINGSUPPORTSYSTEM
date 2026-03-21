@@ -31,6 +31,14 @@ function resolveImagePath(fileUrl) {
     return url;
 }
 
+function doneStorageKey(assignmentId, itemId) {
+    return `anno_done_${assignmentId}_${itemId}`;
+}
+
+function itemHasAnnotations(item) {
+    return Array.isArray(item?.annotations) && item.annotations.length > 0;
+}
+
 /* ── Thumbnail image component ── */
 function ThumbnailImg({ fileUrl, alt }) {
     const [src, setSrc] = React.useState(null);
@@ -116,6 +124,7 @@ export default function Workspace() {
     const [rightTab, setRightTab] = React.useState("annotations"); // "annotations" | "summary"
     const [showShortcuts, setShowShortcuts] = React.useState(false);
     const [showGuidelinePopover, setShowGuidelinePopover] = React.useState(false);
+    const hydratedDoneAssignmentRef = React.useRef(null);
 
     React.useEffect(() => {
         if (isReadOnly && activeTool !== "select") {
@@ -413,6 +422,32 @@ export default function Workspace() {
     }, [workspace, fallbackLabels, fallbackRuleGroups]);
 
     React.useEffect(() => { fetchWorkspace(); }, [fetchWorkspace]);
+
+    React.useEffect(() => {
+        if (!assignmentId || items.length === 0) return;
+        if (hydratedDoneAssignmentRef.current === assignmentId) return;
+
+        const hasExistingDoneFlags = items.some((item) => (
+            localStorage.getItem(doneStorageKey(assignmentId, item.itemId)) === "1"
+        ));
+
+        if (!hasExistingDoneFlags) {
+            items.forEach((item) => {
+                if (itemHasAnnotations(item)) {
+                    localStorage.setItem(doneStorageKey(assignmentId, item.itemId), "1");
+                } else {
+                    localStorage.removeItem(doneStorageKey(assignmentId, item.itemId));
+                }
+            });
+        }
+
+        const firstUndoneIndex = items.findIndex((item) => (
+            localStorage.getItem(doneStorageKey(assignmentId, item.itemId)) !== "1"
+        ));
+
+        setCurrentImageIndex(firstUndoneIndex >= 0 ? firstUndoneIndex : 0);
+        hydratedDoneAssignmentRef.current = assignmentId;
+    }, [assignmentId, items]);
 
     /* ── Load annotations when item changes ── */
     React.useEffect(() => {
