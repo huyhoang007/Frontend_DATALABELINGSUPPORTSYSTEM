@@ -111,6 +111,7 @@ export default function ReviewQueue() {
   const rejectedCount = assignments.filter(
     (a) => a.status === "REJECTED",
   ).length;
+  const displayValue = (value) => (isLoading ? "—" : value);
 
   return (
     <div
@@ -168,7 +169,7 @@ export default function ReviewQueue() {
                   fontWeight: 700,
                 }}
               >
-                {queueTotalCount}
+                {displayValue(queueTotalCount)}
               </span>{" "}
               nhiệm vụ đang chờ đánh giá.
             </p>
@@ -253,7 +254,7 @@ export default function ReviewQueue() {
                   letterSpacing: "-0.02em",
                 }}
               >
-                {kpi.value}
+                {displayValue(kpi.value)}
               </p>
             </div>
           ))}

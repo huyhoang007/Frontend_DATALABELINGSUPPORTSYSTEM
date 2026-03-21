@@ -143,6 +143,12 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
     const handleApprove = async (reviewingId) => {
         const result = await handleReviewAnnotation(reviewingId, false, null);
         if (result.success) {
+            // Clear any inline reject UI tied to the annotation once it is approved.
+            if (rejectingAnnoId === reviewingId) {
+                setRejectingAnnoId(null);
+                setSelectedPolicyId(null);
+                setRejectNote("");
+            }
             addToast({ type: "success", message: "Đã chấp nhận" });
         } else {
             addToast({ type: "error", message: result.error || "Không thể chấp nhận annotation" });
