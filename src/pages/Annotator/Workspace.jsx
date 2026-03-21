@@ -136,6 +136,13 @@ export default function Workspace() {
     const [showShortcuts, setShowShortcuts] = React.useState(false);
     const [showGuidelinePopover, setShowGuidelinePopover] = React.useState(false);
     const hydratedDoneAssignmentRef = React.useRef(null);
+    const [isMobile, setIsMobile] = React.useState(() => window.innerWidth < 768);
+
+    React.useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     React.useEffect(() => {
         if (isReadOnly && activeTool !== "select") {
@@ -648,7 +655,7 @@ export default function Workspace() {
 
                 {/* â•â•â•â•â•â•â•â•â•â• TOP BAR â•â•â•â•â•â•â•â•â•â• */}
                 <div className="flex items-center gap-2 px-3 shrink-0 border-b"
-                    style={{ height: 48, background: "#182233", borderColor: "#253347" }}>
+                    style={{ minHeight: 48, background: "#182233", borderColor: "#253347", flexWrap: isMobile ? "wrap" : "nowrap", paddingTop: isMobile ? 8 : undefined, paddingBottom: isMobile ? 8 : undefined }}>
 
                     {/* Dashboard Logo Link */}
                     <button
@@ -664,7 +671,7 @@ export default function Workspace() {
                     </button>
 
                     {/* Progress bar + count */}
-                    <div className="flex items-center gap-2 mx-3">
+                    <div className="flex items-center gap-2 mx-3" style={{ order: isMobile ? 3 : 0 }}>
                         <div className="w-28 h-1.5 rounded-full overflow-hidden" style={{ background: "#253347" }}>
                             <div className="h-full rounded-full transition-all duration-500"
                                 style={{ width: `${progressPercent}%`, background: "#00bfa5" }} />
@@ -675,7 +682,7 @@ export default function Workspace() {
                     </div>
 
                     {/* Navigation */}
-                    <div className="flex items-center rounded overflow-hidden" style={{ background: "#1e2f42" }}>
+                    <div className="flex items-center rounded overflow-hidden" style={{ background: "#1e2f42", order: isMobile ? 4 : 0 }}>
                         {[
                             { icon: "first_page", dir: "first" },
                             { icon: "chevron_left", dir: "prev" },
@@ -705,7 +712,7 @@ export default function Workspace() {
                     <div className="flex-1" />
 
                     {/* Clock */}
-                    <div className="flex items-center gap-1 mr-3">
+                    <div className="flex items-center gap-1 mr-3" style={{ order: isMobile ? 2 : 0 }}>
                         {[hh, mm, ss].map((unit, i) => (
                             <span key={i} className="text-xs font-mono font-bold tabular-nums px-1.5 py-0.5 rounded"
                                 style={{ background: "#1e2f42", color: "#94a3b8", letterSpacing: "0.05em" }}>
@@ -715,7 +722,7 @@ export default function Workspace() {
                     </div>
 
                     {/* Zoom */}
-                    <div className="flex items-center gap-1 mr-2">
+                    <div className="flex items-center gap-1 mr-2" style={{ order: isMobile ? 2 : 0 }}>
                         <button onClick={() => setZoom((z) => Math.max(10, z - 10))}
                             className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
                             style={{ color: "#64748b" }}>
@@ -731,7 +738,7 @@ export default function Workspace() {
                     </div>
 
                     {/* Guideline quick access */}
-                    <div className="relative mr-1">
+                    <div className="relative mr-1" style={{ order: isMobile ? 2 : 0 }}>
                         <button
                             onClick={() => setShowGuidelinePopover((v) => !v)}
                             title="Hướng dẫn gán nhãn"
@@ -784,7 +791,7 @@ export default function Workspace() {
                     >?</button>
 
                     {/* Action buttons */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2" style={{ order: isMobile ? 5 : 0, width: isMobile ? "100%" : undefined, justifyContent: isMobile ? "flex-end" : undefined }}>
                         {/* Save button */}
                         <button onClick={handleSave}
                             disabled={isReadOnly}
@@ -823,11 +830,11 @@ export default function Workspace() {
                 </div>
 
                 {/* â•â•â•â•â•â•â•â•â•â• BODY â•â•â•â•â•â•â•â•â•â• */}
-                <div className="flex flex-1 overflow-hidden">
+                <div className="flex flex-1 overflow-hidden" style={{ flexDirection: isMobile ? "column" : "row" }}>
 
                     {/* ── LEFT: Image thumbnails ── */}
                     <div className="flex flex-col shrink-0 overflow-y-auto border-r"
-                        style={{ width: 148, background: "#182233", borderColor: "#253347" }}>
+                        style={{ width: isMobile ? "100%" : 148, background: "#182233", borderColor: "#253347", borderRightWidth: isMobile ? 0 : 1, borderBottomWidth: isMobile ? 1 : 0 }}>
 
                         {/* Project Info & Submit Action */}
                         <div className="p-3 border-b shrink-0 flex flex-col gap-2" style={{ borderColor: "#253347" }}>
@@ -855,7 +862,7 @@ export default function Workspace() {
                         </div>
 
                         {/* Image List */}
-                        <div className="flex-1 p-2 space-y-2 overflow-y-auto">
+                        <div className="flex-1 p-2 overflow-y-auto" style={{ display: "flex", flexDirection: isMobile ? "row" : "column", gap: 8, overflowX: isMobile ? "auto" : "hidden" }}>
                             {items.map((item, idx) => {
                                 const isActive = idx === currentImageIndex;
                                 const isDone = anno.isDone(item.itemId);
@@ -866,6 +873,7 @@ export default function Workspace() {
                                         style={{
                                             border: isActive ? "2px solid #00bfa5" : "2px solid transparent",
                                             background: "#1e2f42",
+                                            minWidth: isMobile ? 96 : undefined,
                                         }}>
                                         {/* Number badge */}
                                         <div className="absolute top-1 left-1 z-10 w-5 h-5 rounded text-[10px] font-bold flex items-center justify-center shadow-md bg-black/40 backdrop-blur-sm"
@@ -879,7 +887,7 @@ export default function Workspace() {
                                             </div>
                                         )}
                                         {/* Thumbnail */}
-                                        <div className="w-full overflow-hidden" style={{ height: 80 }}>
+                                        <div className="w-full overflow-hidden" style={{ height: 80, width: isMobile ? 92 : undefined }}>
                                             <ThumbnailImg fileUrl={item.fileUrl} alt={item.fileName || `Item ${idx + 1}`} />
                                         </div>
                                         {/* Selection Glow */}
@@ -903,9 +911,9 @@ export default function Workspace() {
                     </div>
 
                     {/* ── CENTER: Canvas ── */}
-                    <div className="flex-1 overflow-auto relative" style={{ background: "#0e1621" }}>
+                    <div className="flex-1 overflow-auto relative" style={{ background: "#0e1621", minHeight: isMobile ? 0 : undefined }}>
                         {/* centering wrapper — expands to at least full viewport so canvas stays centered at small zoom */}
-                        <div style={{ minHeight: "100%", minWidth: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: 32, boxSizing: "border-box" }}>
+                        <div style={{ minHeight: "100%", minWidth: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? 12 : 32, boxSizing: "border-box" }}>
                             <div className="relative shadow-2xl shrink-0"
                                 style={{
                                     width: imgWidth * (zoom / 100),
@@ -974,7 +982,7 @@ export default function Workspace() {
 
                     {/* RIGHT: Tools + Annotations */}
                     <div className="flex flex-col shrink-0 border-l overflow-hidden"
-                        style={{ width: 260, background: "#182233", borderColor: "#253347" }}>
+                        style={{ width: isMobile ? "100%" : 260, maxHeight: isMobile ? "42vh" : undefined, background: "#182233", borderColor: "#253347", borderLeftWidth: isMobile ? 0 : 1, borderTopWidth: isMobile ? 1 : 0 }}>
 
                         {/* Tool icons */}
                         <div className="flex items-center justify-center gap-1.5 px-3 py-2.5 border-b shrink-0"
