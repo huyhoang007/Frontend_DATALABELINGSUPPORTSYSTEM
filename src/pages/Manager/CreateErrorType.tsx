@@ -43,8 +43,12 @@ export default function CreateErrorType() {
             navigate("/manager/error-types");
         } catch (err: any) {
             console.error("Failed to create policy:", err);
-            const msg = err?.response?.data?.message || err?.response?.data || "Lỗi khi tạo loại lỗi";
-            setErrors({ errorName: typeof msg === "string" ? msg : "Lỗi khi tạo loại lỗi" });
+            const raw = err?.response?.data?.message || err?.response?.data || err?.message || "Lỗi khi tạo loại lỗi";
+            const msg = typeof raw === "string" ? raw : "Lỗi khi tạo loại lỗi";
+            const translated = msg.toLowerCase().includes("already exist")
+                ? "Tên loại lỗi này đã tồn tại, vui lòng chọn tên khác"
+                : msg;
+            setErrors({ errorName: translated });
         } finally {
             setSaving(false);
         }

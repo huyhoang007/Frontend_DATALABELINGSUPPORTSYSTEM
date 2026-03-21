@@ -27,7 +27,6 @@ import ErrorTypes from "./pages/Manager/ErrorTypes";
 import ProjectErrors from "./pages/Manager/ProjectErrors";
 import CreateErrorType from "./pages/Manager/CreateErrorType";
 import ManagerTasks from "./pages/Manager/Tasks";
-import ExportData from "./pages/Manager/ExportData";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AdminUsers from "./pages/Admin/Users";
 import AdminLabels from "./pages/Admin/Labels";
@@ -146,7 +145,6 @@ function App() {
               <Route path="error-types" element={<ErrorTypes />} />
               <Route path="error-types/new" element={<CreateErrorType />} />
               <Route path="tasks" element={<ManagerTasks />} />
-              <Route path="export" element={<ExportData />} />
               <Route path="policies" element={<ManagerPolicies />} />
             </Route>
 

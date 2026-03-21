@@ -698,12 +698,13 @@ const ModernLabelsPage: React.FC = () => {
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">Phím tắt (tùy chọn)</label>
                 <input
                   type="text"
-                  placeholder="Ví dụ: P"
+                  placeholder="VD: P, ctrl+1, alt+a, ..."
                   value={newLabel.shortcutKey}
                   onChange={(e) => setNewLabel({ ...newLabel, shortcutKey: e.target.value })}
-                  className="w-full px-4 py-2 bg-background border border-input rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all uppercase"
-                  maxLength={1}
+                  className="w-full px-4 py-2 bg-background border border-input rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                  maxLength={20}
                 />
+                <p className="text-xs text-muted-foreground mt-1">Có thể nhập nhiều ký tự để tìm kiếm nhanh khi gán nhãn</p>
               </div>
             </div>
 
@@ -782,12 +783,13 @@ const ModernLabelsPage: React.FC = () => {
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">Phím tắt (tùy chọn)</label>
                 <input
                   type="text"
-                  placeholder="Ví dụ: P"
+                  placeholder="VD: P, ctrl+1, alt+a, ..."
                   value={editLabel.shortcutKey}
                   onChange={(e) => setEditLabel({ ...editLabel, shortcutKey: e.target.value })}
-                  className="w-full px-4 py-2 bg-background border border-input rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all uppercase"
-                  maxLength={1}
+                  className="w-full px-4 py-2 bg-background border border-input rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                  maxLength={20}
                 />
+                <p className="text-xs text-muted-foreground mt-1">Có thể nhập nhiều ký tự để tìm kiếm nhanh khi gán nhãn</p>
               </div>
             </div>
 
