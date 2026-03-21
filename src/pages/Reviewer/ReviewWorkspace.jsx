@@ -17,6 +17,10 @@ function resolveImagePath(fileUrl) {
     return url;
 }
 
+function isAwaitingRereview(annotation) {
+    return annotation?.status === "REJECTED" && annotation?.isImproved === true;
+}
+
 /* ── Authenticated thumbnail component ── */
 function ThumbnailImg({ fileUrl, alt }) {
     const [src, setSrc] = React.useState(null);
@@ -676,8 +680,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                     const group = annotationGroups.find(g => g.beReviewingIds?.includes(anno.reviewingId));
                                     const gKey = group?.groupKey || `solo_${anno.reviewingId}`;
                                     const isHighlighted = selectedGroupKey === gKey;
-                                    const isPending = !anno.status || anno.status === "PENDING";
+                                    const isPending = !anno.status || anno.status === "PENDING" || isAwaitingRereview(anno);
                                     const isApproved = anno.status === "APPROVED";
+                                    const statusLabel = isAwaitingRereview(anno) ? "PENDING" : (anno.status || "PENDING");
 
                                     return (
                                         <div key={anno.reviewingId}
@@ -702,13 +707,13 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ml-1"
                                                     style={{
                                                         background: isApproved ? "rgba(0,191,165,0.1)"
-                                                            : anno.status === "REJECTED" ? "rgba(248,113,113,0.1)"
-                                                                : "rgba(250,204,21,0.1)",
+                                                            : statusLabel === "REJECTED" ? "rgba(248,113,113,0.1)"
+                                                            : "rgba(250,204,21,0.1)",
                                                         color: isApproved ? "#00bfa5"
-                                                            : anno.status === "REJECTED" ? "#f87171"
-                                                                : "#facc15",
+                                                            : statusLabel === "REJECTED" ? "#f87171"
+                                                            : "#facc15",
                                                     }}>
-                                                    {anno.status || "PENDING"}
+                                                    {statusLabel}
                                                 </span>
                                             </div>
 

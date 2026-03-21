@@ -53,10 +53,26 @@ function isApprovedWorkspaceError(message) {
 /* ── Thumbnail image component ── */
 function ThumbnailImg({ fileUrl, alt }) {
     const [src, setSrc] = React.useState(null);
+    const [isVisible, setIsVisible] = React.useState(false);
+    const containerRef = React.useRef(null);
+
+    React.useEffect(() => {
+        const element = containerRef.current;
+        if (!element) return;
+        const observer = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting) {
+                setIsVisible(true);
+                observer.disconnect();
+            }
+        }, { rootMargin: "300px" });
+        observer.observe(element);
+        return () => observer.disconnect();
+    }, []);
+
     React.useEffect(() => {
         let cancelled = false;
         let blobUrl = null;
-        if (!fileUrl) return;
+        if (!fileUrl || !isVisible) return;
         const path = resolveImagePath(fileUrl);
         if (!path) return;
         (async () => {
@@ -69,13 +85,13 @@ function ThumbnailImg({ fileUrl, alt }) {
             } catch { /* silent */ }
         })();
         return () => { cancelled = true; if (blobUrl) URL.revokeObjectURL(blobUrl); };
-    }, [fileUrl]);
+    }, [fileUrl, isVisible]);
     if (!src) return (
-        <div className="w-full h-full flex items-center justify-center" style={{ background: "#0e1621" }}>
+        <div ref={containerRef} className="w-full h-full flex items-center justify-center" style={{ background: "#0e1621" }}>
             <span className="material-symbols-outlined" style={{ fontSize: 24, color: "#3a5068" }}>image</span>
         </div>
     );
-    return <img src={src} alt={alt} className="w-full h-full object-cover" draggable={false} />;
+    return <img ref={containerRef} src={src} alt={alt} className="w-full h-full object-cover" draggable={false} />;
 }
 
 /* ── Tool definitions ── */
@@ -105,7 +121,7 @@ export default function Workspace() {
     const totalImages = items.length;
 
     // Is the assignment read-only (submitted, re-submitted, or approved)?
-    const isReadOnly = ["SUBMITTED", "APPROVED"].includes(workspace?.assignmentStatus?.toUpperCase());
+    const isReadOnly = ["SUBMITTED", "RE_SUBMITTED", "APPROVED"].includes(workspace?.assignmentStatus?.toUpperCase());
 
     /* ── Fetch workspace ── */
     const fetchWorkspace = React.useCallback(async () => {
@@ -622,7 +638,7 @@ export default function Workspace() {
     }
 
     // Block access if assignment already submitted/re-submitted
-    const lockedStatuses = ["SUBMITTED", "APPROVED"];
+    const lockedStatuses = ["SUBMITTED", "RE_SUBMITTED", "APPROVED"];
     if (lockedStatuses.includes(workspace?.assignmentStatus?.toUpperCase())) {
         const isApproved = workspace?.assignmentStatus?.toUpperCase() === "APPROVED";
         return (
@@ -805,8 +821,8 @@ export default function Workspace() {
                         {/* Mark Done button */}
                         <button onClick={handleMarkDone}
                             title={currentIsDone ? "Bỏ đánh dấu hoàn thành" : "Đánh dấu hoàn thành ảnh này"}
-                            disabled={(!currentIsDone && anno.annotations.length === 0) || isReadOnly}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${((!currentIsDone && anno.annotations.length === 0) || isReadOnly) ? 'opacity-40 cursor-not-allowed' : 'hover:brightness-110 active:scale-95'}`}
+                            disabled={(!currentIsDone && (anno.annotations.length === 0 || currentItemHasRejectedFeedback)) || isReadOnly}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${((!currentIsDone && (anno.annotations.length === 0 || currentItemHasRejectedFeedback)) || isReadOnly) ? 'opacity-40 cursor-not-allowed' : 'hover:brightness-110 active:scale-95'}`}
                             style={currentIsDone
                                 ? { background: "#064e3b", color: "#34d399", border: "1px solid #10b98144" }
                                 : { background: "#1e2f42", color: "#94a3b8", border: "1px solid #3a506844" }}>
@@ -968,6 +984,7 @@ export default function Workspace() {
                                 {(pendingShape || relabelGroupKey) && (
                                     <LabelSelectModal
                                         labelGroups={labelGroupsForModal}
+                                        initialSelectedIds={relabelGroupKey ? (anno.annotations.find((group) => group.groupKey === relabelGroupKey)?.labelIds || []) : []}
                                         pendingShape={pendingShape}
                                         canvasWidth={imgWidth * (zoom / 100)}
                                         canvasHeight={imgHeight * (zoom / 100)}
