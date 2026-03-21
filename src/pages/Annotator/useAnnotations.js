@@ -273,6 +273,11 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
         (g) => g.groupKey === groupKey,
       );
       if (target?.reviewStatus === "APPROVED") return;
+      const sameLabels =
+        target &&
+        target.labelIds.length === normalizedLabelIds.length &&
+        target.labelIds.every((id, index) => id === normalizedLabelIds[index]);
+      if (sameLabels) return;
       const labelNames = normalizedLabelIds.map((id) => {
         const l = allLabels.find((lb) => lb.id === id);
         return l?.name || "Unknown";
@@ -287,10 +292,10 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
           g.groupKey === groupKey
             ? {
                 ...g,
-              labelIds: [...normalizedLabelIds],
+                labelIds: [...normalizedLabelIds],
                 labelNames,
                 colorCodes,
-                // Xóa trạng thái rejected khi annotator đã thay thế label
+                // Only the edited annotation should leave rejected state after a real relabel.
                 reviewStatus: null,
                 policyName: null,
               }

@@ -39,6 +39,12 @@ function itemHasAnnotations(item) {
     return Array.isArray(item?.annotations) && item.annotations.length > 0;
 }
 
+function itemHasRejectedFeedback(item) {
+    return Array.isArray(item?.annotations) && item.annotations.some((annotation) => (
+        String(annotation?.status || "").toUpperCase() === "REJECTED"
+    ));
+}
+
 function isApprovedWorkspaceError(message) {
     const text = String(message || "").toLowerCase();
     return text.includes("already approved") || text.includes("assignment is already approved");
@@ -491,7 +497,10 @@ export default function Workspace() {
     const doneCount = items.filter((i) => anno.isDone(i.itemId)).length;
     const progressPercent = totalImages > 0 ? Math.round((doneCount / totalImages) * 100) : 0;
     const hasIncompleteItems = totalImages === 0 || doneCount !== totalImages;
-    const isSubmitBlocked = isReadOnly || imageLoading || !!imageError || hasIncompleteItems;
+    const currentItemHasRejectedFeedback = anno.annotations.some((group) => group.reviewStatus === "REJECTED");
+    const assignmentHasRejectedFeedback = (workspace?.assignmentStatus || "").toUpperCase() === "REJECTED"
+        && (currentItemHasRejectedFeedback || items.some((item) => itemHasRejectedFeedback(item)));
+    const isSubmitBlocked = isReadOnly || imageLoading || !!imageError || hasIncompleteItems || assignmentHasRejectedFeedback;
 
     const handleSubmit = async () => {
         if (isSubmitBlocked) {
@@ -499,6 +508,8 @@ export default function Workspace() {
                 addToast({ type: "warning", message: "Không thể nộp bài khi ảnh hiện tại chưa tải được" });
             } else if (hasIncompleteItems) {
                 addToast({ type: "warning", message: "Chỉ có thể nộp bài sau khi tất cả ảnh đã được đánh dấu hoàn thành" });
+            } else if (assignmentHasRejectedFeedback) {
+                addToast({ type: "warning", message: "Cần xử lý toàn bộ annotation bị reviewer trả về trước khi nộp lại" });
             }
             return;
         }

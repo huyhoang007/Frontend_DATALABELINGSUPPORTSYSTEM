@@ -129,8 +129,9 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
   };
 
   /* ── Active count ── */
+  const activeStatuses = ["PENDING", "IN_PROGRESS", "REJECTED", "RE_SUBMITTED"];
   const activeCount = assignments.filter((a) =>
-    ["PENDING", "IN_PROGRESS", "REJECTED"].includes(
+    activeStatuses.includes(
       (a.status || "").toUpperCase(),
     ),
   ).length;
@@ -211,7 +212,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
             {
               label: "Đang thực hiện",
               value: assignments.filter(
-                (t) => (t.status || "").toUpperCase() === "IN_PROGRESS",
+                (t) => ["IN_PROGRESS", "REJECTED"].includes((t.status || "").toUpperCase()),
               ).length,
               icon: "pending",
               color: T.brand,
@@ -223,6 +224,14 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
               ).length,
               icon: "schedule",
               color: T.amber,
+            },
+            {
+              label: "Nộp lại",
+              value: assignments.filter(
+                (t) => (t.status || "").toUpperCase() === "RE_SUBMITTED",
+              ).length,
+              icon: "restart_alt",
+              color: "#BF5700",
             },
           ].map((kpi, idx) => (
             <div
