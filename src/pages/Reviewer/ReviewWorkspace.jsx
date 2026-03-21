@@ -166,6 +166,10 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
     };
 
     const handleSubmit = async () => {
+        if (imageError) {
+            addToast({ type: "error", message: "Không thể nộp đánh giá khi ảnh hiện tại tải thất bại" });
+            return;
+        }
         const result = await handleSubmitReview();
         if (result.success) {
             addToast({ type: "success", message: "Đã nộp đánh giá thành công!" });
@@ -228,7 +232,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
     const imgWidth = currentItem?.width || 800;
     const imgHeight = currentItem?.height || 600;
     const totalImages = items.length;
-    const canSubmit = reviewStats.pending === 0 && reviewStats.total > 0;
+    const hasImageLoadError = Boolean(imageError);
+    const canReviewCurrentImage = !imageLoading && !hasImageLoadError && Boolean(imageBlobUrl);
+    const canSubmit = reviewStats.pending === 0 && reviewStats.total > 0 && !hasImageLoadError;
 
     const hh = String(now.getHours()).padStart(2, "0");
     const mm = String(now.getMinutes()).padStart(2, "0");
@@ -374,7 +380,13 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                         cursor: canSubmit && !reviewSubmitting ? "pointer" : "not-allowed",
                         opacity: reviewSubmitting ? 0.6 : 1,
                     }}
-                    title={!canSubmit ? `Còn ${reviewStats.pending} annotation chưa được đánh giá` : "Hoàn tất và nộp đánh giá"}>
+                    title={
+                        hasImageLoadError
+                            ? "Không thể nộp đánh giá khi ảnh hiện tại tải thất bại"
+                            : !canSubmit
+                                ? `Còn ${reviewStats.pending} annotation chưa được đánh giá`
+                                : "Hoàn tất và nộp đánh giá"
+                    }>
                     {reviewSubmitting
                         ? <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
                         : <span className="material-symbols-outlined text-[14px]">task_alt</span>}
@@ -422,6 +434,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                         <button onClick={handleSubmit}
                             disabled={!canSubmit || reviewSubmitting}
                             className="w-full py-2 rounded text-xs font-bold flex items-center justify-center gap-1.5 transition-opacity"
+                            title={hasImageLoadError ? "Không thể nộp đánh giá khi ảnh hiện tại tải thất bại" : undefined}
                             style={{
                                 background: canSubmit ? "#00bfa5" : "#253347",
                                 color: canSubmit ? "#fff" : "#4a6788",
@@ -540,6 +553,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                         <p className="text-sm font-medium mb-1" style={{ color: "#f87171" }}>Không tải được ảnh</p>
                                         <p className="text-[10px] font-mono break-all"
                                             style={{ color: "#64748b" }}>{imageError.url}</p>
+                                        <p className="text-xs mt-3" style={{ color: "#cbd5e1" }}>
+                                            Đánh giá và nộp bài đã bị khóa cho đến khi ảnh tải được.
+                                        </p>
                                     </div>
                                 </div>
                             ) : (
@@ -684,7 +700,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                             {isPending && (
                                                 <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
                                                     <button onClick={() => handleApprove(anno.reviewingId)}
-                                                        disabled={reviewSubmitting}
+                                                        disabled={reviewSubmitting || !canReviewCurrentImage}
+                                                        title={!canReviewCurrentImage ? "Không thể đánh giá khi ảnh hiện tại tải thất bại" : undefined}
                                                         className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-bold transition"
                                                         style={{
                                                             background: "rgba(0,191,165,0.1)",
@@ -702,8 +719,14 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                                             setSelectedPolicyId(null);
                                                             setRejectNote("");
                                                         }}
-                                                        disabled={reviewSubmitting || policies.length === 0}
-                                                        title={policies.length === 0 ? "Chưa có policy được cấu hình" : "Từ chối annotation này"}
+                                                        disabled={reviewSubmitting || policies.length === 0 || !canReviewCurrentImage}
+                                                        title={
+                                                            !canReviewCurrentImage
+                                                                ? "Không thể đánh giá khi ảnh hiện tại tải thất bại"
+                                                                : policies.length === 0
+                                                                    ? "Chưa có policy được cấu hình"
+                                                                    : "Từ chối annotation này"
+                                                        }
                                                         className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-bold transition disabled:opacity-40"
                                                         style={{
                                                             background: "rgba(248,113,113,0.1)",
