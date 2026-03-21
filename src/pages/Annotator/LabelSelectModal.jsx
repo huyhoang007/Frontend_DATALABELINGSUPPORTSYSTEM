@@ -8,13 +8,17 @@ import * as React from "react";
  *  onSave(labelIds: number[])
  *  onCancel()
  */
-export default function LabelSelectModal({ labelGroups = [], onSave, onCancel }) {
-    const [selectedIds, setSelectedIds] = React.useState([]);
+export default function LabelSelectModal({ labelGroups = [], initialSelectedIds = [], onSave, onCancel }) {
+    const [selectedIds, setSelectedIds] = React.useState(initialSelectedIds);
     const [search, setSearch] = React.useState("");
     const [activeRuleIdx, setActiveRuleIdx] = React.useState(0);
     const [viewMode, setViewMode] = React.useState(null); // null | "labels" | "rules"
 
     const isSearching = search.trim().length > 0;
+
+    React.useEffect(() => {
+        setSelectedIds(initialSelectedIds);
+    }, [initialSelectedIds]);
 
     /* ── filtered groups when searching ── */
     const searchResults = React.useMemo(() => {

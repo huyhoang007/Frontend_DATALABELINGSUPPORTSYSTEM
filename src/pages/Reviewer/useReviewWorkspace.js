@@ -28,6 +28,10 @@ function resolveImagePath(fileUrl) {
     return url;
 }
 
+function isAwaitingRereview(annotation) {
+    return annotation?.status === "REJECTED" && annotation?.isImproved === true;
+}
+
 export default function useReviewWorkspace(assignmentIdNum) {
     // ── Workspace state ──
     const [workspace, setWorkspace] = useState(null);
@@ -106,7 +110,7 @@ export default function useReviewWorkspace(assignmentIdNum) {
         const allAnnotations = Object.values(annoCache).flat();
         const total = allAnnotations.length;
         const approved = allAnnotations.filter(a => a.status === "APPROVED").length;
-        const rejected = allAnnotations.filter(a => a.status === "REJECTED").length;
+        const rejected = allAnnotations.filter(a => a.status === "REJECTED" && !isAwaitingRereview(a)).length;
         const pending = total - approved - rejected;
         return {
             total,
@@ -124,7 +128,7 @@ export default function useReviewWorkspace(assignmentIdNum) {
         const annos = annoCache[itemId] ?? [];
         const total = annos.length;
         const approved = annos.filter(a => a.status === "APPROVED").length;
-        const rejected = annos.filter(a => a.status === "REJECTED").length;
+        const rejected = annos.filter(a => a.status === "REJECTED" && !isAwaitingRereview(a)).length;
         return { total, approved, rejected, pending: total - approved - rejected };
     }, [annoCache]);
 
@@ -228,8 +232,8 @@ export default function useReviewWorkspace(assignmentIdNum) {
             if (cacheComplete) {
                 const allAnnotations = Object.values(nextCache).flat();
                 const total = allAnnotations.length;
-                const pending = allAnnotations.filter(a => a.status !== "APPROVED" && a.status !== "REJECTED").length;
-                const anyRejected = allAnnotations.some(a => a.status === "REJECTED");
+                const pending = allAnnotations.filter(a => a.status !== "APPROVED" && (a.status !== "REJECTED" || isAwaitingRereview(a))).length;
+                const anyRejected = allAnnotations.some(a => a.status === "REJECTED" && !isAwaitingRereview(a));
 
                 if (pending === 0 && total > 0) {
                     return {

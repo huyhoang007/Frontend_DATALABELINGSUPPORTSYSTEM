@@ -123,8 +123,11 @@ export default function TaskList() {
   };
 
   const getActionConfig = (status) => {
-    if (["PENDING", "REJECTED", "RE_SUBMITTED"].includes(status)) {
+    if (["PENDING", "REJECTED"].includes(status)) {
       return { label: "Bắt đầu", text: "#FFFFFF", background: T.brand, border: "none" };
+    }
+    if (status === "RE_SUBMITTED") {
+      return { label: "Xem", text: T.textSecondary, background: T.surfaceHover, border: `1px solid ${T.border}`, icon: "visibility" };
     }
     if (status === "IN_PROGRESS") {
       return { label: "Tiếp tục", text: T.amber, background: T.amberBg, border: `1px solid ${T.amber}40` };
@@ -850,7 +853,7 @@ export default function TaskList() {
                         gap: "8px",
                       }}
                     >
-                      {["PENDING", "REJECTED", "RE_SUBMITTED"].includes(status) && (
+                      {["PENDING", "REJECTED"].includes(status) && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -877,6 +880,37 @@ export default function TaskList() {
                           }
                         >
                           Bắt đầu
+                        </button>
+                      )}
+                      {status === "RE_SUBMITTED" && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpen(a);
+                          }}
+                          style={{
+                            height: "32px",
+                            minWidth: "84px",
+                            padding: "0 14px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "6px",
+                            fontSize: "13px",
+                            fontWeight: 600,
+                            color: T.textSecondary,
+                            background: T.surfaceHover,
+                            border: `1px solid ${T.border}`,
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                            transition: "all .15s",
+                          }}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                            visibility
+                          </span>
+                          Xem
                         </button>
                       )}
                       {status === "IN_PROGRESS" && (

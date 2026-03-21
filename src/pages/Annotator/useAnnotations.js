@@ -334,6 +334,16 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
         });
         return false;
       }
+      const hasRejectedFeedback = latestAnnotationsRef.current.some(
+        (annotation) => annotation.reviewStatus === "REJECTED",
+      );
+      if (hasRejectedFeedback) {
+        addToast?.({
+          type: "warning",
+          message: "Cần xử lý annotation bị reviewer trả về trước khi đánh dấu hoàn thành",
+        });
+        return false;
+      }
       localStorage.setItem(DONE_KEY(assignmentId, itemId), "1");
       return true;
     },
