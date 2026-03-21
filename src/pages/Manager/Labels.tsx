@@ -9,15 +9,28 @@ import {
     Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "../../components/ui/Table";
 
+interface Label {
+    labelId?: number;
+    id?: number;
+    labelName?: string;
+    name?: string;
+    colorCode?: string;
+    labelType?: string;
+    type?: string;
+    isActive?: boolean;
+    description?: string;
+    shortcutKey?: string;
+}
+
 export default function Labels() {
     const navigate = useNavigate();
-    const [labels, setLabels] = useState([]);
+    const [labels, setLabels] = useState<Label[]>([]);
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [deleteTarget, setDeleteTarget] = useState<Label | null>(null);
     const [deleting, setDeleting] = useState(false);
-    const [activatingId, setActivatingId] = useState(null);
+    const [activatingId, setActivatingId] = useState<number | null>(null);
 
     const loadLabels = async () => {
         setLoading(true);
@@ -25,7 +38,7 @@ export default function Labels() {
             const data = await labelApi.getAllLabels();
             setLabels(Array.isArray(data) ? data : []);
         } catch (err) {
-            setError(err?.message || "Không thể tải danh sách nhãn");
+            setError((err as Error)?.message || "Không thể tải danh sách nhãn");
         } finally {
             setLoading(false);
         }
@@ -37,23 +50,23 @@ export default function Labels() {
         if (!deleteTarget) return;
         setDeleting(true);
         try {
-            await labelApi.deleteLabel(deleteTarget.labelId ?? deleteTarget.id);
+            await labelApi.deleteLabel((deleteTarget.labelId ?? deleteTarget.id) as number);
             setDeleteTarget(null);
             loadLabels();
         } catch (err) {
-            setError(err?.message || "Xóa thất bại");
+            setError((err as Error)?.message || "Xóa thất bại");
         } finally {
             setDeleting(false);
         }
     };
 
-    const handleActivate = async (labelId) => {
+    const handleActivate = async (labelId: number) => {
         setActivatingId(labelId);
         try {
             await labelApi.activateLabel(labelId);
             loadLabels();
         } catch (err) {
-            setError(err?.message || "Kích hoạt lại thất bại");
+            setError((err as Error)?.message || "Kích hoạt lại thất bại");
         } finally {
             setActivatingId(null);
         }
@@ -145,7 +158,7 @@ export default function Labels() {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => handleActivate(label.labelId ?? label.id)}
+                                                onClick={() => handleActivate((label.labelId ?? label.id) as number)}
                                                 title="Kích hoạt lại"
                                                 disabled={activatingId === (label.labelId ?? label.id)}
                                             >

@@ -22,8 +22,8 @@ const TABS = [
     { key: "data", label: "Dữ liệu", icon: "cloud_upload" },
     { key: "labels", label: "Quy tắc nhãn", icon: "rule" },
     { key: "assignments", label: "Phân công", icon: "assignment" },
-    { key: "export", label: "Xuất dữ liệu", icon: "download" },
     { key: "errors", label: "Lỗi", icon: "bug_report" },
+    { key: "export", label: "Xuất dữ liệu", icon: "download" },
 ];
 
 const ProjectDetail: React.FC = () => {

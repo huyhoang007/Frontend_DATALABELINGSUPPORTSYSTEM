@@ -92,7 +92,7 @@ const ModernProjectsPage: React.FC = () => {
   const fetchProjects = async () => {
     setIsLoading(true);
     try {
-      const raw = await projectApi.getMyProjects();
+      const raw: any = await projectApi.getMyProjects();
       const list = Array.isArray(raw) ? raw : (raw?.data ?? raw?.content ?? []);
 
       const mapped = list.map((p: any) => ({
@@ -105,11 +105,13 @@ const ModernProjectsPage: React.FC = () => {
         datasets: [],
       }));
 
-      // Compute real status from assignments
+      // Compute real status from assignments, but preserve backend status if paused/completed/inactive
       const withStatus = await Promise.all(
         mapped.map(async (proj: any) => {
+          // If backend explicitly set paused/inactive, keep it
+          if (["paused", "inactive"].includes(proj.status)) return proj;
           try {
-            const aRaw = await assignmentApi.getAssignmentsByProject(proj.project_id);
+            const aRaw: any = await assignmentApi.getAssignmentsByProject(proj.project_id);
             const aList = Array.isArray(aRaw) ? aRaw : (aRaw?.data ?? aRaw?.content ?? []);
             return { ...proj, status: computeProjectStatus(aList) };
           } catch {
@@ -146,7 +148,11 @@ const ModernProjectsPage: React.FC = () => {
       setNewDescription("");
       fetchProjects(); // Refresh list
     } catch (error: any) {
-      addToast(error.message || "Không thể tạo dự án", "error");
+      const raw = error?.response?.data?.message || error?.message || "";
+      const msg = typeof raw === "string" && raw.toLowerCase().includes("already exist")
+        ? "Tên dự án đã tồn tại, vui lòng chọn tên khác"
+        : raw || "Không thể tạo dự án";
+      addToast(msg, "error");
     } finally {
       setIsCreating(false);
     }

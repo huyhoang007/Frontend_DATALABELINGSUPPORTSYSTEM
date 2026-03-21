@@ -33,7 +33,7 @@ export default function CreateLabel() {
         if (!/^#[0-9A-Fa-f]{6}$/.test(form.colorCode)) e.colorCode = "Mã màu không hợp lệ (VD: #FF0000)";
         if (!form.labelType) e.labelType = "Chọn loại nhãn";
         if (form.description.length > 200) e.description = "Tối đa 200 ký tự";
-        if (form.shortcutKey && form.shortcutKey.length > 1) e.shortcutKey = "Chỉ 1 ký tự";
+        if (form.shortcutKey && form.shortcutKey.length > 20) e.shortcutKey = "Tối đa 20 ký tự";
         setErrors(e);
         return Object.keys(e).length === 0;
     };
@@ -138,14 +138,15 @@ export default function CreateLabel() {
 
                 {/* Shortcut Key */}
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Phím tắt</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">Phím tắt <span className="text-muted-foreground font-normal">(tùy chọn)</span></label>
                     <Input
-                        placeholder="VD: A, 1, ..."
+                        placeholder="VD: P, ctrl+1, alt+a, ..."
                         value={form.shortcutKey}
-                        onChange={(e) => set("shortcutKey", e.target.value.slice(0, 1))}
-                        className="w-20"
-                        maxLength={1}
+                        onChange={(e) => set("shortcutKey", e.target.value.slice(0, 20))}
+                        className="w-48"
+                        maxLength={20}
                     />
+                    <p className="text-xs text-muted-foreground mt-1">Có thể nhập nhiều ký tự để tìm kiếm nhanh khi gán nhãn</p>
                     {errors.shortcutKey && <p className="text-xs text-destructive mt-1">{errors.shortcutKey}</p>}
                 </div>
 

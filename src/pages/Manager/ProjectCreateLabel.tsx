@@ -108,8 +108,9 @@ export default function ProjectCreateLabel() {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Phím tắt</label>
-                    <Input placeholder="VD: A" value={form.shortcutKey} onChange={(e) => set("shortcutKey", e.target.value.slice(0, 1))} className="w-20" maxLength={1} />
+                    <label className="block text-sm font-medium text-foreground mb-1">Phím tắt <span className="text-muted-foreground font-normal">(tùy chọn)</span></label>
+                    <Input placeholder="VD: P, ctrl+1, alt+a, ..." value={form.shortcutKey} onChange={(e) => set("shortcutKey", e.target.value.slice(0, 20))} className="w-48" maxLength={20} />
+                    <p className="text-xs text-muted-foreground mt-1">Có thể nhập nhiều ký tự để tìm kiếm nhanh khi gán nhãn</p>
                 </div>
 
                 <div className="flex items-center gap-3 pt-2 border-t border-border">
