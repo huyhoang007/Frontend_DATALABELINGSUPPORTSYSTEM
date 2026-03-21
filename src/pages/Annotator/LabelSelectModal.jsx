@@ -16,9 +16,17 @@ export default function LabelSelectModal({ labelGroups = [], initialSelectedIds 
 
     const isSearching = search.trim().length > 0;
 
+    // Only reset selectedIds when modal first opens (when initialSelectedIds changes from empty/different)
     React.useEffect(() => {
-        setSelectedIds(initialSelectedIds);
-    }, [initialSelectedIds]);
+        // Only update if we haven't selected anything yet, or if initial changed significantly
+        setSelectedIds((prev) => {
+            // If user has already selected, don't override
+            if (prev.length > 0 && initialSelectedIds.length === prev.length) {
+                return prev;
+            }
+            return initialSelectedIds;
+        });
+    }, [initialSelectedIds?.join(",")]); // Use string join to prevent re-render on object reference change
 
     /* ── filtered groups when searching ── */
     const searchResults = React.useMemo(() => {
@@ -68,7 +76,9 @@ export default function LabelSelectModal({ labelGroups = [], initialSelectedIds 
     const currentGroup = labelGroups[activeRuleIdx] || null;
 
     const toggle = (id) => {
-        setSelectedIds((prev) => (prev.includes(id) ? [] : [id]));
+        // For single-select: only select, don't toggle off
+        // User must click Cancel to deselect
+        setSelectedIds([id]);
     };
 
     const handleSave = () => {
@@ -384,7 +394,7 @@ export default function LabelSelectModal({ labelGroups = [], initialSelectedIds 
 function LabelChip({ label, selected, onClick }) {
     return (
         <button
-            onClick={onClick}
+            onClick={(e) => { e.stopPropagation(); onClick?.(); }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
             style={{
                 background: selected ? `${label.color}22` : "#182233",
