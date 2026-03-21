@@ -39,6 +39,11 @@ function itemHasAnnotations(item) {
     return Array.isArray(item?.annotations) && item.annotations.length > 0;
 }
 
+function isApprovedWorkspaceError(message) {
+    const text = String(message || "").toLowerCase();
+    return text.includes("already approved") || text.includes("assignment is already approved");
+}
+
 /* ── Thumbnail image component ── */
 function ThumbnailImg({ fileUrl, alt }) {
     const [src, setSrc] = React.useState(null);
@@ -94,7 +99,7 @@ export default function Workspace() {
     const totalImages = items.length;
 
     // Is the assignment read-only (submitted, re-submitted, or approved)?
-    const isReadOnly = ["SUBMITTED", "RE_SUBMITTED", "APPROVED"].includes(workspace?.assignmentStatus?.toUpperCase());
+    const isReadOnly = ["SUBMITTED", "APPROVED"].includes(workspace?.assignmentStatus?.toUpperCase());
 
     /* ── Fetch workspace ── */
     const fetchWorkspace = React.useCallback(async () => {
@@ -483,12 +488,17 @@ export default function Workspace() {
     };
 
     /* â”€â”€ Submit assignment â”€â”€ */
-    const isSubmitBlocked = isReadOnly || imageLoading || !!imageError;
+    const doneCount = items.filter((i) => anno.isDone(i.itemId)).length;
+    const progressPercent = totalImages > 0 ? Math.round((doneCount / totalImages) * 100) : 0;
+    const hasIncompleteItems = totalImages === 0 || doneCount !== totalImages;
+    const isSubmitBlocked = isReadOnly || imageLoading || !!imageError || hasIncompleteItems;
 
     const handleSubmit = async () => {
         if (isSubmitBlocked) {
             if (imageError) {
                 addToast({ type: "warning", message: "Không thể nộp bài khi ảnh hiện tại chưa tải được" });
+            } else if (hasIncompleteItems) {
+                addToast({ type: "warning", message: "Chỉ có thể nộp bài sau khi tất cả ảnh đã được đánh dấu hoàn thành" });
             }
             return;
         }
@@ -548,10 +558,6 @@ export default function Workspace() {
         setRelabelGroupKey(null);
     };
 
-    /* â”€â”€ Progress â”€â”€ */
-    const doneCount = items.filter((i) => anno.isDone(i.itemId)).length;
-    const progressPercent = totalImages > 0 ? Math.round((doneCount / totalImages) * 100) : 0;
-
     /* â”€â”€ Loading / Error states â”€â”€ */
     if (loading) {
         return (
@@ -562,6 +568,20 @@ export default function Workspace() {
         );
     }
     if (error) {
+        if (isApprovedWorkspaceError(error)) {
+            return (
+                <div className="flex flex-col items-center justify-center h-screen bg-background text-foreground gap-4 px-6">
+                    <span className="material-symbols-outlined text-5xl text-emerald-400">verified</span>
+                    <p className="text-lg font-semibold text-foreground">Bài tập đã được duyệt</p>
+                    <p className="text-sm text-muted-foreground text-center max-w-md">
+                        Bài tập này đã hoàn tất vòng duyệt và hiện chỉ còn ở trạng thái xem.
+                    </p>
+                    <Button variant="secondary" onClick={() => navigate("/annotator/tasks")} leftIcon="arrow_back">
+                        Quay lại danh sách
+                    </Button>
+                </div>
+            );
+        }
         return (
             <div className="flex flex-col items-center justify-center h-screen bg-background text-foreground gap-4">
                 <span className="material-symbols-outlined text-5xl text-destructive">error</span>
@@ -584,15 +604,16 @@ export default function Workspace() {
     }
 
     // Block access if assignment already submitted/re-submitted
-    const lockedStatuses = ["SUBMITTED", "RE_SUBMITTED", "APPROVED"];
+    const lockedStatuses = ["SUBMITTED", "APPROVED"];
     if (lockedStatuses.includes(workspace?.assignmentStatus?.toUpperCase())) {
+        const isApproved = workspace?.assignmentStatus?.toUpperCase() === "APPROVED";
         return (
             <div className="flex flex-col items-center justify-center h-screen bg-background text-foreground gap-4">
-                <span className="material-symbols-outlined text-5xl text-amber-400">lock</span>
-                <p className="text-lg font-semibold text-foreground">Bài tập đã được nộp</p>
+                <span className={`material-symbols-outlined text-5xl ${isApproved ? "text-emerald-400" : "text-amber-400"}`}>{isApproved ? "verified" : "lock"}</span>
+                <p className="text-lg font-semibold text-foreground">{isApproved ? "Bài tập đã được duyệt" : "Bài tập đã được nộp"}</p>
                 <p className="text-sm text-muted-foreground">
                     Trạng thái: <span className="font-medium text-foreground">{workspace.assignmentStatus}</span>
-                    {" "}— bạn không thể chỉnh sửa sau khi đã nộp.
+                    {" "}— {isApproved ? "bạn chỉ có thể xem lại kết quả đã hoàn tất." : "bạn không thể chỉnh sửa sau khi đã nộp."}
                 </p>
                 <Button variant="secondary" onClick={() => navigate("/annotator/tasks")} leftIcon="arrow_back">
                     Quay lại danh sách
@@ -774,7 +795,7 @@ export default function Workspace() {
                             <span className="material-symbols-outlined" style={{ fontSize: 15 }}>
                                 {currentIsDone ? "check_circle" : "task_alt"}
                             </span>
-                            <span>{currentIsDone ? "Hoàn thành" : "Xong ảnh"}</span>
+                            <span>{currentIsDone ? "Bỏ hoàn thành" : "Xong ảnh"}</span>
                         </button>
 
                         {/* Divider */}

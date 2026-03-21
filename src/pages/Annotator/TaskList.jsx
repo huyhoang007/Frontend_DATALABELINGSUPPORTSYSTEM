@@ -68,6 +68,13 @@ export default function TaskList() {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const fetchAssignments = useCallback(async () => {
     setLoading(true);
@@ -113,6 +120,19 @@ export default function TaskList() {
 
   const handleOpen = (assignment) => {
     navigate(`/annotator/task/${assignment.assignmentId}`);
+  };
+
+  const getActionConfig = (status) => {
+    if (["PENDING", "REJECTED", "RE_SUBMITTED"].includes(status)) {
+      return { label: "Bắt đầu", text: "#FFFFFF", background: T.brand, border: "none" };
+    }
+    if (status === "IN_PROGRESS") {
+      return { label: "Tiếp tục", text: T.amber, background: T.amberBg, border: `1px solid ${T.amber}40` };
+    }
+    if (["SUBMITTED", "APPROVED", "COMPLETED"].includes(status)) {
+      return { label: "Xem", text: T.textSecondary, background: T.surfaceHover, border: `1px solid ${T.border}`, icon: "visibility" };
+    }
+    return null;
   };
 
   const activeCount = assignments.filter((a) =>
@@ -489,7 +509,7 @@ export default function TaskList() {
               boxShadow: "0 1px 3px rgba(9,30,66,.08)",
             }}
           >
-            {/* Table header */}
+            {!isMobile && (
             <div
               style={{
                 display: "grid",
@@ -580,6 +600,7 @@ export default function TaskList() {
                 THAO TÁC
               </p>
             </div>
+            )}
 
             {/* Table rows */}
             <div>
@@ -590,6 +611,97 @@ export default function TaskList() {
                   text: T.textMuted,
                   dot: T.textMuted,
                 };
+                const action = getActionConfig(status);
+
+                if (isMobile) {
+                  return (
+                    <div
+                      key={a.assignmentId}
+                      onClick={() => handleOpen(a)}
+                      style={{
+                        padding: "16px",
+                        borderBottom: `1px solid ${T.border}`,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "12px",
+                        background: idx % 2 === 0 ? T.surface : "#FAFBFC",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "flex-start" }}>
+                        <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: "4px" }}>
+                          <span style={{ fontFamily: "monospace", fontSize: "12px", color: T.textMuted }}>#{a.assignmentId}</span>
+                          <span style={{ fontSize: "14px", fontWeight: 700, color: T.textPrimary }}>{a.projectName || "—"}</span>
+                          <span style={{ fontSize: "12px", color: T.textMuted }}>{a.datasetName || "—"}</span>
+                        </div>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            padding: "4px 10px",
+                            borderRadius: "999px",
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.06em",
+                            background: statusStyle.bg,
+                            color: statusStyle.text,
+                            flexShrink: 0,
+                          }}
+                        >
+                          <span style={{ width: "6px", height: "6px", borderRadius: "50%", display: "inline-block", background: statusStyle.dot }} />
+                          {STATUS_VI[status] || status.replace("_", " ")}
+                        </span>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                        <div>
+                          <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Người đánh giá</p>
+                          <p style={{ fontSize: "12px", color: T.textSecondary }}>{a.reviewerName || "—"}</p>
+                        </div>
+                        <div>
+                          <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Tiến độ</p>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ flex: 1, height: "6px", background: T.border, borderRadius: "99px", overflow: "hidden" }}>
+                              <div style={{ height: "100%", background: `linear-gradient(to right, ${T.brand}, ${T.brandHover})`, borderRadius: "99px", width: `${a.progress || 0}%` }} />
+                            </div>
+                            <span style={{ fontSize: "12px", fontWeight: 800, color: T.textPrimary }}>{a.progress || 0}%</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {action && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpen(a);
+                          }}
+                          style={{
+                            height: "36px",
+                            width: "100%",
+                            padding: "0 16px",
+                            fontSize: "12px",
+                            fontWeight: 700,
+                            color: action.text,
+                            background: action.background,
+                            border: action.border,
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "6px",
+                          }}
+                        >
+                          {action.icon && <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>{action.icon}</span>}
+                          {action.label}
+                        </button>
+                      )}
+                    </div>
+                  );
+                }
 
                 return (
                   <div
@@ -738,7 +850,7 @@ export default function TaskList() {
                         gap: "8px",
                       }}
                     >
-                      {["PENDING", "REJECTED"].includes(status) && (
+                      {["PENDING", "REJECTED", "RE_SUBMITTED"].includes(status) && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
