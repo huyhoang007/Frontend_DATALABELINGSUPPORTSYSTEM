@@ -637,8 +637,8 @@ export default function Workspace() {
         );
     }
 
-    // Block access if assignment already submitted/re-submitted
-    const lockedStatuses = ["SUBMITTED", "RE_SUBMITTED", "APPROVED"];
+    // Block access after submission, but keep approved assignments viewable in read-only mode.
+    const lockedStatuses = ["SUBMITTED", "RE_SUBMITTED"];
     if (lockedStatuses.includes(workspace?.assignmentStatus?.toUpperCase())) {
         const isApproved = workspace?.assignmentStatus?.toUpperCase() === "APPROVED";
         return (
@@ -871,9 +871,17 @@ export default function Workspace() {
                                     ? { background: "#1e3a5f", color: "#7dd3fc", border: "1px solid #2563eb55" }
                                     : { background: "linear-gradient(135deg, #00bfa5, #0097a7)", color: "#fff", boxShadow: "0 4px 12px rgba(0,191,165,0.35)" }}>
                                 <span className="material-symbols-outlined" style={{ fontSize: 15 }}>
-                                    {isReadOnly ? "check_circle" : "send"}
+                                    {isReadOnly
+                                        ? workspace?.assignmentStatus?.toUpperCase() === "APPROVED"
+                                            ? "visibility"
+                                            : "check_circle"
+                                        : "send"}
                                 </span>
-                                <span>{isReadOnly ? "Đã nộp" : "Nộp bài"}</span>
+                                <span>{isReadOnly
+                                    ? workspace?.assignmentStatus?.toUpperCase() === "APPROVED"
+                                        ? "Chỉ xem"
+                                        : "Đã nộp"
+                                    : "Nộp bài"}</span>
                             </button>
                         </div>
 
