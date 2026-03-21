@@ -483,8 +483,15 @@ export default function Workspace() {
     };
 
     /* â”€â”€ Submit assignment â”€â”€ */
+    const isSubmitBlocked = isReadOnly || imageLoading || !!imageError;
+
     const handleSubmit = async () => {
-        if (isReadOnly) return;
+        if (isSubmitBlocked) {
+            if (imageError) {
+                addToast({ type: "warning", message: "Không thể nộp bài khi ảnh hiện tại chưa tải được" });
+            }
+            return;
+        }
         try {
             await anno.saveNow();
             await annotationApi.submitAssignment(assignmentId);
@@ -802,9 +809,10 @@ export default function Workspace() {
                             {/* Submit */}
                             <button
                                 onClick={handleSubmit}
-                                disabled={isReadOnly}
-                                className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all shadow-lg flex items-center justify-center gap-1.5 ${isReadOnly ? 'opacity-60 cursor-not-allowed' : 'hover:brightness-110 active:scale-95'}`}
-                                style={isReadOnly
+                                disabled={isSubmitBlocked}
+                                title={imageError ? "Không thể nộp khi ảnh hiện tại chưa tải được" : undefined}
+                                className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all shadow-lg flex items-center justify-center gap-1.5 ${isSubmitBlocked ? 'opacity-60 cursor-not-allowed' : 'hover:brightness-110 active:scale-95'}`}
+                                style={isSubmitBlocked
                                     ? { background: "#1e3a5f", color: "#7dd3fc", border: "1px solid #2563eb55" }
                                     : { background: "linear-gradient(135deg, #00bfa5, #0097a7)", color: "#fff", boxShadow: "0 4px 12px rgba(0,191,165,0.35)" }}>
                                 <span className="material-symbols-outlined" style={{ fontSize: 15 }}>
@@ -885,7 +893,10 @@ export default function Workspace() {
                                         <div className="text-center p-6 max-w-sm">
                                             <span className="material-symbols-outlined mb-3 block" style={{ fontSize: 48, color: "#f87171" }}>broken_image</span>
                                             <p className="text-sm font-medium mb-1" style={{ color: "#f87171" }}>Không tải được ảnh</p>
-                                            <p className="text-[10px] font-mono break-all mb-4" style={{ color: "#64748b" }}>{imageError.url}</p>
+                                            <p className="text-[10px] font-mono break-all mb-3" style={{ color: "#64748b" }}>{imageError.url}</p>
+                                            <p className="text-xs mb-4" style={{ color: "#fca5a5" }}>
+                                                Nộp bài bị khóa cho đến khi ảnh tải lại thành công.
+                                            </p>
                                             <button onClick={() => { setImageError(null); setImageBlobUrl(null); }}
                                                 className="px-4 py-1.5 text-xs font-medium rounded"
                                                 style={{ background: "rgba(255,255,255,0.1)", color: "#fff" }}>
