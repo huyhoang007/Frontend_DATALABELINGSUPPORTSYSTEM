@@ -166,6 +166,10 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
     };
 
     const handleSubmit = async () => {
+        if (isFinalizedAssignment) {
+            addToast({ type: "warning", message: `Assignment đã ở trạng thái cuối ${assignmentStatus}, không thể nộp lại` });
+            return;
+        }
         if (imageError) {
             addToast({ type: "error", message: "Không thể nộp đánh giá khi ảnh hiện tại tải thất bại" });
             return;
@@ -232,9 +236,11 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
     const imgWidth = currentItem?.width || 800;
     const imgHeight = currentItem?.height || 600;
     const totalImages = items.length;
+    const assignmentStatus = (workspace?.assignmentStatus || "").toUpperCase();
+    const isFinalizedAssignment = assignmentStatus === "APPROVED" || assignmentStatus === "REJECTED";
     const hasImageLoadError = Boolean(imageError);
-    const canReviewCurrentImage = !imageLoading && !hasImageLoadError && Boolean(imageBlobUrl);
-    const canSubmit = reviewStats.pending === 0 && reviewStats.total > 0 && !hasImageLoadError;
+    const canReviewCurrentImage = !isFinalizedAssignment && !imageLoading && !hasImageLoadError && Boolean(imageBlobUrl);
+    const canSubmit = !isFinalizedAssignment && reviewStats.pending === 0 && reviewStats.total > 0 && !hasImageLoadError;
 
     const hh = String(now.getHours()).padStart(2, "0");
     const mm = String(now.getMinutes()).padStart(2, "0");
@@ -381,8 +387,10 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                         opacity: reviewSubmitting ? 0.6 : 1,
                     }}
                     title={
-                        hasImageLoadError
-                            ? "Không thể nộp đánh giá khi ảnh hiện tại tải thất bại"
+                        isFinalizedAssignment
+                            ? `Assignment đã ở trạng thái cuối ${assignmentStatus}`
+                            : hasImageLoadError
+                                ? "Không thể nộp đánh giá khi ảnh hiện tại tải thất bại"
                             : !canSubmit
                                 ? `Còn ${reviewStats.pending} annotation chưa được đánh giá`
                                 : "Hoàn tất và nộp đánh giá"
@@ -391,7 +399,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                         ? <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
                         : <span className="material-symbols-outlined text-[14px]">task_alt</span>}
                     <span>Hoàn tất đánh giá</span>
-                    {!canSubmit && reviewStats.pending > 0 && (
+                    {!isFinalizedAssignment && !canSubmit && reviewStats.pending > 0 && (
                         <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
                             style={{ background: "#253347", color: "#94a3b8" }}>
                             {reviewStats.pending}
@@ -701,7 +709,11 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                                 <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
                                                     <button onClick={() => handleApprove(anno.reviewingId)}
                                                         disabled={reviewSubmitting || !canReviewCurrentImage}
-                                                        title={!canReviewCurrentImage ? "Không thể đánh giá khi ảnh hiện tại tải thất bại" : undefined}
+                                                        title={isFinalizedAssignment
+                                                            ? `Assignment đã ở trạng thái cuối ${assignmentStatus}`
+                                                            : !canReviewCurrentImage
+                                                                ? "Không thể đánh giá khi ảnh hiện tại tải thất bại"
+                                                                : undefined}
                                                         className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-bold transition"
                                                         style={{
                                                             background: "rgba(0,191,165,0.1)",
@@ -721,7 +733,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                                         }}
                                                         disabled={reviewSubmitting || policies.length === 0 || !canReviewCurrentImage}
                                                         title={
-                                                            !canReviewCurrentImage
+                                                            isFinalizedAssignment
+                                                                ? `Assignment đã ở trạng thái cuối ${assignmentStatus}`
+                                                                : !canReviewCurrentImage
                                                                 ? "Không thể đánh giá khi ảnh hiện tại tải thất bại"
                                                                 : policies.length === 0
                                                                     ? "Chưa có policy được cấu hình"
@@ -785,7 +799,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                                             Hủy
                                                         </button>
                                                         <button onClick={() => handleReject(anno.reviewingId)}
-                                                            disabled={!selectedPolicyId || reviewSubmitting}
+                                                            disabled={!selectedPolicyId || reviewSubmitting || isFinalizedAssignment}
                                                             className="flex-1 px-2 py-1 rounded text-xs font-bold transition disabled:opacity-40"
                                                             style={{
                                                                 background: selectedPolicyId ? "#f87171" : "#253347",
