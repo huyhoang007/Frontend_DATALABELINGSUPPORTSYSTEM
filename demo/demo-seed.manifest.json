@@ -1,0 +1,237 @@
+{
+  "version": 1,
+  "name": "demo-data-v1",
+  "defaultAccounts": {
+    "managerUsername": "Manager1",
+    "annotatorUsername": "Annotator1",
+    "reviewerUsername": "Reviewer1"
+  },
+  "settings": {
+    "defaultDataType": "IMAGE",
+    "generatedAssetRoot": "demo-assets/generated",
+    "curatedAssetRoot": "demo-assets/curated"
+  },
+  "libraries": {
+    "labels": [
+      { "key": "car", "labelName": "Car", "colorCode": "#2563EB", "labelType": "DETECTION", "description": "Ô tô con trong khung hình", "shortcutKey": "C" },
+      { "key": "truck", "labelName": "Truck", "colorCode": "#0F766E", "labelType": "DETECTION", "description": "Xe tải hoặc xe chở hàng", "shortcutKey": "T" },
+      { "key": "bus", "labelName": "Bus", "colorCode": "#7C3AED", "labelType": "DETECTION", "description": "Xe buýt hoặc xe khách", "shortcutKey": "B" },
+      { "key": "motorbike", "labelName": "Motorbike", "colorCode": "#EA580C", "labelType": "DETECTION", "description": "Xe máy hai bánh", "shortcutKey": "M" },
+      { "key": "bicycle", "labelName": "Bicycle", "colorCode": "#16A34A", "labelType": "DETECTION", "description": "Xe đạp", "shortcutKey": "Y" },
+      { "key": "plate", "labelName": "License Plate", "colorCode": "#DC2626", "labelType": "DETECTION", "description": "Biển số nhìn rõ được", "shortcutKey": "L" },
+      { "key": "person", "labelName": "Person", "colorCode": "#0891B2", "labelType": "DETECTION", "description": "Người xuất hiện trong ảnh", "shortcutKey": "P" },
+      { "key": "pedestrian", "labelName": "Pedestrian", "colorCode": "#0284C7", "labelType": "DETECTION", "description": "Người đi bộ gần khu vực giao thông", "shortcutKey": "D" },
+      { "key": "parking_slot", "labelName": "Parking Slot", "colorCode": "#8B5CF6", "labelType": "DETECTION", "description": "Vị trí đỗ xe trên mặt sân", "shortcutKey": "S" },
+      { "key": "occupied_slot", "labelName": "Occupied Slot", "colorCode": "#EF4444", "labelType": "CLASSIFICATION", "description": "Slot đã có xe đỗ", "shortcutKey": "O" },
+      { "key": "gate", "labelName": "Gate", "colorCode": "#475569", "labelType": "DETECTION", "description": "Cổng ra vào hoặc barrier", "shortcutKey": "G" },
+      { "key": "basket", "labelName": "Basket", "colorCode": "#65A30D", "labelType": "DETECTION", "description": "Giỏ hàng cầm tay", "shortcutKey": "K" },
+      { "key": "shelf", "labelName": "Shelf", "colorCode": "#92400E", "labelType": "DETECTION", "description": "Kệ trưng bày hàng hóa", "shortcutKey": "H" },
+      { "key": "product", "labelName": "Product", "colorCode": "#EC4899", "labelType": "DETECTION", "description": "Sản phẩm trên quầy hoặc kệ", "shortcutKey": "R" },
+      { "key": "barcode", "labelName": "Barcode", "colorCode": "#111827", "labelType": "DETECTION", "description": "Mã vạch nhìn đọc được", "shortcutKey": "A" },
+      { "key": "cashier", "labelName": "Cashier", "colorCode": "#0EA5E9", "labelType": "DETECTION", "description": "Nhân viên thu ngân", "shortcutKey": "Q" },
+      { "key": "bag", "labelName": "Shopping Bag", "colorCode": "#F59E0B", "labelType": "DETECTION", "description": "Túi hàng của khách", "shortcutKey": "J" },
+      { "key": "pallet", "labelName": "Pallet", "colorCode": "#B45309", "labelType": "DETECTION", "description": "Pallet trong kho", "shortcutKey": "U" },
+      { "key": "carton", "labelName": "Carton", "colorCode": "#A16207", "labelType": "DETECTION", "description": "Thùng carton", "shortcutKey": "N" },
+      { "key": "forklift", "labelName": "Forklift", "colorCode": "#EAB308", "labelType": "DETECTION", "description": "Xe nâng hàng", "shortcutKey": "F" },
+      { "key": "worker", "labelName": "Worker", "colorCode": "#2563EB", "labelType": "DETECTION", "description": "Nhân công trong khu vực làm việc", "shortcutKey": "W" },
+      { "key": "rack", "labelName": "Rack", "colorCode": "#64748B", "labelType": "DETECTION", "description": "Kệ kho", "shortcutKey": "X" },
+      { "key": "damaged_box", "labelName": "Damaged Box", "colorCode": "#DC2626", "labelType": "CLASSIFICATION", "description": "Thùng hàng có dấu hiệu hư hỏng", "shortcutKey": "Z" },
+      { "key": "helmet", "labelName": "Helmet", "colorCode": "#F59E0B", "labelType": "DETECTION", "description": "Mũ bảo hộ", "shortcutKey": "E" },
+      { "key": "vest", "labelName": "Safety Vest", "colorCode": "#FACC15", "labelType": "DETECTION", "description": "Áo phản quang", "shortcutKey": "V" },
+      { "key": "no_helmet", "labelName": "No Helmet", "colorCode": "#DC2626", "labelType": "CLASSIFICATION", "description": "Người không đội mũ bảo hộ", "shortcutKey": "1" },
+      { "key": "no_vest", "labelName": "No Vest", "colorCode": "#BE123C", "labelType": "CLASSIFICATION", "description": "Người không mặc áo phản quang", "shortcutKey": "2" },
+      { "key": "barrier", "labelName": "Barrier", "colorCode": "#4F46E5", "labelType": "DETECTION", "description": "Rào chắn công trường", "shortcutKey": "3" },
+      { "key": "cone", "labelName": "Traffic Cone", "colorCode": "#FB923C", "labelType": "DETECTION", "description": "Cọc tiêu cảnh báo", "shortcutKey": "4" }
+    ],
+    "rules": [
+      { "key": "bbox_min_24", "name": "BBox tối thiểu 24px", "ruleContent": "Chỉ gán nhãn khi vật thể có vùng hiển thị đủ lớn, chiều rộng và chiều cao tối thiểu 24px. Vật thể nhỏ hơn ngưỡng này phải bỏ qua để tránh bbox nhiễu.", "labelKeys": ["car", "truck", "bus", "motorbike", "bicycle", "person", "worker"] },
+      { "key": "bbox_not_tight_crop", "name": "Không cắt sát mép vật thể", "ruleContent": "Bounding box phải ôm toàn bộ vật thể nhưng không cắt sát quá mức. Chừa một biên nhỏ hợp lý quanh viền nếu vật thể bị blur nhẹ hoặc có bóng đổ.", "labelKeys": ["car", "truck", "bus", "motorbike", "bicycle", "person", "worker", "forklift"] },
+      { "key": "ignore_heavy_occlusion", "name": "Bỏ qua che khuất nặng", "ruleContent": "Nếu vật thể bị che khuất hơn 60% hoặc không đủ hình dáng để xác định lớp nhãn, không được gán nhãn. Trường hợp 30-60% chỉ gán nếu loại vật thể vẫn chắc chắn.", "labelKeys": ["car", "truck", "bus", "person", "worker", "product"] },
+      { "key": "plate_readable_only", "name": "Biển số chỉ gán khi đọc được", "ruleContent": "Chỉ gán nhãn License Plate khi biển số nhìn rõ ít nhất 5 ký tự hoặc khung biển đủ rõ để reviewer xác nhận. Biển mờ, nghiêng quá mạnh hoặc cháy sáng phải bỏ qua.", "labelKeys": ["plate"] },
+      { "key": "ppe_person_first", "name": "Mỗi worker phải kiểm tra PPE", "ruleContent": "Mỗi worker nhìn thấy rõ đầu và thân trên phải được kiểm tra Helmet và Safety Vest. Nếu thiếu một trong hai, dùng nhãn No Helmet hoặc No Vest tương ứng.", "labelKeys": ["worker", "helmet", "vest", "no_helmet", "no_vest"] },
+      { "key": "slot_single_state", "name": "Mỗi ô đỗ chỉ có một trạng thái", "ruleContent": "Mỗi Parking Slot phải có đúng một trạng thái rõ ràng. Nếu có xe phủ quá 50% diện tích slot thì đánh dấu Occupied Slot. Không gán đồng thời nhiều trạng thái cho cùng một slot.", "labelKeys": ["parking_slot", "occupied_slot"] },
+      { "key": "retail_visible_products", "name": "Chỉ gán sản phẩm nhìn thấy rõ", "ruleContent": "Chỉ gán Product khi ít nhất 70% bao bì nhìn thấy hoặc hình dáng sản phẩm đủ rõ. Sản phẩm khuất sâu trong kệ hoặc phản xạ mạnh phải bỏ qua.", "labelKeys": ["product", "barcode", "shelf"] },
+      { "key": "barcode_readable", "name": "Barcode phải đủ nét", "ruleContent": "Chỉ gán Barcode nếu mã vạch không bị blur mạnh, không đứt gãy quá 20% và còn khả năng quét được theo trực quan. Mã vạch méo hoặc phản sáng nặng phải bỏ qua.", "labelKeys": ["barcode"] },
+      { "key": "warehouse_damage_rule", "name": "Hư hỏng phải thấy rõ", "ruleContent": "Chỉ gán Damaged Box khi có dấu hiệu rõ như rách, móp, ướt, hoặc biến dạng đáng kể. Không suy đoán dựa trên bóng tối hoặc nếp gấp nhỏ thông thường.", "labelKeys": ["damaged_box", "carton", "pallet"] },
+      { "key": "rack_and_pallet_hierarchy", "name": "Rack và pallet không chồng sai vai trò", "ruleContent": "Rack là cấu trúc cố định của kho, pallet là vật thể đặt trên sàn hoặc trên rack. Không dùng nhãn Rack cho pallet chồng hàng và không dùng Pallet cho chân kệ.", "labelKeys": ["rack", "pallet", "carton"] },
+      { "key": "pedestrian_crossing_context", "name": "Pedestrian theo ngữ cảnh giao thông", "ruleContent": "Dùng nhãn Pedestrian khi người xuất hiện trong bối cảnh giao thông hoặc bãi đỗ xe. Nếu người là nhân sự nội bộ ở kho hoặc công trường, dùng Worker hoặc Person theo project.", "labelKeys": ["pedestrian", "person", "worker"] },
+      { "key": "barrier_cone_visibility", "name": "Barrier và cone phải đủ hình dạng", "ruleContent": "Rào chắn và cọc tiêu chỉ được gán khi nhìn thấy hình dạng đủ rõ để phân biệt với vật thể màu cam hoặc vật cản nền. Trường hợp chỉ thấy phần đầu mờ phải bỏ qua.", "labelKeys": ["barrier", "cone"] }
+    ],
+    "errorTypes": [
+      { "key": "missing_object", "errorName": "Missing Object", "errorLevel": "HIGH", "description": "Bỏ sót vật thể đáng lẽ phải được gán nhãn." },
+      { "key": "wrong_label", "errorName": "Wrong Label", "errorLevel": "HIGH", "description": "Gán sai loại nhãn so với định nghĩa project." },
+      { "key": "bbox_too_loose", "errorName": "BBox Too Loose", "errorLevel": "MEDIUM", "description": "Bounding box rộng quá mức và lấy nhiều nền thừa." },
+      { "key": "bbox_too_tight", "errorName": "BBox Too Tight", "errorLevel": "MEDIUM", "description": "Bounding box cắt mất một phần vật thể." },
+      { "key": "duplicate_annotation", "errorName": "Duplicate Annotation", "errorLevel": "MEDIUM", "description": "Một vật thể bị gán nhãn lặp nhiều lần." },
+      { "key": "wrong_occlusion_judgement", "errorName": "Wrong Occlusion Judgement", "errorLevel": "MEDIUM", "description": "Gán nhãn hoặc bỏ qua không đúng với mức che khuất." },
+      { "key": "unreadable_plate", "errorName": "Unreadable Plate", "errorLevel": "HIGH", "description": "Gán biển số khi biển mờ, cháy sáng hoặc không đủ rõ." },
+      { "key": "wrong_slot_status", "errorName": "Wrong Slot Status", "errorLevel": "HIGH", "description": "Xác định sai occupied/free cho ô đỗ xe." },
+      { "key": "ppe_missed", "errorName": "Missed PPE Violation", "errorLevel": "CRITICAL", "description": "Bỏ sót vi phạm PPE ở worker nhìn thấy rõ." },
+      { "key": "false_damage", "errorName": "False Damage", "errorLevel": "MEDIUM", "description": "Đánh dấu hư hỏng khi dấu hiệu chưa đủ rõ." },
+      { "key": "barcode_unreadable", "errorName": "Barcode Unreadable", "errorLevel": "MEDIUM", "description": "Gán barcode khi mã vạch không còn khả năng đọc." },
+      { "key": "project_rule_violation", "errorName": "Project Rule Violation", "errorLevel": "HIGH", "description": "Annotation vi phạm trực tiếp một quy tắc đã công bố của project." }
+    ]
+  },
+  "projects": [
+    {
+      "slug": "urban-traffic-intersection",
+      "name": "[DEMO] Giao thông đô thị - Camera ngã tư",
+      "description": "Dự án demo nhận diện phương tiện và người đi bộ tại nút giao đô thị đông đúc.",
+      "guidelineContent": "Ưu tiên nhận diện phương tiện di chuyển trên trục đường chính, bỏ qua vật thể quá nhỏ hoặc bị khuất nặng. Biển số chỉ gán khi nhìn rõ.",
+      "flagship": true,
+      "labels": ["car", "truck", "bus", "motorbike", "bicycle", "plate", "pedestrian", "person"],
+      "rules": ["bbox_min_24", "bbox_not_tight_crop", "ignore_heavy_occlusion", "plate_readable_only", "pedestrian_crossing_context"],
+      "errorTypes": ["missing_object", "wrong_label", "bbox_too_loose", "bbox_too_tight", "unreadable_plate", "project_rule_violation"],
+      "batches": [
+        { "name": "batch-01-rush-hour", "count": 36 },
+        { "name": "batch-02-night-and-rain", "count": 24 }
+      ],
+      "assignments": [
+        { "datasetName": "batch-01-rush-hour", "annotatorUsername": "Annotator1", "reviewerUsername": "Reviewer1", "scenario": "happy-path" },
+        { "datasetName": "batch-02-night-and-rain", "annotatorUsername": "Annotator1", "reviewerUsername": "Reviewer1", "scenario": "review-rework" }
+      ]
+    },
+    {
+      "slug": "urban-traffic-bus-lane",
+      "name": "[DEMO] Giao thông đô thị - Làn xe buýt",
+      "description": "Theo dõi bus lane, phát hiện xe đi sai làn và người đi bộ băng cắt.",
+      "guidelineContent": "Xe buýt phải được ưu tiên gán đầy đủ. Xe nhỏ đi sát lề hoặc che bởi bus trên 60% thì bỏ qua.",
+      "labels": ["bus", "car", "motorbike", "plate", "pedestrian", "person"],
+      "rules": ["bbox_min_24", "bbox_not_tight_crop", "ignore_heavy_occlusion", "plate_readable_only"],
+      "errorTypes": ["missing_object", "wrong_label", "bbox_too_loose", "wrong_occlusion_judgement"],
+      "batches": [
+        { "name": "batch-01-lane-monitoring", "count": 28 }
+      ],
+      "assignments": [
+        { "datasetName": "batch-01-lane-monitoring", "annotatorUsername": "Annotator1", "reviewerUsername": "Reviewer1", "scenario": "queue-richness" }
+      ]
+    },
+    {
+      "slug": "parking-occupancy-overview",
+      "name": "[DEMO] Bãi đỗ xe - Quan trắc công suất",
+      "description": "Nhận diện ô đỗ và trạng thái có xe/không có xe trong bãi đỗ ngoài trời.",
+      "guidelineContent": "Mỗi ô đỗ cần có hình học đủ rõ và một trạng thái rõ ràng. Không gán occupied khi xe chỉ lấn nhẹ dưới 50%.",
+      "labels": ["parking_slot", "occupied_slot", "car", "motorbike", "pedestrian", "gate"],
+      "rules": ["slot_single_state", "bbox_not_tight_crop", "ignore_heavy_occlusion"],
+      "errorTypes": ["wrong_slot_status", "missing_object", "bbox_too_tight", "project_rule_violation"],
+      "batches": [
+        { "name": "batch-01-overview-cam", "count": 34 }
+      ],
+      "assignments": [
+        { "datasetName": "batch-01-overview-cam", "annotatorUsername": "Annotator1", "reviewerUsername": "Reviewer1", "scenario": "manager-overview" }
+      ]
+    },
+    {
+      "slug": "parking-access-control",
+      "name": "[DEMO] Bãi đỗ xe - Kiểm soát ra vào",
+      "description": "Camera gần barrier/cổng vào dùng cho kiểm soát phương tiện và plate.",
+      "guidelineContent": "Tập trung vào vùng cổng, barrier và biển số đủ nét. Người đi bộ gần cổng chỉ gán khi ảnh hưởng trực tiếp đến luồng ra vào.",
+      "labels": ["car", "truck", "plate", "gate", "person", "pedestrian"],
+      "rules": ["plate_readable_only", "bbox_min_24", "pedestrian_crossing_context"],
+      "errorTypes": ["unreadable_plate", "missing_object", "wrong_label", "project_rule_violation"],
+      "batches": [
+        { "name": "batch-01-entry-exit", "count": 30 }
+      ],
+      "assignments": [
+        { "datasetName": "batch-01-entry-exit", "annotatorUsername": "Annotator1", "reviewerUsername": "Reviewer1", "scenario": "pending-review" }
+      ]
+    },
+    {
+      "slug": "retail-shelf-monitoring",
+      "name": "[DEMO] Bán lẻ - Giám sát kệ hàng",
+      "description": "Theo dõi sản phẩm, kệ và tình trạng nhận diện barcode ở khu trưng bày.",
+      "guidelineContent": "Chỉ gán product khi bao bì nhìn thấy đủ rõ. Barcode phải có khả năng đọc được bằng mắt thường.",
+      "labels": ["product", "barcode", "shelf", "person", "basket", "bag"],
+      "rules": ["retail_visible_products", "barcode_readable", "bbox_not_tight_crop"],
+      "errorTypes": ["barcode_unreadable", "missing_object", "wrong_label", "bbox_too_loose"],
+      "batches": [
+        { "name": "batch-01-front-shelf", "count": 32 },
+        { "name": "batch-02-endcap-promo", "count": 18 }
+      ],
+      "assignments": [
+        { "datasetName": "batch-01-front-shelf", "annotatorUsername": "Annotator1", "reviewerUsername": "Reviewer1", "scenario": "catalog-richness" }
+      ]
+    },
+    {
+      "slug": "retail-checkout-zone",
+      "name": "[DEMO] Bán lẻ - Khu vực quầy thu ngân",
+      "description": "Dữ liệu quầy thanh toán với cashier, basket, bag và hành vi xếp hàng.",
+      "guidelineContent": "Cashier chỉ dùng cho nhân sự đứng sau quầy. Khách hàng và người xếp hàng dùng Person.",
+      "labels": ["cashier", "person", "basket", "bag", "barcode", "product"],
+      "rules": ["retail_visible_products", "barcode_readable", "ignore_heavy_occlusion"],
+      "errorTypes": ["wrong_label", "duplicate_annotation", "barcode_unreadable"],
+      "batches": [
+        { "name": "batch-01-checkout", "count": 26 }
+      ],
+      "assignments": [
+        { "datasetName": "batch-01-checkout", "annotatorUsername": "Annotator1", "reviewerUsername": "Reviewer1", "scenario": "queue-richness" }
+      ]
+    },
+    {
+      "slug": "warehouse-pallet-audit",
+      "name": "[DEMO] Nhà kho - Kiểm kê pallet",
+      "description": "Nhận diện pallet, carton, rack và worker trong kho tổng hợp.",
+      "guidelineContent": "Phân biệt rõ rack cố định và pallet di động. Chỉ đánh dấu damaged box khi thấy dấu hiệu hư hỏng thực sự.",
+      "guidelineVersion": "1.0",
+      "flagship": true,
+      "labels": ["pallet", "carton", "forklift", "worker", "rack", "damaged_box"],
+      "rules": ["bbox_not_tight_crop", "warehouse_damage_rule", "rack_and_pallet_hierarchy", "ignore_heavy_occlusion"],
+      "errorTypes": ["false_damage", "missing_object", "wrong_label", "duplicate_annotation", "project_rule_violation"],
+      "batches": [
+        { "name": "batch-01-rack-zone-a", "count": 40 },
+        { "name": "batch-02-loading-bay", "count": 28 }
+      ],
+      "assignments": [
+        { "datasetName": "batch-01-rack-zone-a", "annotatorUsername": "Annotator1", "reviewerUsername": "Reviewer1", "scenario": "rejected-rework" },
+        { "datasetName": "batch-02-loading-bay", "annotatorUsername": "Annotator1", "reviewerUsername": "Reviewer1", "scenario": "approved-flow" }
+      ]
+    },
+    {
+      "slug": "warehouse-forklift-safety",
+      "name": "[DEMO] Nhà kho - An toàn xe nâng",
+      "description": "Giám sát khu vực xe nâng và tương tác với worker.",
+      "guidelineContent": "Tập trung vào khoảng cách giữa xe nâng và worker. Vật thể mờ hoặc khuất nặng gần cửa kho được phép bỏ qua.",
+      "labels": ["forklift", "worker", "pallet", "carton", "rack"],
+      "rules": ["bbox_min_24", "bbox_not_tight_crop", "ignore_heavy_occlusion"],
+      "errorTypes": ["missing_object", "wrong_label", "project_rule_violation"],
+      "batches": [
+        { "name": "batch-01-forklift-aisle", "count": 24 }
+      ],
+      "assignments": [
+        { "datasetName": "batch-01-forklift-aisle", "annotatorUsername": "Annotator1", "reviewerUsername": "Reviewer1", "scenario": "pending-review" }
+      ]
+    },
+    {
+      "slug": "safety-ppe-construction",
+      "name": "[DEMO] An toàn lao động - PPE công trường",
+      "description": "Kiểm tra PPE của worker tại công trường ngoài trời.",
+      "guidelineContent": "Mỗi worker thấy rõ đầu và thân trên đều phải được kiểm tra helmet và vest. Các vi phạm PPE được ưu tiên review kỹ.",
+      "flagship": true,
+      "labels": ["worker", "helmet", "vest", "no_helmet", "no_vest", "barrier", "cone"],
+      "rules": ["ppe_person_first", "barrier_cone_visibility", "bbox_min_24"],
+      "errorTypes": ["ppe_missed", "wrong_label", "missing_object", "project_rule_violation"],
+      "batches": [
+        { "name": "batch-01-site-entry", "count": 42 },
+        { "name": "batch-02-crane-zone", "count": 22 }
+      ],
+      "assignments": [
+        { "datasetName": "batch-01-site-entry", "annotatorUsername": "Annotator1", "reviewerUsername": "Reviewer1", "scenario": "rework-story" }
+      ]
+    },
+    {
+      "slug": "safety-industrial-barriers",
+      "name": "[DEMO] An toàn lao động - Rào chắn khu nguy hiểm",
+      "description": "Dự án nhẹ hơn tập trung vào barrier, cone và worker trong khu công nghiệp.",
+      "guidelineContent": "Chỉ gán barrier và cone khi nhìn thấy đủ hình dạng. Worker khuất nặng hoặc chỉ thấy một phần chân không cần gán.",
+      "labels": ["worker", "barrier", "cone", "helmet", "vest"],
+      "rules": ["barrier_cone_visibility", "bbox_min_24", "ignore_heavy_occlusion"],
+      "errorTypes": ["missing_object", "wrong_label", "bbox_too_tight"],
+      "batches": [
+        { "name": "batch-01-hazard-zone", "count": 20 }
+      ],
+      "assignments": [
+        { "datasetName": "batch-01-hazard-zone", "annotatorUsername": "Annotator1", "reviewerUsername": "Reviewer1", "scenario": "catalog-richness" }
+      ]
+    }
+  ]
+}
