@@ -70,14 +70,18 @@ export default function ReviewQueue() {
     };
   }, []);
 
-  // Filter: show reviewable assignments (SUBMITTED, RE_SUBMITTED) plus search
+  // Queue scope only includes assignments that still need reviewer attention.
+  const queueAssignments = React.useMemo(
+    () =>
+      assignments.filter(
+        (a) => a.status === "SUBMITTED" || a.status === "RE_SUBMITTED",
+      ),
+    [assignments],
+  );
+
+  // Filter visible queue rows by search without changing the queue totals.
   const reviewableAssignments = React.useMemo(() => {
-    let list = assignments.filter(
-      (a) =>
-        a.status === "SUBMITTED" ||
-        a.status === "RE_SUBMITTED" ||
-        a.status === "REJECTED",
-    );
+    let list = queueAssignments;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(
@@ -87,19 +91,20 @@ export default function ReviewQueue() {
       );
     }
     return list;
-  }, [assignments, searchQuery]);
+  }, [queueAssignments, searchQuery]);
 
   const handleReview = (assignment) => {
     navigate(`/reviewer/review/${assignment.assignmentId}`);
   };
 
   // Stats
-  const pendingCount = assignments.filter(
-    (a) => a.status === "SUBMITTED" || a.status === "RE_SUBMITTED",
+  const pendingCount = queueAssignments.filter(
+    (a) => a.status === "SUBMITTED",
   ).length;
   const resubmittedCount = assignments.filter(
     (a) => a.status === "RE_SUBMITTED",
   ).length;
+  const queueTotalCount = queueAssignments.length;
   const approvedCount = assignments.filter(
     (a) => a.status === "APPROVED",
   ).length;
@@ -163,7 +168,7 @@ export default function ReviewQueue() {
                   fontWeight: 700,
                 }}
               >
-                {pendingCount}
+                {queueTotalCount}
               </span>{" "}
               nhiệm vụ đang chờ đánh giá.
             </p>
@@ -181,7 +186,7 @@ export default function ReviewQueue() {
         >
           {[
             {
-              label: "Chờ đánh giá",
+              label: "Chờ duyệt",
               value: pendingCount,
               color: T.purple,
               bg: T.purpleBg,
@@ -205,8 +210,8 @@ export default function ReviewQueue() {
               bg: T.redBg,
             },
             {
-              label: "Tổng cộng",
-              value: assignments.length,
+              label: "Tổng trong queue",
+              value: queueTotalCount,
               color: T.brand,
               bg: T.brandLight,
             },
@@ -705,7 +710,7 @@ export default function ReviewQueue() {
             }}
           >
             Hiển thị {reviewableAssignments.length} trong tổng số{" "}
-            {assignments.length} nhiệm vụ
+            {queueTotalCount} nhiệm vụ trong queue
           </p>
         )}
       </div>
