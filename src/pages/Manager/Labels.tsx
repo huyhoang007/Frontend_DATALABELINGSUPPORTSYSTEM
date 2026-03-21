@@ -17,6 +17,7 @@ export default function Labels() {
     const [error, setError] = useState("");
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
+    const [activatingId, setActivatingId] = useState(null);
 
     const loadLabels = async () => {
         setLoading(true);
@@ -43,6 +44,18 @@ export default function Labels() {
             setError(err?.message || "Xóa thất bại");
         } finally {
             setDeleting(false);
+        }
+    };
+
+    const handleActivate = async (labelId) => {
+        setActivatingId(labelId);
+        try {
+            await labelApi.activateLabel(labelId);
+            loadLabels();
+        } catch (err) {
+            setError(err?.message || "Kích hoạt lại thất bại");
+        } finally {
+            setActivatingId(null);
         }
     };
 
@@ -91,6 +104,7 @@ export default function Labels() {
                                 <TableHead className="w-12">Color</TableHead>
                                 <TableHead>Tên nhãn</TableHead>
                                 <TableHead>Loại</TableHead>
+                                <TableHead>Trạng thái</TableHead>
                                 <TableHead>Mô tả</TableHead>
                                 <TableHead>Phím tắt</TableHead>
                                 <TableHead className="text-right">Hành động</TableHead>
@@ -111,6 +125,11 @@ export default function Labels() {
                                             {label.labelType ?? label.type ?? "—"}
                                         </span>
                                     </TableCell>
+                                    <TableCell>
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${label.isActive !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                            {label.isActive !== false ? 'Đang hoạt động' : 'Ngưng sử dụng'}
+                                        </span>
+                                    </TableCell>
                                     <TableCell className="text-muted-foreground max-w-[200px] truncate">{label.description || "—"}</TableCell>
                                     <TableCell>
                                         {label.shortcutKey ? (
@@ -118,9 +137,21 @@ export default function Labels() {
                                         ) : "—"}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(label)} title="Xóa nhãn">
-                                            <span className="material-symbols-outlined text-base text-destructive">delete</span>
-                                        </Button>
+                                        {label.isActive !== false ? (
+                                            <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(label)} title="Ngưng sử dụng nhãn">
+                                                <span className="material-symbols-outlined text-base text-amber-600">block</span>
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleActivate(label.labelId ?? label.id)}
+                                                title="Kích hoạt lại"
+                                                disabled={activatingId === (label.labelId ?? label.id)}
+                                            >
+                                                <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                                            </Button>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -134,8 +165,8 @@ export default function Labels() {
                 onClose={() => setDeleteTarget(null)}
                 onConfirm={handleDelete}
                 title="Xóa nhãn"
-                message={`Bạn có chắc muốn xóa nhãn "${deleteTarget?.labelName ?? deleteTarget?.name}"?`}
-                confirmText={deleting ? "Đang xóa..." : "Xóa"}
+                message={`Bạn có chắc muốn ngưng sử dụng nhãn "${deleteTarget?.labelName ?? deleteTarget?.name}"?`}
+                confirmText={deleting ? "Đang xử lý..." : "Ngưng sử dụng"}
                 isDestructive
             />
         </div>

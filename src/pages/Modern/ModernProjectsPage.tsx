@@ -60,7 +60,7 @@ const ModernProjectsPage: React.FC = () => {
 
   // Form State
   const [newName, setNewName] = useState("");
-  const [newDataType, setNewDataType] = useState("");
+  const [newDataType, setNewDataType] = useState("IMAGE");
   const [newDescription, setNewDescription] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -112,8 +112,8 @@ const ModernProjectsPage: React.FC = () => {
   };
 
   const handleCreateProject = async () => {
-    if (!newName || !newDataType) {
-      addToast("Vui lòng nhập tên và chọn loại dữ liệu", "error");
+    if (!newName) {
+      addToast("Vui lòng nhập tên dự án", "error");
       return;
     }
 
@@ -121,13 +121,13 @@ const ModernProjectsPage: React.FC = () => {
     try {
       await projectApi.createProject({
         name: newName,
-        dataType: newDataType.toUpperCase(), // Backend expects uppercase enum
+        dataType: "IMAGE",
         description: newDescription.trim(), // Use actual description from form
       });
       addToast("Tạo dự án thành công!", "success");
       setShowCreateModal(false);
       setNewName("");
-      setNewDataType("");
+      setNewDataType("IMAGE");
       setNewDescription("");
       fetchProjects(); // Refresh list
     } catch (error: any) {
@@ -528,16 +528,12 @@ const ModernProjectsPage: React.FC = () => {
               </div>
               <div>
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Loại dữ liệu *</label>
-                <select
-                  value={newDataType}
-                  onChange={(e) => setNewDataType(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none cursor-pointer"
-                >
-                  <option value="">Chọn loại dữ liệu</option>
-                  <option value="IMAGE">Hình ảnh</option>
-                  <option value="TEXT">Văn bản</option>
-                  <option value="AUDIO">Âm thanh</option>
-                </select>
+                <input
+                  type="text"
+                  value="Hình ảnh"
+                  disabled
+                  className="w-full px-4 py-2.5 bg-muted border border-input rounded-lg text-sm text-muted-foreground cursor-not-allowed"
+                />
               </div>
 
               <div>

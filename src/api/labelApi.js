@@ -60,6 +60,15 @@ export const labelApi = {
     },
 
     /**
+     * Activate label (reverse soft delete)
+     * @param {number} labelId
+     * @returns {Promise<Object>} Updated label
+     */
+    activateLabel: async (labelId) => {
+        return await apiClient.patch(`/api/labels/${labelId}/activate`);
+    },
+
+    /**
      * Get labels by project (legacy - may need backend update)
      * @param {number} projectId
      * @returns {Promise<Array>} Label[]

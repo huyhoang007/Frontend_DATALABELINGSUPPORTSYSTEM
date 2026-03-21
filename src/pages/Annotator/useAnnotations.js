@@ -183,12 +183,13 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
   // ── Add annotation ──
   const addAnnotation = useCallback(
     (shape, labelIds, allLabels) => {
+      const normalizedLabelIds = Array.isArray(labelIds) && labelIds.length > 0 ? [labelIds[0]] : [];
       const groupKey = generateGroupKey();
-      const labelNames = labelIds.map((id) => {
+      const labelNames = normalizedLabelIds.map((id) => {
         const l = allLabels.find((l) => l.id === id);
         return l?.name || "Unknown";
       });
-      const colorCodes = labelIds.map((id) => {
+      const colorCodes = normalizedLabelIds.map((id) => {
         const l = allLabels.find((l) => l.id === id);
         return l?.color || "#6b7280";
       });
@@ -197,7 +198,7 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
         groupKey,
         shapeType: shape.type,
         geometry: { ...shape },
-        labelIds: [...labelIds],
+        labelIds: [...normalizedLabelIds],
         labelNames,
         colorCodes,
         beReviewingIds: [],
@@ -267,15 +268,16 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
   // ── Update labels (relabel) ──
   const updateLabels = useCallback(
     (groupKey, labelIds, allLabels) => {
+      const normalizedLabelIds = Array.isArray(labelIds) && labelIds.length > 0 ? [labelIds[0]] : [];
       const target = latestAnnotationsRef.current.find(
         (g) => g.groupKey === groupKey,
       );
       if (target?.reviewStatus === "APPROVED") return;
-      const labelNames = labelIds.map((id) => {
+      const labelNames = normalizedLabelIds.map((id) => {
         const l = allLabels.find((lb) => lb.id === id);
         return l?.name || "Unknown";
       });
-      const colorCodes = labelIds.map((id) => {
+      const colorCodes = normalizedLabelIds.map((id) => {
         const l = allLabels.find((lb) => lb.id === id);
         return l?.color || "#6b7280";
       });
@@ -285,7 +287,7 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
           g.groupKey === groupKey
             ? {
                 ...g,
-                labelIds: [...labelIds],
+              labelIds: [...normalizedLabelIds],
                 labelNames,
                 colorCodes,
                 // Xóa trạng thái rejected khi annotator đã thay thế label
