@@ -242,6 +242,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
     const imgWidth = currentItem?.width || 800;
     const imgHeight = currentItem?.height || 600;
     const totalImages = items.length;
+    const currentItemStats = currentItemId != null
+        ? getItemStats(currentItemId)
+        : { total: 0, approved: 0, rejected: 0, pending: 0 };
     const assignmentStatus = (workspace?.assignmentStatus || "").toUpperCase();
     const isFinalizedAssignment = assignmentStatus === "APPROVED" || assignmentStatus === "REJECTED";
     const hasImageLoadError = Boolean(imageError);
@@ -519,17 +522,17 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                         </div>
                         <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: "#253347" }}>
                             <div className="h-full rounded-full transition-all"
-                                style={{
-                                    width: reviewStats.total > 0
-                                        ? `${(reviewStats.reviewed / reviewStats.total) * 100}%`
-                                        : "0%",
-                                    background: "#00bfa5",
-                                }} />
+                            style={{
+                                width: currentItemStats.total > 0
+                                    ? `${((currentItemStats.approved + currentItemStats.rejected) / currentItemStats.total) * 100}%`
+                                    : "0%",
+                                background: "#00bfa5",
+                            }} />
                         </div>
                         <div className="flex justify-between text-[10px] mt-1.5">
-                            <span style={{ color: "#00bfa5" }}>A {reviewStats.approved}</span>
-                            <span style={{ color: "#f87171" }}>R {reviewStats.rejected}</span>
-                            <span style={{ color: "#facc15" }}>P {reviewStats.pending}</span>
+                            <span style={{ color: "#00bfa5" }}>A {currentItemStats.approved}</span>
+                            <span style={{ color: "#f87171" }}>R {currentItemStats.rejected}</span>
+                            <span style={{ color: "#facc15" }}>P {currentItemStats.pending}</span>
                         </div>
                     </div>
                 </div>
