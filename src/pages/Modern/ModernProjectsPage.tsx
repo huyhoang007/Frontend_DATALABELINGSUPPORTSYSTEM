@@ -1,12 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-// import { Project, User } from '../../types/cvat'; // Optional if types match, or define local interface
 import { projectApi } from "../../api/projectApi";
+import { assignmentApi } from "../../api/assignmentApi";
 import { useToast } from "../../context/ToastContext";
 import { useAuth } from "../../context/AuthContext";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { cn } from "../../utils/cn";
+
+function computeProjectStatus(assignments: any[]): string {
+  if (!assignments || assignments.length === 0) return "draft";
+  const statuses = assignments.map((a) => (a.status ?? "").toUpperCase());
+  if (statuses.every((s) => s === "APPROVED")) return "completed";
+  if (statuses.some((s) => s === "REJECTED")) return "in_progress";
+  if (statuses.some((s) => ["IN_PROGRESS", "SUBMITTED", "RE_SUBMITTED"].includes(s))) return "in_progress";
+  return "draft";
+}
 
 // Bảng màu Modern Enterprise UI (Atlassian/Jira style)
 const T = {
@@ -83,29 +92,35 @@ const ModernProjectsPage: React.FC = () => {
   const fetchProjects = async () => {
     setIsLoading(true);
     try {
-      // Use getMyProjects or getAllProjects based on requirement.
-      // Manager dashboard usually shows their own projects.
-      const data = await projectApi.getMyProjects();
-      // Map backend response fields to UI constraints if necessary
-      // Backend: { id, name, type (IMAGE/VIDEO...), status, ... }
-      // UI expects: project_id, name, data_type, status...
-      const mappedProjects = data.map((p: any) => ({
-        project_id: p.projectId, // Backend returns projectId, not id
+      const raw = await projectApi.getMyProjects();
+      const list = Array.isArray(raw) ? raw : (raw?.data ?? raw?.content ?? []);
+
+      const mapped = list.map((p: any) => ({
+        project_id: p.projectId,
         name: p.name,
-        data_type: p.type
-          ? p.type.toLowerCase()
-          : p.dataType
-            ? p.dataType.toLowerCase()
-            : "unknown", // Handle type vs dataType naming
+        data_type: p.type ? p.type.toLowerCase() : p.dataType ? p.dataType.toLowerCase() : "unknown",
         status: p.status ? p.status.toLowerCase() : "unknown",
         manager_id: p.managerId,
-        manager: { full_name: user?.username || "Me" }, // Backend might not return full manager obj in list
-        datasets: [], // Backend might not return datasets in list summary
+        manager: { full_name: user?.username || "Me" },
+        datasets: [],
       }));
-      setProjects(mappedProjects);
+
+      // Compute real status from assignments
+      const withStatus = await Promise.all(
+        mapped.map(async (proj: any) => {
+          try {
+            const aRaw = await assignmentApi.getAssignmentsByProject(proj.project_id);
+            const aList = Array.isArray(aRaw) ? aRaw : (aRaw?.data ?? aRaw?.content ?? []);
+            return { ...proj, status: computeProjectStatus(aList) };
+          } catch {
+            return proj;
+          }
+        })
+      );
+
+      setProjects(withStatus);
     } catch (error: any) {
       console.error("Failed to fetch projects", error);
-      // addToast("Could not load projects", "error");
     } finally {
       setIsLoading(false);
     }

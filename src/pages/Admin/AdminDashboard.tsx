@@ -186,7 +186,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             marginBottom: "8px",
             letterSpacing: "-0.02em"
           }}>
-            Admin Dashboard
+            Bảng điều khiển Admin
           </h1>
           <p style={{
             fontSize: "14px",
@@ -344,7 +344,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             {/* Annotators */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "14px", color: T.textSecondary }}>Annotators</span>
+                <span style={{ fontSize: "14px", color: T.textSecondary }}>Người chú thích</span>
                 <span style={{ fontSize: "16px", fontWeight: 700, color: T.textPrimary }}>{roleStats.annotators}</span>
               </div>
               <div style={{ 
@@ -366,7 +366,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             {/* Reviewers */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "14px", color: T.textSecondary }}>Reviewers</span>
+                <span style={{ fontSize: "14px", color: T.textSecondary }}>Người đánh giá</span>
                 <span style={{ fontSize: "16px", fontWeight: 700, color: T.textPrimary }}>{roleStats.reviewers}</span>
               </div>
               <div style={{ 
@@ -388,7 +388,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             {/* Managers */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "14px", color: T.textSecondary }}>Managers</span>
+                <span style={{ fontSize: "14px", color: T.textSecondary }}>Quản lý</span>
                 <span style={{ fontSize: "16px", fontWeight: 700, color: T.textPrimary }}>{roleStats.managers}</span>
               </div>
               <div style={{ 
@@ -410,7 +410,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             {/* Admins */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "14px", color: T.textSecondary }}>Admins</span>
+                <span style={{ fontSize: "14px", color: T.textSecondary }}>Quản trị viên</span>
                 <span style={{ fontSize: "16px", fontWeight: 700, color: T.textPrimary }}>{roleStats.admins}</span>
               </div>
               <div style={{ 

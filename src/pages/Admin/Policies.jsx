@@ -25,22 +25,22 @@ export default function AdminPolicies() {
                                 Quản lý chính sách
                             </h1>
                             <p className="text-muted-foreground">
-                                Configure global policies and rules
+                                Cấu hình chính sách và quy tắc toàn hệ thống
                             </p>
                         </div>
                         <button
                             onClick={() => setShowCreateModal(true)}
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
                         >
-                            Create Policy
+                            Tạo chính sách
                         </button>
                     </div>
 
                     <div className="bg-card border border-border rounded-lg p-6">
                         <div className="text-center text-muted-foreground py-12">
                             <div className="text-6xl mb-4 font-bold">P</div>
-                            <p className="text-lg font-medium mb-2">No policies configured</p>
-                            <p className="text-sm">Policy management API integration pending</p>
+                            <p className="text-lg font-medium mb-2">Chưa có chính sách nào</p>
+                            <p className="text-sm">Tích hợp API quản lý chính sách đang chờ xử lý</p>
                             <p className="text-xs mt-2 text-yellow-600">TODO_BACKEND: GET /api/policies</p>
                         </div>
                     </div>
@@ -48,33 +48,33 @@ export default function AdminPolicies() {
                     {showCreateModal && (
                         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                             <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
-                                <h2 className="text-xl font-bold text-foreground mb-4">Create New Policy</h2>
+                                <h2 className="text-xl font-bold text-foreground mb-4">Tạo chính sách mới</h2>
 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-1">Policy Name</label>
+                                        <label className="block text-sm font-medium text-muted-foreground mb-1">Tên chính sách</label>
                                         <input
                                             type="text"
                                             value={newPolicy.name}
                                             onChange={(e) => setNewPolicy({ ...newPolicy, name: e.target.value })}
                                             className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
-                                            placeholder="e.g., Quality Assurance Policy"
+                                            placeholder="VD: Chính sách đảm bảo chất lượng"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-1">Description</label>
+                                        <label className="block text-sm font-medium text-muted-foreground mb-1">Mô tả</label>
                                         <textarea
                                             value={newPolicy.description}
                                             onChange={(e) => setNewPolicy({ ...newPolicy, description: e.target.value })}
                                             className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
                                             rows={3}
-                                            placeholder="Describe the policy purpose..."
+                                            placeholder="Mô tả mục đích của chính sách..."
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-1">Rules (JSON)</label>
+                                        <label className="block text-sm font-medium text-muted-foreground mb-1">Quy tắc (JSON)</label>
                                         <textarea
                                             value={newPolicy.rules}
                                             onChange={(e) => setNewPolicy({ ...newPolicy, rules: e.target.value })}
@@ -90,13 +90,13 @@ export default function AdminPolicies() {
                                         onClick={() => setShowCreateModal(false)}
                                         className="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-accent transition-colors"
                                     >
-                                        Cancel
+                                        Hủy
                                     </button>
                                     <button
                                         onClick={handleCreatePolicy}
                                         className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
                                     >
-                                        Create
+                                        Tạo
                                     </button>
                                 </div>
 

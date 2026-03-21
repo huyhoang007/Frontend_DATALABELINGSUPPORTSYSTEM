@@ -156,8 +156,7 @@ export default function ProjectExport() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
                     {/* Dataset selector */}
                     <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">Dataset / Batch</label>
-                        <select
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">Dataset / Batch</label>                        <select
                             className="w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                             value={selectedDatasetId}
                             onChange={(e) => setSelectedDatasetId(e.target.value)}
@@ -245,12 +244,12 @@ export default function ProjectExport() {
                                     </TableCell>
                                     <TableCell>
                                         {item.status === "COMPLETED" ? (
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                                                COMPLETED
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                                Hoàn thành
                                             </span>
                                         ) : (
                                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                                                FAILED
+                                                Thất bại
                                             </span>
                                         )}
                                     </TableCell>

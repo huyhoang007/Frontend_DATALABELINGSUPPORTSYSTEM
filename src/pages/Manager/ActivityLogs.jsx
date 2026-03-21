@@ -60,7 +60,7 @@ export default function ActivityLogs() {
             }));
         } catch (error) {
             console.error(error);
-            addToast("Failed to load activity logs", "error");
+            addToast("Không thể tải nhật ký hoạt động", "error");
         } finally {
             setIsLoading(false);
         }
@@ -243,10 +243,10 @@ export default function ActivityLogs() {
                     <option value="ALL">Tất cả hành động</option>
                     <option value="CREATE_PROJECT">Tạo dự án</option>
                     <option value="SUBMIT_TASK">Gửi nhiệm vụ</option>
-                    <option value="APPROVE_TASK">Approve Task</option>
-                    <option value="REJECT_TASK">Reject Task</option>
-                    <option value="CREATE_USER">Create User</option>
-                    <option value="LOGIN">Login</option>
+                    <option value="APPROVE_TASK">Duyệt nhiệm vụ</option>
+                    <option value="REJECT_TASK">Từ chối nhiệm vụ</option>
+                    <option value="CREATE_USER">Tạo người dùng</option>
+                    <option value="LOGIN">Đăng nhập</option>
                 </select>
             </div>
 
@@ -326,7 +326,7 @@ export default function ActivityLogs() {
                                 textTransform: "uppercase",
                                 letterSpacing: "0.08em"
                             }}>
-                                TIME
+                                THỜI GIAN
                             </p>
                             <p style={{
                                 fontSize: "10px",
@@ -335,7 +335,7 @@ export default function ActivityLogs() {
                                 textTransform: "uppercase",
                                 letterSpacing: "0.08em"
                             }}>
-                                ACTOR
+                                NGƯỜI DÙNG
                             </p>
                             <p style={{
                                 fontSize: "10px",
@@ -344,7 +344,7 @@ export default function ActivityLogs() {
                                 textTransform: "uppercase",
                                 letterSpacing: "0.08em"
                             }}>
-                                ACTION
+                                HÀNH ĐỘNG
                             </p>
                             <p style={{
                                 fontSize: "10px",
@@ -353,7 +353,7 @@ export default function ActivityLogs() {
                                 textTransform: "uppercase",
                                 letterSpacing: "0.08em"
                             }}>
-                                MESSAGE
+                                NỘI DUNG
                             </p>
                         </div>
 

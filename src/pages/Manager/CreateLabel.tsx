@@ -17,17 +17,17 @@ export default function CreateLabel() {
         description: "",
         shortcutKey: "",
     });
-    const [errors, setErrors] = useState({});
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const [saving, setSaving] = useState(false);
     const [apiError, setApiError] = useState("");
 
-    const set = (key, value) => {
+    const set = (key: string, value: string) => {
         setForm((prev) => ({ ...prev, [key]: value }));
         setErrors((prev) => ({ ...prev, [key]: "" }));
     };
 
     const validate = () => {
-        const e = {};
+        const e: Record<string, string> = {};
         if (!form.labelName.trim()) e.labelName = "Tên nhãn là bắt buộc";
         else if (form.labelName.length > 50) e.labelName = "Tối đa 50 ký tự";
         if (!/^#[0-9A-Fa-f]{6}$/.test(form.colorCode)) e.colorCode = "Mã màu không hợp lệ (VD: #FF0000)";
@@ -52,7 +52,7 @@ export default function CreateLabel() {
             });
             navigate("/manager/labels");
         } catch (err) {
-            setApiError(err?.message || "Tạo nhãn thất bại");
+            setApiError((err as Error)?.message || "Tạo nhãn thất bại");
         } finally {
             setSaving(false);
         }

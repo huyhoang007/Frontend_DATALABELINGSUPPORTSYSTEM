@@ -25,7 +25,7 @@ export default function AdminActivityLogs() {
             setLogs(data.content || data || []);
         } catch (error) {
             console.error('Failed to fetch activity logs:', error);
-            addToast('Failed to load activity logs', 'error');
+            addToast('Không thể tải nhật ký hoạt động', 'error');
         } finally {
             setIsLoading(false);
         }
@@ -50,7 +50,7 @@ export default function AdminActivityLogs() {
             setLogs(Array.isArray(data) ? data : data.content || []);
         } catch (error) {
             console.error('Failed to search logs:', error);
-            addToast('Failed to search activity logs', 'error');
+            addToast('Không thể tìm kiếm nhật ký hoạt động', 'error');
         } finally {
             setIsLoading(false);
         }
@@ -88,55 +88,55 @@ export default function AdminActivityLogs() {
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-8">
                         <h1 className="text-3xl font-bold text-foreground mb-2">
-                            Global Activity Logs
+                            Nhật ký hoạt động toàn hệ thống
                         </h1>
                         <p className="text-muted-foreground">
-                            Monitor all system activities and user actions
+                            Theo dõi tất cả hoạt động hệ thống và hành động người dùng
                         </p>
                     </div>
                     <div className="bg-card border border-border rounded-lg p-6 mb-6">
-                        <h2 className="text-lg font-semibold text-foreground mb-4">Filters</h2>
+                        <h2 className="text-lg font-semibold text-foreground mb-4">Bộ lọc</h2>
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">Action</label>
+                                <label className="block text-sm font-medium text-muted-foreground mb-1">Hành động</label>
                                 <select value={filters.action} onChange={(e) => setFilters({ ...filters, action: e.target.value })} className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground">
-                                    <option value="">All Actions</option>
-                                    <option value="LOGIN">Login</option>
-                                    <option value="CREATE">Create</option>
-                                    <option value="UPDATE">Update</option>
-                                    <option value="DELETE">Delete</option>
-                                    <option value="VIEW">View</option>
+                                    <option value="">Tất cả hành động</option>
+                                    <option value="LOGIN">Đăng nhập</option>
+                                    <option value="CREATE">Tạo mới</option>
+                                    <option value="UPDATE">Cập nhật</option>
+                                    <option value="DELETE">Xóa</option>
+                                    <option value="VIEW">Xem</option>
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">From Date</label>
+                                <label className="block text-sm font-medium text-muted-foreground mb-1">Từ ngày</label>
                                 <input type="date" value={filters.dateFrom} onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })} className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">To Date</label>
+                                <label className="block text-sm font-medium text-muted-foreground mb-1">Đến ngày</label>
                                 <input type="date" value={filters.dateTo} onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })} className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground" />
                             </div>
                             <div className="flex items-end">
                                 <button onClick={handleSearch} disabled={isLoading} className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white rounded-lg font-medium transition-colors">
-                                    {isLoading ? 'Loading...' : 'Search Logs'}
+                                    {isLoading ? 'Đang tải...' : 'Tìm kiếm'}
                                 </button>
                             </div>
                         </div>
                     </div>
                     <div className="bg-card border border-border rounded-lg overflow-hidden">
                         {isLoading ? (
-                            <div className="text-center text-muted-foreground py-12"><p>Loading activity logs...</p></div>
+                            <div className="text-center text-muted-foreground py-12"><p>Đang tải nhật ký hoạt động...</p></div>
                         ) : logs.length === 0 ? (
-                            <div className="text-center text-muted-foreground py-12"><p className="text-lg font-medium mb-2">No activity logs found</p><p className="text-sm">Activity logs will appear here when users perform actions</p></div>
+                            <div className="text-center text-muted-foreground py-12"><p className="text-lg font-medium mb-2">Không tìm thấy nhật ký hoạt động</p><p className="text-sm">Nhật ký hoạt động sẽ xuất hiện ở đây khi người dùng thực hiện các hành động</p></div>
                         ) : (
                             <table className="w-full">
                                 <thead className="bg-background/50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Timestamp</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">User</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Action</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Target</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Details</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Thời gian</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Người dùng</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Hành động</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Đối tượng</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Chi tiết</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border">
@@ -161,16 +161,16 @@ export default function AdminActivityLogs() {
                         )}
                         {!isLoading && logs.length > logsPerPage && (
                             <div className="flex items-center justify-between p-4 border-t border-border">
-                                <div className="text-sm text-muted-foreground">Showing {indexOfFirstLog + 1}-{Math.min(indexOfLastLog, logs.length)} of {logs.length} logs</div>
+                                <div className="text-sm text-muted-foreground">Hiển thị {indexOfFirstLog + 1}-{Math.min(indexOfLastLog, logs.length)} trong {logs.length} nhật ký</div>
                                 <div className="flex gap-2">
-                                    <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-3 py-1.5 text-sm border border-border rounded-lg text-foreground hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                                    <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-3 py-1.5 text-sm border border-border rounded-lg text-foreground hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Trước</button>
                                     <div className="px-3 py-1.5 text-sm border border-border rounded-lg bg-blue-600/10 text-blue-600 font-medium">{currentPage} / {totalPages}</div>
-                                    <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="px-3 py-1.5 text-sm border border-border rounded-lg text-foreground hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+                                    <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="px-3 py-1.5 text-sm border border-border rounded-lg text-foreground hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Sau</button>
                                 </div>
                             </div>
                         )}
                     </div>
-                    {logs.length > 0 && (<div className="mt-4 text-sm text-muted-foreground">Total {logs.length} activities</div>)}
+                    {logs.length > 0 && (<div className="mt-4 text-sm text-muted-foreground">Tổng cộng {logs.length} hoạt động</div>)}
                 </div>
             </main>
         </div>

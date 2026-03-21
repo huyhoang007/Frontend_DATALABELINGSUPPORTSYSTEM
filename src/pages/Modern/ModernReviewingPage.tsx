@@ -320,7 +320,7 @@ const ModernReviewingPage: React.FC = () => {
                   </div>
                   {review.is_improved && (
                     <div className="px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-full text-[10px] font-bold uppercase tracking-wide">
-                      Improved
+                      Đã cải thiện
                     </div>
                   )}
                 </div>
@@ -337,7 +337,7 @@ const ModernReviewingPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">Label</div>
+                    <div className="text-xs text-muted-foreground mb-1">Nhãn</div>
                     <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                       <div
                         className="w-3 h-3 rounded-full shrink-0"
@@ -351,7 +351,7 @@ const ModernReviewingPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">Annotator</div>
+                    <div className="text-xs text-muted-foreground mb-1">Người chú thích</div>
                     <div className="text-sm font-semibold text-foreground truncate">
                       {review.annotator?.full_name}
                     </div>
@@ -361,7 +361,7 @@ const ModernReviewingPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">Reviewer</div>
+                    <div className="text-xs text-muted-foreground mb-1">Người đánh giá</div>
                     <div className="text-sm font-semibold text-foreground truncate">
                       {review.reviewer?.full_name}
                     </div>
@@ -373,7 +373,7 @@ const ModernReviewingPage: React.FC = () => {
 
                 {/* Geometry Preview */}
                 <div className="mb-4">
-                  <div className="text-xs text-muted-foreground mb-1">Geometry</div>
+                  <div className="text-xs text-muted-foreground mb-1">Dữ liệu hình học</div>
                   <div className="bg-muted/40 p-2 rounded-md font-mono text-[10px] text-muted-foreground truncate border border-border/50 max-w-md">
                     {review.geometry}
                   </div>
@@ -463,7 +463,7 @@ const ModernReviewingPage: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">Label</div>
+                    <div className="text-xs text-muted-foreground mb-1">Nhãn</div>
                     <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                       <div
                         className="w-3 h-3 rounded-full"
@@ -491,13 +491,13 @@ const ModernReviewingPage: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">Annotator</div>
+                    <div className="text-xs text-muted-foreground mb-1">Người chú thích</div>
                     <div className="text-sm font-medium text-foreground">
                       {selectedReview.annotator?.full_name}
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground mb-1">Reviewer</div>
+                    <div className="text-xs text-muted-foreground mb-1">Người đánh giá</div>
                     <div className="text-sm font-medium text-foreground">
                       {selectedReview.reviewer?.full_name}
                     </div>
@@ -507,7 +507,7 @@ const ModernReviewingPage: React.FC = () => {
             </div>
 
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-foreground mb-2">Geometry Data</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Dữ liệu hình học</h3>
               <div className="p-4 bg-muted/30 rounded-lg border border-border/50 font-mono text-xs text-muted-foreground break-all">
                 {selectedReview.geometry}
               </div>

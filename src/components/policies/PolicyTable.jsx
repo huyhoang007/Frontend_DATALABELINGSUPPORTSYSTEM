@@ -33,11 +33,11 @@ export function PolicyTable({ policies, onEdit, onToggleStatus }) {
             <table className="w-full text-sm text-left">
                 <thead className="bg-muted text-muted-foreground font-medium border-b border-border">
                     <tr>
-                        <th className="px-4 py-3">Error Name</th>
-                        <th className="px-4 py-3 w-32">Level</th>
-                        <th className="px-4 py-3 w-32">Status</th>
-                        <th className="px-4 py-3 w-40">Last Updated</th>
-                        <th className="px-4 py-3 w-20 text-right">Action</th>
+                        <th className="px-4 py-3">Tên lỗi</th>
+                        <th className="px-4 py-3 w-32">Mức độ</th>
+                        <th className="px-4 py-3 w-32">Trạng thái</th>
+                        <th className="px-4 py-3 w-40">Cập nhật lần cuối</th>
+                        <th className="px-4 py-3 w-20 text-right">Hành động</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-card">
@@ -75,7 +75,7 @@ export function PolicyTable({ policies, onEdit, onToggleStatus }) {
                                 <button
                                     onClick={() => onEdit(policy)}
                                     className="p-1.5 text-muted-foreground hover:text-annotator-primary hover:bg-annotator-primary/10 rounded-md transition-all"
-                                    title="Edit Policy"
+                                    title="Chỉnh sửa chính sách"
                                 >
                                     <span className="material-symbols-outlined text-[18px]">edit</span>
                                 </button>

@@ -133,7 +133,7 @@ export default function ProjectLabels() {
         <div className="space-y-4">
             {/* ── Header ── */}
             <div className="flex items-center justify-between flex-wrap gap-2">
-                <h2 className="text-base font-bold text-foreground">Label Rules</h2>
+                <h2 className="text-base font-bold text-foreground">Quy tắc nhãn</h2>
                 <div className="flex gap-2">
                     <Button variant="secondary" size="sm" onClick={() => { setRuleModalOpen(true); setRuleSearch(""); }}>
                         <span className="material-symbols-outlined text-base mr-1">playlist_add</span>Thêm label rules

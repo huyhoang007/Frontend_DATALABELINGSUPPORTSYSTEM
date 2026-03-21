@@ -85,8 +85,8 @@ export default function Workspace() {
     const currentItem = items[currentImageIndex] || null;
     const totalImages = items.length;
 
-    // Is the assignment read-only (already submitted or approved)?
-    const isReadOnly = workspace?.assignmentStatus?.toUpperCase() === "SUBMITTED" || workspace?.assignmentStatus?.toUpperCase() === "APPROVED";
+    // Is the assignment read-only (submitted, re-submitted, or approved)?
+    const isReadOnly = ["SUBMITTED", "RE_SUBMITTED", "APPROVED"].includes(workspace?.assignmentStatus?.toUpperCase());
 
     /* ── Fetch workspace ── */
     const fetchWorkspace = React.useCallback(async () => {
@@ -537,6 +537,24 @@ export default function Workspace() {
                 <span className="material-symbols-outlined text-5xl text-muted-foreground/40">assignment</span>
                 <p className="text-muted-foreground">Không tìm thấy bài tập</p>
                 <Button variant="secondary" onClick={() => navigate("/annotator/tasks")} leftIcon="arrow_back">Quay lại</Button>
+            </div>
+        );
+    }
+
+    // Block access if assignment already submitted/re-submitted
+    const lockedStatuses = ["SUBMITTED", "RE_SUBMITTED", "APPROVED"];
+    if (lockedStatuses.includes(workspace?.assignmentStatus?.toUpperCase())) {
+        return (
+            <div className="flex flex-col items-center justify-center h-screen bg-background text-foreground gap-4">
+                <span className="material-symbols-outlined text-5xl text-amber-400">lock</span>
+                <p className="text-lg font-semibold text-foreground">Bài tập đã được nộp</p>
+                <p className="text-sm text-muted-foreground">
+                    Trạng thái: <span className="font-medium text-foreground">{workspace.assignmentStatus}</span>
+                    {" "}— bạn không thể chỉnh sửa sau khi đã nộp.
+                </p>
+                <Button variant="secondary" onClick={() => navigate("/annotator/tasks")} leftIcon="arrow_back">
+                    Quay lại danh sách
+                </Button>
             </div>
         );
     }

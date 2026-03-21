@@ -52,8 +52,8 @@ export function PolicyForm({ isOpen, onClose, onSubmit, initialData }) {
 
     const validate = () => {
         const newErrors = {};
-        if (!formData.errorName.trim()) newErrors.errorName = "Error name is required";
-        if (!formData.description.trim()) newErrors.description = "Description is required";
+        if (!formData.errorName.trim()) newErrors.errorName = "Tên lỗi là bắt buộc";
+        if (!formData.description.trim()) newErrors.description = "Mô tả là bắt buộc";
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -68,12 +68,12 @@ export function PolicyForm({ isOpen, onClose, onSubmit, initialData }) {
         <ModalDialog
             isOpen={isOpen}
             onClose={onClose}
-            title={isEditMode ? "Edit Policy" : "Create New Policy"}
+            title={isEditMode ? "Chỉnh sửa chính sách" : "Tạo chính sách mới"}
             actions={
                 <>
-                    <Button variant="secondary" onClick={onClose}>Cancel</Button>
+                    <Button variant="secondary" onClick={onClose}>Hủy</Button>
                     <Button variant="primary" onClick={handleSubmit}>
-                        {isEditMode ? "Update" : "Create"}
+                        {isEditMode ? "Cập nhật" : "Tạo"}
                     </Button>
                 </>
             }
@@ -81,41 +81,41 @@ export function PolicyForm({ isOpen, onClose, onSubmit, initialData }) {
             <div className="space-y-4">
                 {/* Error Name */}
                 <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Error Name</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Tên lỗi</label>
                     <input
                         name="errorName"
                         value={formData.errorName}
                         onChange={handleChange}
                         className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-annotator-primary"
-                        placeholder="e.g. Bounding Box Too Loose"
+                        placeholder="VD: Bounding Box quá lỏng"
                     />
                     {errors.errorName && <p className="text-[10px] text-red-500">{errors.errorName}</p>}
                 </div>
 
                 {/* Error Level */}
                 <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Level</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Mức độ</label>
                     <select
                         name="errorLevel"
                         value={formData.errorLevel}
                         onChange={handleChange}
                         className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-annotator-primary appearance-none"
                     >
-                        <option value="LOW">Low</option>
-                        <option value="MEDIUM">Medium</option>
-                        <option value="HIGH">High</option>
+                        <option value="LOW">Thấp</option>
+                        <option value="MEDIUM">Trung bình</option>
+                        <option value="HIGH">Cao</option>
                     </select>
                 </div>
 
                 {/* Description */}
                 <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Description</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Mô tả</label>
                     <textarea
                         name="description"
                         value={formData.description}
                         onChange={handleChange}
                         className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-annotator-primary min-h-[100px]"
-                        placeholder="Describe the labeling rule..."
+                        placeholder="Mô tả quy tắc gán nhãn..."
                     />
                     {errors.description && <p className="text-[10px] text-red-500">{errors.description}</p>}
                 </div>
@@ -133,7 +133,7 @@ export function PolicyForm({ isOpen, onClose, onSubmit, initialData }) {
                         <div className="w-9 h-5 bg-muted-foreground/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
                     </label>
                     <span className="text-sm font-medium text-foreground">
-                        {formData.status === "ACTIVE" ? "Active" : "Inactive"}
+                        {formData.status === "ACTIVE" ? "Đang hoạt động" : "Không hoạt động"}
                     </span>
                 </div>
             </div>

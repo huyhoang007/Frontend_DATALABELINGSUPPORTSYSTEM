@@ -250,16 +250,15 @@ export default function ProjectAssignments() {
             <Card className="p-6 space-y-5">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-[18px]">assignment</span>
-                    Create Assignment
+                    Tạo phân công
                 </h3>
-
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Select Data */}
                     <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Select Data</label>
+                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Chọn dữ liệu</label>
                         <div className="relative">
                             <select className={selectCls} value={selDataset} onChange={(e) => setSelDataset(e.target.value)}>
-                                <option value="">{datasets.length === 0 ? "No datasets found" : "— Choose dataset —"}</option>
+                                <option value="">{datasets.length === 0 ? "Không có dataset" : "— Chọn dataset —"}</option>
                                 {datasets.map((d) => (
                                     <option key={d.id} value={d.id}>{d.name}</option>
                                 ))}
@@ -270,10 +269,10 @@ export default function ProjectAssignments() {
 
                     {/* Select Annotator */}
                     <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Select Annotator</label>
+                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Chọn người chú thích</label>
                         <div className="relative">
                             <select className={selectCls} value={selAnnotator} onChange={(e) => setSelAnnotator(e.target.value)} disabled={loadingUsers}>
-                                <option value="">{loadingUsers ? "Loading annotators..." : annotators.length === 0 ? "No annotators found" : "— Choose annotator —"}</option>
+                                <option value="">{loadingUsers ? "Đang tải..." : annotators.length === 0 ? "Không có người chú thích" : "— Chọn người chú thích —"}</option>
                                 {annotators.map((a) => (
                                     <option key={a.id} value={a.id}>{a.name}</option>
                                 ))}
@@ -288,10 +287,10 @@ export default function ProjectAssignments() {
 
                     {/* Select Reviewer */}
                     <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Select Reviewer</label>
+                        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Chọn người đánh giá</label>
                         <div className="relative">
                             <select className={selectCls} value={selReviewer} onChange={(e) => setSelReviewer(e.target.value)} disabled={loadingUsers}>
-                                <option value="">{loadingUsers ? "Loading reviewers..." : reviewers.length === 0 ? "No reviewers found" : "— Choose reviewer —"}</option>
+                                <option value="">{loadingUsers ? "Đang tải..." : reviewers.length === 0 ? "Không có người đánh giá" : "— Chọn người đánh giá —"}</option>
                                 {reviewers.map((r) => (
                                     <option key={r.id} value={r.id}>{r.name}</option>
                                 ))}
@@ -311,7 +310,7 @@ export default function ProjectAssignments() {
                         <span className="material-symbols-outlined text-[16px] text-destructive">error</span>
                         <p className="text-sm text-destructive flex-1">{usersError}</p>
                         <Button type="button" variant="ghost" size="sm" onClick={fetchUsers}>
-                            <span className="material-symbols-outlined text-base mr-1">refresh</span>Retry
+                            <span className="material-symbols-outlined text-base mr-1">refresh</span>Thử lại
                         </Button>
                     </div>
                 )}
@@ -332,7 +331,7 @@ export default function ProjectAssignments() {
                         ) : (
                             <span className="material-symbols-outlined text-base mr-1">add</span>
                         )}
-                        {creating ? "Creating..." : "Create Task"}
+                        {creating ? "Đang tạo..." : "Tạo nhiệm vụ"}
                     </Button>
                 </div>
             </Card>
@@ -342,19 +341,19 @@ export default function ProjectAssignments() {
                 <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-[18px]">task_alt</span>
-                        Assignment Tasks
+                        Danh sách phân công
                     </h3>
                     <div className="flex items-center gap-3">
                         {assignments.length > 0 && (
                             <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                 <span className="flex items-center gap-1">
-                                    <span className="w-2 h-2 rounded-full bg-yellow-400" />Pending: {pending}
+                                    <span className="w-2 h-2 rounded-full bg-yellow-400" />Chờ xử lý: {pending}
                                 </span>
                                 <span className="flex items-center gap-1">
-                                    <span className="w-2 h-2 rounded-full bg-blue-400" />In Progress: {inProgress}
+                                    <span className="w-2 h-2 rounded-full bg-blue-400" />Đang thực hiện: {inProgress}
                                 </span>
                                 <span className="flex items-center gap-1">
-                                    <span className="w-2 h-2 rounded-full bg-green-400" />Completed: {completed}
+                                    <span className="w-2 h-2 rounded-full bg-green-400" />Hoàn thành: {completed}
                                 </span>
                             </div>
                         )}
@@ -362,7 +361,7 @@ export default function ProjectAssignments() {
                             <span className={cn("material-symbols-outlined text-base mr-1", loadingAssignments && "animate-spin")}>
                                 {loadingAssignments ? "progress_activity" : "refresh"}
                             </span>
-                            Refresh
+                            Làm mới
                         </Button>
                     </div>
                 </div>
@@ -371,7 +370,7 @@ export default function ProjectAssignments() {
                 {loadingAssignments && assignments.length === 0 && (
                     <div className="flex items-center justify-center py-16">
                         <span className="material-symbols-outlined text-3xl text-muted-foreground animate-spin mr-2">progress_activity</span>
-                        <span className="text-muted-foreground text-sm">Loading assignments...</span>
+                        <span className="text-muted-foreground text-sm">Đang tải phân công...</span>
                     </div>
                 )}
 
@@ -380,16 +379,16 @@ export default function ProjectAssignments() {
                     <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-destructive/10 border border-destructive/20">
                         <span className="material-symbols-outlined text-[16px] text-destructive">error</span>
                         <p className="text-sm text-destructive flex-1">{assignmentsError}</p>
-                        <Button variant="ghost" size="sm" onClick={fetchAssignments}>Retry</Button>
+                        <Button variant="ghost" size="sm" onClick={fetchAssignments}>Thử lại</Button>
                     </div>
                 )}
 
                 {!loadingAssignments && assignments.length === 0 && !assignmentsError ? (
                     <div className="text-center py-16">
                         <span className="material-symbols-outlined text-5xl text-muted-foreground/40 mb-3 block">assignment</span>
-                        <h4 className="text-base font-semibold text-foreground mb-1">No assignments yet</h4>
+                        <h4 className="text-base font-semibold text-foreground mb-1">Chưa có phân công nào</h4>
                         <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                            Select a dataset, annotator, and reviewer above, then click "Create Task" to assign work.
+                            Chọn dataset, người chú thích và người đánh giá ở trên, sau đó nhấn "Tạo nhiệm vụ" để phân công công việc.
                         </p>
                     </div>
                 ) : assignments.length > 0 && (
@@ -398,9 +397,9 @@ export default function ProjectAssignments() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>ID</TableHead>
-                                    <TableHead>DATA SOURCE</TableHead>
-                                    <TableHead>ANNOTATOR</TableHead>
-                                    <TableHead>REVIEWER</TableHead>
+                                    <TableHead>NGUỒN DỮ LIỆU</TableHead>
+                                    <TableHead>NGƯỜI CHÚ THÍCH</TableHead>
+                                    <TableHead>NGƯỜI ĐÁNH GIÁ</TableHead>
                                     <TableHead>TIẾN ĐỘ</TableHead>
                                     <TableHead>TRẠNG THÁI</TableHead>
                                     <TableHead className="text-right">THAO TÁC</TableHead>
@@ -451,7 +450,7 @@ export default function ProjectAssignments() {
                                 })}
                             </TableBody>
                         </Table>
-                        <p className="text-xs text-muted-foreground pt-2">Showing {assignments.length} assignment{assignments.length !== 1 ? "s" : ""}</p>
+                        <p className="text-xs text-muted-foreground pt-2">Hiển thị {assignments.length} phân công</p>
                     </>
                 )}
             </Card>
@@ -460,24 +459,24 @@ export default function ProjectAssignments() {
             <ModalDialog
                 isOpen={!!viewTask}
                 onClose={() => setViewTask(null)}
-                title="Assignment Details"
-                actions={<Button variant="secondary" onClick={() => setViewTask(null)}>Close</Button>}
+                title="Chi tiết phân công"
+                actions={<Button variant="secondary" onClick={() => setViewTask(null)}>Đóng</Button>}
             >
                 {viewTask && (
                     <div className="space-y-3 text-sm">
-                        <div><span className="font-medium text-foreground">Assignment ID:</span> <span className="text-muted-foreground font-mono">#{viewTask.assignmentId}</span></div>
-                        <div><span className="font-medium text-foreground">Project:</span> <span className="text-muted-foreground">{viewTask.projectName || "—"}</span></div>
-                        <div><span className="font-medium text-foreground">Data Source:</span> <span className="text-muted-foreground">{viewTask.datasetName || "—"}</span></div>
-                        <div><span className="font-medium text-foreground">Annotator:</span> <span className="text-muted-foreground">{viewTask.annotatorName || "—"}</span></div>
-                        <div><span className="font-medium text-foreground">Reviewer:</span> <span className="text-muted-foreground">{viewTask.reviewerName || "—"}</span></div>
-                        <div><span className="font-medium text-foreground">Progress:</span> <span className="text-muted-foreground">{viewTask.progress || 0}%</span></div>
-                        <div><span className="font-medium text-foreground">Status:</span>{" "}
+                        <div><span className="font-medium text-foreground">Mã phân công:</span> <span className="text-muted-foreground font-mono">#{viewTask.assignmentId}</span></div>
+                        <div><span className="font-medium text-foreground">Dự án:</span> <span className="text-muted-foreground">{viewTask.projectName || "—"}</span></div>
+                        <div><span className="font-medium text-foreground">Nguồn dữ liệu:</span> <span className="text-muted-foreground">{viewTask.datasetName || "—"}</span></div>
+                        <div><span className="font-medium text-foreground">Người chú thích:</span> <span className="text-muted-foreground">{viewTask.annotatorName || "—"}</span></div>
+                        <div><span className="font-medium text-foreground">Người đánh giá:</span> <span className="text-muted-foreground">{viewTask.reviewerName || "—"}</span></div>
+                        <div><span className="font-medium text-foreground">Tiến độ:</span> <span className="text-muted-foreground">{viewTask.progress || 0}%</span></div>
+                        <div><span className="font-medium text-foreground">Trạng thái:</span>{" "}
                             <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-xs font-medium", STATUS_STYLES[String(viewTask.status).toUpperCase()])}>
                                 {String(viewTask.status || "").replace("_", " ")}
                             </span>
                         </div>
                         {viewTask.createdAt && (
-                            <div><span className="font-medium text-foreground">Created:</span> <span className="text-muted-foreground">{new Date(viewTask.createdAt).toLocaleString("vi-VN")}</span></div>
+                            <div><span className="font-medium text-foreground">Ngày tạo:</span> <span className="text-muted-foreground">{new Date(viewTask.createdAt).toLocaleString("vi-VN")}</span></div>
                         )}
                     </div>
                 )}

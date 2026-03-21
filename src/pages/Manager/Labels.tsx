@@ -101,7 +101,7 @@ export default function Labels() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-12">Color</TableHead>
+                                <TableHead className="w-12">Màu</TableHead>
                                 <TableHead>Tên nhãn</TableHead>
                                 <TableHead>Loại</TableHead>
                                 <TableHead>Trạng thái</TableHead>

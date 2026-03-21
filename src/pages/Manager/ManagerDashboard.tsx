@@ -155,7 +155,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Manager Dashboard
+            Bảng điều khiển Manager
           </h1>
           <p className="text-lg text-muted-foreground">
             Quản lý dự án và team của bạn
@@ -218,7 +218,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
           <div className="text-3xl font-bold text-foreground mb-1">
             {annotators.length}
           </div>
-          <div className="text-xs font-medium text-muted-foreground">Annotators</div>
+          <div className="text-xs font-medium text-muted-foreground">Người chú thích</div>
         </Card>
       </div>
 
