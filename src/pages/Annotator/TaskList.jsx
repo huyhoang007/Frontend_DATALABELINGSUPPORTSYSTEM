@@ -34,7 +34,6 @@ const TABS = [
   "RE_SUBMITTED",
   "APPROVED",
   "REJECTED",
-  "COMPLETED",
 ];
 
 const STATUS_STYLES = {
@@ -44,7 +43,6 @@ const STATUS_STYLES = {
   RE_SUBMITTED: { bg: "#FFF3E0", text: "#BF5700", dot: "#BF5700" },
   APPROVED: { bg: T.greenBg, text: T.green, dot: T.green },
   REJECTED: { bg: T.redBg, text: T.red, dot: T.red },
-  COMPLETED: { bg: T.greenBg, text: T.green, dot: T.green },
 };
 
 const STATUS_VI = {
@@ -55,7 +53,6 @@ const STATUS_VI = {
   RE_SUBMITTED: "NỘP LẠI",
   APPROVED: "ĐÃ DUYỆT",
   REJECTED: "TỪ CHỐI",
-  COMPLETED: "HOÀN THÀNH",
 };
 
 export default function TaskList() {
@@ -132,7 +129,7 @@ export default function TaskList() {
     if (status === "IN_PROGRESS") {
       return { label: "Tiếp tục", text: T.amber, background: T.amberBg, border: `1px solid ${T.amber}40` };
     }
-    if (["SUBMITTED", "APPROVED", "COMPLETED"].includes(status)) {
+    if (["SUBMITTED", "APPROVED"].includes(status)) {
       return { label: "Xem", text: T.textSecondary, background: T.surfaceHover, border: `1px solid ${T.border}`, icon: "visibility" };
     }
     return null;

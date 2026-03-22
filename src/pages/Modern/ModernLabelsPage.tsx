@@ -293,7 +293,13 @@ const ModernLabelsPage: React.FC = () => {
       addToast('Xóa rule thành công!', 'success');
       fetchLabelRules();
     } catch (error: any) {
-      addToast(error.message || 'Không thể xóa rule', 'error');
+      const errorMsg = error.message || '';
+      // Check if error is due to foreign key constraint
+      if (errorMsg.includes('foreign key') || errorMsg.includes('is still referenced')) {
+        addToast('Rule này đang được sử dụng bởi các project. Vui lòng xóa rule khỏi các project trước khi xóa.', 'error');
+      } else {
+        addToast(errorMsg || 'Không thể xóa rule', 'error');
+      }
     }
   };
 
@@ -349,6 +355,36 @@ const ModernLabelsPage: React.FC = () => {
       fetchLabelRules();
     } catch (error: any) {
       addToast(error.message || 'Không thể thêm label', 'error');
+    } finally {
+      setIsAttachingLabels(false);
+    }
+  };
+
+  const handleRemoveLabels = async () => {
+    if (!attachingRule || attachLabelIds.length === 0) return;
+    
+    setIsAttachingLabels(true);
+    try {
+      // Get current labels in the rule and remove the selected ones
+      const currentLabelIds = (attachingRule.labels as any[])?.map(
+        (l: any) => l.labelId ?? l.label_id
+      ) || [];
+      
+      const remainingLabelIds = currentLabelIds.filter(
+        (id: number) => !attachLabelIds.includes(id)
+      );
+      
+      await labelRuleApi.replaceLabels(
+        (attachingRule.ruleId ?? attachingRule.rule_id) as number,
+        remainingLabelIds
+      );
+      addToast(`Bỏ ${attachLabelIds.length} label khỏi rule thành công!`, 'success');
+      setShowAttachLabelsModal(false);
+      setAttachingRule(null);
+      setAttachLabelIds([]);
+      fetchLabelRules();
+    } catch (error: any) {
+      addToast(error.message || 'Không thể bỏ label', 'error');
     } finally {
       setIsAttachingLabels(false);
     }
@@ -990,19 +1026,18 @@ const ModernLabelsPage: React.FC = () => {
                       (l: any) => (l.labelId ?? l.label_id) === id
                     );
                     return (
-                      <label
+                      <div
                         key={id}
                         className={cn(
-                          "flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors",
+                          "flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors",
                           checked && "bg-primary/5",
-                          alreadyAttached && "opacity-40 cursor-not-allowed"
+                          alreadyAttached && "opacity-40"
                         )}
                       >
                         <input
                           type="checkbox"
                           checked={checked}
-                          disabled={alreadyAttached}
-                          onChange={() => !alreadyAttached && toggleAttachLabelSelection(id)}
+                          onChange={() => toggleAttachLabelSelection(id)}
                           className="accent-primary w-4 h-4 cursor-pointer"
                         />
                         <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
@@ -1013,7 +1048,7 @@ const ModernLabelsPage: React.FC = () => {
                         {!alreadyAttached && (
                           <span className="text-xs text-muted-foreground font-mono ml-auto">{color}</span>
                         )}
-                      </label>
+                      </div>
                     );
                   })}
                 </div>
@@ -1028,6 +1063,16 @@ const ModernLabelsPage: React.FC = () => {
               >
                 Hủy
               </Button>
+              {attachLabelIds.length > 0 && (
+                <Button
+                  variant="ghost"
+                  onClick={handleRemoveLabels}
+                  disabled={isAttachingLabels}
+                  className="text-amber-600 hover:bg-amber-500/10"
+                >
+                  Bỏ ({attachLabelIds.length})
+                </Button>
+              )}
               <Button
                 variant="primary"
                 onClick={handleAttachLabels}

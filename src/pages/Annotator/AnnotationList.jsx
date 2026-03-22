@@ -44,14 +44,14 @@ export default function AnnotationList({
                         className={cn(
                             "p-3 rounded-lg border flex items-center group transition-all cursor-pointer",
                             isApproved
-                                ? "bg-emerald-500/10 border-emerald-500/30"
+                                ? "bg-emerald-500/15 border-emerald-500/40"
                                 : isRejected
-                                    ? "bg-red-500/10 border-red-500/30"
+                                    ? "bg-red-500/15 border-red-500/40"
                                     : group.isHidden
-                                        ? "bg-muted/10 border-transparent opacity-60"
+                                        ? "bg-slate-700/20 border-transparent opacity-60"
                                         : isSelected
-                                            ? "bg-annotator-primary/10 border-annotator-primary/30 shadow-sm"
-                                            : "bg-muted/30 border-border hover:border-annotator-primary/30 hover:bg-muted/60"
+                                            ? "bg-cyan-500/20 border-cyan-400/50 shadow-md"
+                                            : "bg-slate-700/30 border-slate-600 hover:border-cyan-400/50 hover:bg-slate-700/50"
                         )}
                     >
                         {/* Status icon */}
@@ -63,12 +63,12 @@ export default function AnnotationList({
                         )}
 
                         {/* Index */}
-                        <span className="text-[10px] font-mono text-muted-foreground w-6 opacity-50">
+                        <span className="text-[10px] font-mono text-slate-400 w-6 opacity-70">
                             #{i + 1}
                         </span>
 
                         {/* Shape icon */}
-                        <span className="material-symbols-outlined text-[16px] text-muted-foreground mr-2">
+                        <span className="material-symbols-outlined text-[16px] text-slate-300 mr-2">
                             {icon}
                         </span>
 
@@ -78,25 +78,26 @@ export default function AnnotationList({
                                 {group.labelIds.map((lid, j) => (
                                     <span
                                         key={lid}
-                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium"
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[12px] font-bold shadow-sm"
                                         style={{
-                                            backgroundColor: `${group.colorCodes?.[j] || "#6b7280"}20`,
-                                            color: group.colorCodes?.[j] || "#6b7280",
+                                            backgroundColor: "rgba(255, 255, 255, 0.12)",
+                                            color: "#ffffff",
+                                            border: "1px solid rgba(255, 255, 255, 0.25)",
                                         }}
                                     >
                                         <span
-                                            className="w-1.5 h-1.5 rounded-full"
+                                            className="w-2.5 h-2.5 rounded-full"
                                             style={{ backgroundColor: group.colorCodes?.[j] || "#6b7280" }}
                                         />
                                         {group.labelNames?.[j] || "Unknown"}
                                     </span>
                                 ))}
                             </div>
-                            <p className="text-[10px] text-muted-foreground capitalize pl-0.5">
+                            <p className="text-[10px] text-slate-400 capitalize pl-0.5">
                                 {group.shapeType}
                             </p>
                             {isRejected && group.policyName && (
-                                <p className="text-[10px] text-red-400 mt-0.5 pl-0.5">
+                                <p className="text-[10px] text-red-300 mt-0.5 pl-0.5">
                                     ⚠ {group.policyName}
                                 </p>
                             )}

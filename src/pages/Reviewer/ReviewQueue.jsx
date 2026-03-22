@@ -45,6 +45,7 @@ export default function ReviewQueue() {
   const [hoveredRow, setHoveredRow] = useState(null);
   const [hoveredKpi, setHoveredKpi] = useState(null);
   const [isMobile, setIsMobile] = React.useState(() => window.innerWidth < 768);
+  const [filterByStatus, setFilterByStatus] = React.useState(null); // null | "SUBMITTED" | "RE_SUBMITTED" | "APPROVED" | "REJECTED"
 
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -88,7 +89,18 @@ export default function ReviewQueue() {
 
   // Filter visible queue rows by search without changing the queue totals.
   const reviewableAssignments = React.useMemo(() => {
-    let list = queueAssignments;
+    let list = assignments;
+    
+    // Filter by status if active
+    if (filterByStatus === "SUBMITTED" || filterByStatus === "RE_SUBMITTED") {
+      list = list.filter((a) => a.status === filterByStatus);
+    } else if (filterByStatus === "APPROVED") {
+      list = list.filter((a) => a.status === "APPROVED");
+    } else if (filterByStatus === "REJECTED") {
+      list = list.filter((a) => a.status === "REJECTED");
+    }
+    
+    // Filter by search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(
@@ -98,10 +110,14 @@ export default function ReviewQueue() {
       );
     }
     return list;
-  }, [queueAssignments, searchQuery]);
+  }, [assignments, searchQuery, filterByStatus]);
 
   const handleReview = (assignment) => {
     navigate(`/reviewer/review/${assignment.assignmentId}`);
+  };
+
+  const toggleStatusFilter = (status) => {
+    setFilterByStatus(filterByStatus === status ? null : status);
   };
 
   const getStatusLabel = (status) => {
@@ -206,40 +222,52 @@ export default function ReviewQueue() {
               value: pendingCount,
               color: T.purple,
               bg: T.purpleBg,
+              status: "SUBMITTED",
             },
             {
               label: "Nộp lại",
               value: resubmittedCount,
               color: "#BF5700",
               bg: "#FFF0E6",
+              status: "RE_SUBMITTED",
             },
             {
               label: "Đã chấp nhận",
               value: approvedCount,
               color: T.green,
               bg: T.greenBg,
+              status: "APPROVED",
             },
             {
               label: "Đã từ chối",
               value: rejectedCount,
               color: T.red,
               bg: T.redBg,
+              status: "REJECTED",
             },
             {
-              label: "Tổng trong queue",
+              label: "Tổng hàng chờ",
               value: queueTotalCount,
               color: T.brand,
               bg: T.brandLight,
+              status: "QUEUE",
             },
           ].map((kpi, idx) => (
             <div
               key={kpi.label}
               onMouseEnter={() => setHoveredKpi(idx)}
               onMouseLeave={() => setHoveredKpi(null)}
+              onClick={() => {
+                if (kpi.status === "QUEUE") {
+                  setFilterByStatus(filterByStatus === "QUEUE" ? null : "QUEUE");
+                } else {
+                  toggleStatusFilter(kpi.status);
+                }
+              }}
               style={{
                 padding: "20px 24px",
-                background: T.surface,
-                border: `1px solid ${T.border}`,
+                background: filterByStatus === kpi.status || filterByStatus === "QUEUE" && kpi.status === "QUEUE" ? kpi.bg : T.surface,
+                border: filterByStatus === kpi.status || filterByStatus === "QUEUE" && kpi.status === "QUEUE" ? `2px solid ${kpi.color}` : `1px solid ${T.border}`,
                 borderRadius: "6px",
                 cursor: "pointer",
                 transition: "all .15s",
@@ -817,7 +845,12 @@ export default function ReviewQueue() {
             }}
           >
             Hiển thị {reviewableAssignments.length} trong tổng số{" "}
-            {queueTotalCount} nhiệm vụ trong queue
+            {filterByStatus === "SUBMITTED" ? pendingCount 
+              : filterByStatus === "RE_SUBMITTED" ? resubmittedCount
+              : filterByStatus === "APPROVED" ? approvedCount
+              : filterByStatus === "REJECTED" ? rejectedCount
+              : filterByStatus === "QUEUE" ? queueTotalCount
+              : assignments.length} nhiệm vụ
           </p>
         )}
       </div>
