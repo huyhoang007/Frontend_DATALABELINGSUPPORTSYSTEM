@@ -36,7 +36,6 @@ const TABS = [
   "RE_SUBMITTED",
   "APPROVED",
   "REJECTED",
-  "COMPLETED",
 ];
 
 /* ── Status badge styles ── */
@@ -48,7 +47,6 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> =
     RE_SUBMITTED: { bg: "#FFF3E0", text: "#BF5700", dot: "#BF5700" },
     APPROVED: { bg: T.greenBg, text: T.green, dot: T.green },
     REJECTED: { bg: T.redBg, text: T.red, dot: T.red },
-    COMPLETED: { bg: T.greenBg, text: T.green, dot: T.green },
   };
 
 const STATUS_VI: Record<string, string> = {
@@ -59,7 +57,6 @@ const STATUS_VI: Record<string, string> = {
   RE_SUBMITTED: "NỘP LẠI",
   APPROVED: "ĐÃ DUYỆT",
   REJECTED: "TỪ CHỐI",
-  COMPLETED: "HOÀN THÀNH",
 };
 
 interface AnnotatorDashboardProps {

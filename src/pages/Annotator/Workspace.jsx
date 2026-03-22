@@ -517,6 +517,8 @@ export default function Workspace() {
     };
 
     /* â”€â”€ Submit assignment â”€â”€ */
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const submitTimeoutRef = React.useRef(null);
     const doneCount = items.filter((i) => anno.isDone(i.itemId)).length;
     const progressPercent = totalImages > 0 ? Math.round((doneCount / totalImages) * 100) : 0;
     const hasIncompleteItems = totalImages === 0 || doneCount !== totalImages;
@@ -525,24 +527,80 @@ export default function Workspace() {
         && (currentItemHasRejectedFeedback || items.some((item) => itemHasRejectedFeedback(item)));
     const isSubmitBlocked = isReadOnly || imageLoading || !!imageError || hasIncompleteItems || assignmentHasRejectedFeedback;
 
+    // Cleanup timeout on unmount
+    React.useEffect(() => {
+        return () => {
+            if (submitTimeoutRef.current) {
+                clearTimeout(submitTimeoutRef.current);
+            }
+        };
+    }, []);
+
     const handleSubmit = async () => {
+        if (isSubmitting) {
+            console.warn("[SUBMIT] Already submitting, ignoring double-click");
+            return; // Prevent double-click
+        }
         if (isSubmitBlocked) {
+            console.warn("[SUBMIT] Submit blocked. Conditions:", { imageError: !!imageError, hasIncompleteItems, assignmentHasRejectedFeedback, imageLoading, isReadOnly });
             if (imageError) {
                 addToast({ type: "warning", message: "Không thể nộp bài khi ảnh hiện tại chưa tải được" });
             } else if (hasIncompleteItems) {
-                addToast({ type: "warning", message: "Chỉ có thể nộp bài sau khi tất cả ảnh đã được đánh dấu hoàn thành" });
+                addToast({ type: "warning", message: `Chỉ có thể nộp bài sau khi tất cả ảnh đã được đánh dấu hoàn thành (${doneCount}/${totalImages})` });
             } else if (assignmentHasRejectedFeedback) {
                 addToast({ type: "warning", message: "Cần xử lý toàn bộ annotation bị reviewer trả về trước khi nộp lại" });
             }
             return;
         }
+        setIsSubmitting(true);
+        console.log("[SUBMIT] Starting submit process...");
+        
+        // Safety timeout - reset isSubmitting after 10 seconds if something goes wrong
+        submitTimeoutRef.current = setTimeout(() => {
+            console.warn("[SUBMIT] Timeout reached - forcefully resetting isSubmitting state");
+            setIsSubmitting(false);
+            addToast({ type: "error", message: "Nộp bài quá lâu - vui lòng thử lại" });
+        }, 10000);
+
         try {
+            console.log("[SUBMIT] Saving annotations...");
             await anno.saveNow();
+            console.log("[SUBMIT] Annotations saved successfully");
+            
+            console.log("[SUBMIT] Submitting assignment to backend...");
             await annotationApi.submitAssignment(assignmentId);
+            console.log("[SUBMIT] Assignment submitted successfully by backend");
+            
+            // Clear timeout if success
+            if (submitTimeoutRef.current) {
+                clearTimeout(submitTimeoutRef.current);
+                submitTimeoutRef.current = null;
+            }
+            
             addToast({ type: "success", message: "Nộp bài thành công" });
-            navigate("/annotator/tasks");
+            // Small delay to ensure backend processed
+            setTimeout(() => {
+                navigate("/annotator/tasks");
+            }, 500);
         } catch (err) {
-            addToast({ type: "error", message: err?.message || "Nộp bài thất bại" });
+            console.error("[SUBMIT] Error details:", {
+                status: err?.response?.status,
+                data: err?.response?.data,
+                message: err?.message,
+                fullError: err
+            });
+            
+            // Clear timeout on error
+            if (submitTimeoutRef.current) {
+                clearTimeout(submitTimeoutRef.current);
+                submitTimeoutRef.current = null;
+            }
+            
+            const errorMsg = err?.response?.data?.message || err?.message || "Nộp bài thất bại";
+            addToast({ type: "error", message: errorMsg });
+        } finally {
+            setIsSubmitting(false);
+            console.log("[SUBMIT] Submit process finished, isSubmitting reset to false");
         }
     };
 
@@ -864,20 +922,24 @@ export default function Workspace() {
                             {/* Submit */}
                             <button
                                 onClick={handleSubmit}
-                                disabled={isSubmitBlocked}
+                                disabled={isSubmitBlocked || isSubmitting}
                                 title={imageError ? "Không thể nộp khi ảnh hiện tại chưa tải được" : undefined}
-                                className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all shadow-lg flex items-center justify-center gap-1.5 ${isSubmitBlocked ? 'opacity-60 cursor-not-allowed' : 'hover:brightness-110 active:scale-95'}`}
-                                style={isSubmitBlocked
+                                className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all shadow-lg flex items-center justify-center gap-1.5 ${isSubmitBlocked || isSubmitting ? 'opacity-60 cursor-not-allowed' : 'hover:brightness-110 active:scale-95'}`}
+                                style={isSubmitBlocked || isSubmitting
                                     ? { background: "#1e3a5f", color: "#7dd3fc", border: "1px solid #2563eb55" }
                                     : { background: "linear-gradient(135deg, #00bfa5, #0097a7)", color: "#fff", boxShadow: "0 4px 12px rgba(0,191,165,0.35)" }}>
-                                <span className="material-symbols-outlined" style={{ fontSize: 15 }}>
-                                    {isReadOnly
+                                <span className="material-symbols-outlined" style={{ fontSize: 15, animation: isSubmitting ? 'spin 1s linear infinite' : 'none' }}>
+                                    {isSubmitting
+                                        ? "progress_activity"
+                                        : isReadOnly
                                         ? workspace?.assignmentStatus?.toUpperCase() === "APPROVED"
                                             ? "visibility"
                                             : "check_circle"
                                         : "send"}
                                 </span>
-                                <span>{isReadOnly
+                                <span>{isSubmitting
+                                    ? "ĐANG GỬI..."
+                                    : isReadOnly
                                     ? workspace?.assignmentStatus?.toUpperCase() === "APPROVED"
                                         ? "Chỉ xem"
                                         : "Đã nộp"

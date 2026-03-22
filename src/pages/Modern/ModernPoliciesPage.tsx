@@ -213,7 +213,13 @@ const ModernPoliciesPage: React.FC = () => {
       setPolicyToDelete(null);
       fetchPolicies();
     } catch (error: any) {
-      addToast(error.message || 'Không thể xóa lỗi', 'error');
+      const errorMsg = error.message || '';
+      // Check if error is due to foreign key constraint
+      if (errorMsg.includes('foreign key') || errorMsg.includes('is still referenced')) {
+        addToast('Policy này đang được sử dụng bởi các review task. Vui lòng xóa policy ra khỏi các reviewing trước khi xóa.', 'error');
+      } else {
+        addToast(errorMsg || 'Không thể xóa lỗi', 'error');
+      }
     } finally {
       setIsDeleting(false);
     }

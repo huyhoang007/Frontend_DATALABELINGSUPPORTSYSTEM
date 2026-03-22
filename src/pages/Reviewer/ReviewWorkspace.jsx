@@ -700,8 +700,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                         <div key={anno.reviewingId}
                                             className="rounded-lg border transition-all cursor-pointer"
                                             style={{
-                                                background: isHighlighted ? "#1e3a4a" : "#1e2f42",
-                                                borderColor: isHighlighted ? "#00bfa5" : "#253347",
+                                                background: isHighlighted ? "linear-gradient(135deg, rgba(0,191,165,0.15) 0%, rgba(59,130,246,0.1) 100%)" : "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)",
+                                                borderColor: isHighlighted ? "#00bfa5" : "#374151",
                                                 padding: "10px 12px",
                                             }}
                                             onClick={() => setSelectedGroupKey(isHighlighted ? null : gKey)}>
@@ -711,16 +711,13 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <span className="w-2.5 h-2.5 rounded-full shrink-0"
                                                         style={{ background: anno.colorCode || "#6b7280" }} />
-                                                    <span className="text-sm font-medium truncate"
-                                                        style={{ color: "#e2e8f0" }}>
+                                                    <span className="text-base font-bold truncate"
+                                                        style={{ color: "#ffffff" }}>
                                                         {anno.labelName || `Label #${anno.labelId}`}
                                                     </span>
                                                 </div>
-                                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ml-1"
+                                                <span className="text-[10px] font-medium shrink-0 ml-1"
                                                     style={{
-                                                        background: isApproved ? "rgba(0,191,165,0.1)"
-                                                            : statusLabel === "REJECTED" ? "rgba(248,113,113,0.1)"
-                                                            : "rgba(250,204,21,0.1)",
                                                         color: isApproved ? "#00bfa5"
                                                             : statusLabel === "REJECTED" ? "#f87171"
                                                             : "#facc15",
@@ -742,10 +739,10 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                             </div>
 
                                             {/* Action buttons (PENDING only) */}
-                                            {isPending && (
+                                            {isPending && !anno.policyName && (
                                                 <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
                                                     <button onClick={() => handleApprove(anno.reviewingId)}
-                                                        disabled={reviewSubmitting || !canReviewCurrentImage}
+                                                        disabled={reviewSubmitting || !canReviewCurrentImage || isRejecting}
                                                         title={isFinalizedAssignment
                                                             ? `Assignment đã ở trạng thái cuối ${assignmentStatus}`
                                                             : !canReviewCurrentImage
@@ -790,8 +787,20 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                                 </div>
                                             )}
 
+                                            {/* Show reject message if already rejected */}
+                                            {anno.policyName && (
+                                                <div className="p-2 rounded-lg text-xs font-medium"
+                                                    style={{
+                                                        background: "rgba(248,113,113,0.1)",
+                                                        border: "1px solid rgba(248,113,113,0.2)",
+                                                        color: "#f87171"
+                                                    }}>
+                                                    ✓ Đã từ chối: {anno.policyName}
+                                                </div>
+                                            )}
+
                                             {/* Inline reject form */}
-                                            {isRejecting && (
+                                            {isRejecting && !anno.policyName && (
                                                 <div className="mt-2 p-2 rounded-lg space-y-2"
                                                     style={{
                                                         background: "rgba(248,113,113,0.05)",
@@ -980,21 +989,19 @@ function ReviewSummaryPanel({ items, annoCache, allLabels, reviewStats, currentI
                             <div key={ls.labelId} className="px-2 py-1.5 rounded"
                                 style={{ background: "#1e2f42", border: "1px solid #253347" }}>
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="w-2.5 h-2.5 rounded-full shrink-0"
-                                        style={{ background: ls.colorCode }} />
-                                    <span className="text-xs font-medium truncate flex-1"
+                                    <span className="text-sm font-bold flex-1"
                                         style={{ color: "#e2e8f0" }}>{ls.labelName}</span>
                                     <span className="text-[10px] font-mono" style={{ color: "#64748b" }}>
                                         {ls.total}
                                     </span>
                                 </div>
-                                <div className="flex gap-2 text-[10px] pl-4">
-                                    {ls.approved > 0 && <span style={{ color: "#00bfa5" }}>A{ls.approved}</span>}
-                                    {ls.rejected > 0 && <span style={{ color: "#f87171" }}>R{ls.rejected}</span>}
-                                    {ls.pending > 0 && <span style={{ color: "#facc15" }}>P{ls.pending}</span>}
+                                <div className="flex gap-2 text-[10px] pl-0">
+                                    {ls.approved > 0 && <span style={{ color: "#00bfa5" }}>✓ A{ls.approved}</span>}
+                                    {ls.rejected > 0 && <span style={{ color: "#f87171" }}>✕ R{ls.rejected}</span>}
+                                    {ls.pending > 0 && <span style={{ color: "#facc15" }}>⏳ P{ls.pending}</span>}
                                 </div>
                             </div>
-                        ))}
+                        ))}}
                     </div>
                 </div>
             )}
