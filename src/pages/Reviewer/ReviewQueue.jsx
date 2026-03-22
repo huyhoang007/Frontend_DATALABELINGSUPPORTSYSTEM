@@ -45,7 +45,7 @@ export default function ReviewQueue() {
   const [hoveredRow, setHoveredRow] = useState(null);
   const [hoveredKpi, setHoveredKpi] = useState(null);
   const [isMobile, setIsMobile] = React.useState(() => window.innerWidth < 768);
-  const [filterByStatus, setFilterByStatus] = React.useState(null); // null | "SUBMITTED" | "RE_SUBMITTED" | "APPROVED" | "REJECTED"
+  const [filterByStatus, setFilterByStatus] = React.useState(null); // null | "SUBMITTED" | "RE_SUBMITTED" | "REVIEWED" | "APPROVED" | "REJECTED"
 
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -89,8 +89,9 @@ export default function ReviewQueue() {
 
   // Filter visible queue rows by search without changing the queue totals.
   const reviewableAssignments = React.useMemo(() => {
-    let list = assignments;
-    
+    // Display all assignments except IN_PROGRESS by default
+    let list = assignments.filter((a) => a.status !== "IN_PROGRESS");
+
     // Filter by status if active
     if (filterByStatus === "SUBMITTED" || filterByStatus === "RE_SUBMITTED") {
       list = list.filter((a) => a.status === filterByStatus);
@@ -98,8 +99,10 @@ export default function ReviewQueue() {
       list = list.filter((a) => a.status === "APPROVED");
     } else if (filterByStatus === "REJECTED") {
       list = list.filter((a) => a.status === "REJECTED");
+    } else if (filterByStatus === "REVIEWED") {
+      list = list.filter((a) => a.status === "APPROVED" || a.status === "REJECTED");
     }
-    
+
     // Filter by search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -125,23 +128,27 @@ export default function ReviewQueue() {
     if (status === "RE_SUBMITTED") return "NỘP LẠI";
     if (status === "REJECTED") return "TỪ CHỐI";
     if (status === "APPROVED") return "ĐÃ CHẤP NHẬN";
+    if (status === "PENDING") return "CHỜ XỬ LÝ";
     return status;
   };
 
-  // Stats
-  const pendingCount = queueAssignments.filter(
+  // Stats - count from all assignments except IN_PROGRESS, not just queue
+  const pendingCount = assignments.filter(
     (a) => a.status === "SUBMITTED",
   ).length;
   const resubmittedCount = assignments.filter(
     (a) => a.status === "RE_SUBMITTED",
   ).length;
-  const queueTotalCount = queueAssignments.length;
+  const queueTotalCount = assignments.filter(
+    (a) => a.status !== "IN_PROGRESS",
+  ).length;
   const approvedCount = assignments.filter(
     (a) => a.status === "APPROVED",
   ).length;
   const rejectedCount = assignments.filter(
     (a) => a.status === "REJECTED",
   ).length;
+  const reviewedCount = approvedCount + rejectedCount;
   const displayValue = (value) => (isLoading ? "—" : value);
 
   return (
@@ -245,13 +252,6 @@ export default function ReviewQueue() {
               bg: T.redBg,
               status: "REJECTED",
             },
-            {
-              label: "Tổng hàng chờ",
-              value: queueTotalCount,
-              color: T.brand,
-              bg: T.brandLight,
-              status: "QUEUE",
-            },
           ].map((kpi, idx) => (
             <div
               key={kpi.label}
@@ -259,15 +259,25 @@ export default function ReviewQueue() {
               onMouseLeave={() => setHoveredKpi(null)}
               onClick={() => {
                 if (kpi.status === "QUEUE") {
-                  setFilterByStatus(filterByStatus === "QUEUE" ? null : "QUEUE");
+                  setFilterByStatus(
+                    filterByStatus === "QUEUE" ? null : "QUEUE",
+                  );
                 } else {
                   toggleStatusFilter(kpi.status);
                 }
               }}
               style={{
                 padding: "20px 24px",
-                background: filterByStatus === kpi.status || filterByStatus === "QUEUE" && kpi.status === "QUEUE" ? kpi.bg : T.surface,
-                border: filterByStatus === kpi.status || filterByStatus === "QUEUE" && kpi.status === "QUEUE" ? `2px solid ${kpi.color}` : `1px solid ${T.border}`,
+                background:
+                  filterByStatus === kpi.status ||
+                  (filterByStatus === "QUEUE" && kpi.status === "QUEUE")
+                    ? kpi.bg
+                    : T.surface,
+                border:
+                  filterByStatus === kpi.status ||
+                  (filterByStatus === "QUEUE" && kpi.status === "QUEUE")
+                    ? `2px solid ${kpi.color}`
+                    : `1px solid ${T.border}`,
                 borderRadius: "6px",
                 cursor: "pointer",
                 transition: "all .15s",
@@ -484,96 +494,96 @@ export default function ReviewQueue() {
             }}
           >
             {!isMobile && (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "60px 2fr 1.2fr 1.5fr 1fr 0.8fr 100px",
-                padding: "12px 24px",
-                borderBottom: `1px solid ${T.border}`,
-                background: "#FAFBFC",
-                gap: "16px",
-                alignItems: "center",
-              }}
-            >
-              <p
+              <div
                 style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
+                  display: "grid",
+                  gridTemplateColumns: "60px 2fr 1.2fr 1.5fr 1fr 0.8fr 100px",
+                  padding: "12px 24px",
+                  borderBottom: `1px solid ${T.border}`,
+                  background: "#FAFBFC",
+                  gap: "16px",
+                  alignItems: "center",
                 }}
               >
-                ID
-              </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
-                DỰ ÁN
-              </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
-                NGƯỜI GÁN NHÃN
-              </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
-                BỘ DỮ LIỆU
-              </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
-                TRẠNG THÁI
-              </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
-                TIẾN ĐỘ GÁN NHÃN
-              </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  textAlign: "right",
-                }}
-              >
-                THAO TÁC
-              </p>
-            </div>
+                <p
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    color: T.textMuted,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  ID
+                </p>
+                <p
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    color: T.textMuted,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  DỰ ÁN
+                </p>
+                <p
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    color: T.textMuted,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  NGƯỜI GÁN NHÃN
+                </p>
+                <p
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    color: T.textMuted,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  BỘ DỮ LIỆU
+                </p>
+                <p
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    color: T.textMuted,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  TRẠNG THÁI
+                </p>
+                <p
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    color: T.textMuted,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  TIẾN ĐỘ GÁN NHÃN
+                </p>
+                <p
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    color: T.textMuted,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    textAlign: "right",
+                  }}
+                >
+                  THAO TÁC
+                </p>
+              </div>
             )}
 
             {/* Table rows */}
@@ -607,11 +617,45 @@ export default function ReviewQueue() {
                         cursor: "pointer",
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "flex-start" }}>
-                        <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: "4px" }}>
-                          <span style={{ fontFamily: "monospace", fontSize: "12px", color: T.textMuted }}>#{a.assignmentId}</span>
-                          <span style={{ fontSize: "14px", fontWeight: 700, color: T.textPrimary }}>{a.projectName || "—"}</span>
-                          <span style={{ fontSize: "12px", color: T.textMuted }}>{a.datasetName || "—"}</span>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: "12px",
+                          alignItems: "flex-start",
+                        }}
+                      >
+                        <div
+                          style={{
+                            minWidth: 0,
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "4px",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontFamily: "monospace",
+                              fontSize: "12px",
+                              color: T.textMuted,
+                            }}
+                          >
+                            #{a.assignmentId}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: 700,
+                              color: T.textPrimary,
+                            }}
+                          >
+                            {a.projectName || "—"}
+                          </span>
+                          <span
+                            style={{ fontSize: "12px", color: T.textMuted }}
+                          >
+                            {a.datasetName || "—"}
+                          </span>
                         </div>
                         <span
                           style={{
@@ -629,23 +673,92 @@ export default function ReviewQueue() {
                             flexShrink: 0,
                           }}
                         >
-                          <span style={{ width: "6px", height: "6px", borderRadius: "50%", display: "inline-block", background: statusStyle.dot }} />
+                          <span
+                            style={{
+                              width: "6px",
+                              height: "6px",
+                              borderRadius: "50%",
+                              display: "inline-block",
+                              background: statusStyle.dot,
+                            }}
+                          />
                           {getStatusLabel(status)}
                         </span>
                       </div>
 
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr",
+                          gap: "12px",
+                        }}
+                      >
                         <div>
-                          <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Người gán nhãn</p>
-                          <p style={{ fontSize: "12px", color: T.textSecondary }}>{a.annotatorName || "—"}</p>
+                          <p
+                            style={{
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              color: T.textMuted,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.08em",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            Người gán nhãn
+                          </p>
+                          <p
+                            style={{ fontSize: "12px", color: T.textSecondary }}
+                          >
+                            {a.annotatorName || "—"}
+                          </p>
                         </div>
                         <div>
-                          <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Tiến độ gán nhãn</p>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <div style={{ flex: 1, height: "6px", background: T.border, borderRadius: "99px", overflow: "hidden" }}>
-                              <div style={{ height: "100%", background: `linear-gradient(to right, ${T.brand}, ${T.brandHover})`, borderRadius: "99px", width: `${a.progress ?? 0}%` }} />
+                          <p
+                            style={{
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              color: T.textMuted,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.08em",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            Tiến độ gán nhãn
+                          </p>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                flex: 1,
+                                height: "6px",
+                                background: T.border,
+                                borderRadius: "99px",
+                                overflow: "hidden",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  height: "100%",
+                                  background: `linear-gradient(to right, ${T.brand}, ${T.brandHover})`,
+                                  borderRadius: "99px",
+                                  width: `${a.progress ?? 0}%`,
+                                }}
+                              />
                             </div>
-                            <span style={{ fontSize: "12px", fontWeight: 800, color: T.textPrimary }}>{a.progress ?? 0}%</span>
+                            <span
+                              style={{
+                                fontSize: "12px",
+                                fontWeight: 800,
+                                color: T.textPrimary,
+                              }}
+                            >
+                              {a.progress ?? 0}%
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -669,7 +782,7 @@ export default function ReviewQueue() {
                           fontFamily: "inherit",
                         }}
                       >
-                        Đánh giá
+                        {status === "APPROVED" ? "Xem" : "Đánh giá"}
                       </button>
                     </div>
                   );
@@ -770,7 +883,13 @@ export default function ReviewQueue() {
                       {getStatusLabel(status)}
                     </span>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "2px",
+                      }}
+                    >
                       <span
                         style={{
                           fontSize: "12px",
@@ -824,7 +943,7 @@ export default function ReviewQueue() {
                           (e.currentTarget.style.background = T.brand)
                         }
                       >
-                        Đánh giá
+                        {status === "APPROVED" ? "Xem" : "Đánh giá"}
                       </button>
                     </div>
                   </div>
@@ -845,12 +964,18 @@ export default function ReviewQueue() {
             }}
           >
             Hiển thị {reviewableAssignments.length} trong tổng số{" "}
-            {filterByStatus === "SUBMITTED" ? pendingCount 
-              : filterByStatus === "RE_SUBMITTED" ? resubmittedCount
-              : filterByStatus === "APPROVED" ? approvedCount
-              : filterByStatus === "REJECTED" ? rejectedCount
-              : filterByStatus === "QUEUE" ? queueTotalCount
-              : assignments.length} nhiệm vụ
+            {filterByStatus === "SUBMITTED"
+              ? pendingCount
+              : filterByStatus === "RE_SUBMITTED"
+                ? resubmittedCount
+                : filterByStatus === "APPROVED"
+                  ? approvedCount
+                  : filterByStatus === "REJECTED"
+                    ? rejectedCount
+                    : filterByStatus === "QUEUE"
+                      ? queueTotalCount
+                      : assignments.length}{" "}
+            nhiệm vụ
           </p>
         )}
       </div>

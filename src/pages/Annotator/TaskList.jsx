@@ -121,16 +121,38 @@ export default function TaskList() {
 
   const getActionConfig = (status) => {
     if (["PENDING", "REJECTED"].includes(status)) {
-      return { label: "Bắt đầu", text: "#FFFFFF", background: T.brand, border: "none" };
+      return {
+        label: "Bắt đầu",
+        text: "#FFFFFF",
+        background: T.brand,
+        border: "none",
+      };
     }
     if (status === "RE_SUBMITTED") {
-      return { label: "Xem", text: T.textSecondary, background: T.surfaceHover, border: `1px solid ${T.border}`, icon: "visibility" };
+      return {
+        label: "Xem",
+        text: T.textSecondary,
+        background: T.surfaceHover,
+        border: `1px solid ${T.border}`,
+        icon: "visibility",
+      };
     }
     if (status === "IN_PROGRESS") {
-      return { label: "Tiếp tục", text: T.amber, background: T.amberBg, border: `1px solid ${T.amber}40` };
+      return {
+        label: "Tiếp tục",
+        text: T.amber,
+        background: T.amberBg,
+        border: `1px solid ${T.amber}40`,
+      };
     }
     if (["SUBMITTED", "APPROVED"].includes(status)) {
-      return { label: "Xem", text: T.textSecondary, background: T.surfaceHover, border: `1px solid ${T.border}`, icon: "visibility" };
+      return {
+        label: "Xem",
+        text: T.textSecondary,
+        background: T.surfaceHover,
+        border: `1px solid ${T.border}`,
+        icon: "visibility",
+      };
     }
     return null;
   };
@@ -510,96 +532,96 @@ export default function TaskList() {
             }}
           >
             {!isMobile && (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "60px 2fr 1.5fr 1.2fr 1.5fr 1fr 100px",
-                padding: "12px 24px",
-                borderBottom: `1px solid ${T.border}`,
-                background: "#FAFBFC",
-                gap: "16px",
-                alignItems: "center",
-              }}
-            >
-              <p
+              <div
                 style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
+                  display: "grid",
+                  gridTemplateColumns: "60px 2fr 1.5fr 1.2fr 1.5fr 1fr 100px",
+                  padding: "12px 24px",
+                  borderBottom: `1px solid ${T.border}`,
+                  background: "#FAFBFC",
+                  gap: "16px",
+                  alignItems: "center",
                 }}
               >
-                ID
-              </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
-                DỰ ÁN
-              </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
-                BỘ DỮ LIỆU
-              </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
-                NGƯỜI ĐÁNH GIÁ
-              </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
-                TIẾN ĐỘ
-              </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
-                TRẠNG THÁI
-              </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  textAlign: "right",
-                }}
-              >
-                THAO TÁC
-              </p>
-            </div>
+                <p
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    color: T.textMuted,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  ID
+                </p>
+                <p
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    color: T.textMuted,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  DỰ ÁN
+                </p>
+                <p
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    color: T.textMuted,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  BỘ DỮ LIỆU
+                </p>
+                <p
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    color: T.textMuted,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  NGƯỜI ĐÁNH GIÁ
+                </p>
+                <p
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    color: T.textMuted,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  TIẾN ĐỘ
+                </p>
+                <p
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    color: T.textMuted,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  TRẠNG THÁI
+                </p>
+                <p
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    color: T.textMuted,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    textAlign: "right",
+                  }}
+                >
+                  THAO TÁC
+                </p>
+              </div>
             )}
 
             {/* Table rows */}
@@ -628,11 +650,45 @@ export default function TaskList() {
                         cursor: "pointer",
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "flex-start" }}>
-                        <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: "4px" }}>
-                          <span style={{ fontFamily: "monospace", fontSize: "12px", color: T.textMuted }}>#{a.assignmentId}</span>
-                          <span style={{ fontSize: "14px", fontWeight: 700, color: T.textPrimary }}>{a.projectName || "—"}</span>
-                          <span style={{ fontSize: "12px", color: T.textMuted }}>{a.datasetName || "—"}</span>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: "12px",
+                          alignItems: "flex-start",
+                        }}
+                      >
+                        <div
+                          style={{
+                            minWidth: 0,
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "4px",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontFamily: "monospace",
+                              fontSize: "12px",
+                              color: T.textMuted,
+                            }}
+                          >
+                            #{a.assignmentId}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: 700,
+                              color: T.textPrimary,
+                            }}
+                          >
+                            {a.projectName || "—"}
+                          </span>
+                          <span
+                            style={{ fontSize: "12px", color: T.textMuted }}
+                          >
+                            {a.datasetName || "—"}
+                          </span>
                         </div>
                         <span
                           style={{
@@ -650,23 +706,92 @@ export default function TaskList() {
                             flexShrink: 0,
                           }}
                         >
-                          <span style={{ width: "6px", height: "6px", borderRadius: "50%", display: "inline-block", background: statusStyle.dot }} />
+                          <span
+                            style={{
+                              width: "6px",
+                              height: "6px",
+                              borderRadius: "50%",
+                              display: "inline-block",
+                              background: statusStyle.dot,
+                            }}
+                          />
                           {STATUS_VI[status] || status.replace("_", " ")}
                         </span>
                       </div>
 
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr",
+                          gap: "12px",
+                        }}
+                      >
                         <div>
-                          <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Người đánh giá</p>
-                          <p style={{ fontSize: "12px", color: T.textSecondary }}>{a.reviewerName || "—"}</p>
+                          <p
+                            style={{
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              color: T.textMuted,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.08em",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            Người đánh giá
+                          </p>
+                          <p
+                            style={{ fontSize: "12px", color: T.textSecondary }}
+                          >
+                            {a.reviewerName || "—"}
+                          </p>
                         </div>
                         <div>
-                          <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Tiến độ</p>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <div style={{ flex: 1, height: "6px", background: T.border, borderRadius: "99px", overflow: "hidden" }}>
-                              <div style={{ height: "100%", background: `linear-gradient(to right, ${T.brand}, ${T.brandHover})`, borderRadius: "99px", width: `${a.progress || 0}%` }} />
+                          <p
+                            style={{
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              color: T.textMuted,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.08em",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            Tiến độ
+                          </p>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                flex: 1,
+                                height: "6px",
+                                background: T.border,
+                                borderRadius: "99px",
+                                overflow: "hidden",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  height: "100%",
+                                  background: `linear-gradient(to right, ${T.brand}, ${T.brandHover})`,
+                                  borderRadius: "99px",
+                                  width: `${a.progress || 0}%`,
+                                }}
+                              />
                             </div>
-                            <span style={{ fontSize: "12px", fontWeight: 800, color: T.textPrimary }}>{a.progress || 0}%</span>
+                            <span
+                              style={{
+                                fontSize: "12px",
+                                fontWeight: 800,
+                                color: T.textPrimary,
+                              }}
+                            >
+                              {a.progress || 0}%
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -695,7 +820,14 @@ export default function TaskList() {
                             gap: "6px",
                           }}
                         >
-                          {action.icon && <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>{action.icon}</span>}
+                          {action.icon && (
+                            <span
+                              className="material-symbols-outlined"
+                              style={{ fontSize: "16px" }}
+                            >
+                              {action.icon}
+                            </span>
+                          )}
                           {action.label}
                         </button>
                       )}
@@ -904,7 +1036,10 @@ export default function TaskList() {
                             transition: "all .15s",
                           }}
                         >
-                          <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                          <span
+                            className="material-symbols-outlined"
+                            style={{ fontSize: "16px" }}
+                          >
                             visibility
                           </span>
                           Xem

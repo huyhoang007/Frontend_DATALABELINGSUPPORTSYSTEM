@@ -62,4 +62,13 @@ export const projectApi = {
     updateProject: async (projectId, payload) => {
         return await apiClient.put(`/api/projects/${projectId}`, payload);
     },
+
+    /**
+     * Activate (restore) project from INACTIVE status
+     * @param {number} projectId
+     * @returns {Promise<Object>} ProjectResponse
+     */
+    activateProject: async (projectId) => {
+        return await apiClient.patch(`/api/projects/${projectId}/activate`);
+    },
 };
