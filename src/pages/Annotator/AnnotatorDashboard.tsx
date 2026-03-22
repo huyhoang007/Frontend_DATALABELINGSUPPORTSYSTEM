@@ -128,9 +128,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
   /* ── Active count ── */
   const activeStatuses = ["PENDING", "IN_PROGRESS", "REJECTED", "RE_SUBMITTED"];
   const activeCount = assignments.filter((a) =>
-    activeStatuses.includes(
-      (a.status || "").toUpperCase(),
-    ),
+    activeStatuses.includes((a.status || "").toUpperCase()),
   ).length;
 
   return (
@@ -208,8 +206,10 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
             },
             {
               label: "Đang thực hiện",
-              value: assignments.filter(
-                (t) => ["IN_PROGRESS", "REJECTED"].includes((t.status || "").toUpperCase()),
+              value: assignments.filter((t) =>
+                ["IN_PROGRESS", "REJECTED"].includes(
+                  (t.status || "").toUpperCase(),
+                ),
               ).length,
               icon: "pending",
               color: T.brand,

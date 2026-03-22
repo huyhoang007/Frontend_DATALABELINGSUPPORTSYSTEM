@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { datasetApi } from "../../api/datasetApi";
+import { assignmentApi } from "../../api/assignmentApi";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import {
@@ -17,6 +18,20 @@ type HistoryEntry = {
     exportedAt: string;
     status: "COMPLETED" | "FAILED";
 };
+
+/**
+ * Compute batch status from assignments
+ * COMPLETED: all assignments are APPROVED
+ * IN_PROGRESS: some APPROVED, some IN_PROGRESS/SUBMITTED
+ * PENDING: no assignments or all PENDING
+ */
+function computeBatchStatus(assignments: any[]): string {
+    if (!assignments || assignments.length === 0) return "PENDING";
+    const statuses = assignments.map((a: any) => a.status);
+    if (statuses.every((s: string) => s === "APPROVED")) return "COMPLETED";
+    if (statuses.some((s: string) => ["IN_PROGRESS", "SUBMITTED", "RE_SUBMITTED"].includes(s))) return "IN_PROGRESS";
+    return "PENDING";
+}
 
 function downloadBlob(blob: Blob | ArrayBuffer | string, filename: string, mimeType: string) {
     const b = blob instanceof Blob ? blob : new Blob([blob], { type: mimeType });
@@ -40,6 +55,7 @@ export default function ProjectExport() {
     const [datasets, setDatasets] = useState<any[]>([]);
     const [loadingDatasets, setLoadingDatasets] = useState(true);
     const [selectedDatasetId, setSelectedDatasetId] = useState<string>("");
+    const [batchStatus, setBatchStatus] = useState<string>("PENDING");
     const [format, setFormat] = useState("COCO JSON");
     const [exporting, setExporting] = useState(false);
     const [error, setError] = useState("");
@@ -79,8 +95,32 @@ export default function ProjectExport() {
 
     useEffect(() => { loadDatasets(); }, [loadDatasets]);
 
+    // Load batch status when dataset changes
+    useEffect(() => {
+        if (!selectedDatasetId || !projectId) return;
+        
+        (async () => {
+            try {
+                const assignments = await assignmentApi.getAssignmentsByProject(Number(projectId));
+                const relevantAssignments = assignments.filter(
+                    (a: any) => String(a.datasetId ?? a.dataset_id) === selectedDatasetId
+                );
+                setBatchStatus(computeBatchStatus(relevantAssignments));
+            } catch (err) {
+                setBatchStatus("PENDING");
+            }
+        })();
+    }, [selectedDatasetId, projectId]);
+
     const handleExport = async () => {
         if (!selectedDatasetId) { setError("Vui lòng chọn dataset"); return; }
+        
+        // Check if batch is completed before allowing export
+        if (batchStatus !== "COMPLETED") {
+            setError(`Chỉ có thể export batch đã hoàn thành (COMPLETED). Trạng thái hiện tại: ${batchStatus}`);
+            return;
+        }
+        
         setError("");
         setExporting(true);
 
@@ -198,6 +238,27 @@ export default function ProjectExport() {
                 </p>
                 <p className="text-xs text-muted-foreground">Chỉ export các annotation đã được duyệt (APPROVED).</p>
 
+                {/* Batch status display */}
+                <div className="bg-muted/50 rounded-lg p-3 border border-border">
+                    <p className="text-xs font-medium text-muted-foreground">
+                        Trạng thái Batch: 
+                        <span className={`ml-2 inline-flex items-center px-2 py-1 rounded text-xs font-semibold ${
+                            batchStatus === "COMPLETED" 
+                                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                : batchStatus === "IN_PROGRESS"
+                                ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                        }`}>
+                            {batchStatus}
+                        </span>
+                    </p>
+                    {batchStatus !== "COMPLETED" && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                            ⚠️ Batch chưa hoàn thành. Vui lòng đợi tất cả annotation được duyệt (APPROVED) trước khi export.
+                        </p>
+                    )}
+                </div>
+
                 {error && (
                     <p className="text-sm text-destructive">{error}</p>
                 )}
@@ -205,7 +266,7 @@ export default function ProjectExport() {
                 <Button
                     variant="secondary"
                     onClick={handleExport}
-                    disabled={exporting || !selectedDatasetId || loadingDatasets}
+                    disabled={exporting || !selectedDatasetId || loadingDatasets || batchStatus !== "COMPLETED"}
                     isLoading={exporting}
                 >
                     <span className="material-symbols-outlined text-base mr-1">download</span>

@@ -210,10 +210,10 @@ export default function AdminLabels() {
                                         <input
                                             type="text"
                                             value={newLabel.shortcutKey}
-                                            onChange={(e) => setNewLabel({ ...newLabel, shortcutKey: e.target.value.slice(0, 1).toUpperCase() })}
+                                            onChange={(e) => setNewLabel({ ...newLabel, shortcutKey: e.target.value.slice(0, 20) })}
                                             className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
-                                            placeholder="VD: P"
-                                            maxLength={1}
+                                            placeholder="VD: P, ctrl+1, alt+a, ..."
+                                            maxLength={20}
                                         />
                                     </div>
 

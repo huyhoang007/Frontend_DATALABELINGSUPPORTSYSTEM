@@ -265,7 +265,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
         ? getItemStats(currentItemId)
         : { total: 0, approved: 0, rejected: 0, pending: 0 };
     const assignmentStatus = (workspace?.assignmentStatus || "").toUpperCase();
-    const isFinalizedAssignment = assignmentStatus === "APPROVED" || assignmentStatus === "REJECTED";
+    const isFinalizedAssignment = assignmentStatus === "APPROVED" || assignmentStatus === "REJECTED" || assignmentStatus === "SUBMITTED" || assignmentStatus === "RE_SUBMITTED";
     const hasImageLoadError = Boolean(imageError);
     const canReviewCurrentImage = !isFinalizedAssignment && !imageLoading && !hasImageLoadError && Boolean(imageBlobUrl);
     const canSubmit = !isFinalizedAssignment && reviewStats.pending === 0 && reviewStats.total > 0 && !hasImageLoadError;
@@ -738,8 +738,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                                 )}
                                             </div>
 
-                                            {/* Action buttons (PENDING only) */}
-                                            {isPending && !anno.policyName && (
+                                            {/* Action buttons (PENDING only, not if assignment is already APPROVED) */}
+                                            {isPending && !anno.policyName && assignmentStatus !== "APPROVED" && (
                                                 <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
                                                     <button onClick={() => handleApprove(anno.reviewingId)}
                                                         disabled={reviewSubmitting || !canReviewCurrentImage || isRejecting}
@@ -1001,7 +1001,7 @@ function ReviewSummaryPanel({ items, annoCache, allLabels, reviewStats, currentI
                                     {ls.pending > 0 && <span style={{ color: "#facc15" }}>⏳ P{ls.pending}</span>}
                                 </div>
                             </div>
-                        ))}}
+                        ))}
                     </div>
                 </div>
             )}

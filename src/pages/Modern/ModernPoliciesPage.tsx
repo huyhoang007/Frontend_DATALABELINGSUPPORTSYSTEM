@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { policyApi } from '../../api/policyApi';
-import { projectApi } from '../../api/projectApi';
-import { useToast } from '../../context/ToastContext';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { cn } from '../../utils/cn';
+import React, { useState, useEffect } from "react";
+import { policyApi } from "../../api/policyApi";
+import { projectApi } from "../../api/projectApi";
+import { useToast } from "../../context/ToastContext";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { cn } from "../../utils/cn";
 
 // Bảng màu Modern Enterprise UI (Atlassian/Jira style)
 const T = {
@@ -30,7 +30,10 @@ const T = {
 };
 
 // Type declaration for toast
-const useTypedToast = () => useToast() as { addToast: (message: string, type?: 'success' | 'error' | 'info') => void };
+const useTypedToast = () =>
+  useToast() as {
+    addToast: (message: string, type?: "success" | "error" | "info") => void;
+  };
 
 interface Project {
   project_id: number;
@@ -67,9 +70,9 @@ const ModernPoliciesPage: React.FC = () => {
 
   // Form state for new policy
   const [newPolicy, setNewPolicy] = useState({
-    errorName: '',
-    description: '',
-    errorLevel: 'MEDIUM'
+    errorName: "",
+    description: "",
+    errorLevel: "MEDIUM",
   });
 
   // Fetch policies on mount
@@ -80,15 +83,20 @@ const ModernPoliciesPage: React.FC = () => {
   const fetchPolicies = async () => {
     setIsLoading(true);
     try {
-      const response = await policyApi.list() as { data: Policy[], meta: any };
-      const policyList: Policy[] = Array.isArray(response?.data) ? response.data : [];
+      const response = (await policyApi.list()) as {
+        data: Policy[];
+        meta: any;
+      };
+      const policyList: Policy[] = Array.isArray(response?.data)
+        ? response.data
+        : [];
 
       // Nếu backend không trả về projects trong policy,
       // fetch danh sách project rồi build ngược lại map policyId → projects[]
-      const hasProjects = policyList.some(p => (p.projects?.length || 0) > 0);
+      const hasProjects = policyList.some((p) => (p.projects?.length || 0) > 0);
       if (!hasProjects && policyList.length > 0) {
         try {
-          const projects: any[] = await projectApi.getMyProjects() as any[];
+          const projects: any[] = (await projectApi.getMyProjects()) as any[];
           // Với mỗi project, lấy policies áp dụng
           const projectPolicies = await Promise.all(
             projects.map(async (proj) => {
@@ -97,22 +105,33 @@ const ModernPoliciesPage: React.FC = () => {
               try {
                 const pp = await policyApi.getByProject(pid);
                 // BE có thể trả về object đơn hoặc array → normalize
-                const ppList: Policy[] = Array.isArray(pp) ? pp : (pp ? [pp as Policy] : []);
-                return { project: proj, policyIds: ppList.map((p: Policy) => p.policyId || p.policy_id) };
-              } catch { return { project: proj, policyIds: [] }; }
-            })
+                const ppList: Policy[] = Array.isArray(pp)
+                  ? pp
+                  : pp
+                    ? [pp as Policy]
+                    : [];
+                return {
+                  project: proj,
+                  policyIds: ppList.map(
+                    (p: Policy) => p.policyId || p.policy_id,
+                  ),
+                };
+              } catch {
+                return { project: proj, policyIds: [] };
+              }
+            }),
           );
           // Build map: policyId → Project[]
           const policyProjectMap: Record<number, Project[]> = {};
           projectPolicies.forEach(({ project, policyIds }) => {
-            policyIds.forEach(pid => {
+            policyIds.forEach((pid) => {
               if (pid == null) return;
               if (!policyProjectMap[pid]) policyProjectMap[pid] = [];
               policyProjectMap[pid].push(project);
             });
           });
           // Gắn projects vào từng policy
-          const enriched = policyList.map(p => ({
+          const enriched = policyList.map((p) => ({
             ...p,
             projects: policyProjectMap[p.policyId || p.policy_id || 0] || [],
           }));
@@ -124,7 +143,7 @@ const ModernPoliciesPage: React.FC = () => {
         setPolicies(policyList);
       }
     } catch (error) {
-      console.error('Failed to fetch policies:', error);
+      console.error("Failed to fetch policies:", error);
     } finally {
       setIsLoading(false);
     }
@@ -132,7 +151,7 @@ const ModernPoliciesPage: React.FC = () => {
 
   const handleCreatePolicy = async () => {
     if (!newPolicy.errorName.trim()) {
-      addToast('Tên lỗi là bắt buộc', 'error');
+      addToast("Tên lỗi là bắt buộc", "error");
       return;
     }
 
@@ -141,18 +160,18 @@ const ModernPoliciesPage: React.FC = () => {
       await policyApi.create({
         errorName: newPolicy.errorName.trim(),
         description: newPolicy.description || null,
-        errorLevel: newPolicy.errorLevel
+        errorLevel: newPolicy.errorLevel,
       });
-      addToast('Tạo lỗi thành công!', 'success');
+      addToast("Tạo lỗi thành công!", "success");
       setShowCreateModal(false);
       setNewPolicy({
-        errorName: '',
-        description: '',
-        errorLevel: 'MEDIUM'
+        errorName: "",
+        description: "",
+        errorLevel: "MEDIUM",
       });
       fetchPolicies(); // Refresh list
     } catch (error: any) {
-      addToast(error.message || 'Không thể tạo lỗi', 'error');
+      addToast(error.message || "Không thể tạo lỗi", "error");
     } finally {
       setIsCreating(false);
     }
@@ -162,15 +181,15 @@ const ModernPoliciesPage: React.FC = () => {
     setSelectedPolicy(policy);
     setNewPolicy({
       errorName: getPolicyName(policy),
-      description: policy.description || '',
-      errorLevel: (policy.errorLevel || 'MEDIUM') as string
+      description: policy.description || "",
+      errorLevel: (policy.errorLevel || "MEDIUM") as string,
     });
     setShowEditModal(true);
   };
 
   const handleUpdatePolicy = async () => {
     if (!selectedPolicy || !newPolicy.errorName.trim()) {
-      addToast('Tên lỗi là bắt buộc', 'error');
+      addToast("Tên lỗi là bắt buộc", "error");
       return;
     }
 
@@ -179,19 +198,19 @@ const ModernPoliciesPage: React.FC = () => {
       await policyApi.update(getPolicyId(selectedPolicy), {
         errorName: newPolicy.errorName.trim(),
         description: newPolicy.description || null,
-        errorLevel: newPolicy.errorLevel
+        errorLevel: newPolicy.errorLevel,
       });
-      addToast('Cập nhật lỗi thành công!', 'success');
+      addToast("Cập nhật lỗi thành công!", "success");
       setShowEditModal(false);
       setSelectedPolicy(null);
       setNewPolicy({
-        errorName: '',
-        description: '',
-        errorLevel: 'MEDIUM'
+        errorName: "",
+        description: "",
+        errorLevel: "MEDIUM",
       });
       fetchPolicies();
     } catch (error: any) {
-      addToast(error.message || 'Không thể cập nhật lỗi', 'error');
+      addToast(error.message || "Không thể cập nhật lỗi", "error");
     } finally {
       setIsCreating(false);
     }
@@ -208,17 +227,23 @@ const ModernPoliciesPage: React.FC = () => {
     setIsDeleting(true);
     try {
       await policyApi.delete(getPolicyId(policyToDelete));
-      addToast('Xóa lỗi thành công!', 'success');
+      addToast("Xóa lỗi thành công!", "success");
       setShowDeleteConfirm(false);
       setPolicyToDelete(null);
       fetchPolicies();
     } catch (error: any) {
-      const errorMsg = error.message || '';
+      const errorMsg = error.message || "";
       // Check if error is due to foreign key constraint
-      if (errorMsg.includes('foreign key') || errorMsg.includes('is still referenced')) {
-        addToast('Policy này đang được sử dụng bởi các review task. Vui lòng xóa policy ra khỏi các reviewing trước khi xóa.', 'error');
+      if (
+        errorMsg.includes("foreign key") ||
+        errorMsg.includes("is still referenced")
+      ) {
+        addToast(
+          "Policy này đang được sử dụng bởi các review task. Vui lòng xóa policy ra khỏi các reviewing trước khi xóa.",
+          "error",
+        );
       } else {
-        addToast(errorMsg || 'Không thể xóa lỗi', 'error');
+        addToast(errorMsg || "Không thể xóa lỗi", "error");
       }
     } finally {
       setIsDeleting(false);
@@ -226,54 +251,64 @@ const ModernPoliciesPage: React.FC = () => {
   };
 
   // Helper functions
-  const getPolicyName = (policy: Policy) => policy.errorName || policy.error_name || 'Unknown';
-  const getPolicyId = (policy: Policy) => policy.policyId || policy.policy_id || 0;
+  const getPolicyName = (policy: Policy) =>
+    policy.errorName || policy.error_name || "Unknown";
+  const getPolicyId = (policy: Policy) =>
+    policy.policyId || policy.policy_id || 0;
 
   const getPolicyIcon = (errorName: string) => {
-    if (errorName.includes('Quality')) return 'Q';
-    if (errorName.includes('Consistency')) return 'C';
-    if (errorName.includes('Completeness')) return 'M';
-    if (errorName.includes('Boundary')) return 'B';
-    if (errorName.includes('Review')) return 'R';
-    return 'P';
+    if (errorName.includes("Quality")) return "Q";
+    if (errorName.includes("Consistency")) return "C";
+    if (errorName.includes("Completeness")) return "M";
+    if (errorName.includes("Boundary")) return "B";
+    if (errorName.includes("Review")) return "R";
+    return "P";
   };
 
   const getPolicyColor = (errorName: string) => {
-    if (errorName.includes('Quality')) return '#f59e0b';
-    if (errorName.includes('Consistency')) return '#3b82f6';
-    if (errorName.includes('Completeness')) return '#10b981';
-    if (errorName.includes('Boundary')) return '#8b5cf6';
-    if (errorName.includes('Review')) return '#ef4444';
-    return '#6b7280';
+    if (errorName.includes("Quality")) return "#f59e0b";
+    if (errorName.includes("Consistency")) return "#3b82f6";
+    if (errorName.includes("Completeness")) return "#10b981";
+    if (errorName.includes("Boundary")) return "#8b5cf6";
+    if (errorName.includes("Review")) return "#ef4444";
+    return "#6b7280";
   };
 
   return (
-    <div style={{
-      padding: '32px',
-      minHeight: '100vh',
-      backgroundColor: T.bg,
-    }}>
+    <div
+      style={{
+        padding: "32px",
+        minHeight: "100vh",
+        backgroundColor: T.bg,
+      }}
+    >
       {/* Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: '24px',
-        }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "24px",
+          }}
+        >
           <div>
-            <h1 style={{
-              fontSize: '24px',
-              fontWeight: '600',
-              color: T.textPrimary,
-              marginBottom: '8px',
-            }}>
+            <h1
+              style={{
+                fontSize: "24px",
+                fontWeight: "600",
+                color: T.textPrimary,
+                marginBottom: "8px",
+              }}
+            >
               Quản lý lỗi
             </h1>
-            <p style={{
-              fontSize: '15px',
-              color: T.textSecondary,
-            }}>
+            <p
+              style={{
+                fontSize: "15px",
+                color: T.textSecondary,
+              }}
+            >
               Quản lý các loại lỗi và tiêu chuẩn chất lượng cho dự án
             </p>
           </div>
@@ -288,170 +323,211 @@ const ModernPoliciesPage: React.FC = () => {
         </div>
 
         {/* Stats */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '16px',
-        }}>
-          <div style={{
-            padding: '16px',
-            borderRadius: '10px',
-            border: `1px solid ${T.border}`,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-            backgroundColor: T.brandLight,
-            color: T.brand,
-          }}>
-            <div style={{
-              fontSize: '24px',
-              fontWeight: '700',
-              marginBottom: '4px',
-            }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: "16px",
+          }}
+        >
+          <div
+            style={{
+              padding: "16px",
+              borderRadius: "10px",
+              border: `1px solid ${T.border}`,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              backgroundColor: T.brandLight,
+              color: T.brand,
+            }}
+          >
+            <div
+              style={{
+                fontSize: "24px",
+                fontWeight: "700",
+                marginBottom: "4px",
+              }}
+            >
               {policies.length}
             </div>
-            <div style={{
-              fontSize: '12px',
-              fontWeight: '500',
-              opacity: 0.8,
-            }}>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: "500",
+                opacity: 0.8,
+              }}
+            >
               Tổng các lỗi
             </div>
           </div>
-          <div style={{
-            padding: '16px',
-            borderRadius: '10px',
-            border: `1px solid ${T.border}`,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-            backgroundColor: T.greenBg,
-            color: T.green,
-          }}>
-            <div style={{
-              fontSize: '24px',
-              fontWeight: '700',
-              marginBottom: '4px',
-            }}>
-              {policies.reduce((sum, policy) => sum + (policy.projects?.length || 0), 0)}
+          <div
+            style={{
+              padding: "16px",
+              borderRadius: "10px",
+              border: `1px solid ${T.border}`,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              backgroundColor: T.greenBg,
+              color: T.green,
+            }}
+          >
+            <div
+              style={{
+                fontSize: "24px",
+                fontWeight: "700",
+                marginBottom: "4px",
+              }}
+            >
+              {policies.reduce(
+                (sum, policy) => sum + (policy.projects?.length || 0),
+                0,
+              )}
             </div>
-            <div style={{
-              fontSize: '12px',
-              fontWeight: '500',
-              opacity: 0.8,
-            }}>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: "500",
+                opacity: 0.8,
+              }}
+            >
               Áp dụng cho dự án
             </div>
           </div>
-          <div style={{
-            padding: '16px',
-            borderRadius: '10px',
-            border: `1px solid ${T.border}`,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-            backgroundColor: T.redBg,
-            color: T.red,
-          }}>
-            <div style={{
-              fontSize: '24px',
-              fontWeight: '700',
-              marginBottom: '4px',
-            }}>
-              {policies.filter(p => p.errorLevel === 'CRITICAL').length}
+          <div
+            style={{
+              padding: "16px",
+              borderRadius: "10px",
+              border: `1px solid ${T.border}`,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              backgroundColor: T.redBg,
+              color: T.red,
+            }}
+          >
+            <div
+              style={{
+                fontSize: "24px",
+                fontWeight: "700",
+                marginBottom: "4px",
+              }}
+            >
+              {policies.filter((p) => p.errorLevel === "CRITICAL").length}
             </div>
-            <div style={{
-              fontSize: '12px',
-              fontWeight: '500',
-              opacity: 0.8,
-            }}>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: "500",
+                opacity: 0.8,
+              }}
+            >
               Lỗi cực nghiêm trọng
             </div>
           </div>
-          <div style={{
-            padding: '16px',
-            borderRadius: '10px',
-            border: `1px solid ${T.border}`,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-            backgroundColor: '#FFEBE6',
-            color: '#BF2600',
-          }}>
-            <div style={{
-              fontSize: '24px',
-              fontWeight: '700',
-              marginBottom: '4px',
-            }}>
-              {policies.filter(p => p.errorLevel === 'HIGH').length}
+          <div
+            style={{
+              padding: "16px",
+              borderRadius: "10px",
+              border: `1px solid ${T.border}`,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              backgroundColor: "#FFEBE6",
+              color: "#BF2600",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "24px",
+                fontWeight: "700",
+                marginBottom: "4px",
+              }}
+            >
+              {policies.filter((p) => p.errorLevel === "HIGH").length}
             </div>
-            <div style={{
-              fontSize: '12px',
-              fontWeight: '500',
-              opacity: 0.8,
-            }}>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: "500",
+                opacity: 0.8,
+              }}
+            >
               Lỗi cao
             </div>
           </div>
-          <div style={{
-            padding: '16px',
-            borderRadius: '10px',
-            border: `1px solid ${T.border}`,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-            backgroundColor: T.amberBg,
-            color: T.amber,
-          }}>
-            <div style={{
-              fontSize: '24px',
-              fontWeight: '700',
-              marginBottom: '4px',
-            }}>
-              {policies.filter(p => p.errorLevel === 'MEDIUM').length}
+          <div
+            style={{
+              padding: "16px",
+              borderRadius: "10px",
+              border: `1px solid ${T.border}`,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              backgroundColor: T.amberBg,
+              color: T.amber,
+            }}
+          >
+            <div
+              style={{
+                fontSize: "24px",
+                fontWeight: "700",
+                marginBottom: "4px",
+              }}
+            >
+              {policies.filter((p) => p.errorLevel === "MEDIUM").length}
             </div>
-            <div style={{
-              fontSize: '12px',
-              fontWeight: '500',
-              opacity: 0.8,
-            }}>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: "500",
+                opacity: 0.8,
+              }}
+            >
               Lỗi trung bình
             </div>
           </div>
-          <div style={{
-            padding: '16px',
-            borderRadius: '10px',
-            border: `1px solid ${T.border}`,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-            backgroundColor: T.greenBg,
-            color: T.green,
-          }}>
-            <div style={{
-              fontSize: '24px',
-              fontWeight: '700',
-              marginBottom: '4px',
-            }}>
-              {policies.filter(p => p.errorLevel === 'LOW').length}
+          <div
+            style={{
+              padding: "16px",
+              borderRadius: "10px",
+              border: `1px solid ${T.border}`,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              backgroundColor: T.greenBg,
+              color: T.green,
+            }}
+          >
+            <div
+              style={{
+                fontSize: "24px",
+                fontWeight: "700",
+                marginBottom: "4px",
+              }}
+            >
+              {policies.filter((p) => p.errorLevel === "LOW").length}
             </div>
-            <div style={{
-              fontSize: '12px',
-              fontWeight: '500',
-              opacity: 0.8,
-            }}>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: "500",
+                opacity: 0.8,
+              }}
+            >
               Lỗi nhẹ
             </div>
           </div>
@@ -459,12 +535,14 @@ const ModernPoliciesPage: React.FC = () => {
       </Card>
 
       {/* Policies Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-        gap: '24px',
-        marginTop: '32px',
-      }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
+          gap: "24px",
+          marginTop: "32px",
+        }}
+      >
         {policies.map((policy) => (
           <Card
             key={policy.policy_id}
@@ -475,14 +553,17 @@ const ModernPoliciesPage: React.FC = () => {
             }}
           >
             <div className="mb-4">
-              <h3 className="text-lg font-bold text-foreground truncate mb-1" title={getPolicyName(policy)}>
+              <h3
+                className="text-lg font-bold text-foreground truncate mb-1"
+                title={getPolicyName(policy)}
+              >
                 {getPolicyName(policy)}
               </h3>
               <div
                 className="inline-flex px-2 py-0.5 rounded-lg text-xs font-semibold"
                 style={{
                   backgroundColor: `${getPolicyColor(getPolicyName(policy))}15`,
-                  color: getPolicyColor(getPolicyName(policy))
+                  color: getPolicyColor(getPolicyName(policy)),
                 }}
               >
                 Lỗi #{getPolicyId(policy)}
@@ -554,35 +635,47 @@ const ModernPoliciesPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
             <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-              {showEditModal ? 'Chỉnh sửa lỗi' : 'Tạo lỗi mới'}
+              {showEditModal ? "Chỉnh sửa lỗi" : "Tạo lỗi mới"}
             </h2>
 
             <div className="space-y-4 mb-6">
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Tên lỗi *</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                  Tên lỗi *
+                </label>
                 <input
                   type="text"
                   placeholder="Tên lỗi (vd: Annotation Quality)"
                   value={newPolicy.errorName}
-                  onChange={(e) => setNewPolicy({ ...newPolicy, errorName: e.target.value })}
+                  onChange={(e) =>
+                    setNewPolicy({ ...newPolicy, errorName: e.target.value })
+                  }
                   className="w-full px-4 py-2.5 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Mô tả</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                  Mô tả
+                </label>
                 <textarea
                   placeholder="Mô tả lỗi..."
                   rows={4}
                   value={newPolicy.description}
-                  onChange={(e) => setNewPolicy({ ...newPolicy, description: e.target.value })}
+                  onChange={(e) =>
+                    setNewPolicy({ ...newPolicy, description: e.target.value })
+                  }
                   className="w-full px-4 py-2.5 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none resize-y min-h-[100px]"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Mức độ lỗi *</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                  Mức độ lỗi *
+                </label>
                 <select
                   value={newPolicy.errorLevel}
-                  onChange={(e) => setNewPolicy({ ...newPolicy, errorLevel: e.target.value })}
+                  onChange={(e) =>
+                    setNewPolicy({ ...newPolicy, errorLevel: e.target.value })
+                  }
                   className="w-full px-4 py-2.5 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none cursor-pointer"
                 >
                   <option value="LOW">Thấp</option>
@@ -606,10 +699,12 @@ const ModernPoliciesPage: React.FC = () => {
               </Button>
               <Button
                 variant="primary"
-                onClick={showEditModal ? handleUpdatePolicy : handleCreatePolicy}
+                onClick={
+                  showEditModal ? handleUpdatePolicy : handleCreatePolicy
+                }
                 isLoading={isCreating}
               >
-                {showEditModal ? 'Cập nhật' : 'Tạo lỗi'}
+                {showEditModal ? "Cập nhật" : "Tạo lỗi"}
               </Button>
             </div>
           </Card>
@@ -630,7 +725,7 @@ const ModernPoliciesPage: React.FC = () => {
                   className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mt-1"
                   style={{
                     backgroundColor: `${getPolicyColor(getPolicyName(selectedPolicy))}20`,
-                    color: getPolicyColor(getPolicyName(selectedPolicy))
+                    color: getPolicyColor(getPolicyName(selectedPolicy)),
                   }}
                 >
                   Lỗi #{getPolicyId(selectedPolicy)}
@@ -647,7 +742,9 @@ const ModernPoliciesPage: React.FC = () => {
             {/* Modal Content */}
             <div className="p-6 overflow-y-auto space-y-6">
               <div>
-                <h3 className="text-sm font-bold text-foreground mb-2">Mô tả lỗi</h3>
+                <h3 className="text-sm font-bold text-foreground mb-2">
+                  Mô tả lỗi
+                </h3>
                 <div className="p-4 bg-muted/50 rounded-lg text-sm text-foreground/80 leading-relaxed border border-border/50">
                   {selectedPolicy.description}
                 </div>
@@ -685,10 +782,7 @@ const ModernPoliciesPage: React.FC = () => {
 
             {/* Modal Footer */}
             <div className="p-4 border-t border-border/50 bg-muted/20 flex gap-3 justify-end">
-              <Button
-                variant="ghost"
-                onClick={() => setShowDetailModal(false)}
-              >
+              <Button variant="ghost" onClick={() => setShowDetailModal(false)}>
                 Đóng
               </Button>
             </div>
@@ -700,9 +794,15 @@ const ModernPoliciesPage: React.FC = () => {
       {showDeleteConfirm && policyToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-sm p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-bold text-foreground mb-2">Xác nhận xóa</h3>
+            <h3 className="text-lg font-bold text-foreground mb-2">
+              Xác nhận xóa
+            </h3>
             <p className="text-sm text-muted-foreground mb-6">
-              Bạn có chắc chắn muốn xóa policy <span className="font-semibold text-foreground">"{getPolicyName(policyToDelete)}"</span> không? Hành động này không thể hoàn tác.
+              Bạn có chắc chắn muốn xóa policy{" "}
+              <span className="font-semibold text-foreground">
+                "{getPolicyName(policyToDelete)}"
+              </span>{" "}
+              không? Hành động này không thể hoàn tác.
             </p>
             <div className="flex gap-3 justify-end">
               <Button
