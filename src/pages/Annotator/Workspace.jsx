@@ -44,7 +44,7 @@ function itemHasRejectedFeedback(item) {
     Array.isArray(item?.annotations) &&
     item.annotations.some(
       (annotation) =>
-        String(annotation?.status || "").toUpperCase() === "REJECTED",
+        String(annotation?.status || annotation?.reviewStatus || "").toUpperCase() === "REJECTED",
     )
   );
 }
@@ -567,6 +567,45 @@ export default function Workspace() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentItem?.itemId]);
+
+  React.useEffect(() => {
+    if (!currentItem?.itemId) return;
+    setWorkspace((prev) => {
+      if (!prev?.items) return prev;
+      let changed = false;
+      const nextItems = prev.items.map((item) => {
+        if (item.itemId !== currentItem.itemId) return item;
+        const nextAnnotations = anno.annotations.map((group) => ({
+          reviewingId: group.beReviewingIds?.[0] ?? null,
+          status: group.reviewStatus ?? null,
+          reviewStatus: group.reviewStatus ?? null,
+          policyName: group.policyName ?? null,
+          labelIds: group.labelIds ?? [],
+          labelNames: group.labelNames ?? [],
+        }));
+        const sameLength =
+          Array.isArray(item.annotations) &&
+          item.annotations.length === nextAnnotations.length;
+        const sameStatuses =
+          sameLength &&
+          item.annotations.every((annotation, index) => {
+            const nextAnnotation = nextAnnotations[index];
+            return (
+              String(annotation?.status || annotation?.reviewStatus || "") ===
+                String(nextAnnotation?.status || nextAnnotation?.reviewStatus || "") &&
+              String(annotation?.policyName || "") === String(nextAnnotation?.policyName || "")
+            );
+          });
+        if (sameStatuses) return item;
+        changed = true;
+        return {
+          ...item,
+          annotations: nextAnnotations,
+        };
+      });
+      return changed ? { ...prev, items: nextItems } : prev;
+    });
+  }, [currentItem?.itemId, anno.annotations]);
 
   /* â”€â”€ Navigation â”€â”€ */
   const handleNavigate = async (direction) => {
