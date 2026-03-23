@@ -265,7 +265,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
         ? getItemStats(currentItemId)
         : { total: 0, approved: 0, rejected: 0, pending: 0 };
     const assignmentStatus = (workspace?.assignmentStatus || "").toUpperCase();
-    const isFinalizedAssignment = assignmentStatus === "APPROVED" || assignmentStatus === "REJECTED" || assignmentStatus === "SUBMITTED" || assignmentStatus === "RE_SUBMITTED";
+    const isFinalizedAssignment = assignmentStatus === "APPROVED" || assignmentStatus === "REJECTED";
     const hasImageLoadError = Boolean(imageError);
     const canReviewCurrentImage = !isFinalizedAssignment && !imageLoading && !hasImageLoadError && Boolean(imageBlobUrl);
     const canSubmit = !isFinalizedAssignment && reviewStats.pending === 0 && reviewStats.total > 0 && !hasImageLoadError;
