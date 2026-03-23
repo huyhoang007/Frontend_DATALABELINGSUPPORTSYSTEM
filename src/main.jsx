@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { Agentation } from 'agentation'
 import App from './App.jsx'
 import './index.css'
 import { ToastProvider } from './context/ToastContext'
@@ -9,7 +10,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
       <ToastProvider>
-        <App />
+        <>
+          <App />
+          {import.meta.env.DEV && <Agentation />}
+        </>
       </ToastProvider>
     </AuthProvider>
   </React.StrictMode>,
