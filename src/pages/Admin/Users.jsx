@@ -611,7 +611,7 @@ export default function AdminUsers() {
                             >
                               Bỏ cấm
                             </button>
-                          ) : (
+                          ) : u.roleName && u.roleName.toUpperCase() !== "ADMIN" ? (
                             <div style={{ display: "flex", gap: "8px" }}>
                               <button
                                 onClick={() => handleOpenRoleModal(u)}
@@ -658,7 +658,8 @@ export default function AdminUsers() {
                                 Cấm
                               </button>
                             </div>
-                          )}
+                          ) : null
+                          }
                         </div>
                       </div>
                     );
@@ -1019,7 +1020,6 @@ export default function AdminUsers() {
                     onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
                     onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                   >
-                    <option value={1}>Quản trị viên</option>
                     <option value={2}>Quản lý</option>
                     <option value={3}>Người gán nhãn</option>
                     <option value={4}>Người đánh giá</option>

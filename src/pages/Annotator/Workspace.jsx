@@ -563,10 +563,10 @@ export default function Workspace() {
   /* ── Load annotations when item changes ── */
   React.useEffect(() => {
     if (currentItem?.itemId) {
-      anno.loadAnnotations(currentItem.itemId);
+      // Use pre-loaded annotations from workspace instead of refetching
+      anno.loadAnnotations(currentItem.itemId, currentItem.annotations);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentItem?.itemId]);
+  }, [currentItem?.itemId, currentItem?.annotations]);
 
   React.useEffect(() => {
     if (!currentItem?.itemId) return;

@@ -1,23 +1,33 @@
 # View-Only Mode for Finalized Batch Status - Implementation Summary
 
 ## Overview
+
 Implemented the ability to **view** labeled/reviewed data when batch status is `APPROVED`, `SUBMITTED`, or `RE_SUBMITTED`, while **preventing** any editing/approval/rejection actions.
 
 ## What Was Fixed
 
 ### 1. ReviewWorkspace.jsx - Status Constant Bug (CRITICAL)
+
 **File**: `src/pages/Reviewer/ReviewWorkspace.jsx` (Line 268)
 
 **Before**:
+
 ```javascript
-const isFinalizedAssignment = assignmentStatus === "APPROVED" || assignmentStatus === "REJECTED" 
-  || assignmentStatus === "SUBMITTED" || assignmentStatus === "RESUBMITTED";
+const isFinalizedAssignment =
+  assignmentStatus === "APPROVED" ||
+  assignmentStatus === "REJECTED" ||
+  assignmentStatus === "SUBMITTED" ||
+  assignmentStatus === "RESUBMITTED";
 ```
 
 **After**:
+
 ```javascript
-const isFinalizedAssignment = assignmentStatus === "APPROVED" || assignmentStatus === "REJECTED" 
-  || assignmentStatus === "SUBMITTED" || assignmentStatus === "RE_SUBMITTED";
+const isFinalizedAssignment =
+  assignmentStatus === "APPROVED" ||
+  assignmentStatus === "REJECTED" ||
+  assignmentStatus === "SUBMITTED" ||
+  assignmentStatus === "RE_SUBMITTED";
 ```
 
 **Issue**: The status constant was `"RESUBMITTED"` (no underscore) but backend uses `"RE_SUBMITTED"` (with underscore). This caused the finalized check to fail for resubmitted assignments.
@@ -27,7 +37,9 @@ const isFinalizedAssignment = assignmentStatus === "APPROVED" || assignmentStatu
 ## How It Works
 
 ### Annotator Workspace (View-Only Mode)
+
 When assignment status is `SUBMITTED`, `RE_SUBMITTED`, or `APPROVED`:
+
 - **✓ CAN**: View all labeled data
 - **✓ CAN**: View annotations on the canvas (read-only)
 - **✗ CANNOT**: Draw or edit annotations
@@ -35,7 +47,9 @@ When assignment status is `SUBMITTED`, `RE_SUBMITTED`, or `APPROVED`:
 - **UI Status**: Tool selector disabled, only "Select" mode available
 
 ### Reviewer Workspace (View-Only Mode)
+
 When assignment status is `SUBMITTED`, `RE_SUBMITTED`, `APPROVED`, or `REJECTED`:
+
 - **✓ CAN**: View all reviewed data with labels and decisions
 - **✓ CAN**: View annotation details and rejection reasons
 - **✓ CAN**: Click annotations to highlight them
@@ -47,6 +61,7 @@ When assignment status is `SUBMITTED`, `RE_SUBMITTED`, `APPROVED`, or `REJECTED`
 ## User Experience
 
 ### When Viewing a Finalized Batch:
+
 1. **Annotator sees**:
    - All images with their labels displayed
    - Message: "Assignment đã ở trạng thái cuối {STATUS}"
@@ -65,6 +80,7 @@ When assignment status is `SUBMITTED`, `RE_SUBMITTED`, `APPROVED`, or `REJECTED`
 ### Key Variables:
 
 **Annotator Workspace**:
+
 ```javascript
 const isReadOnly = ["SUBMITTED", "RE_SUBMITTED", "APPROVED"].includes(
   workspace?.assignmentStatus?.toUpperCase(),
@@ -72,27 +88,33 @@ const isReadOnly = ["SUBMITTED", "RE_SUBMITTED", "APPROVED"].includes(
 ```
 
 **Reviewer Workspace**:
+
 ```javascript
-const isFinalizedAssignment = assignmentStatus === "APPROVED" 
-  || assignmentStatus === "REJECTED" 
-  || assignmentStatus === "SUBMITTED" 
-  || assignmentStatus === "RE_SUBMITTED";
+const isFinalizedAssignment =
+  assignmentStatus === "APPROVED" ||
+  assignmentStatus === "REJECTED" ||
+  assignmentStatus === "SUBMITTED" ||
+  assignmentStatus === "RE_SUBMITTED";
 ```
 
 ### Button Disabling Logic:
 
 **Annotator**:
+
 - `isReadOnly ? "select" : activeTool` (forces select mode)
 - `disabled={isReadOnly}` (disables submit button)
 - `drawingHandlers={isReadOnly ? {} : drawing}` (disables drawing)
 
 **Reviewer**:
+
 - `canReviewCurrentImage = !isFinalizedAssignment && !imageLoading && !hasImageLoadError && imageBlobUrl`
 - `disabled={reviewSubmitting || !canReviewCurrentImage || isRejecting}` (disables approve)
 - `disabled={reviewSubmitting || policies.length === 0 || !canReviewCurrentImage}` (disables reject)
 
 ## Status Constants
+
 All components now consistently use:
+
 - `"APPROVED"` - Assignment/Review approved
 - `"SUBMITTED"` - Annotator submitted work for review
 - `"RE_SUBMITTED"` - Annotator resubmitted after rejection
@@ -111,9 +133,11 @@ All components now consistently use:
 - [ ] Confirm buttons are properly disabled with tooltips
 
 ## Files Modified
+
 1. `src/pages/Reviewer/ReviewWorkspace.jsx` - Fixed status constant on line 268
 
 ## Files Already Correct (No Changes Needed)
+
 1. `src/pages/Annotator/Workspace.jsx` - Already has correct implementation
 2. `src/pages/Reviewer/ReviewQueue.jsx` - Already uses "RE_SUBMITTED"
 3. Backend services - Already validate assignment status correctly

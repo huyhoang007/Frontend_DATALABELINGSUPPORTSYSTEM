@@ -45,7 +45,7 @@ export default function ReviewQueue() {
   const [hoveredRow, setHoveredRow] = useState(null);
   const [hoveredKpi, setHoveredKpi] = useState(null);
   const [isMobile, setIsMobile] = React.useState(() => window.innerWidth < 768);
-  const [filterByStatus, setFilterByStatus] = React.useState(null); // null | "SUBMITTED" | "RE_SUBMITTED" | "REVIEWED" | "APPROVED" | "REJECTED"
+  const [filterByStatus, setFilterByStatus] = React.useState("SUBMITTED"); // null | "SUBMITTED" | "RE_SUBMITTED" | "REVIEWED" | "APPROVED" | "REJECTED"
 
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -82,15 +82,22 @@ export default function ReviewQueue() {
   const queueAssignments = React.useMemo(
     () =>
       assignments.filter(
-        (a) => a.status === "SUBMITTED" || a.status === "RE_SUBMITTED",
+        (a) => (a.status === "SUBMITTED" || a.status === "RE_SUBMITTED") && 
+                (a.projectStatus || "").toUpperCase() !== "PAUSED"
       ),
     [assignments],
   );
 
   // Filter visible queue rows by search without changing the queue totals.
   const reviewableAssignments = React.useMemo(() => {
-    // Display all assignments except IN_PROGRESS by default
-    let list = assignments.filter((a) => a.status !== "IN_PROGRESS");
+    // Display all assignments (including IN_PROGRESS) except those with PAUSED projects
+    let list = assignments.filter((a) => {
+      // Ẩn project có status PAUSED
+      if ((a.projectStatus || "").toUpperCase() === "PAUSED") {
+        return false;
+      }
+      return true;
+    });
 
     // Filter by status if active
     if (filterByStatus === "SUBMITTED" || filterByStatus === "RE_SUBMITTED") {
@@ -100,7 +107,9 @@ export default function ReviewQueue() {
     } else if (filterByStatus === "REJECTED") {
       list = list.filter((a) => a.status === "REJECTED");
     } else if (filterByStatus === "REVIEWED") {
-      list = list.filter((a) => a.status === "APPROVED" || a.status === "REJECTED");
+      list = list.filter(
+        (a) => a.status === "APPROVED" || a.status === "REJECTED",
+      );
     }
 
     // Filter by search query
@@ -134,19 +143,19 @@ export default function ReviewQueue() {
 
   // Stats - count from all assignments except IN_PROGRESS, not just queue
   const pendingCount = assignments.filter(
-    (a) => a.status === "SUBMITTED",
+    (a) => a.status === "SUBMITTED" && (a.projectStatus || "").toUpperCase() !== "PAUSED",
   ).length;
   const resubmittedCount = assignments.filter(
-    (a) => a.status === "RE_SUBMITTED",
+    (a) => a.status === "RE_SUBMITTED" && (a.projectStatus || "").toUpperCase() !== "PAUSED",
   ).length;
   const queueTotalCount = assignments.filter(
-    (a) => a.status !== "IN_PROGRESS",
+    (a) => a.status !== "IN_PROGRESS" && (a.projectStatus || "").toUpperCase() !== "PAUSED",
   ).length;
   const approvedCount = assignments.filter(
-    (a) => a.status === "APPROVED",
+    (a) => a.status === "APPROVED" && (a.projectStatus || "").toUpperCase() !== "PAUSED",
   ).length;
   const rejectedCount = assignments.filter(
-    (a) => a.status === "REJECTED",
+    (a) => a.status === "REJECTED" && (a.projectStatus || "").toUpperCase() !== "PAUSED",
   ).length;
   const reviewedCount = approvedCount + rejectedCount;
   const displayValue = (value) => (isLoading ? "—" : value);

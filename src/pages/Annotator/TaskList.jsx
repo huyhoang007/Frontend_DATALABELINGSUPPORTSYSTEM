@@ -58,7 +58,7 @@ const STATUS_VI = {
 export default function TaskList() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState("ALL");
+  const [activeTab, setActiveTab] = useState("PENDING");
   const [search, setSearch] = useState("");
   const [hoveredRow, setHoveredRow] = useState(null);
 
@@ -103,6 +103,11 @@ export default function TaskList() {
 
   const filteredAssignments = useMemo(() => {
     return assignments.filter((a) => {
+      // Ẩn project có status PAUSED
+      if ((a.projectStatus || "").toUpperCase() === "PAUSED") {
+        return false;
+      }
+      
       const matchesTab =
         activeTab === "ALL" || (a.status || "").toUpperCase() === activeTab;
       const q = search.toLowerCase();
@@ -160,7 +165,7 @@ export default function TaskList() {
   const activeCount = assignments.filter((a) =>
     ["PENDING", "IN_PROGRESS", "REJECTED"].includes(
       (a.status || "").toUpperCase(),
-    ),
+    ) && (a.projectStatus || "").toUpperCase() !== "PAUSED"
   ).length;
 
   return (
