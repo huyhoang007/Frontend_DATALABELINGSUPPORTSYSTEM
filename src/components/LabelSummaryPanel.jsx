@@ -2,18 +2,23 @@
 
 /**
  * LabelSummaryPanel — Tổng hợp tất cả nhãn đã gán trên toàn bộ assignment.
- *
+ * 
  * Props:
- *   workspace        — full workspace object từ API (workspace.items[i].annotations là BE data)
+ *   workspace        — full workspace object từ API (includes summary stats)
  *   currentItem      — item đang xem (itemId)
  *   liveAnnotations  — anno.annotations (AnnotationGroup[]) — live state cho item hiện tại
  *   allLabels        — flat label list [{ id, name, color, type }]
  */
 export default function LabelSummaryPanel({ workspace, currentItem, liveAnnotations, allLabels }) {
 
-    /* ─── Tính tổng hợp ─────────────────────────────────────────────────── */
+    /* ─── Tính tổng hợp từ API summary + live edits ─────────────────────── */
     const { summary, totalAnnotations, annotatedImageCount, totalImages } = React.useMemo(() => {
         if (!workspace) return { summary: [], totalAnnotations: 0, annotatedImageCount: 0, totalImages: 0 };
+
+        // Use API summary as baseline
+        const apiTotalShapes = workspace.totalShapes || 0;
+        const apiAnnotatedItems = workspace.annotatedItems || 0;
+        const apiTotalItems = workspace.totalItems || 0;
 
         // map: labelId → { labelId, labelName, colorCode, labelType, shapeCount, imageIds: Set }
         const map = new Map();
@@ -35,6 +40,8 @@ export default function LabelSummaryPanel({ workspace, currentItem, liveAnnotati
             e.imageIds.add(itemId);
         };
 
+        let currentItemAnnotatedCount = 0;
+        let adjustmentShapes = 0;
         let annotatedCount = 0;
 
         (workspace.items || []).forEach((item) => {
@@ -43,7 +50,11 @@ export default function LabelSummaryPanel({ workspace, currentItem, liveAnnotati
             if (isCurrentItem) {
                 // Dùng live annotations (trạng thái hiện tại, chưa lưu cũng tính)
                 const hasAny = liveAnnotations?.length > 0;
-                if (hasAny) annotatedCount++;
+                if (hasAny) currentItemAnnotatedCount = 1;
+                
+                // Track shape count for current item live edits
+                const beAnnotations = item.annotations || [];
+                adjustmentShapes = (liveAnnotations?.length || 0) - beAnnotations.length;
 
                 liveAnnotations?.forEach((group) => {
                     group.labelIds?.forEach((lid, idx) => {
@@ -73,9 +84,12 @@ export default function LabelSummaryPanel({ workspace, currentItem, liveAnnotati
 
         return {
             summary: entries,
-            totalAnnotations: total,
-            annotatedImageCount: annotatedCount,
-            totalImages: workspace.items?.length || 0,
+            // Use API summary if available, fallback to calculated total from items loaded
+            totalAnnotations: apiTotalShapes > 0 ? (apiTotalShapes + adjustmentShapes) : total,
+            // Count from API + current item adjustment
+            annotatedImageCount: apiAnnotatedItems > 0 ? (apiAnnotatedItems + currentItemAnnotatedCount) : (annotatedCount),
+            // Use API total
+            totalImages: apiTotalItems > 0 ? apiTotalItems : (workspace.items?.length || 0),
         };
     }, [workspace, currentItem, liveAnnotations, allLabels]);
 
