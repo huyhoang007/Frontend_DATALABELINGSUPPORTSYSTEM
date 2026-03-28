@@ -388,7 +388,8 @@ export default function UploadData() {
                   marginTop: "4px",
                 }}
               >
-                Toàn bộ ảnh (PNG, JPG, JPEG, GIF, BMP, WEBP) trong thư mục sẽ được tải lên
+                Toàn bộ ảnh (PNG, JPG, JPEG, GIF, BMP, WEBP) trong thư mục sẽ
+                được tải lên
               </p>
             </>
           ) : (

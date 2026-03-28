@@ -190,7 +190,11 @@ const ModernLabelsPage: React.FC = () => {
       });
       fetchLabels(); // Refresh list
     } catch (error: any) {
-      addToast(error.message || "Không thể tạo nhãn", "error");
+      const raw = error?.response?.data?.message || error?.message || "";
+      const msg = typeof raw === "string" && raw.toLowerCase().includes("already exist")
+        ? "Nhãn này với loại đã tồn tại. Hãy chọn tên hoặc loại khác"
+        : raw || "Không thể tạo nhãn";
+      addToast(msg, "error");
     } finally {
       setIsCreating(false);
     }
@@ -455,6 +459,22 @@ const ModernLabelsPage: React.FC = () => {
     label.labelName || label.label_name || "Unknown";
   const getLabelColor = (label: Label) =>
     label.colorCode || label.color_code || "#3b82f6";
+  
+  const getLabelTypeColor = (type?: string) => {
+    switch (type?.toUpperCase()) {
+      case "OBJECT":
+        return "#8b5cf6";
+      case "CLASSIFICATION":
+        return "#10b981";
+      case "SEGMENTATION":
+        return "#f59e0b";
+      case "DETECTION":
+        return "#06b6d4";
+      default:
+        return "#6b7280";
+    }
+  };
+
   const getLabelId = (label: Label) => label.labelId || label.label_id || 0;
   const isLabelActive = (label: Label) => label.isActive !== false;
 
@@ -611,7 +631,7 @@ const ModernLabelsPage: React.FC = () => {
                   <h3 className="text-lg font-bold text-foreground mb-1 truncate">
                     {getLabelName(label)}
                   </h3>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-2">
                     <div
                       className="w-4 h-4 rounded border border-border"
                       style={{ backgroundColor: getLabelColor(label) }}
@@ -620,7 +640,16 @@ const ModernLabelsPage: React.FC = () => {
                       {getLabelColor(label)}
                     </div>
                   </div>
-                  <div className="mt-3">
+                  <div className="flex gap-2 flex-wrap mb-3">
+                    <span
+                      className="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide"
+                      style={{
+                        backgroundColor: `${getLabelColor(label)}20`,
+                        color: getLabelColor(label),
+                      }}
+                    >
+                      {label.labelType || label.label_type || "CLASSIFICATION"}
+                    </span>
                     <span
                       className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
                       style={{
@@ -735,18 +764,33 @@ const ModernLabelsPage: React.FC = () => {
                       {rule.labels?.map((label: any) => (
                         <div
                           key={getLabelId(label)}
-                          className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border"
+                          className="flex flex-col items-start gap-1 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border"
                           style={{
                             backgroundColor: `${getLabelColor(label)}10`,
                             borderColor: `${getLabelColor(label)}30`,
                             color: getLabelColor(label),
                           }}
                         >
-                          <div
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: getLabelColor(label) }}
-                          />
-                          {getLabelName(label)}
+                          <div className="flex items-center gap-1.5">
+                            <div
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: getLabelColor(label) }}
+                            />
+                            {getLabelName(label)}
+                          </div>
+                          {(label.labelType || label.label_type) && (
+                            <div className="ml-3">
+                              <span
+                                className="text-[8px] px-1 py-0.5 rounded-full font-bold"
+                                style={{
+                                  backgroundColor: `${getLabelTypeColor(label.labelType || label.label_type)}20`,
+                                  color: getLabelTypeColor(label.labelType || label.label_type),
+                                }}
+                              >
+                                {label.labelType || label.label_type}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -1249,26 +1293,42 @@ const ModernLabelsPage: React.FC = () => {
                       const id = getLabelId(label);
                       const color = getLabelColor(label);
                       const name = getLabelName(label);
+                      const type = label.labelType || label.label_type;
                       return (
                         <div
                           key={id}
                           className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors justify-between"
                         >
-                          <div className="flex items-center gap-3 flex-1">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
                             <div
                               className="w-4 h-4 rounded-full flex-shrink-0"
                               style={{ backgroundColor: color }}
                             />
-                            <span className="text-sm text-foreground font-medium">
-                              {name}
-                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-foreground font-medium">
+                                  {name}
+                                </span>
+                                {type && (
+                                  <span
+                                    className="text-[10px] px-1.5 py-0.5 rounded-full font-bold whitespace-nowrap"
+                                    style={{
+                                      backgroundColor: `${getLabelTypeColor(type)}20`,
+                                      color: getLabelTypeColor(type),
+                                    }}
+                                  >
+                                    {type}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </div>
                           <Button
                             size="xs"
                             variant="ghost"
                             onClick={() => handleRemoveLabelDirect(id)}
                             disabled={isAttachingLabels}
-                            className="text-amber-600 hover:bg-amber-500/10"
+                            className="text-amber-600 hover:bg-amber-500/10 shrink-0"
                           >
                             Bỏ
                           </Button>
@@ -1291,6 +1351,7 @@ const ModernLabelsPage: React.FC = () => {
                       const id = getLabelId(label);
                       const color = getLabelColor(label);
                       const name = getLabelName(label);
+                      const type = label.labelType || label.label_type;
                       const checked = attachLabelIds.includes(id);
                       return (
                         <div
@@ -1304,16 +1365,31 @@ const ModernLabelsPage: React.FC = () => {
                             type="checkbox"
                             checked={checked}
                             onChange={() => toggleAttachLabelSelection(id)}
-                            className="accent-primary w-4 h-4 cursor-pointer"
+                            className="accent-primary w-4 h-4 cursor-pointer flex-shrink-0"
                           />
                           <div
                             className="w-4 h-4 rounded-full flex-shrink-0"
                             style={{ backgroundColor: color }}
                           />
-                          <span className="text-sm text-foreground font-medium">
-                            {name}
-                          </span>
-                          <span className="text-xs text-muted-foreground font-mono ml-auto">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-foreground font-medium">
+                                {name}
+                              </span>
+                              {type && (
+                                <span
+                                  className="text-[10px] px-1.5 py-0.5 rounded-full font-bold whitespace-nowrap"
+                                  style={{
+                                    backgroundColor: `${getLabelTypeColor(type)}20`,
+                                    color: getLabelTypeColor(type),
+                                  }}
+                                >
+                                  {type}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <span className="text-xs text-muted-foreground font-mono ml-auto flex-shrink-0">
                             {color}
                           </span>
                         </div>

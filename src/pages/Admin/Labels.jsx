@@ -62,7 +62,11 @@ export default function AdminLabels() {
       });
       fetchLabels(); // Refresh list
     } catch (error) {
-      addToast(error.message || "Tạo nhãn thất bại", "error");
+      const raw = error?.response?.data?.message || error?.message || "";
+      const msg = typeof raw === "string" && raw.toLowerCase().includes("already exist")
+        ? "Nhãn này với loại đã tồn tại. Hãy chọn tên hoặc loại khác"
+        : raw || "Tạo nhãn thất bại";
+      addToast(msg, "error");
     } finally {
       setIsCreating(false);
     }
@@ -134,18 +138,25 @@ export default function AdminLabels() {
                           "L"}
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-foreground">
+                        <h3 className="font-semibold text-foreground mb-1">
                           {label.labelName}
                         </h3>
-                        <span
-                          className="text-xs px-2 py-0.5 rounded-full"
-                          style={{
-                            backgroundColor: `${getLabelTypeColor(label.labelType)}20`,
-                            color: getLabelTypeColor(label.labelType),
-                          }}
-                        >
-                          {label.labelType}
-                        </span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span
+                            className="text-xs px-2 py-0.5 rounded-full"
+                            style={{
+                              backgroundColor: `${getLabelTypeColor(label.labelType)}20`,
+                              color: getLabelTypeColor(label.labelType),
+                            }}
+                          >
+                            {label.labelType}
+                          </span>
+                          {label.isActive !== false && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                              Đang hoạt động
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     {label.description && (

@@ -62,8 +62,12 @@ export default function CreateLabel() {
         shortcutKey: form.shortcutKey.trim() || null,
       });
       navigate("/manager/labels");
-    } catch (err) {
-      setApiError((err as Error)?.message || "Tạo nhãn thất bại");
+    } catch (err: any) {
+      const raw = err?.response?.data?.message || err?.message || "";
+      const msg = typeof raw === "string" && raw.toLowerCase().includes("already exist")
+        ? "Nhãn này với loại đã tồn tại. Hãy chọn tên hoặc loại khác"
+        : raw || "Tạo nhãn thất bại";
+      setApiError(msg);
     } finally {
       setSaving(false);
     }
