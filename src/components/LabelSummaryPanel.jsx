@@ -2,23 +2,18 @@
 
 /**
  * LabelSummaryPanel — Tổng hợp tất cả nhãn đã gán trên toàn bộ assignment.
- * 
+ *
  * Props:
- *   workspace        — full workspace object từ API (includes summary stats)
+ *   workspace        — full workspace object từ API (workspace.items[i].annotations là BE data)
  *   currentItem      — item đang xem (itemId)
  *   liveAnnotations  — anno.annotations (AnnotationGroup[]) — live state cho item hiện tại
  *   allLabels        — flat label list [{ id, name, color, type }]
  */
 export default function LabelSummaryPanel({ workspace, currentItem, liveAnnotations, allLabels }) {
 
-    /* ─── Tính tổng hợp từ API summary + live edits ─────────────────────── */
+    /* ─── Tính tổng hợp ─────────────────────────────────────────────────── */
     const { summary, totalAnnotations, annotatedImageCount, totalImages } = React.useMemo(() => {
         if (!workspace) return { summary: [], totalAnnotations: 0, annotatedImageCount: 0, totalImages: 0 };
-
-        // Use API summary as baseline
-        const apiTotalShapes = workspace.totalShapes || 0;
-        const apiAnnotatedItems = workspace.annotatedItems || 0;
-        const apiTotalItems = workspace.totalItems || 0;
 
         // map: labelId → { labelId, labelName, colorCode, labelType, shapeCount, imageIds: Set }
         const map = new Map();
@@ -40,39 +35,45 @@ export default function LabelSummaryPanel({ workspace, currentItem, liveAnnotati
             e.imageIds.add(itemId);
         };
 
-        let currentItemAnnotatedCount = 0;
-        let adjustmentShapes = 0;
         let annotatedCount = 0;
 
         (workspace.items || []).forEach((item) => {
             const isCurrentItem = item.itemId === currentItem?.itemId;
 
             if (isCurrentItem) {
-                // Dùng live annotations (trạng thái hiện tại, chưa lưu cũng tính)
-                const hasAny = liveAnnotations?.length > 0;
-                if (hasAny) currentItemAnnotatedCount = 1;
+                // For current item: prioritize liveAnnotations, fallback to BE annotations
+                const annotationsToUse = (liveAnnotations && liveAnnotations.length > 0) ? liveAnnotations : (item.annotations || []);
                 
-                // Track shape count for current item live edits
-                const beAnnotations = item.annotations || [];
-                adjustmentShapes = (liveAnnotations?.length || 0) - beAnnotations.length;
-
-                liveAnnotations?.forEach((group) => {
-                    group.labelIds?.forEach((lid, idx) => {
-                        const lname = group.labelNames?.[idx] || "";
-                        const lcolor = group.colorCodes?.[idx] || "#6b7280";
-                        const labelMeta = allLabels?.find((l) => String(l.id) === String(lid));
-                        const ltype = labelMeta?.type || "";
-                        addEntry(lid, lname, lcolor, ltype, item.itemId);
-                    });
-                });
+                if (annotationsToUse.length > 0) {
+                    annotatedCount++;
+                    
+                    if (liveAnnotations && liveAnnotations.length > 0) {
+                        // Use live annotations (AnnotationGroup format)
+                        liveAnnotations.forEach((group) => {
+                            group.labelIds?.forEach((lid, idx) => {
+                                const lname = group.labelNames?.[idx] || "";
+                                const lcolor = group.colorCodes?.[idx] || "#6b7280";
+                                const labelMeta = allLabels?.find((l) => String(l.id) === String(lid));
+                                const ltype = labelMeta?.type || "";
+                                addEntry(lid, lname, lcolor, ltype, item.itemId);
+                            });
+                        });
+                    } else {
+                        // Use BE annotations
+                        (item.annotations || []).forEach((ann) => {
+                            addEntry(ann.labelId, ann.labelName, ann.colorCode, ann.labelType, item.itemId);
+                        });
+                    }
+                }
             } else {
-                // Dùng annotations đã lưu từ BE (trong workspace response)
+                // For other items: use BE annotations only
                 const beAnnotations = item.annotations || [];
-                if (beAnnotations.length > 0) annotatedCount++;
-
-                beAnnotations.forEach((ann) => {
-                    addEntry(ann.labelId, ann.labelName, ann.colorCode, ann.labelType, item.itemId);
-                });
+                if (beAnnotations.length > 0) {
+                    annotatedCount++;
+                    beAnnotations.forEach((ann) => {
+                        addEntry(ann.labelId, ann.labelName, ann.colorCode, ann.labelType, item.itemId);
+                    });
+                }
             }
         });
 
@@ -84,28 +85,11 @@ export default function LabelSummaryPanel({ workspace, currentItem, liveAnnotati
 
         return {
             summary: entries,
-            // Use API summary if available, fallback to calculated total from items loaded
-            totalAnnotations: apiTotalShapes > 0 ? (apiTotalShapes + adjustmentShapes) : total,
-            // Count from API + current item adjustment
-            annotatedImageCount: apiAnnotatedItems > 0 ? (apiAnnotatedItems + currentItemAnnotatedCount) : (annotatedCount),
-            // Use API total
-            totalImages: apiTotalItems > 0 ? apiTotalItems : (workspace.items?.length || 0),
+            totalAnnotations: total,
+            annotatedImageCount: annotatedCount,
+            totalImages: workspace.items?.length || 0,
         };
-    }, [workspace, currentItem, liveAnnotations, allLabels]);
-
-    /* ─── Render ─────────────────────────────────────────────────────────── */
-    if (summary.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center h-48 gap-3 opacity-30">
-                <span className="material-symbols-outlined" style={{ fontSize: 36, color: "#3a5068" }}>
-                    analytics
-                </span>
-                <p className="text-xs text-center px-4" style={{ color: "#3a5068" }}>
-                    Chưa có annotation nào trên toàn bộ assignment
-                </p>
-            </div>
-        );
-    }
+    }, [workspace, currentItem?.itemId, liveAnnotations, allLabels]);
 
     const unannotatedCount = totalImages - annotatedImageCount;
     const coveragePct = totalImages > 0 ? Math.round((annotatedImageCount / totalImages) * 100) : 0;
@@ -175,54 +159,62 @@ export default function LabelSummaryPanel({ workspace, currentItem, liveAnnotati
 
                 {/* Table rows */}
                 <div className="rounded-b overflow-hidden" style={{ border: "1px solid #1e2f42", borderTop: "none" }}>
-                    {summary.map((entry, idx) => (
-                        <div
-                            key={entry.labelId}
-                            className="flex items-center px-2 py-2 gap-2 transition-colors hover:bg-white/5"
-                            style={{
-                                borderBottom: idx < summary.length - 1 ? "1px solid #1a2637" : "none",
-                                background: idx % 2 === 0 ? "transparent" : "rgba(0,0,0,0.15)",
-                            }}
-                        >
-                            {/* Color dot */}
+                    {summary.length > 0 ? (
+                        summary.map((entry, idx) => (
                             <div
-                                className="w-2.5 h-2.5 rounded-full shrink-0"
-                                style={{ background: entry.colorCode }}
-                            />
-
-                            {/* Label name + type */}
-                            <div className="flex-1 min-w-0">
+                                key={entry.labelId}
+                                className="flex items-center px-2 py-2 gap-2 transition-colors hover:bg-white/5"
+                                style={{
+                                    borderBottom: idx < summary.length - 1 ? "1px solid #1a2637" : "none",
+                                    background: idx % 2 === 0 ? "transparent" : "rgba(0,0,0,0.15)",
+                                }}
+                            >
+                                {/* Color dot */}
                                 <div
-                                    className="text-xs font-medium truncate"
-                                    style={{ color: "#cbd5e1" }}
-                                    title={entry.labelName}
-                                >
-                                    {entry.labelName}
-                                </div>
-                                {entry.labelType && (
-                                    <div className="text-[9px] uppercase" style={{ color: "#4a6788" }}>
-                                        {entry.labelType}
+                                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                                    style={{ background: entry.colorCode }}
+                                />
+
+                                {/* Label name + type */}
+                                <div className="flex-1 min-w-0">
+                                    <div
+                                        className="text-xs font-medium truncate"
+                                        style={{ color: "#cbd5e1" }}
+                                        title={entry.labelName}
+                                    >
+                                        {entry.labelName}
                                     </div>
-                                )}
+                                    {entry.labelType && (
+                                        <div className="text-[9px] uppercase" style={{ color: "#4a6788" }}>
+                                            {entry.labelType}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Shape count */}
+                                <span
+                                    className="text-xs font-bold tabular-nums w-14 text-center"
+                                    style={{ color: "#00bfa5" }}
+                                >
+                                    {entry.shapeCount}
+                                </span>
+
+                                {/* Image count */}
+                                <span
+                                    className="text-xs tabular-nums w-14 text-center"
+                                    style={{ color: "#94a3b8" }}
+                                >
+                                    {entry.imageCount}/{totalImages}
+                                </span>
                             </div>
-
-                            {/* Shape count */}
-                            <span
-                                className="text-xs font-bold tabular-nums w-14 text-center"
-                                style={{ color: "#00bfa5" }}
-                            >
-                                {entry.shapeCount}
-                            </span>
-
-                            {/* Image count */}
-                            <span
-                                className="text-xs tabular-nums w-14 text-center"
-                                style={{ color: "#94a3b8" }}
-                            >
-                                {entry.imageCount}/{totalImages}
-                            </span>
+                        ))
+                    ) : (
+                        <div className="flex items-center justify-center py-4">
+                            <p className="text-[10px] text-center" style={{ color: "#4a6788" }}>
+                                Chưa có nhãn trên ảnh này
+                            </p>
                         </div>
-                    ))}
+                    )}
                 </div>
             </div>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useOutletContext } from "react-router-dom";
 import { datasetApi } from "../../api/datasetApi";
 import { userApi } from "../../api/userApi";
 import { assignmentApi } from "../../api/assignmentApi";
@@ -41,6 +41,8 @@ const STATUS_STYLES: Record<string, string> = {
 export default function ProjectAssignments() {
     const { projectId } = useParams<{ projectId: string }>();
     const pid = projectId || "";
+    const { project: parentProject } = (useOutletContext() as any) || {};
+    const isProjectCompleted = parentProject?.status?.toLowerCase() === "completed";
 
     /* ── Data lists ── */
     const [datasets, setDatasets] = useState<any[]>([]);
@@ -246,6 +248,16 @@ export default function ProjectAssignments() {
                 </div>
             )}
 
+            {isProjectCompleted && (
+                <div className="px-4 py-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-lg flex items-start gap-3">
+                    <span className="material-symbols-outlined text-orange-600 dark:text-orange-400 text-base mt-0.5">lock</span>
+                    <div>
+                        <p className="font-medium text-orange-900 dark:text-orange-200 text-sm">Du an COMPLETED - Chi co the xuat du lieu</p>
+                        <p className="text-xs text-orange-800 dark:text-orange-300 mt-1">Du an da hoan thanh tat ca cac tac vu. Chi co the xuat du lieu, cac chuc nang khac bi khoa.</p>
+                    </div>
+                </div>
+            )}
+
             {/* ── Assignment Form ── */}
             <Card className="p-6 space-y-5">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
@@ -257,7 +269,7 @@ export default function ProjectAssignments() {
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Chọn dữ liệu</label>
                         <div className="relative">
-                            <select className={selectCls} value={selDataset} onChange={(e) => setSelDataset(e.target.value)}>
+                            <select className={selectCls} value={selDataset} onChange={(e) => setSelDataset(e.target.value)} disabled={isProjectCompleted}>
                                 <option value="">{datasets.length === 0 ? "Không có dataset" : "— Chọn dataset —"}</option>
                                 {datasets.map((d) => (
                                     <option key={d.id} value={d.id}>{d.name}</option>
@@ -271,7 +283,7 @@ export default function ProjectAssignments() {
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Chọn người chú thích</label>
                         <div className="relative">
-                            <select className={selectCls} value={selAnnotator} onChange={(e) => setSelAnnotator(e.target.value)} disabled={loadingUsers}>
+                            <select className={selectCls} value={selAnnotator} onChange={(e) => setSelAnnotator(e.target.value)} disabled={isProjectCompleted || loadingUsers}>
                                 <option value="">{loadingUsers ? "Đang tải..." : annotators.length === 0 ? "Không có người chú thích" : "— Chọn người chú thích —"}</option>
                                 {annotators.map((a) => (
                                     <option key={a.id} value={a.id}>{a.name}</option>
@@ -289,7 +301,7 @@ export default function ProjectAssignments() {
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Chọn người đánh giá</label>
                         <div className="relative">
-                            <select className={selectCls} value={selReviewer} onChange={(e) => setSelReviewer(e.target.value)} disabled={loadingUsers}>
+                            <select className={selectCls} value={selReviewer} onChange={(e) => setSelReviewer(e.target.value)} disabled={isProjectCompleted || loadingUsers}>
                                 <option value="">{loadingUsers ? "Đang tải..." : reviewers.length === 0 ? "Không có người đánh giá" : "— Chọn người đánh giá —"}</option>
                                 {reviewers.map((r) => (
                                     <option key={r.id} value={r.id}>{r.name}</option>
@@ -325,7 +337,7 @@ export default function ProjectAssignments() {
 
                 {/* Create Task button */}
                 <div>
-                    <Button type="button" variant="primary" onClick={handleCreate} disabled={creating}>
+                    <Button type="button" variant="primary" onClick={handleCreate} disabled={creating || isProjectCompleted}>
                         {creating ? (
                             <span className="material-symbols-outlined text-base mr-1 animate-spin">progress_activity</span>
                         ) : (
@@ -333,6 +345,7 @@ export default function ProjectAssignments() {
                         )}
                         {creating ? "Đang tạo..." : "Tạo nhiệm vụ"}
                     </Button>
+                    {isProjectCompleted && <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">info</span>Du an COMPLETED khong the tao phan cong</p>}
                 </div>
             </Card>
 

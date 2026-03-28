@@ -1,4 +1,4 @@
-﻿﻿﻿import * as React from "react";
+﻿﻿import * as React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Workspace3Column } from "../../components/layout/WorkspaceLayout";
 import { Button } from "../../components/ui/Button";
@@ -44,7 +44,7 @@ function itemHasRejectedFeedback(item) {
     Array.isArray(item?.annotations) &&
     item.annotations.some(
       (annotation) =>
-        String(annotation?.status || annotation?.reviewStatus || "").toUpperCase() === "REJECTED",
+         String(annotation?.status || annotation?.reviewStatus || "").toUpperCase() === "REJECTED",
     )
   );
 }
@@ -563,10 +563,10 @@ export default function Workspace() {
   /* ── Load annotations when item changes ── */
   React.useEffect(() => {
     if (currentItem?.itemId) {
-      // Use pre-loaded annotations from workspace instead of refetching
-      anno.loadAnnotations(currentItem.itemId, currentItem.annotations);
+      anno.loadAnnotations(currentItem.itemId);
     }
-  }, [currentItem?.itemId, currentItem?.annotations]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentItem?.itemId]);
 
   React.useEffect(() => {
     if (!currentItem?.itemId) return;

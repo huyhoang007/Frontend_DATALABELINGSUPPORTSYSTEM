@@ -7,6 +7,7 @@ import { projectApi } from "../../api/projectApi";
 
 export default function ProjectOverview() {
     const { project } = useOutletContext<{ project: any }>();
+    const isProjectCompleted = project?.status?.toLowerCase() === "completed";
     const [summary, setSummary] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -330,16 +331,26 @@ export default function ProjectOverview() {
                         <input
                             value={guidelineVersion}
                             onChange={(e) => setGuidelineVersion(e.target.value)}
-                            className="px-2 py-1 rounded border border-border bg-background text-xs text-foreground w-20"
+                            disabled={isProjectCompleted}
+                            className={`px-2 py-1 rounded border border-border bg-background text-xs text-foreground w-20 ${isProjectCompleted ? "opacity-50 cursor-not-allowed" : ""}`}
                             placeholder="v1.0"
                         />
                     </div>
                 </div>
+                
+                {isProjectCompleted && (
+                    <div className="px-3 py-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded mb-3 flex items-start gap-2">
+                        <span className="material-symbols-outlined text-orange-600 dark:text-orange-400 text-sm mt-0.5">lock</span>
+                        <p className="text-xs text-orange-900 dark:text-orange-200">Du an COMPLETED - khong the chinh sua huong dan gan nhan</p>
+                    </div>
+                )}
+                
                 <textarea
                     value={guidelineContent}
                     onChange={(e) => setGuidelineContent(e.target.value)}
+                    disabled={isProjectCompleted}
                     rows={8}
-                    className="w-full px-3 py-2 rounded border border-border bg-background text-sm text-foreground resize-y"
+                    className={`w-full px-3 py-2 rounded border border-border bg-background text-sm text-foreground resize-y ${isProjectCompleted ? "opacity-50 cursor-not-allowed" : ""}`}
                     placeholder="Nhập hướng dẫn gán nhãn tổng quát cho dự án: quy tắc vẽ, xử lý che khuất, tiêu chí reject..."
                 />
                 <div className="mt-3">
@@ -347,8 +358,9 @@ export default function ProjectOverview() {
                     <input
                         value={guidelineFileUrl}
                         onChange={(e) => setGuidelineFileUrl(e.target.value)}
+                        disabled={isProjectCompleted}
                         type="url"
-                        className="w-full px-3 py-2 rounded border border-border bg-background text-sm text-foreground"
+                        className={`w-full px-3 py-2 rounded border border-border bg-background text-sm text-foreground ${isProjectCompleted ? "opacity-50 cursor-not-allowed" : ""}`}
                         placeholder="https://example.com/guideline.pdf hoặc đường dẫn file cục bộ"
                     />
                 </div>
@@ -358,8 +370,8 @@ export default function ProjectOverview() {
                     </p>
                     <button
                         onClick={handleSaveGuideline}
-                        disabled={savingGuideline}
-                        className="px-4 py-2 rounded bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-60"
+                        disabled={savingGuideline || isProjectCompleted}
+                        className={`px-4 py-2 rounded bg-primary text-primary-foreground text-xs font-semibold ${savingGuideline || isProjectCompleted ? "opacity-60 cursor-not-allowed" : ""}`}
                     >
                         {savingGuideline ? "Đang lưu..." : "Lưu hướng dẫn"}
                     </button>
