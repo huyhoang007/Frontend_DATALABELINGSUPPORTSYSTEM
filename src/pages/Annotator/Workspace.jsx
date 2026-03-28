@@ -4,8 +4,10 @@ import { Workspace3Column } from "../../components/layout/WorkspaceLayout";
 import { Button } from "../../components/ui/Button";
 import { annotationApi } from "../../api/annotationApi";
 import apiClient from "../../api/apiClient";
+import { isFeatureEnabled } from "../../config/featureFlags";
 import { labelRuleApi } from "../../api/labelRuleApi";
 import { useToast } from "../../context/ToastContext";
+import { getCachedBlobUrl, preloadBlobUrl } from "../../utils/blobAssetCache";
 
 /* â”€â”€ New modules â”€â”€ */
 import { useAnnotations } from "./useAnnotations";
@@ -54,6 +56,7 @@ function ThumbnailImg({ fileUrl, alt }) {
   const [src, setSrc] = React.useState(null);
   const [isVisible, setIsVisible] = React.useState(false);
   const containerRef = React.useRef(null);
+  const workspaceCacheEnabled = isFeatureEnabled("perf_workspace_safe_cache");
 
   React.useEffect(() => {
     const element = containerRef.current;
@@ -79,23 +82,27 @@ function ThumbnailImg({ fileUrl, alt }) {
     if (!path) return;
     (async () => {
       try {
-        const res = await apiClient.get(path, {
-          responseType: "blob",
-          transformResponse: [(d) => d],
-        });
+        const nextSrc = workspaceCacheEnabled
+          ? await getCachedBlobUrl(path)
+          : await apiClient.get(path, {
+              responseType: "blob",
+              transformResponse: [(d) => d],
+            }).then((res) => {
+              const blob = res instanceof Blob ? res : new Blob([res]);
+              blobUrl = URL.createObjectURL(blob);
+              return blobUrl;
+            });
         if (cancelled) return;
-        const blob = res instanceof Blob ? res : new Blob([res]);
-        blobUrl = URL.createObjectURL(blob);
-        setSrc(blobUrl);
+        setSrc(nextSrc);
       } catch {
         /* silent */
       }
     })();
     return () => {
       cancelled = true;
-      if (blobUrl) URL.revokeObjectURL(blobUrl);
+      if (!workspaceCacheEnabled && blobUrl) URL.revokeObjectURL(blobUrl);
     };
-  }, [fileUrl, isVisible]);
+  }, [fileUrl, isVisible, workspaceCacheEnabled]);
   if (!src)
     return (
       <div
@@ -218,6 +225,8 @@ export default function Workspace() {
   const [imageBlobUrl, setImageBlobUrl] = React.useState(null);
   const [imageLoading, setImageLoading] = React.useState(false);
   const [imageError, setImageError] = React.useState(null);
+  const workspaceCacheEnabled = isFeatureEnabled("perf_workspace_safe_cache");
+  const imageLazyLoadEnabled = isFeatureEnabled("perf_image_lazyload");
 
   React.useEffect(() => {
     let cancelled = false;
@@ -236,14 +245,18 @@ export default function Workspace() {
       setImageError(null);
       setImageBlobUrl(null);
       try {
-        const response = await apiClient.get(path, {
-          responseType: "blob",
-          transformResponse: [(data) => data],
-        });
+        const nextSrc = workspaceCacheEnabled
+          ? await getCachedBlobUrl(path)
+          : await apiClient.get(path, {
+              responseType: "blob",
+              transformResponse: [(data) => data],
+            }).then((response) => {
+              const blob = response instanceof Blob ? response : new Blob([response]);
+              blobUrl = URL.createObjectURL(blob);
+              return blobUrl;
+            });
         if (cancelled) return;
-        const blob = response instanceof Blob ? response : new Blob([response]);
-        blobUrl = URL.createObjectURL(blob);
-        setImageBlobUrl(blobUrl);
+        setImageBlobUrl(nextSrc);
       } catch (err) {
         if (cancelled) return;
         const status = err?.status || err?.response?.status || "?";
@@ -258,9 +271,18 @@ export default function Workspace() {
     fetchImage();
     return () => {
       cancelled = true;
-      if (blobUrl) URL.revokeObjectURL(blobUrl);
+      if (!workspaceCacheEnabled && blobUrl) URL.revokeObjectURL(blobUrl);
     };
-  }, [currentItem?.itemId, currentItem?.fileUrl]);
+  }, [currentItem?.itemId, currentItem?.fileUrl, workspaceCacheEnabled]);
+
+  React.useEffect(() => {
+    if (!workspaceCacheEnabled || !imageLazyLoadEnabled) return;
+    const nextItem = items[currentImageIndex + 1];
+    const nextPath = resolveImagePath(nextItem?.fileUrl);
+    if (nextPath) {
+      preloadBlobUrl(nextPath);
+    }
+  }, [workspaceCacheEnabled, imageLazyLoadEnabled, currentImageIndex, items]);
 
   /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        LABELS â€” robust mapping + fallback API by projectId

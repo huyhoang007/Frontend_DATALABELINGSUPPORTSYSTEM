@@ -1,9 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { projectApi } from "../../api/projectApi";
 import { assignmentApi } from "../../api/assignmentApi";
+import { isFeatureEnabled } from "../../config/featureFlags";
 import { useToast } from "../../context/ToastContext";
 import { useAuth } from "../../context/AuthContext";
+import {
+  fetchProjectSummaryList,
+  getHotspotQueryBehavior,
+  invalidateProjectSummaryData,
+  projectQueryKeys,
+} from "../../query/projectQueries";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { cn } from "../../utils/cn";
@@ -50,23 +58,55 @@ interface Project {
   name: string;
   data_type: string;
   status: string;
+  raw_status?: string;
+  description?: string;
   manager_id?: number;
   manager?: { full_name: string };
+  created_at?: string | null;
+  assignment_count?: number;
+  approved_assignment_count?: number;
+  in_progress_assignment_count?: number;
+  rejected_assignment_count?: number;
+  dataset_count?: number;
   datasets?: any[];
 }
 
+const PROJECT_LIST_STATE_KEY = "perf.manager.projects.state";
+const PROJECT_LIST_SCROLL_KEY = "perf.manager.projects.scrollY";
+
+const readPersistedState = () => {
+  if (typeof window === "undefined") return null;
+  try {
+    return JSON.parse(sessionStorage.getItem(PROJECT_LIST_STATE_KEY) || "null");
+  } catch {
+    return null;
+  }
+};
+
 const ModernProjectsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const queryClient = useQueryClient();
+  const persistedState = readPersistedState();
+  const [viewMode, setViewMode] = useState<"grid" | "list">(
+    persistedState?.viewMode === "list" ? "list" : "grid",
+  );
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState("all");
-  const [showDeletedProjects, setShowDeletedProjects] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState(
+    persistedState?.selectedStatus || "all",
+  );
+  const [showDeletedProjects, setShowDeletedProjects] = useState(
+    Boolean(persistedState?.showDeletedProjects),
+  );
 
   // Data State
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [legacyProjects, setLegacyProjects] = useState<Project[]>([]);
+  const [legacyLoading, setLegacyLoading] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const hasRestoredScrollRef = useRef(false);
+  const summaryModeEnabled = isFeatureEnabled("perf_project_list_summary");
+  const cacheEnabled = isFeatureEnabled("perf_hotspot_cache");
+  const persistenceEnabled = isFeatureEnabled("perf_project_tab_persistence");
 
   // Form State
   const [newName, setNewName] = useState("");
@@ -85,13 +125,10 @@ const ModernProjectsPage: React.FC = () => {
   const { addToast } = useToast() as { addToast: (message: string, type?: 'success' | 'error' | 'info') => void };
   const { user } = useAuth();
 
-  // Load Projects on Mount
-  useEffect(() => {
-    fetchProjects();
-  }, []);
+  const legacyViewerName = user?.fullName || user?.username || "Me";
 
-  const fetchProjects = async () => {
-    setIsLoading(true);
+  const fetchProjectsLegacy = async () => {
+    setLegacyLoading(true);
     try {
       const raw: any = await projectApi.getMyProjects();
       const list = Array.isArray(raw) ? raw : (raw?.data ?? raw?.content ?? []);
@@ -101,8 +138,9 @@ const ModernProjectsPage: React.FC = () => {
         name: p.name,
         data_type: p.type ? p.type.toLowerCase() : p.dataType ? p.dataType.toLowerCase() : "unknown",
         status: p.status ? p.status.toLowerCase() : "unknown",
+        raw_status: p.status ? p.status.toLowerCase() : "unknown",
         manager_id: p.managerId,
-        manager: { full_name: user?.username || "Me" },
+        manager: { full_name: legacyViewerName },
         datasets: [],
       }));
 
@@ -121,12 +159,59 @@ const ModernProjectsPage: React.FC = () => {
         })
       );
 
-      setProjects(withStatus);
+      setLegacyProjects(withStatus);
     } catch (error: any) {
       console.error("Failed to fetch projects", error);
     } finally {
-      setIsLoading(false);
+      setLegacyLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (!summaryModeEnabled) {
+      fetchProjectsLegacy();
+    }
+  }, [summaryModeEnabled, legacyViewerName]);
+
+  const {
+    data: summaryProjects = [],
+    isLoading: summaryLoading,
+  } = useQuery({
+    queryKey: projectQueryKeys.summaryList(user?.userId ?? user?.id ?? "me"),
+    queryFn: () => fetchProjectSummaryList(legacyViewerName),
+    enabled: summaryModeEnabled,
+    placeholderData: cacheEnabled ? (previousData) => previousData : undefined,
+    ...getHotspotQueryBehavior(60_000, 600_000),
+  });
+
+  const projects = summaryModeEnabled ? summaryProjects : legacyProjects;
+  const isLoading = summaryModeEnabled ? summaryLoading : legacyLoading;
+
+  useEffect(() => {
+    if (!persistenceEnabled) return;
+    sessionStorage.setItem(
+      PROJECT_LIST_STATE_KEY,
+      JSON.stringify({ viewMode, selectedStatus, showDeletedProjects }),
+    );
+  }, [persistenceEnabled, viewMode, selectedStatus, showDeletedProjects]);
+
+  useEffect(() => {
+    if (!persistenceEnabled || isLoading || hasRestoredScrollRef.current) return;
+    const savedY = Number(sessionStorage.getItem(PROJECT_LIST_SCROLL_KEY) || "0");
+    hasRestoredScrollRef.current = true;
+    if (savedY > 0) {
+      window.requestAnimationFrame(() => window.scrollTo({ top: savedY, behavior: "auto" }));
+    }
+  }, [persistenceEnabled, isLoading]);
+
+  const rememberScrollPosition = () => {
+    if (!persistenceEnabled) return;
+    sessionStorage.setItem(PROJECT_LIST_SCROLL_KEY, String(window.scrollY));
+  };
+
+  const handleOpenProject = (projectId: number) => {
+    rememberScrollPosition();
+    navigate(`/manager/projects/${projectId}`);
   };
 
   const handleCreateProject = async () => {
@@ -147,7 +232,10 @@ const ModernProjectsPage: React.FC = () => {
       setNewName("");
       setNewDataType("IMAGE");
       setNewDescription("");
-      fetchProjects(); // Refresh list
+      await queryClient.invalidateQueries({ queryKey: ["projects", "summary-list"] });
+      if (!summaryModeEnabled) {
+        await fetchProjectsLegacy();
+      }
     } catch (error: any) {
       const raw = error?.response?.data?.message || error?.message || "";
       const msg = typeof raw === "string" && raw.toLowerCase().includes("already exist")
@@ -164,7 +252,7 @@ const ModernProjectsPage: React.FC = () => {
     setEditName(project.name);
     setEditDataType(project.data_type);
     setEditDescription("");
-    setEditStatus(project.status);
+    setEditStatus(project.raw_status || project.status);
     setShowEditModal(true);
   };
 
@@ -186,20 +274,23 @@ const ModernProjectsPage: React.FC = () => {
       // Use the response data from API which has the actual updated status
       const updatedProject = response.data || response;
       
-      // Update the projects array with the response data
-      setProjects(prevProjects =>
-        prevProjects.map(p =>
-          p.project_id === editingProject.project_id
-            ? {
-                ...p,
-                name: updatedProject.name || editName.trim(),
-                data_type: updatedProject.data_type || editDataType,
-                description: updatedProject.description || editDescription,
-                status: updatedProject.status || editStatus
-              }
-            : p
-        )
-      );
+      await invalidateProjectSummaryData(queryClient, editingProject.project_id);
+      if (!summaryModeEnabled) {
+        setLegacyProjects((prevProjects) =>
+          prevProjects.map((p) =>
+            p.project_id === editingProject.project_id
+              ? {
+                  ...p,
+                  name: updatedProject.name || editName.trim(),
+                  data_type: updatedProject.data_type || editDataType,
+                  description: updatedProject.description || editDescription,
+                  status: (updatedProject.computedDisplayStatus || updatedProject.status || editStatus).toLowerCase(),
+                  raw_status: (updatedProject.status || editStatus).toLowerCase(),
+                }
+              : p,
+          ),
+        );
+      }
       
       addToast("Cập nhật dự án thành công!", "success");
       setShowEditModal(false);
@@ -224,7 +315,10 @@ const ModernProjectsPage: React.FC = () => {
     try {
       await projectApi.deleteProject(projectId);
       await new Promise(resolve => setTimeout(resolve, 500)); // Brief delay for DB transaction
-      await fetchProjects(); // Wait for projects to refresh
+      await queryClient.invalidateQueries({ queryKey: ["projects", "summary-list"] });
+      if (!summaryModeEnabled) {
+        await fetchProjectsLegacy();
+      }
       addToast("Đã ẩn dự án thành công!", "success");
       setShowDeletedProjects(true); // Auto-switch to deleted projects tab
     } catch (error: any) {
@@ -247,7 +341,10 @@ const ModernProjectsPage: React.FC = () => {
     try {
       await projectApi.activateProject(projectId);
       addToast("Đã kích hoạt lại dự án thành công!", "success");
-      fetchProjects();
+      await queryClient.invalidateQueries({ queryKey: ["projects", "summary-list"] });
+      if (!summaryModeEnabled) {
+        await fetchProjectsLegacy();
+      }
     } catch (error: any) {
       addToast(error.message || "Không thể kích hoạt lại dự án", "error");
     } finally {
@@ -332,7 +429,7 @@ const ModernProjectsPage: React.FC = () => {
     }
   };
 
-  const filteredProjects = projects.filter((project) => {
+  const filteredProjects = useMemo(() => projects.filter((project) => {
     const normalizedStatus = project.status?.toUpperCase() || "";
     
     // First filter by active/deleted status
@@ -343,7 +440,7 @@ const ModernProjectsPage: React.FC = () => {
     if (!showDeletedProjects && selectedStatus !== "all" && normalizedStatus !== selectedStatus.toUpperCase()) return false;
     
     return true;
-  });
+  }), [projects, selectedStatus, showDeletedProjects]);
 
   return (
     <div style={{
@@ -553,7 +650,7 @@ const ModernProjectsPage: React.FC = () => {
                     <Button
                       variant="ghost"
                       className="flex-1 h-9 text-xs"
-                      onClick={() => navigate(`/manager/projects/${project.project_id}`)}
+                        onClick={() => handleOpenProject(project.project_id)}
                       leftIcon="visibility"
                     >
                       Chi tiết
@@ -642,7 +739,7 @@ const ModernProjectsPage: React.FC = () => {
                           size="sm"
                           variant="ghost"
                           className="h-8 w-8 p-0"
-                          onClick={() => navigate(`/manager/projects/${project.project_id}`)}
+                            onClick={() => handleOpenProject(project.project_id)}
                           title="Xem chi tiết"
                         >
                           Xem

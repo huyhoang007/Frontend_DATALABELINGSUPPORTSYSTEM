@@ -1,10 +1,16 @@
 ﻿import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useOutletContext } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { datasetApi } from "../../api/datasetApi";
-import { assignmentApi } from "../../api/assignmentApi";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
+import {
+  fetchProjectDatasets,
+  getHotspotQueryBehavior,
+  invalidateProjectDatasetData,
+  projectQueryKeys,
+} from "../../query/projectQueries";
 import {
   Table,
   TableHeader,
@@ -13,26 +19,6 @@ import {
   TableHead,
   TableCell,
 } from "../../components/ui/Table";
-
-const toArray = (res: any): any[] => {
-  if (Array.isArray(res)) return res;
-  if (res && Array.isArray(res.data)) return res.data;
-  return [];
-};
-
-const computeBatchStatus = (assignments: any[]): string => {
-  if (!assignments || assignments.length === 0) return "PENDING";
-  const statuses = assignments.map((a: any) => a.status);
-  if (statuses.every((s: string) => s === "APPROVED")) return "COMPLETED";
-  if (statuses.some((s: string) => s === "REJECTED")) return "REJECTED";
-  if (
-    statuses.some((s: string) =>
-      ["IN_PROGRESS", "SUBMITTED", "RE_SUBMITTED"].includes(s),
-    )
-  )
-    return "IN_PROGRESS";
-  return "PENDING";
-};
 
 const BATCH_STATUS_MAP: Record<string, { label: string; className: string }> = {
   PENDING: {
@@ -61,6 +47,7 @@ const MAX_REQUEST_SIZE = 100 * 1024 * 1024;
 const ACCEPTED_EXTS = [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"];
 export default function ProjectData() {
   const { projectId } = useParams();
+  const queryClient = useQueryClient();
   const numericProjectId = Number(projectId);
   const { project: parentProject } = (useOutletContext() as any) || {};
 
@@ -70,14 +57,12 @@ export default function ProjectData() {
   const [batchName, setBatchName] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [uploadMode, setUploadMode] = useState<"files" | "folder">("files");
-  const [datasets, setDatasets] = useState<any[]>([]);
   const [status, setStatus] = useState<
     "idle" | "uploading" | "success" | "error"
   >("idle");
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
-  const [loadingDatasets, setLoadingDatasets] = useState(true);
   const [toast, setToast] = useState("");
 
   const showToast = useCallback((msg: string) => {
@@ -85,37 +70,17 @@ export default function ProjectData() {
     setTimeout(() => setToast(""), 3000);
   }, []);
 
-  const loadDatasets = useCallback(async () => {
-    if (!numericProjectId) return;
-    setLoadingDatasets(true);
-    try {
-      const [dsRes, asRes] = await Promise.all([
-        datasetApi.getDatasetsByProject(numericProjectId),
-        assignmentApi.getAssignmentsByProject(numericProjectId),
-      ]);
-      const dsArr = toArray(dsRes);
-      const asArr = toArray(asRes);
-      console.log("[ProjectData] datasets:", dsArr, "assignments:", asArr);
-      const asByDataset: Record<number, any[]> = {};
-      asArr.forEach((a: any) => {
-        if (!asByDataset[a.datasetId]) asByDataset[a.datasetId] = [];
-        asByDataset[a.datasetId].push(a);
-      });
-      const enriched = dsArr.map((ds: any) => ({
-        ...ds,
-        computedStatus: computeBatchStatus(asByDataset[ds.datasetId] || []),
-      }));
-      setDatasets(enriched);
-    } catch {
-      setDatasets([]);
-    } finally {
-      setLoadingDatasets(false);
-    }
-  }, [numericProjectId]);
-
-  useEffect(() => {
-    loadDatasets();
-  }, [loadDatasets]);
+  const {
+    data: datasets = [],
+    isLoading: loadingDatasets,
+    refetch: refetchDatasets,
+  } = useQuery({
+    queryKey: projectQueryKeys.datasets(numericProjectId),
+    queryFn: () => fetchProjectDatasets(numericProjectId),
+    enabled: Boolean(numericProjectId),
+    placeholderData: (previousData) => previousData,
+    ...getHotspotQueryBehavior(30_000, 300_000),
+  });
 
   const validateFile = (f: File): string | null => {
     const ext = "." + f.name.split(".").pop()?.toLowerCase();
@@ -249,7 +214,8 @@ export default function ProjectData() {
       setBatchName("");
       setFiles([]);
       showToast("Upload thanh cong!");
-      loadDatasets();
+      await invalidateProjectDatasetData(queryClient, numericProjectId);
+      await refetchDatasets();
       setTimeout(() => setStatus("idle"), 3000);
     } catch (err: any) {
       setStatus("error");

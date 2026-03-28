@@ -2,6 +2,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "../../context/ToastContext";
 import apiClient from "../../api/apiClient";
+import { isFeatureEnabled } from "../../config/featureFlags";
+import { getCachedBlobUrl } from "../../utils/blobAssetCache";
 import useReviewWorkspace from "./useReviewWorkspace";
 import AnnotationOverlay from "../Annotator/AnnotationOverlay";
 import { groupAnnotationsByKey } from "../Annotator/geometryUtils";
@@ -40,35 +42,65 @@ function getRejectedReviewCount(annotations = []) {
 /* ── Authenticated thumbnail component ── */
 function ThumbnailImg({ fileUrl, alt }) {
   const [src, setSrc] = React.useState(null);
+  const [isVisible, setIsVisible] = React.useState(false);
+  const containerRef = React.useRef(null);
+  const workspaceCacheEnabled = isFeatureEnabled("perf_workspace_safe_cache");
+  const imageLazyLoadEnabled = isFeatureEnabled("perf_image_lazyload");
+
+  React.useEffect(() => {
+    if (!imageLazyLoadEnabled) {
+      setIsVisible(true);
+      return;
+    }
+    const element = containerRef.current;
+    if (!element) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [imageLazyLoadEnabled]);
+
   React.useEffect(() => {
     let cancelled = false;
     let blobUrl = null;
-    if (!fileUrl) return;
+    if (!fileUrl || !isVisible) return;
     const path = resolveImagePath(fileUrl);
     if (!path) return;
     (async () => {
       try {
-        const res = await apiClient.get(path, {
-          responseType: "blob",
-          transformResponse: [(d) => d],
-        });
+        const nextSrc = workspaceCacheEnabled
+          ? await getCachedBlobUrl(path)
+          : await apiClient.get(path, {
+              responseType: "blob",
+              transformResponse: [(d) => d],
+            }).then((res) => {
+              const blob = res instanceof Blob ? res : new Blob([res]);
+              blobUrl = URL.createObjectURL(blob);
+              return blobUrl;
+            });
         if (cancelled) return;
-        const blob = res instanceof Blob ? res : new Blob([res]);
-        blobUrl = URL.createObjectURL(blob);
-        setSrc(blobUrl);
+        setSrc(nextSrc);
       } catch {
         /* silent */
       }
     })();
     return () => {
       cancelled = true;
-      if (blobUrl) URL.revokeObjectURL(blobUrl);
+      if (!workspaceCacheEnabled && blobUrl) URL.revokeObjectURL(blobUrl);
     };
-  }, [fileUrl]);
+  }, [fileUrl, isVisible, workspaceCacheEnabled]);
 
   if (!src)
     return (
       <div
+        ref={containerRef}
         className="w-full h-full flex items-center justify-center"
         style={{ background: "#0e1621" }}
       >
@@ -82,6 +114,7 @@ function ThumbnailImg({ fileUrl, alt }) {
     );
   return (
     <img
+      ref={containerRef}
       src={src}
       alt={alt}
       className="w-full h-full object-cover"

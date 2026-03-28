@@ -13,6 +13,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import reviewApi from "../../api/reviewApi";
 import { policyApi } from "../../api/policyApi";
 import apiClient from "../../api/apiClient";
+import { isFeatureEnabled } from "../../config/featureFlags";
+import { getCachedBlobUrl, preloadBlobUrl } from "../../utils/blobAssetCache";
 
 /**
  * Resolve file URL to a path the Vite proxy can forward to the backend.
@@ -33,6 +35,8 @@ function isAwaitingRereview(annotation) {
 }
 
 export default function useReviewWorkspace(assignmentIdNum) {
+    const workspaceCacheEnabled = isFeatureEnabled("perf_workspace_safe_cache");
+    const imageLazyLoadEnabled = isFeatureEnabled("perf_image_lazyload");
     // ── Workspace state ──
     const [workspace, setWorkspace] = useState(null);
     const [workspaceLoading, setWorkspaceLoading] = useState(true);
@@ -73,14 +77,18 @@ export default function useReviewWorkspace(assignmentIdNum) {
             if (!path) return;
             setImageLoading(true); setImageError(null); setImageBlobUrl(null);
             try {
-                const response = await apiClient.get(path, {
-                    responseType: "blob",
-                    transformResponse: [(data) => data],
-                });
+                const nextSrc = workspaceCacheEnabled
+                    ? await getCachedBlobUrl(path)
+                    : await apiClient.get(path, {
+                        responseType: "blob",
+                        transformResponse: [(data) => data],
+                    }).then((response) => {
+                        const blob = response instanceof Blob ? response : new Blob([response]);
+                        blobUrl = URL.createObjectURL(blob);
+                        return blobUrl;
+                    });
                 if (cancelled) return;
-                const blob = response instanceof Blob ? response : new Blob([response]);
-                blobUrl = URL.createObjectURL(blob);
-                setImageBlobUrl(blobUrl);
+                setImageBlobUrl(nextSrc);
             } catch (err) {
                 if (cancelled) return;
                 const status = err?.status || err?.response?.status || "?";
@@ -90,8 +98,17 @@ export default function useReviewWorkspace(assignmentIdNum) {
             }
         };
         fetchImage();
-        return () => { cancelled = true; if (blobUrl) URL.revokeObjectURL(blobUrl); };
-    }, [currentItem?.itemId, currentItem?.fileUrl]);
+        return () => { cancelled = true; if (!workspaceCacheEnabled && blobUrl) URL.revokeObjectURL(blobUrl); };
+    }, [currentItem?.itemId, currentItem?.fileUrl, workspaceCacheEnabled]);
+
+    useEffect(() => {
+        if (!workspaceCacheEnabled || !imageLazyLoadEnabled) return;
+        const nextItem = items[currentItemIndex + 1];
+        const nextPath = resolveImagePath(nextItem?.fileUrl);
+        if (nextPath) {
+            preloadBlobUrl(nextPath);
+        }
+    }, [workspaceCacheEnabled, imageLazyLoadEnabled, currentItemIndex, items]);
 
     const currentAnnotations = useMemo(
         () => (currentItemId != null ? annoCache[currentItemId] ?? [] : []),
