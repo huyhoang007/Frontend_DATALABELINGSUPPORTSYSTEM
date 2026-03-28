@@ -1,11 +1,18 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useOutletContext } from "react-router-dom";
-import { datasetApi } from "../../api/datasetApi";
 import { userApi } from "../../api/userApi";
 import { assignmentApi } from "../../api/assignmentApi";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { ModalDialog } from "../../components/ui/Modal";
+import {
+  fetchProjectAssignments,
+  fetchProjectDatasets,
+  getHotspotQueryBehavior,
+  invalidateProjectAssignmentData,
+  projectQueryKeys,
+} from "../../query/projectQueries";
 import {
   Table,
   TableHeader,
@@ -50,31 +57,19 @@ const STATUS_STYLES: Record<string, string> = {
 /* ═══════════ Component ═══════════ */
 export default function ProjectAssignments() {
   const { projectId } = useParams<{ projectId: string }>();
+  const queryClient = useQueryClient();
   const pid = projectId || "";
   const { project: parentProject } = (useOutletContext() as any) || {};
   const isProjectCompleted =
     parentProject?.status?.toLowerCase() === "completed";
 
   /* ── Data lists ── */
-  const [datasets, setDatasets] = useState<any[]>([]);
-  const [annotators, setAnnotators] = useState<any[]>([]);
-  const [reviewers, setReviewers] = useState<any[]>([]);
-
   /* ── Form state ── */
   const [selDataset, setSelDataset] = useState("");
   const [selAnnotator, setSelAnnotator] = useState("");
   const [selReviewer, setSelReviewer] = useState("");
   const [validation, setValidation] = useState("");
   const [creating, setCreating] = useState(false);
-
-  /* ── Loading states ── */
-  const [loadingUsers, setLoadingUsers] = useState(true);
-  const [usersError, setUsersError] = useState<string | null>(null);
-
-  /* ── Assignments from BE ── */
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [loadingAssignments, setLoadingAssignments] = useState(true);
-  const [assignmentsError, setAssignmentsError] = useState<string | null>(null);
 
   /* ── View modal ── */
   const [viewTask, setViewTask] = useState<Assignment | null>(null);
@@ -113,22 +108,8 @@ export default function ProjectAssignments() {
     }
   };
 
-  const applyUsers = (mapped: any[]) => {
-    const ann = mapped.filter((u: any) => isAnnotator(u.role));
-    const rev = mapped.filter((u: any) => isReviewer(u.role));
-    console.log("[ASSIGNMENTS_USERS]", {
-      total: mapped.length,
-      annotators: ann.length,
-      reviewers: rev.length,
-    });
-    setAnnotators(ann);
-    setReviewers(rev);
-  };
-
   /* ── Fetch users from API ── */
   const fetchUsers = useCallback(async () => {
-    setLoadingUsers(true);
-    setUsersError(null);
     try {
       const data: any = await userApi.getAllUsers({ page: 0, size: 200 });
       const arr = Array.isArray(data)
@@ -142,8 +123,8 @@ export default function ProjectAssignments() {
         role: String(u.roleName ?? u.role ?? ""),
       }));
 
-      applyUsers(mapped);
       cacheUsers(mapped);
+      return { users: mapped, usersError: null as string | null };
     } catch (err: any) {
       console.error("[ASSIGNMENTS_USERS] fetch error", err);
       const httpStatus = err?.status;
@@ -151,78 +132,79 @@ export default function ProjectAssignments() {
       const cached = loadCachedUsers();
       if (cached.length > 0) {
         console.log("[ASSIGNMENTS_USERS] using cached users:", cached.length);
-        applyUsers(cached);
-        if (httpStatus === 403) {
-          setUsersError(
-            "API yêu cầu quyền ADMIN — đang dùng dữ liệu đã cache. Đăng nhập ADMIN để cập nhật.",
-          );
-        }
+        return {
+          users: cached,
+          usersError:
+            httpStatus === 403
+              ? "API yêu cầu quyền ADMIN — đang dùng dữ liệu đã cache. Đăng nhập ADMIN để cập nhật."
+              : null,
+        };
       } else {
         if (httpStatus === 403) {
-          setUsersError(
-            "GET /api/users yêu cầu quyền ADMIN. Đăng nhập ADMIN 1 lần để tải danh sách user, sau đó MANAGER có thể dùng cache.",
-          );
+          return {
+            users: [],
+            usersError:
+              "GET /api/users yêu cầu quyền ADMIN. Đăng nhập ADMIN 1 lần để tải danh sách user, sau đó MANAGER có thể dùng cache.",
+          };
         } else if (httpStatus === 401) {
-          setUsersError("Hết phiên đăng nhập — vui lòng đăng nhập lại.");
+          return {
+            users: [],
+            usersError: "Hết phiên đăng nhập — vui lòng đăng nhập lại.",
+          };
         } else {
-          setUsersError(err?.message || "Không thể tải danh sách user.");
+          return {
+            users: [],
+            usersError: err?.message || "Không thể tải danh sách user.",
+          };
         }
-        setAnnotators([]);
-        setReviewers([]);
       }
-    } finally {
-      setLoadingUsers(false);
     }
   }, []);
 
-  /* ── Fetch assignments from BE API ── */
-  const fetchAssignments = useCallback(async () => {
-    if (!pid) return;
-    setLoadingAssignments(true);
-    setAssignmentsError(null);
-    try {
-      const data: any = await assignmentApi.getAssignmentsByProject(
-        Number(pid),
-      );
-      const arr = Array.isArray(data)
-        ? data
-        : data?.content || data?.data || [];
-      console.log("[ASSIGNMENTS] loaded", arr.length, "assignments from API");
-      setAssignments(arr);
-    } catch (err: any) {
-      console.error("[ASSIGNMENTS] fetch error", err);
-      setAssignmentsError(
-        err?.message || "Không thể tải danh sách assignment.",
-      );
-    } finally {
-      setLoadingAssignments(false);
-    }
-  }, [pid]);
+  const {
+    data: datasets = [],
+    isLoading: loadingDatasets,
+  } = useQuery({
+    queryKey: projectQueryKeys.datasets(pid),
+    queryFn: () => fetchProjectDatasets(Number(pid)),
+    enabled: Boolean(pid),
+    placeholderData: (previousData) => previousData,
+    ...getHotspotQueryBehavior(30_000, 300_000),
+  });
 
-  /* ── Load data on mount ── */
-  useEffect(() => {
-    // Datasets from API
-    if (pid) {
-      datasetApi
-        .getDatasetsByProject(Number(pid))
-        .then((data: any) => {
-          const arr = Array.isArray(data) ? data : data?.content || [];
-          setDatasets(
-            arr.map((d: any) => ({
-              id: String(d.datasetId ?? d.id),
-              name: d.batchName ?? d.name ?? `Dataset ${d.datasetId ?? d.id}`,
-            })),
-          );
-        })
-        .catch((err: any) => {
-          console.error("[ASSIGNMENTS] datasets fetch error", err);
-          setDatasets([]);
-        });
-    }
+  const {
+    data: assignments = [],
+    isLoading: loadingAssignments,
+    error: assignmentsError,
+    refetch: refetchAssignments,
+  } = useQuery<Assignment[]>({
+    queryKey: projectQueryKeys.assignments(pid),
+    queryFn: () => fetchProjectAssignments(Number(pid)),
+    enabled: Boolean(pid),
+    placeholderData: (previousData) => previousData,
+    ...getHotspotQueryBehavior(30_000, 300_000),
+  });
+  const {
+    data: usersResult,
+    isLoading: loadingUsers,
+    refetch: refetchUsers,
+  } = useQuery({
+    queryKey: ["assignment-users"],
+    queryFn: fetchUsers,
+    placeholderData: (previousData) => previousData,
+    ...getHotspotQueryBehavior(300_000, 600_000),
+  });
 
-    fetchUsers();
-    fetchAssignments();
-  }, [pid, fetchUsers, fetchAssignments]);
+  const mappedUsers = usersResult?.users || [];
+  const usersError = usersResult?.usersError || null;
+  const annotators = useMemo(
+    () => mappedUsers.filter((u: any) => isAnnotator(u.role)),
+    [mappedUsers],
+  );
+  const reviewers = useMemo(
+    () => mappedUsers.filter((u: any) => isReviewer(u.role)),
+    [mappedUsers],
+  );
 
   /* ── Create Assignment via BE API ── */
   const handleCreate = async () => {
@@ -251,7 +233,8 @@ export default function ProjectAssignments() {
       showToast(`Created Assignment #${response.assignmentId}`);
 
       // Refresh assignments list
-      await fetchAssignments();
+      await invalidateProjectAssignmentData(queryClient, Number(pid));
+      await refetchAssignments();
 
       // Reset selects
       setSelDataset("");
@@ -273,7 +256,8 @@ export default function ProjectAssignments() {
     try {
       await assignmentApi.deleteAssignment(assignmentId);
       showToast(`Deleted Assignment #${assignmentId}`);
-      await fetchAssignments();
+      await invalidateProjectAssignmentData(queryClient, Number(pid));
+      await refetchAssignments();
     } catch (err: any) {
       showToast(err?.message || "Không thể xóa assignment.");
     }
@@ -289,6 +273,9 @@ export default function ProjectAssignments() {
   const completed = assignments.filter((t) =>
     ["APPROVED", "COMPLETED"].includes(String(t.status).toUpperCase()),
   ).length;
+  const assignmentsErrorMessage = assignmentsError
+    ? (assignmentsError as any)?.message || String(assignmentsError)
+    : null;
 
   /* ── Select style ── */
   const selectCls =
@@ -340,10 +327,12 @@ export default function ProjectAssignments() {
                 className={selectCls}
                 value={selDataset}
                 onChange={(e) => setSelDataset(e.target.value)}
-                disabled={isProjectCompleted}
+                disabled={isProjectCompleted || loadingDatasets}
               >
                 <option value="">
-                  {datasets.length === 0
+                  {loadingDatasets
+                    ? "Đang tải..."
+                    : datasets.length === 0
                     ? "Không có dataset"
                     : "— Chọn dataset —"}
                 </option>
@@ -445,7 +434,7 @@ export default function ProjectAssignments() {
               type="button"
               variant="ghost"
               size="sm"
-              onClick={fetchUsers}
+              onClick={() => refetchUsers()}
             >
               <span className="material-symbols-outlined text-base mr-1">
                 refresh
@@ -522,7 +511,7 @@ export default function ProjectAssignments() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={fetchAssignments}
+              onClick={() => refetchAssignments()}
               disabled={loadingAssignments}
             >
               <span
@@ -551,15 +540,15 @@ export default function ProjectAssignments() {
         )}
 
         {/* Error */}
-        {assignmentsError && (
+        {assignmentsErrorMessage && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-destructive/10 border border-destructive/20">
             <span className="material-symbols-outlined text-[16px] text-destructive">
               error
             </span>
             <p className="text-sm text-destructive flex-1">
-              {assignmentsError}
+              {assignmentsErrorMessage}
             </p>
-            <Button variant="ghost" size="sm" onClick={fetchAssignments}>
+            <Button variant="ghost" size="sm" onClick={() => refetchAssignments()}>
               Thử lại
             </Button>
           </div>
@@ -567,7 +556,7 @@ export default function ProjectAssignments() {
 
         {!loadingAssignments &&
         assignments.length === 0 &&
-        !assignmentsError ? (
+        !assignmentsErrorMessage ? (
           <div className="text-center py-16">
             <span className="material-symbols-outlined text-5xl text-muted-foreground/40 mb-3 block">
               assignment

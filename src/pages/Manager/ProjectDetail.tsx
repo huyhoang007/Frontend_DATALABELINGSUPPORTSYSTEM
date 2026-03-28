@@ -1,6 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate, useLocation, Outlet } from "react-router-dom";
-import { projectApi } from "../../api/projectApi";
+import {
+    fetchProjectDetail,
+    getHotspotQueryBehavior,
+    projectQueryKeys,
+} from "../../query/projectQueries";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { cn } from "../../utils/cn";
@@ -30,43 +35,22 @@ const ProjectDetail: React.FC = () => {
     const { projectId } = useParams<{ projectId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
-    const [project, setProject] = useState<ProjectData | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
     // Determine active tab from URL
     const basePath = `/manager/projects/${projectId}`;
     const currentSuffix = location.pathname.replace(basePath, "").replace(/^\//, "").split("/")[0] || "";
     const activeTab = TABS.find((t) => t.key === currentSuffix) ? currentSuffix : "";
-
-    useEffect(() => {
-        if (!projectId) return;
-        fetchProject();
-    }, [projectId]);
-
-    const fetchProject = async () => {
-        setIsLoading(true);
-        setError(null);
-        try {
-            const raw: any = await projectApi.getProjectById(Number(projectId));
-            if (!raw) { setError("not_found"); return; }
-            setProject({
-                project_id: raw.projectId ?? raw.project_id ?? Number(projectId),
-                name: raw.name ?? "Untitled",
-                data_type: (raw.type ?? raw.dataType ?? "unknown").toLowerCase(),
-                status: (raw.status ?? "unknown").toLowerCase(),
-                description: raw.description ?? "",
-                guidelineContent: raw.guidelineContent ?? "",
-                guidelineVersion: raw.guidelineVersion ?? "v1.0",
-                manager_name: raw.managerName ?? raw.manager_name ?? "",
-                created_at: raw.createdAt ?? raw.created_at ?? "",
-            });
-        } catch {
-            setError("not_found");
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const {
+        data: project,
+        isLoading,
+        error,
+    } = useQuery<ProjectData>({
+        queryKey: projectQueryKeys.detail(projectId),
+        queryFn: () => fetchProjectDetail(projectId),
+        enabled: Boolean(projectId),
+        placeholderData: (previousData) => previousData,
+        ...getHotspotQueryBehavior(60_000, 600_000),
+    });
 
     const getStatusDot = (status: string) => {
         switch (status) {

@@ -1,31 +1,25 @@
 import React, { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOutletContext } from "react-router-dom";
 import { Card } from "../../components/ui/Card";
 import { cn } from "../../utils/cn";
-import { analyticsApi } from "../../api/analyticsApi";
 import { projectApi } from "../../api/projectApi";
+import {
+    fetchProjectOverview,
+    getHotspotQueryBehavior,
+    invalidateProjectSummaryData,
+    projectQueryKeys,
+} from "../../query/projectQueries";
 
 const toNumber = (value: any) => {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const averageScore = (items: any[]) => {
-    if (!Array.isArray(items) || items.length === 0) return 0;
-    const total = items.reduce((sum, item) => sum + toNumber(item?.performanceScore), 0);
-    return total / items.length;
-};
-
-const normalizeUserId = (item: any) => item?.userId ?? item?.user_id ?? item?.memberId ?? item?.member_id;
-
 export default function ProjectOverview() {
     const { project } = useOutletContext<{ project: any }>();
+    const queryClient = useQueryClient();
     const isProjectCompleted = project?.status?.toLowerCase() === "completed";
-    const [summary, setSummary] = useState<any>(null);
-    const [contributors, setContributors] = useState<any[]>([]);
-    const [teamAverageScore, setTeamAverageScore] = useState(0);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [guidelineContent, setGuidelineContent] = useState("");
     const [guidelineVersion, setGuidelineVersion] = useState("v1.0");
     const [guidelineFileUrl, setGuidelineFileUrl] = useState("");
@@ -49,87 +43,19 @@ export default function ProjectOverview() {
         }
     }, [guidelineMessage]);
 
-    useEffect(() => {
-        let cancelled = false;
-        async function fetchSummary() {
-            setLoading(true);
-            setError(null);
-            try {
-                const projectId = project.projectId ?? project.project_id;
-                const [summaryData, contributionData, memberScoreData] = await Promise.all([
-                    analyticsApi.getProjectSummary(projectId),
-                    analyticsApi.getTeamContributions(projectId).catch(() => []),
-                    analyticsApi.getMemberScores(projectId).catch(() => null),
-                ]);
-
-                if (!cancelled) {
-                    const contributionRows = Array.isArray(contributionData) ? contributionData : [];
-                    const memberScores = Array.isArray(memberScoreData) ? memberScoreData : [];
-                    const contributorsByUserId = new Map<any, any>();
-                    const scoreByUserId = new Map<any, number>();
-
-                    memberScores.forEach((item: any) => {
-                        const userId = normalizeUserId(item);
-                        if (userId === undefined || userId === null) return;
-                        scoreByUserId.set(userId, toNumber(item?.performanceScore));
-                    });
-
-                    contributionRows.forEach((item: any) => {
-                        const userId = normalizeUserId(item);
-                        if (userId !== undefined && userId !== null) {
-                            contributorsByUserId.set(userId, {
-                                ...item,
-                                userId,
-                                performanceScore: scoreByUserId.get(userId) ?? 0,
-                            });
-                        }
-                    });
-
-                    memberScores.forEach((item: any) => {
-                        const userId = normalizeUserId(item);
-                        if (userId === undefined || userId === null) return;
-                        contributorsByUserId.set(userId, {
-                            ...(contributorsByUserId.get(userId) || {}),
-                            ...item,
-                            userId,
-                            performanceScore: scoreByUserId.get(userId) ?? 0,
-                        });
-                    });
-
-                    const mergedContributors = Array.from(contributorsByUserId.values())
-                        .map((item: any) => ({
-                            ...item,
-                            userId: normalizeUserId(item),
-                            fullName: item?.fullName ?? item?.full_name ?? item?.name ?? item?.username ?? "N/A",
-                            username: item?.username ?? item?.fullName ?? item?.full_name ?? item?.name ?? "N/A",
-                            role: item?.role ?? item?.memberRole ?? item?.userRole ?? "ANNOTATOR",
-                            totalAssignments: toNumber(item?.totalAssignments ?? item?.assignedTasks ?? item?.taskCount),
-                            completedAssignments: toNumber(item?.completedAssignments ?? item?.completedTasks ?? item?.completedCount),
-                            performanceScore: scoreByUserId.get(normalizeUserId(item)) ?? 0,
-                        }))
-                        .sort((a: any, b: any) =>
-                            b.performanceScore - a.performanceScore ||
-                            b.completedAssignments - a.completedAssignments ||
-                            b.totalAssignments - a.totalAssignments,
-                        );
-
-                    setSummary(summaryData);
-                    setContributors(mergedContributors);
-                    setTeamAverageScore(
-                        memberScores.length > 0
-                            ? averageScore(memberScores)
-                            : toNumber(summaryData?.teamAveragePerformanceScore),
-                    );
-                }
-            } catch (err: any) {
-                if (!cancelled) setError(err?.message || "Không thể tải dữ liệu analytics");
-            } finally {
-                if (!cancelled) setLoading(false);
-            }
-        }
-        fetchSummary();
-        return () => { cancelled = true; };
-    }, [project.projectId, project.project_id]);
+    const projectId = project?.projectId ?? project?.project_id;
+    const {
+        data: overviewData,
+        isLoading: loading,
+        error,
+    } = useQuery({
+        queryKey: projectQueryKeys.overview(projectId),
+        queryFn: () => fetchProjectOverview(projectId),
+        enabled: Boolean(projectId),
+        placeholderData: (previousData) => previousData,
+        ...getHotspotQueryBehavior(30_000, 300_000),
+    });
+    const errorMessage = error ? (error as any)?.message || String(error) : null;
 
     if (loading) {
         return (
@@ -140,10 +66,10 @@ export default function ProjectOverview() {
         );
     }
 
-    if (error) {
+    if (errorMessage) {
         return (
             <Card className="p-8 bg-card/80 backdrop-blur border-border/60 text-center">
-                <div className="text-red-400 text-sm mb-2">! {error}</div>
+                <div className="text-red-400 text-sm mb-2">! {errorMessage}</div>
                 <button onClick={() => window.location.reload()} className="text-xs text-primary underline">
                     Thử lại
                 </button>
@@ -151,10 +77,12 @@ export default function ProjectOverview() {
         );
     }
 
+    const summary = overviewData?.summary;
+    const contributors = overviewData?.contributors || [];
+    const teamAverageScore = overviewData?.teamAverageScore || 0;
     const progress = summary?.progress;
     const quality = summary?.qualityMetrics;
     const handleSaveGuideline = async () => {
-        const projectId = project.projectId ?? project.project_id;
         if (!projectId) return;
         setSavingGuideline(true);
         setGuidelineMessage(null);
@@ -164,6 +92,8 @@ export default function ProjectOverview() {
                 guidelineFileUrl,
                 guidelineVersion,
             });
+            await invalidateProjectSummaryData(queryClient, projectId);
+            await queryClient.invalidateQueries({ queryKey: projectQueryKeys.overview(projectId) });
             setGuidelineMessage("Đã lưu hướng dẫn gán nhãn thành công.");
             setGuidelineMessageType("success");
         } catch (err: any) {
