@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useOutletContext } from "react-router-dom";
 import { datasetApi } from "../../api/datasetApi";
 import { assignmentApi } from "../../api/assignmentApi";
 import { Card } from "../../components/ui/Card";
@@ -38,10 +38,13 @@ const BATCH_STATUS_MAP: Record<string, { label: string; className: string }> = {
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_REQUEST_SIZE = 100 * 1024 * 1024;
-const ACCEPTED_EXTS = [".png", ".jpg", ".jpeg", ".pdf", ".csv", ".zip"];
+const ACCEPTED_EXTS = [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"];
 export default function ProjectData() {
   const { projectId } = useParams();
   const numericProjectId = Number(projectId);
+  const { project: parentProject } = (useOutletContext() as any) || {};
+  
+  const isProjectCompleted = parentProject?.status?.toLowerCase() === "completed";
 
   const [batchName, setBatchName] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -157,8 +160,8 @@ export default function ProjectData() {
   const batchOk = batchName.trim().length > 0;
   const filesOk = files.length > 0;
   const notUploading = status !== "uploading";
-  const canUpload = batchOk && filesOk && notUploading;
-  const disabledReason = !batchOk ? "Nhap ten batch de upload" : !filesOk ? "Chon it nhat 1 file" : !notUploading ? "Dang upload..." : null;
+  const canUpload = !isProjectCompleted && batchOk && filesOk && notUploading;
+  const disabledReason = isProjectCompleted ? "Du an da hoan thanh - chi co the xuat du lieu" : !batchOk ? "Nhap ten batch de upload" : !filesOk ? "Chon it nhat 1 file" : !notUploading ? "Dang upload..." : null;
 
   const handleUpload = async () => {
     if (!batchOk) { showToast("Vui long nhap ten batch"); return; }
@@ -188,6 +191,17 @@ export default function ProjectData() {
           {toast}
         </div>
       )}
+      
+      {isProjectCompleted && (
+        <div className="px-4 py-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-lg flex items-start gap-3">
+          <span className="material-symbols-outlined text-orange-600 dark:text-orange-400 text-base mt-0.5">lock</span>
+          <div>
+            <p className="font-medium text-orange-900 dark:text-orange-200 text-sm">Du an COMPLETED - Chi co the xuat du lieu</p>
+            <p className="text-xs text-orange-800 dark:text-orange-300 mt-1">Du an da hoan thanh tat ca cac tac vu. Chi co the xuat du lieu, cac chuc nang khac bi khoa.</p>
+          </div>
+        </div>
+      )}
+      
       <Card className="p-6 space-y-4">
         <div className="max-w-md">
           <label className="block text-sm font-medium text-muted-foreground mb-1">Ten Batch</label>
@@ -195,21 +209,21 @@ export default function ProjectData() {
         </div>
         <div className="flex gap-2">
           {(["files", "folder"] as const).map((mode) => (
-            <button key={mode} type="button" onClick={() => { setUploadMode(mode); setFiles([]); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold border transition-colors ${uploadMode === mode ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground hover:border-muted-foreground"}`}>
+            <button key={mode} type="button" disabled={isProjectCompleted} onClick={() => { setUploadMode(mode); setFiles([]); }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold border transition-colors ${isProjectCompleted ? "opacity-50 cursor-not-allowed" : ""} ${uploadMode === mode ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground hover:border-muted-foreground"}`}>
               <span className="material-symbols-outlined text-base">{mode === "files" ? "insert_drive_file" : "folder_open"}</span>
               {mode === "files" ? "Chon file" : "Chon thu muc"}
             </button>
           ))}
         </div>
-        <div className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${dragActive ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}
-          onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+        <div className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${isProjectCompleted ? "cursor-not-allowed opacity-50" : "cursor-pointer"} ${dragActive && !isProjectCompleted ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}
+          onDragOver={(e) => { if (!isProjectCompleted) { e.preventDefault(); setDragActive(true); } }}
           onDragLeave={() => setDragActive(false)}
-          onDrop={uploadMode === "folder" ? handleFolderDrop : handleDrop}
-          onClick={() => document.getElementById(uploadMode === "folder" ? "folder-input-data" : "file-input-data")?.click()}>
+          onDrop={!isProjectCompleted ? (uploadMode === "folder" ? handleFolderDrop : handleDrop) : undefined}
+          onClick={() => !isProjectCompleted && document.getElementById(uploadMode === "folder" ? "folder-input-data" : "file-input-data")?.click()}>
           <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2 block">{uploadMode === "folder" ? "folder_open" : "cloud_upload"}</span>
           <p className="text-sm text-muted-foreground">Keo tha file vao day hoac <span className="text-primary font-medium">chon file</span></p>
-          <p className="text-xs text-muted-foreground mt-1">PNG, JPG, PDF, CSV, ZIP -- toi da 10 MB/file, 100 MB tong</p>
+          <p className="text-xs text-muted-foreground mt-1">PNG, JPG, JPEG, GIF, BMP, WEBP -- toi da 10 MB/file, 100 MB tong</p>
           <input id="file-input-data" type="file" multiple accept={ACCEPTED_EXTS.join(",")} className="hidden"
             onChange={(e) => { if (e.target.files?.length) handleFiles(e.target.files); (e.target as any).value = ""; }} />
           <input id="folder-input-data" type="file" {...({ webkitdirectory: "", mozdirectory: "" } as any)} multiple accept="image/*" className="hidden"

@@ -148,7 +148,7 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
 
   // ── Load annotations for an item ──
   const loadAnnotations = useCallback(
-    async (itemId, preloadedData) => {
+    async (itemId) => {
       currentItemIdRef.current = itemId;
       if (!assignmentId || !itemId) {
         setAnnotations([]);
@@ -156,15 +156,10 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
       }
       setIsLoading(true);
       try {
-        // Use pre-loaded data from openWorkspace if available
-        let beData = preloadedData;
-        if (!beData || beData.length === 0) {
-          // Fallback to API call if no pre-loaded data
-          beData = await annotationApi.getAnnotationsByItem(
-            assignmentId,
-            itemId,
-          );
-        }
+        const beData = await annotationApi.getAnnotationsByItem(
+          assignmentId,
+          itemId,
+        );
         const groups = groupAnnotationsByKey(beData || []);
         setAnnotations(groups);
         if (import.meta.env.DEV) {
@@ -173,8 +168,6 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
             groups.length,
             "groups for item",
             itemId,
-            "from",
-            preloadedData ? "workspace" : "api"
           );
         }
       } catch (err) {

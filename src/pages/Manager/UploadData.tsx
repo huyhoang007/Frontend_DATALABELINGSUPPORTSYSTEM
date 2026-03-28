@@ -388,7 +388,7 @@ export default function UploadData() {
                   marginTop: "4px",
                 }}
               >
-                Toàn bộ ảnh (PNG, JPG, JPEG) trong thư mục sẽ được tải lên
+                Toàn bộ ảnh (PNG, JPG, JPEG, GIF, BMP, WEBP) trong thư mục sẽ được tải lên
               </p>
             </>
           ) : (
@@ -406,7 +406,7 @@ export default function UploadData() {
                   marginTop: "4px",
                 }}
               >
-                PNG, JPG, PDF, CSV, ZIP
+                PNG, JPG, JPEG, GIF, BMP, WEBP
               </p>
             </>
           )}
@@ -414,7 +414,7 @@ export default function UploadData() {
             id="file-input"
             type="file"
             multiple
-            accept=".png,.jpg,.jpeg,.pdf,.csv,.zip"
+            accept=".png,.jpg,.jpeg,.gif,.bmp,.webp"
             style={{ display: "none" }}
             onChange={(e) => {
               if (e.target.files?.length) handleFiles(e.target.files);

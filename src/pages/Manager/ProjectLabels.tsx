@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { labelRuleApi } from "../../api/labelRuleApi";
 import apiClient from "../../api/apiClient";
 import { Card } from "../../components/ui/Card";
@@ -43,6 +43,8 @@ export default function ProjectLabels() {
     const { projectId } = useParams();
     const navigate = useNavigate();
     const pid = projectId || "";
+    const { project: parentProject } = (useOutletContext() as any) || {};
+    const isProjectCompleted = parentProject?.status?.toLowerCase() === "completed";
 
     /* ── Label Rules state ── */
     const [globalRules, setGlobalRules] = useState<any[]>([]);
@@ -135,11 +137,21 @@ export default function ProjectLabels() {
             <div className="flex items-center justify-between flex-wrap gap-2">
                 <h2 className="text-base font-bold text-foreground">Quy tắc nhãn</h2>
                 <div className="flex gap-2">
-                    <Button variant="secondary" size="sm" onClick={() => { setRuleModalOpen(true); setRuleSearch(""); }}>
+                    <Button variant="secondary" size="sm" onClick={() => { setRuleModalOpen(true); setRuleSearch(""); }} disabled={isProjectCompleted}>
                         <span className="material-symbols-outlined text-base mr-1">playlist_add</span>Thêm label rules
                     </Button>
                 </div>
             </div>
+
+            {isProjectCompleted && (
+                <div className="px-4 py-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-lg flex items-start gap-3">
+                    <span className="material-symbols-outlined text-orange-600 dark:text-orange-400 text-base mt-0.5">lock</span>
+                    <div>
+                        <p className="font-medium text-orange-900 dark:text-orange-200 text-sm">Du an COMPLETED - Chi co the xuat du lieu</p>
+                        <p className="text-xs text-orange-800 dark:text-orange-300 mt-1">Du an da hoan thanh tat ca cac tac vu. Chi co the xuat du lieu, cac chuc nang khac bi khoa.</p>
+                    </div>
+                </div>
+            )}
 
             {/* ── Toast ── */}
             {toast && (
@@ -156,7 +168,7 @@ export default function ProjectLabels() {
                             <span className="material-symbols-outlined text-[16px]">rule</span>
                             Label Rules của project
                         </h3>
-                        <Button variant="secondary" size="sm" onClick={() => { setRuleModalOpen(true); setRuleSearch(""); }}>
+                        <Button variant="secondary" size="sm" onClick={() => { setRuleModalOpen(true); setRuleSearch(""); }} disabled={isProjectCompleted}>
                             <span className="material-symbols-outlined text-base mr-1">add</span>Thêm rule
                         </Button>
                     </div>
@@ -170,7 +182,7 @@ export default function ProjectLabels() {
                         <div className="text-center py-8">
                             <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2 block">rule</span>
                             <p className="text-muted-foreground text-sm">Chưa có label rule nào trong project</p>
-                            <Button variant="secondary" size="sm" className="mt-3" onClick={() => { setRuleModalOpen(true); setRuleSearch(""); }}>
+                            <Button variant="secondary" size="sm" className="mt-3" onClick={() => { setRuleModalOpen(true); setRuleSearch(""); }} disabled={isProjectCompleted}>
                                 <span className="material-symbols-outlined text-base mr-1">add</span>Thêm label rules
                             </Button>
                         </div>
@@ -189,7 +201,7 @@ export default function ProjectLabels() {
                                         <TableCell className="font-medium">{rule.name ?? rule.ruleName}</TableCell>
                                         <TableCell className="text-muted-foreground max-w-[300px] truncate">{rule.ruleContent ?? rule.description ?? "—"}</TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="ghost" size="sm" onClick={() => removeRule(rule)} title="Gỡ khỏi project">
+                                            <Button variant="ghost" size="sm" onClick={() => removeRule(rule)} disabled={isProjectCompleted} title="Gỡ khỏi project">
                                                 <span className="material-symbols-outlined text-base text-destructive">remove_circle</span>
                                                 <span className="ml-1 text-sm text-destructive">Gỡ</span>
                                             </Button>

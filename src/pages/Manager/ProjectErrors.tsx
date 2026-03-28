@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useOutletContext } from "react-router-dom";
 import { policiesAPI } from "../../services/api";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -37,6 +37,9 @@ const SEVERITY_STYLES: Record<string, string> = {
 export default function ProjectErrors() {
     const { projectId } = useParams<{ projectId: string }>();
     const pid = Number(projectId) || 0;
+    const { project: parentProject } = (useOutletContext() as any) || {};
+    const isProjectCompleted = parentProject?.status?.toLowerCase() === "completed";
+    
     const [globalPolicies, setGlobalPolicies] = useState<PolicyItem[]>([]);
     const [projectPolicies, setProjectPolicies] = useState<PolicyItem[]>([]);
     const [search, setSearch] = useState("");
@@ -138,7 +141,7 @@ export default function ProjectErrors() {
                                 <Button
                                     variant="secondary"
                                     size="sm"
-                                    disabled={projectPolicyIds.has(item.policyId) || actionLoading === item.policyId}
+                                    disabled={projectPolicyIds.has(item.policyId) || actionLoading === item.policyId || isProjectCompleted}
                                     onClick={() => addToProject(item.policyId)}
                                 >
                                     <span className="material-symbols-outlined text-base mr-1">add</span>
@@ -148,7 +151,7 @@ export default function ProjectErrors() {
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    disabled={actionLoading === item.policyId}
+                                    disabled={actionLoading === item.policyId || isProjectCompleted}
                                     onClick={() => removeFromProject(item.policyId)}
                                     title="Gỡ khỏi project"
                                 >
@@ -176,6 +179,16 @@ export default function ProjectErrors() {
                 <h2 className="text-base font-bold text-foreground">Lỗi</h2>
                 <p className="text-sm text-muted-foreground mt-1">Danh sách lỗi/loại lỗi dùng trong project</p>
             </div>
+
+            {isProjectCompleted && (
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-start gap-3 dark:bg-orange-900/20 dark:border-orange-800/50">
+                    <span className="material-symbols-outlined text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5">lock</span>
+                    <div className="text-sm text-orange-900 dark:text-orange-200">
+                        <p className="font-semibold">Du an COMPLETED - Chi co the xuat du lieu</p>
+                        <p className="mt-1 text-orange-800 dark:text-orange-300">Dự án này đã hoàn thành và bị khóa. Bạn chỉ có thể xuất dữ liệu. Không thể thêm hay xóa loại lỗi.</p>
+                    </div>
+                </div>
+            )}
 
             {/* Project Error Types */}
             <Card className="p-6 space-y-4">
