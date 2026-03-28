@@ -50,6 +50,15 @@ export const analyticsApi = {
      */
     getComponentQuality: (projectId) =>
         apiClient.get(`/api/analytics/projects/${projectId}/components`),
+
+    /**
+     * Get member scores in a project
+     * GET /api/analytics/projects/{projectId}/member-scores
+     * @param {number} projectId
+     * @returns {Promise<Object[]>} MemberScoreResponse[]
+     */
+    getMemberScores: (projectId) =>
+        apiClient.get(`/api/analytics/projects/${projectId}/member-scores`),
 };
 
 export default analyticsApi;
