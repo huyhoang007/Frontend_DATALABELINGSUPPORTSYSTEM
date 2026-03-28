@@ -580,6 +580,7 @@ export default function Workspace() {
           status: group.reviewStatus ?? null,
           reviewStatus: group.reviewStatus ?? null,
           policyName: group.policyName ?? null,
+          note: group.note ?? null,
           labelIds: group.labelIds ?? [],
           labelNames: group.labelNames ?? [],
         }));
@@ -593,7 +594,8 @@ export default function Workspace() {
             return (
               String(annotation?.status || annotation?.reviewStatus || "") ===
                 String(nextAnnotation?.status || nextAnnotation?.reviewStatus || "") &&
-              String(annotation?.policyName || "") === String(nextAnnotation?.policyName || "")
+              String(annotation?.policyName || "") === String(nextAnnotation?.policyName || "") &&
+              String(annotation?.note || "") === String(nextAnnotation?.note || "")
             );
           });
         if (sameStatuses) return item;
