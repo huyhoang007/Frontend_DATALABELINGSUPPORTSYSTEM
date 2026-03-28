@@ -149,6 +149,7 @@ export function groupAnnotationsByKey(beAnnotations) {
             if (s === "REJECTED") g.reviewStatus = "REJECTED";
             else if (g.reviewStatus !== "REJECTED" && s === "PENDING") g.reviewStatus = s;
             if (!g.policyName && ann.policyName) g.policyName = ann.policyName;
+            if (!g.note && ann.note) g.note = ann.note;
         } else {
             // Build clean geometry (strip meta fields)
             const cleanGeom = { ...geom };
@@ -166,6 +167,7 @@ export function groupAnnotationsByKey(beAnnotations) {
                 isHidden: false,
                 reviewStatus: ann.status || null,
                 policyName: ann.policyName || null,
+                note: ann.note || null,
             });
         }
     });

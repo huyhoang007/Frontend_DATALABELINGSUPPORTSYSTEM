@@ -67,9 +67,10 @@ export default function ProjectCreateLabel() {
       navigate(backPath);
     } catch (err: any) {
       const raw = err?.response?.data?.message || err?.message || "";
-      const msg = typeof raw === "string" && raw.toLowerCase().includes("already exist")
-        ? "Nhãn này với loại đã tồn tại. Hãy chọn tên hoặc loại khác"
-        : raw || "Tạo nhãn thất bại";
+      const msg =
+        typeof raw === "string" && raw.toLowerCase().includes("already exist")
+          ? "Nhãn này với loại đã tồn tại. Hãy chọn tên hoặc loại khác"
+          : raw || "Tạo nhãn thất bại";
       setApiError(msg);
     } finally {
       setSaving(false);

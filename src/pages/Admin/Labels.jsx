@@ -63,9 +63,10 @@ export default function AdminLabels() {
       fetchLabels(); // Refresh list
     } catch (error) {
       const raw = error?.response?.data?.message || error?.message || "";
-      const msg = typeof raw === "string" && raw.toLowerCase().includes("already exist")
-        ? "Nhãn này với loại đã tồn tại. Hãy chọn tên hoặc loại khác"
-        : raw || "Tạo nhãn thất bại";
+      const msg =
+        typeof raw === "string" && raw.toLowerCase().includes("already exist")
+          ? "Nhãn này với loại đã tồn tại. Hãy chọn tên hoặc loại khác"
+          : raw || "Tạo nhãn thất bại";
       addToast(msg, "error");
     } finally {
       setIsCreating(false);

@@ -298,6 +298,7 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
                 // Only the edited annotation should leave rejected state after a real relabel.
                 reviewStatus: null,
                 policyName: null,
+                note: null,
               }
             : g,
         );
