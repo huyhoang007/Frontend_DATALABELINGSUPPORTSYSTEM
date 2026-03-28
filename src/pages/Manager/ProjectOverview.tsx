@@ -5,10 +5,25 @@ import { cn } from "../../utils/cn";
 import { analyticsApi } from "../../api/analyticsApi";
 import { projectApi } from "../../api/projectApi";
 
+const toNumber = (value: any) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const averageScore = (items: any[]) => {
+    if (!Array.isArray(items) || items.length === 0) return 0;
+    const total = items.reduce((sum, item) => sum + toNumber(item?.performanceScore), 0);
+    return total / items.length;
+};
+
+const normalizeUserId = (item: any) => item?.userId ?? item?.user_id ?? item?.memberId ?? item?.member_id;
+
 export default function ProjectOverview() {
     const { project } = useOutletContext<{ project: any }>();
     const isProjectCompleted = project?.status?.toLowerCase() === "completed";
     const [summary, setSummary] = useState<any>(null);
+    const [contributors, setContributors] = useState<any[]>([]);
+    const [teamAverageScore, setTeamAverageScore] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [guidelineContent, setGuidelineContent] = useState("");
@@ -40,8 +55,72 @@ export default function ProjectOverview() {
             setLoading(true);
             setError(null);
             try {
-                const data = await analyticsApi.getProjectSummary(project.projectId ?? project.project_id);
-                if (!cancelled) setSummary(data);
+                const projectId = project.projectId ?? project.project_id;
+                const [summaryData, contributionData, memberScoreData] = await Promise.all([
+                    analyticsApi.getProjectSummary(projectId),
+                    analyticsApi.getTeamContributions(projectId).catch(() => []),
+                    analyticsApi.getMemberScores(projectId).catch(() => null),
+                ]);
+
+                if (!cancelled) {
+                    const contributionRows = Array.isArray(contributionData) ? contributionData : [];
+                    const memberScores = Array.isArray(memberScoreData) ? memberScoreData : [];
+                    const contributorsByUserId = new Map<any, any>();
+                    const scoreByUserId = new Map<any, number>();
+
+                    memberScores.forEach((item: any) => {
+                        const userId = normalizeUserId(item);
+                        if (userId === undefined || userId === null) return;
+                        scoreByUserId.set(userId, toNumber(item?.performanceScore));
+                    });
+
+                    contributionRows.forEach((item: any) => {
+                        const userId = normalizeUserId(item);
+                        if (userId !== undefined && userId !== null) {
+                            contributorsByUserId.set(userId, {
+                                ...item,
+                                userId,
+                                performanceScore: scoreByUserId.get(userId) ?? 0,
+                            });
+                        }
+                    });
+
+                    memberScores.forEach((item: any) => {
+                        const userId = normalizeUserId(item);
+                        if (userId === undefined || userId === null) return;
+                        contributorsByUserId.set(userId, {
+                            ...(contributorsByUserId.get(userId) || {}),
+                            ...item,
+                            userId,
+                            performanceScore: scoreByUserId.get(userId) ?? 0,
+                        });
+                    });
+
+                    const mergedContributors = Array.from(contributorsByUserId.values())
+                        .map((item: any) => ({
+                            ...item,
+                            userId: normalizeUserId(item),
+                            fullName: item?.fullName ?? item?.full_name ?? item?.name ?? item?.username ?? "N/A",
+                            username: item?.username ?? item?.fullName ?? item?.full_name ?? item?.name ?? "N/A",
+                            role: item?.role ?? item?.memberRole ?? item?.userRole ?? "ANNOTATOR",
+                            totalAssignments: toNumber(item?.totalAssignments ?? item?.assignedTasks ?? item?.taskCount),
+                            completedAssignments: toNumber(item?.completedAssignments ?? item?.completedTasks ?? item?.completedCount),
+                            performanceScore: scoreByUserId.get(normalizeUserId(item)) ?? 0,
+                        }))
+                        .sort((a: any, b: any) =>
+                            b.performanceScore - a.performanceScore ||
+                            b.completedAssignments - a.completedAssignments ||
+                            b.totalAssignments - a.totalAssignments,
+                        );
+
+                    setSummary(summaryData);
+                    setContributors(mergedContributors);
+                    setTeamAverageScore(
+                        memberScores.length > 0
+                            ? averageScore(memberScores)
+                            : toNumber(summaryData?.teamAveragePerformanceScore),
+                    );
+                }
             } catch (err: any) {
                 if (!cancelled) setError(err?.message || "Không thể tải dữ liệu analytics");
             } finally {
@@ -74,8 +153,6 @@ export default function ProjectOverview() {
 
     const progress = summary?.progress;
     const quality = summary?.qualityMetrics;
-    const contributors = summary?.topContributors || [];
-
     const handleSaveGuideline = async () => {
         const projectId = project.projectId ?? project.project_id;
         if (!projectId) return;
@@ -115,7 +192,7 @@ export default function ProjectOverview() {
     const labelDistributionBalance = quality?.labelDistributionBalance ?? 0;
 
     const totalTeamMembers = summary?.totalTeamMembers ?? 0;
-    const teamAvgScore = summary?.teamAveragePerformanceScore ?? 0;
+    const teamAvgScore = teamAverageScore || toNumber(summary?.teamAveragePerformanceScore);
     const alerts = summary?.alerts || [];
 
     return (
