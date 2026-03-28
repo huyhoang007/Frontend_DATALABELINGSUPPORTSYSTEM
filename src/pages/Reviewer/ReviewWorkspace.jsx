@@ -789,13 +789,22 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
 
                                             {/* Show reject message if already rejected */}
                                             {anno.policyName && (
-                                                <div className="p-2 rounded-lg text-xs font-medium"
+                                                <div className="p-2 rounded-lg text-xs font-medium space-y-1"
                                                     style={{
                                                         background: "rgba(248,113,113,0.1)",
                                                         border: "1px solid rgba(248,113,113,0.2)",
                                                         color: "#f87171"
                                                     }}>
-                                                    ✓ Đã từ chối: {anno.policyName}
+                                                    <div>✓ Đã từ chối: {anno.policyName}</div>
+                                                    {anno.note && (
+                                                        <div className="mt-1 p-1.5 rounded text-xs" style={{
+                                                            background: "rgba(248,113,113,0.2)",
+                                                            color: "#fca5a5",
+                                                            fontStyle: "italic"
+                                                        }}>
+                                                            💬 {anno.note}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
 

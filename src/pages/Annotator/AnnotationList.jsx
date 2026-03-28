@@ -109,9 +109,16 @@ export default function AnnotationList({
                 {group.shapeType}
               </p>
               {isRejected && group.policyName && (
-                <p className="text-[10px] text-red-300 mt-0.5 pl-0.5">
-                  ⚠ {group.policyName}
-                </p>
+                <div className="mt-0.5">
+                  <p className="text-[10px] text-red-300 pl-0.5">
+                    ⚠ {group.policyName}
+                  </p>
+                  {group.note && (
+                    <p className="text-[10px] text-amber-300 mt-1 pl-0.5">
+                      💬 {group.note}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
 

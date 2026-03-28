@@ -532,31 +532,61 @@ export default function LabelSelectModal({
 
 /* ── Label chip button ── */
 function LabelChip({ label, selected, onClick }) {
+  const getLabelTypeColor = (type) => {
+    switch (type?.toUpperCase()) {
+      case "OBJECT":
+        return "#8b5cf6";
+      case "CLASSIFICATION":
+        return "#10b981";
+      case "SEGMENTATION":
+        return "#f59e0b";
+      case "DETECTION":
+        return "#06b6d4";
+      default:
+        return "#6b7280";
+    }
+  };
+
   return (
     <button
       onClick={(e) => {
         e.stopPropagation();
         onClick?.();
       }}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+      className="flex flex-col items-start gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
       style={{
         background: selected ? `${label.color}22` : "#182233",
         border: selected ? `1.5px solid ${label.color}` : "1.5px solid #253347",
         color: selected ? label.color : "#94a3b8",
       }}
     >
-      <span
-        className="w-2 h-2 rounded-full shrink-0"
-        style={{ background: label.color }}
-      />
-      {label.name}
-      {selected && (
+      <div className="flex items-center gap-1.5 w-full">
         <span
-          className="material-symbols-outlined"
-          style={{ fontSize: 12, marginLeft: 2 }}
-        >
-          check
-        </span>
+          className="w-2 h-2 rounded-full shrink-0"
+          style={{ background: label.color }}
+        />
+        <span className="font-medium">{label.name}</span>
+        {selected && (
+          <span
+            className="material-symbols-outlined ml-auto"
+            style={{ fontSize: 12 }}
+          >
+            check
+          </span>
+        )}
+      </div>
+      {label.type && (
+        <div className="flex items-center gap-1 ml-4">
+          <span
+            className="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
+            style={{
+              backgroundColor: `${getLabelTypeColor(label.type)}20`,
+              color: getLabelTypeColor(label.type),
+            }}
+          >
+            {label.type}
+          </span>
+        </div>
       )}
     </button>
   );
