@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { annotationApi } from "../../api/annotationApi";
@@ -49,21 +50,12 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> =
     REJECTED: { bg: T.redBg, text: T.red, dot: T.red },
   };
 
-const STATUS_VI: Record<string, string> = {
-  ALL: "TẤT CẢ",
-  PENDING: "CHỜ XỬ LÝ",
-  IN_PROGRESS: "ĐANG LÀM",
-  SUBMITTED: "ĐÃ NỘP",
-  RE_SUBMITTED: "NỘP LẠI",
-  APPROVED: "ĐÃ DUYỆT",
-  REJECTED: "TỪ CHỐI",
-};
-
 interface AnnotatorDashboardProps {
   user: any;
 }
 
 const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
+  const { t } = useTranslation(["annotator", "common"]);
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("ALL");
   const [search, setSearch] = useState("");
@@ -90,11 +82,11 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
       console.error("[ANNOTATOR_DASHBOARD] API failed", err);
       const status = err?.status;
       if (status === 401) {
-        setError("Hết phiên đăng nhập — vui lòng đăng nhập lại.");
+        setError(t("annotator:tasks.errors.expiredSession"));
       } else if (status === 403) {
-        setError("Bạn không có quyền xem danh sách task.");
+        setError(t("annotator:tasks.errors.forbidden"));
       } else {
-        setError(err?.message || "Không thể tải danh sách task từ server.");
+        setError(err?.message || t("annotator:tasks.errors.loadFailed"));
       }
     }
 
@@ -130,6 +122,8 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
   const activeCount = assignments.filter((a) =>
     activeStatuses.includes((a.status || "").toUpperCase()),
   ).length;
+  const getStatusLabel = (status: string) =>
+    t(`annotator:tasks.statuses.${status}`, { defaultValue: status });
 
   return (
     <div
@@ -153,7 +147,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
               marginBottom: "4px",
             }}
           >
-            Annotator Dashboard
+            {t("annotator:dashboard.title")}
           </p>
           <h1
             style={{
@@ -164,24 +158,14 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
               marginBottom: "4px",
             }}
           >
-            Chào mừng,{" "}
-            {user?.full_name || user?.username || user?.name || "User"}
+            {t("annotator:tasks.welcomeBack", {
+              name:
+                user?.full_name || user?.username || user?.name || "User",
+            })}
           </h1>
           <p style={{ fontSize: "13px", color: T.textMuted, marginTop: "4px" }}>
             {!loading && (
-              <>
-                Bạn có{" "}
-                <span
-                  style={{
-                    fontFamily: "monospace",
-                    color: T.textPrimary,
-                    fontWeight: 600,
-                  }}
-                >
-                  {activeCount}
-                </span>{" "}
-                nhiệm vụ cần xử lý.
-              </>
+              t("annotator:tasks.activeTasks", { count: activeCount })
             )}
           </p>
         </div>
@@ -197,7 +181,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
         >
           {[
             {
-              label: "Hoàn thành",
+              label: t("annotator:dashboard.completed"),
               value: assignments.filter(
                 (t) => (t.status || "").toUpperCase() === "COMPLETED",
               ).length,
@@ -205,7 +189,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
               color: T.green,
             },
             {
-              label: "Đang thực hiện",
+              label: t("annotator:dashboard.inProgress"),
               value: assignments.filter((t) =>
                 ["IN_PROGRESS", "REJECTED"].includes(
                   (t.status || "").toUpperCase(),
@@ -215,7 +199,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
               color: T.brand,
             },
             {
-              label: "Chờ xử lý",
+              label: t("annotator:dashboard.pending"),
               value: assignments.filter(
                 (t) => (t.status || "").toUpperCase() === "PENDING",
               ).length,
@@ -223,7 +207,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
               color: T.amber,
             },
             {
-              label: "Nộp lại",
+              label: t("annotator:dashboard.resubmitted"),
               value: assignments.filter(
                 (t) => (t.status || "").toUpperCase() === "RE_SUBMITTED",
               ).length,
@@ -346,7 +330,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                   }
                 }}
               >
-                {STATUS_VI[tab] || tab.replace("_", " ")}
+                {getStatusLabel(tab)}
               </button>
             ))}
           </div>
@@ -388,7 +372,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                 outline: "none",
                 transition: "all .15s",
               }}
-              placeholder="Tìm kiếm theo project, dataset..."
+              placeholder={t("annotator:tasks.searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onFocus={(e) => {
@@ -430,7 +414,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                 fontSize: "13px",
               }}
             >
-              Đang tải...
+              {t("common:states.loading")}
             </span>
           </div>
         )}
@@ -468,7 +452,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                 fontFamily: "inherit",
               }}
             >
-              Thử lại
+              {t("annotator:tasks.retryLoad")}
             </button>
           </div>
         )}
@@ -512,7 +496,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                   marginBottom: "8px",
                 }}
               >
-                Chưa có nhiệm vụ nào
+                {t("annotator:tasks.noAssignmentsTitle")}
               </h4>
               <p
                 style={{
@@ -524,8 +508,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                   padding: "0 16px",
                 }}
               >
-                Manager sẽ phân công task cho bạn. Khi có task mới, bạn sẽ thấy
-                tại đây.
+                {t("annotator:tasks.noAssignmentsHint")}
               </p>
             </div>
           </div>
@@ -574,7 +557,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                   letterSpacing: "0.08em",
                 }}
               >
-                DỰ ÁN
+                {t("annotator:tasks.table.project")}
               </p>
               <p
                 style={{
@@ -585,7 +568,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                   letterSpacing: "0.08em",
                 }}
               >
-                BỘ DỮ LIỆU
+                {t("annotator:tasks.table.dataset")}
               </p>
               <p
                 style={{
@@ -596,7 +579,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                   letterSpacing: "0.08em",
                 }}
               >
-                NGƯỜI ĐÁNH GIÁ
+                {t("annotator:tasks.table.reviewer")}
               </p>
               <p
                 style={{
@@ -607,7 +590,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                   letterSpacing: "0.08em",
                 }}
               >
-                TIẾN ĐỘ
+                {t("annotator:tasks.table.progress")}
               </p>
               <p
                 style={{
@@ -618,7 +601,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                   letterSpacing: "0.08em",
                 }}
               >
-                TRẠNG THÁI
+                {t("annotator:tasks.table.status")}
               </p>
               <p
                 style={{
@@ -630,7 +613,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                   textAlign: "right",
                 }}
               >
-                THAO TÁC
+                {t("annotator:tasks.table.action")}
               </p>
             </div>
 
@@ -787,7 +770,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                           background: statusStyle.dot,
                         }}
                       />
-                      {STATUS_VI[status] || status.replace("_", " ")}
+                      {getStatusLabel(status)}
                     </span>
 
                     {/* Action */}
@@ -824,7 +807,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                             (e.currentTarget.style.background = T.brand)
                           }
                         >
-                          Bắt đầu
+                          {t("annotator:tasks.actions.start")}
                         </button>
                       )}
                       {status === "IN_PROGRESS" && (
@@ -853,7 +836,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                             e.currentTarget.style.background = T.amberBg;
                           }}
                         >
-                          Tiếp tục
+                          {t("annotator:tasks.actions.continue")}
                         </button>
                       )}
                       {["SUBMITTED", "APPROVED", "COMPLETED"].includes(
@@ -893,7 +876,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                           >
                             visibility
                           </span>
-                          Xem
+                          {t("annotator:tasks.actions.view")}
                         </button>
                       )}
                     </div>
@@ -909,8 +892,10 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
           <p
             style={{ fontSize: "12px", color: T.textMuted, marginTop: "12px" }}
           >
-            Hiển thị {filteredAssignments.length} / {assignments.length} nhiệm
-            vụ
+            {t("annotator:tasks.showingCount", {
+              shown: filteredAssignments.length,
+              total: assignments.length,
+            })}
           </p>
         )}
       </div>

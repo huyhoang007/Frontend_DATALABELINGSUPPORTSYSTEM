@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 
@@ -16,6 +17,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
   onRegister,
   onSwitchToLogin,
 }) => {
+  const { t } = useTranslation(["auth", "common"]);
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -32,25 +34,25 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!formData.username.trim()) {
-      newErrors.username = "Tên đăng nhập là bắt buộc";
+      newErrors.username = t("auth:register.validation.usernameRequired");
     } else if (formData.username.length < 3) {
-      newErrors.username = "Tên đăng nhập phải có ít nhất 3 ký tự";
+      newErrors.username = t("auth:register.validation.usernameMin");
     }
     if (!formData.fullName.trim()) {
-      newErrors.fullName = "Họ tên là bắt buộc";
+      newErrors.fullName = t("auth:register.validation.fullNameRequired");
     }
     if (!formData.email.trim()) {
-      newErrors.email = "Email là bắt buộc";
+      newErrors.email = t("auth:register.validation.emailRequired");
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email không hợp lệ";
+      newErrors.email = t("auth:register.validation.emailInvalid");
     }
     if (!formData.password) {
-      newErrors.password = "Mật khẩu là bắt buộc";
+      newErrors.password = t("auth:register.validation.passwordRequired");
     } else if (formData.password.length < 6) {
-      newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
+      newErrors.password = t("auth:register.validation.passwordMin");
     }
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Mật khẩu không khớp";
+      newErrors.confirmPassword = t("auth:register.validation.passwordMismatch");
     }
 
     setErrors(newErrors);
@@ -98,7 +100,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-foreground text-2xl font-light m-0 mb-8 tracking-wide">
-            Tạo tài khoản mới
+            {t("auth:register.title")}
           </h1>
         </div>
 
@@ -121,12 +123,12 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Username Field */}
             <div>
-              <label className="block text-muted-foreground text-sm font-medium mb-2">Tên đăng nhập</label>
+              <label className="block text-muted-foreground text-sm font-medium mb-2">{t("auth:register.fields.username.label")}</label>
               <input
                 type="text"
                 value={formData.username}
                 onChange={(e) => handleInputChange("username", e.target.value)}
-                placeholder="Nhập tên đăng nhập"
+                placeholder={t("auth:register.fields.username.placeholder")}
                 className={`w-full px-4 py-3.5 bg-background border rounded-lg text-foreground text-base outline-none transition-all duration-200 focus:ring-2 focus:ring-primary/20 ${errors.username ? 'border-red-500 focus:border-red-500 ring-red-500/10' : 'border-input focus:border-primary'}`}
               />
               {errors.username && <div className="text-red-500 text-xs mt-1">{errors.username}</div>}
@@ -134,12 +136,12 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
 
             {/* Full Name Field */}
             <div>
-              <label className="block text-muted-foreground text-sm font-medium mb-2">Họ và tên</label>
+              <label className="block text-muted-foreground text-sm font-medium mb-2">{t("auth:register.fields.fullName.label")}</label>
               <input
                 type="text"
                 value={formData.fullName}
                 onChange={(e) => handleInputChange("fullName", e.target.value)}
-                placeholder="Nhập họ và tên đầy đủ"
+                placeholder={t("auth:register.fields.fullName.placeholder")}
                 className={`w-full px-4 py-3.5 bg-background border rounded-lg text-foreground text-base outline-none transition-all duration-200 focus:ring-2 focus:ring-primary/20 ${errors.fullName ? 'border-red-500 focus:border-red-500 ring-red-500/10' : 'border-input focus:border-primary'}`}
               />
               {errors.fullName && <div className="text-red-500 text-xs mt-1">{errors.fullName}</div>}
@@ -147,12 +149,12 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
 
             {/* Email Field */}
             <div>
-              <label className="block text-muted-foreground text-sm font-medium mb-2">Email</label>
+              <label className="block text-muted-foreground text-sm font-medium mb-2">{t("auth:register.fields.email.label")}</label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
-                placeholder="Nhập địa chỉ email"
+                placeholder={t("auth:register.fields.email.placeholder")}
                 className={`w-full px-4 py-3.5 bg-background border rounded-lg text-foreground text-base outline-none transition-all duration-200 focus:ring-2 focus:ring-primary/20 ${errors.email ? 'border-red-500 focus:border-red-500 ring-red-500/10' : 'border-input focus:border-primary'}`}
               />
               {errors.email && <div className="text-red-500 text-xs mt-1">{errors.email}</div>}
@@ -161,13 +163,13 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
             {/* Password Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
               <div>
-                <label className="block text-muted-foreground text-sm font-medium mb-2">Mật khẩu</label>
+                <label className="block text-muted-foreground text-sm font-medium mb-2">{t("auth:register.fields.password.label")}</label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     value={formData.password}
                     onChange={(e) => handleInputChange("password", e.target.value)}
-                    placeholder="Nhập mật khẩu"
+                    placeholder={t("auth:register.fields.password.placeholder")}
                     className={`w-full px-4 py-3.5 pr-12 bg-background border rounded-lg text-foreground text-base outline-none transition-all duration-200 focus:ring-2 focus:ring-primary/20 ${errors.password ? 'border-red-500 focus:border-red-500 ring-red-500/10' : 'border-input focus:border-primary'}`}
                   />
                   <button
@@ -186,13 +188,13 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
               </div>
 
               <div>
-                <label className="block text-muted-foreground text-sm font-medium mb-2">Xác nhận mật khẩu</label>
+                <label className="block text-muted-foreground text-sm font-medium mb-2">{t("auth:register.fields.confirmPassword.label")}</label>
                 <div className="relative">
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                    placeholder="Nhập lại mật khẩu"
+                    placeholder={t("auth:register.fields.confirmPassword.placeholder")}
                     className={`w-full px-4 py-3.5 pr-12 bg-background border rounded-lg text-foreground text-base outline-none transition-all duration-200 focus:ring-2 focus:ring-primary/20 ${errors.confirmPassword ? 'border-red-500 focus:border-red-500 ring-red-500/10' : 'border-input focus:border-primary'}`}
                   />
                   <button
@@ -218,7 +220,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
               className="w-full h-12 text-base font-semibold bg-gradient-to-br from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-lg shadow-violet-500/30"
               leftIcon={isLoading ? "loading" : undefined}
             >
-              {isLoading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
+              {isLoading ? t("common:states.creating") : t("auth:register.submit")}
             </Button>
           </form>
 
@@ -226,13 +228,13 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           {onSwitchToLogin && (
             <div className="text-center mt-6 pt-6 border-t border-border/50">
               <span className="text-muted-foreground text-sm">
-                Đã có tài khoản?{" "}
+                {t("auth:register.hasAccount")}{" "}
                 <button
                   type="button"
                   onClick={onSwitchToLogin}
                   className="bg-transparent border-none text-violet-500 hover:text-violet-600 text-sm cursor-pointer underline transition-colors font-medium"
                 >
-                  Đăng nhập ngay
+                  {t("auth:register.switchToLogin")}
                 </button>
               </span>
             </div>

@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Project } from '../../types/cvat';
 import { projectApi } from '../../api/projectApi';
 import { userApi } from '../../api/userApi';
 import { assignmentApi } from '../../api/assignmentApi';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
+import {
+  translateDataType,
+  translateProjectStatus,
+} from '../../i18n/helpers';
 
 interface ManagerDashboardProps {
   user?: any;
@@ -19,6 +24,7 @@ const normalizeAssignmentStatus = (status?: string) =>
 
 const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation(["manager", "common"]);
   const [myProjects, setMyProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -147,7 +153,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
   };
 
   const formatStatus = (status: string) => {
-    if (!status) return 'UNKNOWN';
+    if (!status) return t("common:labels.unknown").toUpperCase();
     return status.toUpperCase();
   };
 
@@ -163,10 +169,10 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Bảng điều khiển Manager
+            {t("manager:dashboard.title")}
           </h1>
           <p className="text-lg text-muted-foreground">
-            Quản lý dự án và team của bạn
+            {t("manager:dashboard.subtitle")}
           </p>
         </div>
       </Card>
@@ -174,7 +180,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
       {/* Hành động nhanh */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
         <h3 className="mb-6 text-sm font-bold text-muted-foreground uppercase tracking-widest">
-          Hành động nhanh
+          {t("manager:dashboard.quickActions")}
         </h3>
         <div className="flex flex-wrap gap-4">
           <Button
@@ -183,7 +189,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
             onClick={() => navigate('/manager/projects')}
             leftIcon="add"
           >
-            Tạo dự án
+            {t("manager:projects.createProject")}
           </Button>
 
           <Button
@@ -192,7 +198,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
             onClick={() => navigate('/manager/labels')}
             leftIcon="label"
           >
-            Tạo nhãn
+            {t("common:nav.createLabel")}
           </Button>
 
           <Button
@@ -201,7 +207,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
             onClick={() => navigate('/manager/policies')}
             leftIcon="policy"
           >
-            Tạo policy
+            {t("common:nav.createPolicy")}
           </Button>
         </div>
       </Card>
@@ -212,21 +218,21 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
           <div className="text-3xl font-bold text-foreground mb-1">
             {myProjects.length}
           </div>
-          <div className="text-xs font-medium text-muted-foreground">Dự án của tôi</div>
+          <div className="text-xs font-medium text-muted-foreground">{t("manager:dashboard.myProjects")}</div>
         </Card>
 
         <Card className="p-6 transition-all hover:shadow-md bg-white/80 dark:bg-slate-800/80">
           <div className="text-3xl font-bold text-foreground mb-1">
             {myProjects.reduce((sum, p: any) => sum + (p.dataset_count ?? p.datasets?.length ?? 0), 0)}
           </div>
-          <div className="text-xs font-medium text-muted-foreground">Datasets</div>
+          <div className="text-xs font-medium text-muted-foreground">{t("common:labels.datasets")}</div>
         </Card>
         
         <Card className="p-6 transition-all hover:shadow-md bg-white/80 dark:bg-slate-800/80">
           <div className="text-3xl font-bold text-foreground mb-1">
             {annotators.length}
           </div>
-          <div className="text-xs font-medium text-muted-foreground">Người chú thích</div>
+          <div className="text-xs font-medium text-muted-foreground">{t("role:annotator")}</div>
         </Card>
       </div>
 
@@ -235,19 +241,19 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
         {/* My Projects */}
         <Card className="p-6 bg-white/80 dark:bg-slate-800/80">
           <h3 className="mb-6 text-lg font-semibold text-foreground flex items-center gap-2">
-            Dự án của tôi
+            {t("manager:dashboard.myProjects")}
           </h3>
           {isLoading ? (
             <div className="flex items-center justify-center p-12 text-muted-foreground">
-              Đang tải...
+              {t("common:states.loading")}
             </div>
           ) : myProjects.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
               <div className="text-lg font-medium text-foreground mb-2">
-                Chưa có dự án nào
+                {t("manager:dashboard.noProjects")}
               </div>
               <div className="text-sm">
-                Hãy tạo dự án đầu tiên của bạn
+                {t("manager:dashboard.createFirstProject")}
               </div>
             </div>
           ) : (
@@ -264,11 +270,17 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
                           {project.name}
                         </h4>
                         <div className="text-xs text-muted-foreground truncate">
-                          {project.data_type} • {(project as any).dataset_count ?? project.datasets?.length ?? 0} datasets
+                          {translateDataType(project.data_type)} •{" "}
+                          {t("manager:dashboard.datasetCount", {
+                            count:
+                              (project as any).dataset_count ??
+                              project.datasets?.length ??
+                              0,
+                          }).toLowerCase()}
                         </div>
                       </div>
                       <div className={`px-3 py-1 rounded-full text-[10px] font-bold border ${getStatusColor(project.status)}`}>
-                        {formatStatus(project.status)}
+                        {translateProjectStatus(project.status)}
                       </div>
                     </div>
 
@@ -279,7 +291,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
                         className="h-8 text-xs hover:bg-primary/5 hover:text-primary"
                         onClick={() => navigate(`/manager/projects/${project.project_id}`)}
                       >
-                        Xem chi tiết
+                        {t("common:actions.viewDetail")}
                       </Button>
                     </div>
                   </div>
@@ -289,8 +301,12 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
               {/* Pagination */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-6 pt-6 border-t border-border">
-                  <div className="text-xs text-muted-foreground">
-                    Hiển thị {indexOfFirstProject + 1}-{Math.min(indexOfLastProject, myProjects.length)} / {myProjects.length} dự án
+                <div className="text-xs text-muted-foreground">
+                    {t("manager:dashboard.showingProjects", {
+                      start: indexOfFirstProject + 1,
+                      end: Math.min(indexOfLastProject, myProjects.length),
+                      total: myProjects.length,
+                    })}
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -300,7 +316,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
                       disabled={currentPage === 1}
                       className="h-8 text-xs"
                     >
-                      ← Trước
+                      ← {t("common:actions.back")}
                     </Button>
                     <div className="flex items-center justify-center h-8 px-3 rounded-md bg-primary/10 text-primary text-xs font-bold">
                       {currentPage} / {totalPages}
@@ -312,7 +328,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
                       disabled={currentPage === totalPages}
                       className="h-8 text-xs"
                     >
-                      Tiếp →
+                      {t("common:actions.view")} →
                     </Button>
                   </div>
                 </div>
@@ -324,16 +340,16 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
         {/* Annotator Progress */}
         <Card className="p-6 bg-white/80 dark:bg-slate-800/80">
           <h3 className="mb-6 text-lg font-semibold text-foreground flex items-center gap-2">
-            Tiến độ Annotators
+            {t("manager:dashboard.annotatorProgress")}
           </h3>
           {isLoadingAnnotators ? (
             <div className="flex items-center justify-center p-12 text-muted-foreground">
-              Đang tải...
+              {t("common:states.loading")}
             </div>
           ) : annotators.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
               <div className="text-sm">
-                Chưa có annotator nào
+                {t("manager:dashboard.noAnnotators")}
               </div>
             </div>
           ) : (
@@ -361,7 +377,9 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
                           {annotator.fullName || annotator.username}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {progress.total} tasks
+                          {t("manager:dashboard.taskCount", {
+                            count: progress.total,
+                          })}
                         </div>
                       </div>
                     </div>
@@ -369,7 +387,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
                     {/* Progress bar */}
                     <div className="mb-2">
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-xs text-muted-foreground">Tiến độ trung bình</span>
+                        <span className="text-xs text-muted-foreground">{t("manager:dashboard.averageProgress")}</span>
                         <span className="text-xs font-bold text-foreground">{progress.avgProgress}%</span>
                       </div>
                       <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -387,7 +405,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
                           {progress.completed}
                         </div>
                         <div className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70">
-                          Hoàn thành
+                          {t("manager:dashboard.completed")}
                         </div>
                       </div>
                       <div className="text-center p-2 rounded-lg bg-amber-50 dark:bg-amber-900/20">
@@ -395,7 +413,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
                           {progress.inProgress}
                         </div>
                         <div className="text-[10px] text-amber-600/70 dark:text-amber-400/70">
-                          Đang làm
+                          {t("manager:dashboard.inProgress")}
                         </div>
                       </div>
                       <div className="text-center p-2 rounded-lg bg-slate-100 dark:bg-slate-700">
@@ -403,7 +421,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
                           {progress.pending}
                         </div>
                         <div className="text-[10px] text-slate-600/70 dark:text-slate-400/70">
-                          Chờ xử lý
+                          {t("manager:dashboard.pending")}
                         </div>
                       </div>
                     </div>

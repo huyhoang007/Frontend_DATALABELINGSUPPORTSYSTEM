@@ -15,6 +15,7 @@ import { policyApi } from "../../api/policyApi";
 import apiClient from "../../api/apiClient";
 import { isFeatureEnabled } from "../../config/featureFlags";
 import { getCachedBlobUrl, preloadBlobUrl } from "../../utils/blobAssetCache";
+import { translate } from "../../i18n/helpers";
 
 /**
  * Resolve file URL to a path the Vite proxy can forward to the backend.
@@ -92,7 +93,10 @@ export default function useReviewWorkspace(assignmentIdNum) {
             } catch (err) {
                 if (cancelled) return;
                 const status = err?.status || err?.response?.status || "?";
-                setImageError({ url: path, message: `Trạng thái ${status}: ${err?.message || "Tải thất bại"}` });
+                setImageError({
+                    url: path,
+                    message: `${translate("common:labels.status")} ${status}: ${err?.message || translate("reviewer:workspace.loadFailed")}`,
+                });
             } finally {
                 if (!cancelled) setImageLoading(false);
             }
@@ -171,7 +175,7 @@ export default function useReviewWorkspace(assignmentIdNum) {
                 console.log(`[REVIEW] seeded cache for ${Object.keys(initialCache).length} items`);
             } catch (err) {
                 if (cancelled) return;
-                const msg = err?.response?.data?.message || err?.message || "Không thể tải workspace";
+                const msg = err?.response?.data?.message || err?.message || translate("reviewer:workspace.loadFailed");
                 setWorkspaceError(msg);
             } finally {
                 if (!cancelled) setWorkspaceLoading(false);
@@ -263,7 +267,7 @@ export default function useReviewWorkspace(assignmentIdNum) {
 
             return { success: true, allDone: false };
         } catch (err) {
-            const msg = err?.response?.data?.message || err?.message || "Không thể đánh giá annotation";
+            const msg = err?.response?.data?.message || err?.message || translate("reviewer:workspace.messages.approveFailed");
             return { success: false, error: msg };
         } finally {
             setReviewSubmitting(false);
@@ -277,7 +281,10 @@ export default function useReviewWorkspace(assignmentIdNum) {
             await reviewApi.submitReview(assignmentIdNum);
             return { success: true };
         } catch (err) {
-            const msg = err?.response?.data?.message || err?.message || "Nộp đánh giá thất bại";
+            const msg =
+                err?.response?.data?.message ||
+                err?.message ||
+                translate("reviewer:workspace.messages.submitFailed");
             return { success: false, error: msg };
         } finally {
             setReviewSubmitting(false);

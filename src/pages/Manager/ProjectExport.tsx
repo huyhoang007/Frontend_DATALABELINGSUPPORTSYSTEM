@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { datasetApi } from "../../api/datasetApi";
 import { assignmentApi } from "../../api/assignmentApi";
 import { Card } from "../../components/ui/Card";
@@ -50,6 +51,7 @@ function downloadBlob(blob: Blob | ArrayBuffer | string, filename: string, mimeT
  * Fetches datasets for the project, then calls the real export API endpoints.
  */
 export default function ProjectExport() {
+    const { t, i18n } = useTranslation(["manager", "common"]);
     const { projectId } = useParams();
 
     const [datasets, setDatasets] = useState<any[]>([]);
@@ -113,11 +115,21 @@ export default function ProjectExport() {
     }, [selectedDatasetId, projectId]);
 
     const handleExport = async () => {
-        if (!selectedDatasetId) { setError("Vui lòng chọn dataset"); return; }
+        if (!selectedDatasetId) { setError(t("manager:export.messages.selectDataset")); return; }
         
         // Check if batch is completed before allowing export
         if (batchStatus !== "COMPLETED") {
-            setError(`Chỉ có thể export batch đã hoàn thành (COMPLETED). Trạng thái hiện tại: ${batchStatus}`);
+            const translatedStatus =
+                batchStatus === "COMPLETED"
+                    ? t("manager:export.batchStatuses.completed")
+                    : batchStatus === "IN_PROGRESS"
+                    ? t("manager:export.batchStatuses.inProgress")
+                    : t("manager:export.batchStatuses.pending");
+            setError(
+                t("manager:export.messages.batchIncomplete", {
+                    status: translatedStatus,
+                }),
+            );
             return;
         }
         
@@ -172,7 +184,7 @@ export default function ProjectExport() {
                 ...prev,
             ]);
         } catch (err: any) {
-            const msg = err?.message || "Export thất bại — vui lòng thử lại";
+            const msg = err?.message || t("manager:export.messages.exportFailed");
             setError(msg);
             setHistory((prev) => [
                 {
@@ -196,14 +208,14 @@ export default function ProjectExport() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
                     {/* Dataset selector */}
                     <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">Dataset / Batch</label>                        <select
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">{t("manager:export.datasetBatch")}</label>                        <select
                             className="w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                             value={selectedDatasetId}
                             onChange={(e) => setSelectedDatasetId(e.target.value)}
                             disabled={loadingDatasets}
                         >
-                            {loadingDatasets && <option value="">Đang tải...</option>}
-                            {!loadingDatasets && datasets.length === 0 && <option value="">Không có dataset</option>}
+                            {loadingDatasets && <option value="">{t("manager:export.loadingDatasets")}</option>}
+                            {!loadingDatasets && datasets.length === 0 && <option value="">{t("manager:export.noDatasets")}</option>}
                             {datasets.map((d) => {
                                 const id = d.datasetId ?? d.dataset_id;
                                 return (
@@ -217,7 +229,7 @@ export default function ProjectExport() {
 
                     {/* Format selector */}
                     <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">Định dạng</label>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">{t("manager:export.format")}</label>
                         <select
                             className="w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                             value={format}
@@ -231,17 +243,21 @@ export default function ProjectExport() {
 
                 {/* Format description */}
                 <p className="text-xs text-muted-foreground max-w-2xl">
-                    {format === "COCO JSON" && "Xuất file JSON theo chuẩn COCO (images, annotations, categories). Phù hợp với hầu hết ML framework."}
-                    {format === "YOLO" && "Xuất file ZIP gồm classes.txt, labels/*.txt (bbox chuẩn hóa 0-1) và ảnh gốc trong images/*."}
-                    {format === "Pascal VOC" && "Xuất file ZIP gồm Annotations/*.xml (bndbox) và ảnh gốc trong JPEGImages/*."}
-                    {format === "CSV" && "Xuất CSV phẳng — mỗi dòng là 1 annotation kèm tọa độ geometry thô."}
+                    {format === "COCO JSON" &&
+                        t("manager:export.formatDescriptions.coco")}
+                    {format === "YOLO" &&
+                        t("manager:export.formatDescriptions.yolo")}
+                    {format === "Pascal VOC" &&
+                        t("manager:export.formatDescriptions.pascalVoc")}
+                    {format === "CSV" &&
+                        t("manager:export.formatDescriptions.csv")}
                 </p>
-                <p className="text-xs text-muted-foreground">Chỉ export các annotation đã được duyệt (APPROVED).</p>
+                <p className="text-xs text-muted-foreground">{t("manager:export.approvedOnly")}</p>
 
                 {/* Batch status display */}
                 <div className="bg-muted/50 rounded-lg p-3 border border-border">
                     <p className="text-xs font-medium text-muted-foreground">
-                        Trạng thái Batch: 
+                        {t("manager:export.batchStatus")}:
                         <span className={`ml-2 inline-flex items-center px-2 py-1 rounded text-xs font-semibold ${
                             batchStatus === "COMPLETED" 
                                 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
@@ -249,12 +265,16 @@ export default function ProjectExport() {
                                 ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
                                 : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
                         }`}>
-                            {batchStatus}
+                            {batchStatus === "COMPLETED"
+                                ? t("manager:export.batchStatuses.completed")
+                                : batchStatus === "IN_PROGRESS"
+                                ? t("manager:export.batchStatuses.inProgress")
+                                : t("manager:export.batchStatuses.pending")}
                         </span>
                     </p>
                     {batchStatus !== "COMPLETED" && (
                         <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-                            ⚠️ Batch chưa hoàn thành. Vui lòng đợi tất cả annotation được duyệt (APPROVED) trước khi export.
+                            {t("manager:export.completedOnly")}
                         </p>
                     )}
                 </div>
@@ -270,24 +290,24 @@ export default function ProjectExport() {
                     isLoading={exporting}
                 >
                     <span className="material-symbols-outlined text-base mr-1">download</span>
-                    Export
+                    {t("manager:export.export")}
                 </Button>
             </Card>
 
             {/* Session export history */}
             <Card className="p-6">
-                <h2 className="text-base font-bold text-foreground mb-4">Lịch sử Export</h2>
+                <h2 className="text-base font-bold text-foreground mb-4">{t("manager:export.history")}</h2>
                 {history.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Chưa có bản export nào.</p>
+                    <p className="text-sm text-muted-foreground">{t("manager:export.emptyHistory")}</p>
                 ) : (
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Dataset</TableHead>
-                                <TableHead>Định dạng</TableHead>
-                                <TableHead>File</TableHead>
-                                <TableHead>Thời gian</TableHead>
-                                <TableHead>Trạng thái</TableHead>
+                                <TableHead>{t("manager:export.table.dataset")}</TableHead>
+                                <TableHead>{t("manager:export.table.format")}</TableHead>
+                                <TableHead>{t("manager:export.table.file")}</TableHead>
+                                <TableHead>{t("manager:export.table.time")}</TableHead>
+                                <TableHead>{t("manager:export.table.status")}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -301,16 +321,16 @@ export default function ProjectExport() {
                                     </TableCell>
                                     <TableCell className="font-mono text-xs text-muted-foreground">{item.fileName}</TableCell>
                                     <TableCell className="text-muted-foreground text-xs">
-                                        {new Date(item.exportedAt).toLocaleTimeString("vi-VN")}
+                                        {new Date(item.exportedAt).toLocaleTimeString(i18n.language === "en" ? "en-US" : "vi-VN")}
                                     </TableCell>
                                     <TableCell>
                                         {item.status === "COMPLETED" ? (
                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                                                Hoàn thành
+                                                {t("manager:export.statusCompleted")}
                                             </span>
                                         ) : (
                                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                                                Thất bại
+                                                {t("manager:export.statusFailed")}
                                             </span>
                                         )}
                                     </TableCell>

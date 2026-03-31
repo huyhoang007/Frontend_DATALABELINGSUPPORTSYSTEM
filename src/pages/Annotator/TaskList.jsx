@@ -1,8 +1,10 @@
 import * as React from "react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { annotationApi } from "../../api/annotationApi";
+import { translateAssignmentStatus } from "../../i18n/helpers";
 
 // Bảng màu Modern Enterprise UI
 const T = {
@@ -45,17 +47,8 @@ const STATUS_STYLES = {
   REJECTED: { bg: T.redBg, text: T.red, dot: T.red },
 };
 
-const STATUS_VI = {
-  ALL: "TẤT CẢ",
-  PENDING: "CHỜ XỬ LÝ",
-  IN_PROGRESS: "ĐANG LÀM",
-  SUBMITTED: "ĐÃ NỘP",
-  RE_SUBMITTED: "NỘP LẠI",
-  APPROVED: "ĐÃ DUYỆT",
-  REJECTED: "TỪ CHỐI",
-};
-
 export default function TaskList() {
+  const { t } = useTranslation(["annotator", "common"]);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("PENDING");
@@ -86,11 +79,11 @@ export default function TaskList() {
     } catch (err) {
       const status = err?.status;
       if (status === 401) {
-        setError("Hết phiên đăng nhập — vui lòng đăng nhập lại.");
+        setError(t("annotator:tasks.errors.expiredSession"));
       } else if (status === 403) {
-        setError("Bạn không có quyền xem danh sách task.");
+        setError(t("annotator:tasks.errors.forbidden"));
       } else {
-        setError(err?.message || "Không thể tải danh sách task từ server.");
+        setError(err?.message || t("annotator:tasks.errors.loadFailed"));
       }
     }
 
@@ -127,7 +120,7 @@ export default function TaskList() {
   const getActionConfig = (status) => {
     if (["PENDING", "REJECTED"].includes(status)) {
       return {
-        label: "Bắt đầu",
+        label: t("annotator:tasks.actions.start"),
         text: "#FFFFFF",
         background: T.brand,
         border: "none",
@@ -135,7 +128,7 @@ export default function TaskList() {
     }
     if (status === "RE_SUBMITTED") {
       return {
-        label: "Xem",
+        label: t("annotator:tasks.actions.view"),
         text: T.textSecondary,
         background: T.surfaceHover,
         border: `1px solid ${T.border}`,
@@ -144,7 +137,7 @@ export default function TaskList() {
     }
     if (status === "IN_PROGRESS") {
       return {
-        label: "Tiếp tục",
+        label: t("annotator:tasks.actions.continue"),
         text: T.amber,
         background: T.amberBg,
         border: `1px solid ${T.amber}40`,
@@ -152,7 +145,7 @@ export default function TaskList() {
     }
     if (["SUBMITTED", "APPROVED"].includes(status)) {
       return {
-        label: "Xem",
+        label: t("annotator:tasks.actions.view"),
         text: T.textSecondary,
         background: T.surfaceHover,
         border: `1px solid ${T.border}`,
@@ -167,6 +160,11 @@ export default function TaskList() {
       (a.status || "").toUpperCase(),
     ) && (a.projectStatus || "").toUpperCase() !== "PAUSED"
   ).length;
+
+  const getStatusText = (status) => {
+    if (status === "ALL") return t("common:labels.overview").toUpperCase();
+    return translateAssignmentStatus(status).toUpperCase();
+  };
 
   return (
     <div
@@ -203,7 +201,7 @@ export default function TaskList() {
                 marginBottom: "4px",
               }}
             >
-              Danh sách nhiệm vụ
+              {t("annotator:tasks.heading")}
             </p>
             <h1
               style={{
@@ -214,28 +212,16 @@ export default function TaskList() {
                 marginBottom: "8px",
               }}
             >
-              Nhiệm vụ của tôi
+              {t("annotator:tasks.title")}
             </h1>
             <p style={{ fontSize: "14px", color: T.textMuted }}>
-              Chào mừng trở lại,{" "}
-              <span style={{ color: T.brand, fontWeight: 600 }}>
-                {user?.displayName || user?.username || user?.name || "User"}
-              </span>
-              .
+              {t("annotator:tasks.welcomeBack", {
+                name: user?.displayName || user?.username || user?.name || "User",
+              })}
               {!loading && (
                 <>
                   {" "}
-                  Bạn có{" "}
-                  <span
-                    style={{
-                      fontFamily: "monospace",
-                      color: T.textPrimary,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {activeCount}
-                  </span>{" "}
-                  nhiệm vụ đang hoạt động.
+                  {t("annotator:tasks.activeTasks", { count: activeCount })}
                 </>
               )}
             </p>
@@ -276,7 +262,7 @@ export default function TaskList() {
             >
               logout
             </span>
-            Đăng xuất
+            {t("common:actions.logout")}
           </button>
         </div>
 
@@ -340,7 +326,7 @@ export default function TaskList() {
                   }
                 }}
               >
-                {STATUS_VI[tab] || tab.replace("_", " ")}
+                {getStatusText(tab)}
               </button>
             ))}
           </div>
@@ -382,7 +368,7 @@ export default function TaskList() {
                 outline: "none",
                 transition: "all .15s",
               }}
-              placeholder="Tìm kiếm theo project, dataset..."
+              placeholder={t("annotator:tasks.searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onFocus={(e) => {
@@ -424,7 +410,7 @@ export default function TaskList() {
                 fontSize: "13px",
               }}
             >
-              Đang tải...
+              {t("common:states.loading")}
             </span>
           </div>
         )}
@@ -462,7 +448,7 @@ export default function TaskList() {
                 fontFamily: "inherit",
               }}
             >
-              Thử lại
+              {t("annotator:tasks.retryLoad")}
             </button>
           </div>
         )}
@@ -506,7 +492,7 @@ export default function TaskList() {
                   marginBottom: "8px",
                 }}
               >
-                Chưa có nhiệm vụ nào
+                {t("annotator:tasks.noAssignmentsTitle")}
               </h4>
               <p
                 style={{
@@ -518,8 +504,7 @@ export default function TaskList() {
                   padding: "0 16px",
                 }}
               >
-                Manager sẽ phân công task cho bạn. Khi có task mới, bạn sẽ thấy
-                tại đây.
+                {t("annotator:tasks.noAssignmentsHint")}
               </p>
             </div>
           </div>
@@ -568,7 +553,7 @@ export default function TaskList() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  DỰ ÁN
+                  {t("annotator:tasks.table.project")}
                 </p>
                 <p
                   style={{
@@ -579,7 +564,7 @@ export default function TaskList() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  BỘ DỮ LIỆU
+                  {t("annotator:tasks.table.dataset")}
                 </p>
                 <p
                   style={{
@@ -590,7 +575,7 @@ export default function TaskList() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  NGƯỜI ĐÁNH GIÁ
+                  {t("annotator:tasks.table.reviewer")}
                 </p>
                 <p
                   style={{
@@ -601,7 +586,7 @@ export default function TaskList() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  TIẾN ĐỘ
+                  {t("annotator:tasks.table.progress")}
                 </p>
                 <p
                   style={{
@@ -612,7 +597,7 @@ export default function TaskList() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  TRẠNG THÁI
+                  {t("annotator:tasks.table.status")}
                 </p>
                 <p
                   style={{
@@ -624,7 +609,7 @@ export default function TaskList() {
                     textAlign: "right",
                   }}
                 >
-                  THAO TÁC
+                  {t("annotator:tasks.table.action")}
                 </p>
               </div>
             )}
@@ -720,7 +705,7 @@ export default function TaskList() {
                               background: statusStyle.dot,
                             }}
                           />
-                          {STATUS_VI[status] || status.replace("_", " ")}
+                          {translateAssignmentStatus(status).toUpperCase()}
                         </span>
                       </div>
 
@@ -742,7 +727,7 @@ export default function TaskList() {
                               marginBottom: "4px",
                             }}
                           >
-                            Người đánh giá
+                            {t("annotator:tasks.table.reviewer")}
                           </p>
                           <p
                             style={{ fontSize: "12px", color: T.textSecondary }}
@@ -761,7 +746,7 @@ export default function TaskList() {
                               marginBottom: "4px",
                             }}
                           >
-                            Tiến độ
+                            {t("annotator:tasks.table.progress")}
                           </p>
                           <div
                             style={{
@@ -977,7 +962,7 @@ export default function TaskList() {
                           background: statusStyle.dot,
                         }}
                       />
-                      {STATUS_VI[status] || status.replace("_", " ")}
+                      {translateAssignmentStatus(status).toUpperCase()}
                     </span>
 
                     <div
@@ -1013,7 +998,7 @@ export default function TaskList() {
                             (e.currentTarget.style.background = T.brand)
                           }
                         >
-                          Bắt đầu
+                          {t("annotator:tasks.actions.start")}
                         </button>
                       )}
                       {status === "RE_SUBMITTED" && (
@@ -1047,7 +1032,7 @@ export default function TaskList() {
                           >
                             visibility
                           </span>
-                          Xem
+                          {t("annotator:tasks.actions.view")}
                         </button>
                       )}
                       {status === "IN_PROGRESS" && (
@@ -1076,7 +1061,7 @@ export default function TaskList() {
                             e.currentTarget.style.background = T.amberBg;
                           }}
                         >
-                          Tiếp tục
+                          {t("annotator:tasks.actions.continue")}
                         </button>
                       )}
                       {["SUBMITTED", "APPROVED", "COMPLETED"].includes(
@@ -1116,7 +1101,7 @@ export default function TaskList() {
                           >
                             visibility
                           </span>
-                          Xem
+                          {t("annotator:tasks.actions.view")}
                         </button>
                       )}
                     </div>
@@ -1137,8 +1122,10 @@ export default function TaskList() {
               fontWeight: 500,
             }}
           >
-            Hiển thị {filteredAssignments.length} trong tổng số{" "}
-            {assignments.length} nhiệm vụ
+            {t("annotator:tasks.showingCount", {
+              shown: filteredAssignments.length,
+              total: assignments.length,
+            })}
           </p>
         )}
       </div>

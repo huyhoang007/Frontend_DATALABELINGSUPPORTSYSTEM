@@ -1,6 +1,7 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useOutletContext } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { datasetApi } from "../../api/datasetApi";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -20,32 +21,22 @@ import {
   TableCell,
 } from "../../components/ui/Table";
 
-const BATCH_STATUS_MAP: Record<string, { label: string; className: string }> = {
-  PENDING: {
-    label: "Cho xu ly",
-    className:
-      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-  },
-  IN_PROGRESS: {
-    label: "Dang xu ly",
-    className:
-      "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  },
-  REJECTED: {
-    label: "Bi tu choi",
-    className: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-  },
-  COMPLETED: {
-    label: "Hoan thanh",
-    className:
-      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  },
+const BATCH_STATUS_MAP = {
+  PENDING:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+  IN_PROGRESS:
+    "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+  REJECTED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+  COMPLETED:
+    "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
 };
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_REQUEST_SIZE = 100 * 1024 * 1024;
 const ACCEPTED_EXTS = [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"];
+
 export default function ProjectData() {
+  const { t, i18n } = useTranslation(["manager", "common"]);
   const { projectId } = useParams();
   const queryClient = useQueryClient();
   const numericProjectId = Number(projectId);
@@ -80,11 +71,9 @@ export default function ProjectData() {
     enabled: Boolean(numericProjectId),
     placeholderData: (previousData) => previousData,
     ...getHotspotQueryBehavior(30_000, 300_000),
-    // ✅ Auto-refresh datasets every 10 seconds to detect status changes
     refetchInterval: 10_000,
   });
 
-  // ✅ Auto-refresh datasets to detect when reviewer approves annotations
   useEffect(() => {
     if (!numericProjectId) return;
     const interval = setInterval(() => {
@@ -95,9 +84,12 @@ export default function ProjectData() {
 
   const validateFile = (f: File): string | null => {
     const ext = "." + f.name.split(".").pop()?.toLowerCase();
-    if (!ACCEPTED_EXTS.includes(ext))
-      return `"${f.name}" -- loai file khong duoc ho tro`;
-    if (f.size > MAX_FILE_SIZE) return `"${f.name}" -- vuot qua gioi han 10 MB`;
+    if (!ACCEPTED_EXTS.includes(ext)) {
+      return t("manager:data.errors.invalidType", { name: f.name });
+    }
+    if (f.size > MAX_FILE_SIZE) {
+      return t("manager:data.errors.tooLarge", { name: f.name });
+    }
     return null;
   };
 
@@ -121,8 +113,9 @@ export default function ProjectData() {
   };
 
   const readAllFilesFromEntry = async (entry: any): Promise<File[]> => {
-    if (entry.isFile)
+    if (entry.isFile) {
       return new Promise((resolve) => entry.file((f: File) => resolve([f])));
+    }
     if (entry.isDirectory) {
       const reader = entry.createReader();
       const allFiles: File[] = [];
@@ -133,9 +126,7 @@ export default function ProjectData() {
               resolve();
               return;
             }
-            const nested = await Promise.all(
-              entries.map(readAllFilesFromEntry),
-            );
+            const nested = await Promise.all(entries.map(readAllFilesFromEntry));
             allFiles.push(...nested.flat());
             readBatch();
           });
@@ -174,68 +165,87 @@ export default function ProjectData() {
 
   const removeFile = (idx: number) =>
     setFiles((prev) => prev.filter((_, i) => i !== idx));
+
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return bytes + " B";
     if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
     return (bytes / 1048576).toFixed(1) + " MB";
   };
+
   const totalSize = files.reduce((sum, f) => sum + f.size, 0);
   const batchOk = batchName.trim().length > 0;
   const filesOk = files.length > 0;
   const notUploading = status !== "uploading";
   const canUpload = !isProjectCompleted && batchOk && filesOk && notUploading;
   const disabledReason = isProjectCompleted
-    ? "Du an da hoan thanh - chi co the xuat du lieu"
+    ? t("manager:data.disabledReasons.completed")
     : !batchOk
-      ? "Nhap ten batch de upload"
+      ? t("manager:data.disabledReasons.batchName")
       : !filesOk
-        ? "Chon it nhat 1 file"
+        ? t("manager:data.disabledReasons.files")
         : !notUploading
-          ? "Dang upload..."
+          ? t("manager:data.disabledReasons.uploading")
           : null;
+
+  const getBatchStatusLabel = (rawStatus: string) => {
+    switch (rawStatus) {
+      case "COMPLETED":
+        return t("manager:data.batchStatuses.completed");
+      case "IN_PROGRESS":
+        return t("manager:data.batchStatuses.inProgress");
+      case "REJECTED":
+        return t("manager:data.batchStatuses.rejected");
+      default:
+        return t("manager:data.batchStatuses.pending");
+    }
+  };
 
   const handleUpload = async () => {
     if (!batchOk) {
-      showToast("Vui long nhap ten batch");
+      showToast(t("manager:data.errors.enterBatchName"));
       return;
     }
     if (!filesOk) {
-      showToast("Vui long chon file de upload");
+      showToast(t("manager:data.errors.selectFiles"));
       return;
     }
     if (totalSize > MAX_REQUEST_SIZE) {
-      showToast("Tong dung luong vuot qua gioi han 100 MB");
+      showToast(t("manager:data.errors.totalTooLarge"));
       return;
     }
+
     setStatus("uploading");
     setError("");
     setProgress(0);
+
     try {
       await datasetApi.createDataset(
         numericProjectId,
         batchName.trim(),
         files,
         (event: any) => {
-          if (event.total)
+          if (event.total) {
             setProgress(Math.round((event.loaded / event.total) * 100));
+          }
         },
       );
       setStatus("success");
       setProgress(100);
       setBatchName("");
       setFiles([]);
-      showToast("Upload thanh cong!");
+      showToast(t("manager:data.uploadSuccessToast"));
       await invalidateProjectDatasetData(queryClient, numericProjectId);
       await refetchDatasets();
       setTimeout(() => setStatus("idle"), 3000);
     } catch (err: any) {
       setStatus("error");
       const s = err?.status;
-      if (s === 413) setError("File qua lon");
-      else if (s === 415) setError("Dinh dang file khong duoc ho tro");
-      else if (s === 401) setError("Het phien dang nhap");
-      else if (s === 403) setError("Khong co quyen upload");
-      else setError(err?.message || "Upload that bai");
+      if (s === 413) setError(t("manager:data.errors.fileTooLarge"));
+      else if (s === 415)
+        setError(t("manager:data.errors.unsupportedFormat"));
+      else if (s === 401) setError(t("manager:data.errors.sessionExpired"));
+      else if (s === 403) setError(t("manager:data.errors.noPermission"));
+      else setError(err?.message || t("manager:data.uploadFailed"));
     }
   };
 
@@ -254,11 +264,10 @@ export default function ProjectData() {
           </span>
           <div>
             <p className="font-medium text-orange-900 dark:text-orange-200 text-sm">
-              Du an COMPLETED - Chi co the xuat du lieu
+              {t("manager:assignments.completedLockedTitle")}
             </p>
             <p className="text-xs text-orange-800 dark:text-orange-300 mt-1">
-              Du an da hoan thanh tat ca cac tac vu. Chi co the xuat du lieu,
-              cac chuc nang khac bi khoa.
+              {t("manager:assignments.completedLockedDescription")}
             </p>
           </div>
         </div>
@@ -267,15 +276,16 @@ export default function ProjectData() {
       <Card className="p-6 space-y-4">
         <div className="max-w-md">
           <label className="block text-sm font-medium text-muted-foreground mb-1">
-            Ten Batch
+            {t("manager:data.batchName")}
           </label>
           <Input
-            placeholder="VD: Human_Images_v1"
+            placeholder={t("manager:data.batchPlaceholder")}
             value={batchName}
             onChange={(e: any) => setBatchName(e.target.value)}
             maxLength={100}
           />
         </div>
+
         <div className="flex gap-2">
           {(["files", "folder"] as const).map((mode) => (
             <button
@@ -291,10 +301,13 @@ export default function ProjectData() {
               <span className="material-symbols-outlined text-base">
                 {mode === "files" ? "insert_drive_file" : "folder_open"}
               </span>
-              {mode === "files" ? "Chon file" : "Chon thu muc"}
+              {mode === "files"
+                ? t("manager:data.chooseFiles")
+                : t("manager:data.chooseFolder")}
             </button>
           ))}
         </div>
+
         <div
           className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${isProjectCompleted ? "cursor-not-allowed opacity-50" : "cursor-pointer"} ${dragActive && !isProjectCompleted ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}
           onDragOver={(e) => {
@@ -326,11 +339,10 @@ export default function ProjectData() {
             {uploadMode === "folder" ? "folder_open" : "cloud_upload"}
           </span>
           <p className="text-sm text-muted-foreground">
-            Keo tha file vao day hoac{" "}
-            <span className="text-primary font-medium">chon file</span>
+            {t("manager:data.dropHint")}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            PNG, JPG, JPEG, GIF, BMP, WEBP -- toi da 10 MB/file, 100 MB tong
+            {t("manager:data.dropSubHint")}
           </p>
           <input
             id="file-input-data"
@@ -367,17 +379,18 @@ export default function ProjectData() {
             }}
           />
         </div>
+
         {files.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-foreground">
-                {files.length} file da chon
+                {t("manager:data.selectedFiles", { count: files.length })}
               </p>
               <p className="text-xs text-muted-foreground">
-                Tong: {formatSize(totalSize)}
+                {t("manager:data.totalSize", { size: formatSize(totalSize) })}
                 {totalSize > MAX_REQUEST_SIZE && (
                   <span className="text-destructive ml-1">
-                    (vuot gioi han!)
+                    {t("manager:data.overLimit")}
                   </span>
                 )}
               </p>
@@ -412,10 +425,13 @@ export default function ProjectData() {
             </div>
           </div>
         )}
+
         {status === "uploading" && (
           <div className="space-y-1">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Dang upload...</span>
+              <span className="text-muted-foreground">
+                {t("manager:data.uploading")}
+              </span>
               <span className="font-mono text-foreground">{progress}%</span>
             </div>
             <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
@@ -426,6 +442,7 @@ export default function ProjectData() {
             </div>
           </div>
         )}
+
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <Button
@@ -439,25 +456,27 @@ export default function ProjectData() {
                   <span className="material-symbols-outlined text-base mr-1 animate-spin">
                     progress_activity
                   </span>
-                  Uploading... {progress}%
+                  {t("manager:data.uploading")} {progress}%
                 </>
               ) : (
                 <>
                   <span className="material-symbols-outlined text-base mr-1">
                     upload
                   </span>
-                  Upload
+                  {t("manager:data.uploadButton")}
                 </>
               )}
             </Button>
+
             {status === "success" && (
               <span className="text-sm text-green-600 flex items-center gap-1">
                 <span className="material-symbols-outlined text-base">
                   check_circle
                 </span>
-                Upload thanh cong
+                {t("manager:data.uploadSuccess")}
               </span>
             )}
+
             {status === "error" && (
               <span className="text-sm text-destructive flex items-center gap-1">
                 <span className="material-symbols-outlined text-base">
@@ -467,6 +486,7 @@ export default function ProjectData() {
               </span>
             )}
           </div>
+
           {disabledReason && (
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <span className="material-symbols-outlined text-[14px]">
@@ -480,31 +500,35 @@ export default function ProjectData() {
 
       <Card className="p-6">
         <h2 className="text-base font-bold text-foreground mb-4">
-          Danh sach Batch
+          {t("manager:data.batchList")}
         </h2>
         {loadingDatasets ? (
           <div className="text-center py-6">
             <span className="material-symbols-outlined text-2xl text-muted-foreground animate-spin block mb-2">
               progress_activity
             </span>
-            <p className="text-sm text-muted-foreground">Dang tai tu API...</p>
+            <p className="text-sm text-muted-foreground">
+              {t("manager:data.loadingApi")}
+            </p>
           </div>
         ) : datasets.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Chua co batch nao.</p>
+          <p className="text-sm text-muted-foreground">
+            {t("manager:data.noBatch")}
+          </p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Batch Name</TableHead>
-                <TableHead>Files</TableHead>
-                <TableHead>Trang thai</TableHead>
-                <TableHead>Ngay tao</TableHead>
+                <TableHead>{t("manager:data.table.batchName")}</TableHead>
+                <TableHead>{t("manager:data.table.files")}</TableHead>
+                <TableHead>{t("manager:data.table.status")}</TableHead>
+                <TableHead>{t("manager:data.table.createdAt")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {datasets.map((ds: any) => {
                 const s = ds.computedStatus || "PENDING";
-                const badge =
+                const badgeClass =
                   BATCH_STATUS_MAP[s] ?? BATCH_STATUS_MAP["PENDING"];
                 return (
                   <TableRow key={ds.datasetId}>
@@ -512,14 +536,16 @@ export default function ProjectData() {
                     <TableCell>{ds.totalItems}</TableCell>
                     <TableCell>
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${badge.className}`}
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${badgeClass}`}
                       >
-                        {badge.label}
+                        {getBatchStatusLabel(s)}
                       </span>
                     </TableCell>
                     <TableCell>
                       {ds.createdAt
-                        ? new Date(ds.createdAt).toLocaleDateString("vi-VN")
+                        ? new Date(ds.createdAt).toLocaleDateString(
+                            i18n.language === "en" ? "en-US" : "vi-VN",
+                          )
                         : "—"}
                     </TableCell>
                   </TableRow>

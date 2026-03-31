@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { labelApi } from "../../api/labelApi";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -18,6 +19,7 @@ const PRESET_COLORS = [
 ];
 
 export default function CreateLabel() {
+  const { t } = useTranslation(["manager", "common"]);
   const navigate = useNavigate();
   const [form, setForm] = useState({
     labelName: "",
@@ -37,14 +39,14 @@ export default function CreateLabel() {
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!form.labelName.trim()) e.labelName = "Tên nhãn là bắt buộc";
-    else if (form.labelName.length > 50) e.labelName = "Tối đa 50 ký tự";
+    if (!form.labelName.trim()) e.labelName = t("manager:labels.form.validation.nameRequired");
+    else if (form.labelName.length > 50) e.labelName = t("manager:labels.form.validation.nameTooLong");
     if (!/^#[0-9A-Fa-f]{6}$/.test(form.colorCode))
-      e.colorCode = "Mã màu không hợp lệ (VD: #FF0000)";
-    if (!form.labelType) e.labelType = "Chọn loại nhãn";
-    if (form.description.length > 200) e.description = "Tối đa 200 ký tự";
+      e.colorCode = t("manager:labels.form.validation.colorInvalid");
+    if (!form.labelType) e.labelType = t("manager:labels.form.validation.typeRequired");
+    if (form.description.length > 200) e.description = t("manager:labels.form.validation.descriptionTooLong");
     if (form.shortcutKey && form.shortcutKey.length > 20)
-      e.shortcutKey = "Tối đa 20 ký tự";
+      e.shortcutKey = t("manager:labels.form.validation.shortcutTooLong");
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -66,8 +68,8 @@ export default function CreateLabel() {
       const raw = err?.response?.data?.message || err?.message || "";
       const msg =
         typeof raw === "string" && raw.toLowerCase().includes("already exist")
-          ? "Nhãn này với loại đã tồn tại. Hãy chọn tên hoặc loại khác"
-          : raw || "Tạo nhãn thất bại";
+          ? t("manager:labels.form.validation.duplicate")
+          : raw || t("manager:labels.form.validation.createFailed");
       setApiError(msg);
     } finally {
       setSaving(false);
@@ -83,7 +85,7 @@ export default function CreateLabel() {
         >
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
-        <h1 className="text-2xl font-bold text-foreground">Thêm nhãn mới</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t("manager:labels.form.title")}</h1>
       </div>
 
       {apiError && <p className="text-sm text-destructive">{apiError}</p>}
@@ -92,10 +94,10 @@ export default function CreateLabel() {
         {/* Label Name */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
-            Tên nhãn <span className="text-destructive">*</span>
+            {t("manager:labels.form.name")} <span className="text-destructive">*</span>
           </label>
           <Input
-            placeholder="VD: Person, Car, Dog..."
+            placeholder={t("manager:labels.form.placeholders.name")}
             value={form.labelName}
             onChange={(e) => set("labelName", e.target.value)}
             maxLength={50}
@@ -108,7 +110,7 @@ export default function CreateLabel() {
         {/* Color */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
-            Màu sắc <span className="text-destructive">*</span>
+            {t("manager:labels.form.color")} <span className="text-destructive">*</span>
           </label>
           <div className="flex items-center gap-3">
             <div className="flex gap-1.5">
@@ -141,16 +143,16 @@ export default function CreateLabel() {
         {/* Type */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
-            Loại nhãn <span className="text-destructive">*</span>
+            {t("manager:labels.form.type")} <span className="text-destructive">*</span>
           </label>
           <select
             className="w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             value={form.labelType}
             onChange={(e) => set("labelType", e.target.value)}
           >
-            {LABEL_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
+            {LABEL_TYPES.map((labelType) => (
+              <option key={labelType} value={labelType}>
+                {t(`manager:labels.types.${labelType}`, { defaultValue: labelType })}
               </option>
             ))}
           </select>
@@ -162,12 +164,12 @@ export default function CreateLabel() {
         {/* Description */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
-            Mô tả
+            {t("manager:labels.form.description")}
           </label>
           <textarea
             className="w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
             rows={3}
-            placeholder="Mô tả ngắn về nhãn..."
+            placeholder={t("manager:labels.form.placeholders.description")}
             value={form.description}
             onChange={(e) => set("description", e.target.value)}
             maxLength={200}
@@ -185,20 +187,20 @@ export default function CreateLabel() {
         {/* Shortcut Key */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
-            Phím tắt{" "}
+            {t("manager:labels.form.shortcut")}{" "}
             <span className="text-muted-foreground font-normal">
-              (tùy chọn)
+              {t("manager:labels.form.shortcutOptional")}
             </span>
           </label>
           <Input
-            placeholder="VD: P, ctrl+1, alt+a, ..."
+            placeholder={t("manager:labels.form.placeholders.shortcut")}
             value={form.shortcutKey}
             onChange={(e) => set("shortcutKey", e.target.value.slice(0, 20))}
             className="w-48"
             maxLength={20}
           />
           <p className="text-xs text-muted-foreground mt-1">
-            Có thể nhập nhiều ký tự để tìm kiếm nhanh khi gán nhãn
+            {t("manager:labels.form.shortcutHint")}
           </p>
           {errors.shortcutKey && (
             <p className="text-xs text-destructive mt-1">
@@ -210,10 +212,10 @@ export default function CreateLabel() {
         {/* Actions */}
         <div className="flex items-center gap-3 pt-2 border-t border-border">
           <Button variant="secondary" onClick={handleSave} isLoading={saving}>
-            Lưu nhãn
+            {t("manager:labels.form.save")}
           </Button>
           <Button variant="ghost" onClick={() => navigate("/manager/labels")}>
-            Hủy
+            {t("common:actions.cancel")}
           </Button>
         </div>
       </Card>

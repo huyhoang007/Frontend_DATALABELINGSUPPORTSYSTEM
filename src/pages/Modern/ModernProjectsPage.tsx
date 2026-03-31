@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { projectApi } from "../../api/projectApi";
 import { assignmentApi } from "../../api/assignmentApi";
 import { isFeatureEnabled } from "../../config/featureFlags";
@@ -15,6 +16,7 @@ import {
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { cn } from "../../utils/cn";
+import { translateDataType, translateProjectStatus } from "../../i18n/helpers";
 
 function computeProjectStatus(assignments: any[]): string {
   if (!assignments || assignments.length === 0) return "draft";
@@ -84,6 +86,7 @@ const readPersistedState = () => {
 };
 
 const ModernProjectsPage: React.FC = () => {
+  const { t } = useTranslation(["manager", "common"]);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const persistedState = readPersistedState();
@@ -217,7 +220,7 @@ const ModernProjectsPage: React.FC = () => {
 
   const handleCreateProject = async () => {
     if (!newName) {
-      addToast("Vui lòng nhập tên dự án", "error");
+      addToast(t("manager:projects.messages.nameRequired"), "error");
       return;
     }
 
@@ -228,7 +231,7 @@ const ModernProjectsPage: React.FC = () => {
         dataType: "IMAGE",
         description: newDescription.trim(), // Use actual description from form
       });
-      addToast("Tạo dự án thành công!", "success");
+      addToast(t("manager:projects.messages.created"), "success");
       setShowCreateModal(false);
       setNewName("");
       setNewDataType("IMAGE");
@@ -239,10 +242,11 @@ const ModernProjectsPage: React.FC = () => {
       }
     } catch (error: any) {
       const raw = error?.response?.data?.message || error?.message || "";
-      const msg = typeof raw === "string" && raw.toLowerCase().includes("already exist")
-        ? "Tên dự án đã tồn tại, vui lòng chọn tên khác"
-        : raw || "Không thể tạo dự án";
-      addToast(msg, "error");
+      const msg =
+        typeof raw === "string" && raw.toLowerCase().includes("already exist")
+          ? t("manager:projects.messages.duplicateName")
+          : raw || t("manager:projects.messages.createFailed");
+      addToast(msg || t("manager:projects.messages.createFailed"), "error");
     } finally {
       setIsCreating(false);
     }
@@ -259,7 +263,7 @@ const ModernProjectsPage: React.FC = () => {
 
   const handleUpdateProject = async () => {
     if (!editingProject || !editName.trim()) {
-      addToast("Tên dự án là bắt buộc", "error");
+      addToast(t("manager:projects.messages.nameRequired"), "error");
       return;
     }
 
@@ -293,11 +297,11 @@ const ModernProjectsPage: React.FC = () => {
         );
       }
       
-      addToast("Cập nhật dự án thành công!", "success");
+      addToast(t("manager:projects.messages.updated"), "success");
       setShowEditModal(false);
       setEditingProject(null);
     } catch (error: any) {
-      addToast(error.message || "Không thể cập nhật dự án", "error");
+      addToast(error.message || t("manager:projects.messages.updateFailed"), "error");
     } finally {
       setIsUpdating(false);
     }
@@ -306,7 +310,7 @@ const ModernProjectsPage: React.FC = () => {
   const handleDeleteProject = async (projectId: number) => {
     if (
       !window.confirm(
-        "Bạn có chắc chắn muốn ẩn dự án này? Dự án sẽ được chuyển sang trạng thái Inactive.",
+        t("manager:projects.messages.confirmDelete"),
       )
     ) {
       return;
@@ -320,10 +324,10 @@ const ModernProjectsPage: React.FC = () => {
       if (!summaryModeEnabled) {
         await fetchProjectsLegacy();
       }
-      addToast("Đã ẩn dự án thành công!", "success");
+      addToast(t("manager:projects.messages.deleted"), "success");
       setShowDeletedProjects(true); // Auto-switch to deleted projects tab
     } catch (error: any) {
-      addToast(error.message || "Không thể ẩn dự án", "error");
+      addToast(error.message || t("manager:projects.messages.createFailed"), "error");
     } finally {
       setIsDeleting(false);
     }
@@ -332,7 +336,7 @@ const ModernProjectsPage: React.FC = () => {
   const handleActivateProject = async (projectId: number) => {
     if (
       !window.confirm(
-        "Bạn có chắc chắn muốn kích hoạt lại dự án này?",
+        t("manager:projects.messages.confirmRestore"),
       )
     ) {
       return;
@@ -341,13 +345,13 @@ const ModernProjectsPage: React.FC = () => {
     setIsDeleting(true);
     try {
       await projectApi.activateProject(projectId);
-      addToast("Đã kích hoạt lại dự án thành công!", "success");
+      addToast(t("manager:projects.messages.restored"), "success");
       await queryClient.invalidateQueries({ queryKey: ["projects", "summary-list"] });
       if (!summaryModeEnabled) {
         await fetchProjectsLegacy();
       }
     } catch (error: any) {
-      addToast(error.message || "Không thể kích hoạt lại dự án", "error");
+      addToast(error.message || t("manager:projects.messages.restoreFailed"), "error");
     } finally {
       setIsDeleting(false);
     }
@@ -357,26 +361,43 @@ const ModernProjectsPage: React.FC = () => {
     const normalized = currentStatus?.toUpperCase() || "DRAFT";
     switch (normalized) {
       case "DRAFT":
-        return [{ value: "DRAFT", label: "Bản nháp" }, { value: "IN_PROGRESS", label: "Đang tiến hành" }];
+        return [
+          { value: "DRAFT", label: translateProjectStatus("DRAFT") },
+          {
+            value: "IN_PROGRESS",
+            label: translateProjectStatus("IN_PROGRESS"),
+          },
+        ];
       case "IN_PROGRESS":
-        return [{ value: "IN_PROGRESS", label: "Đang tiến hành" }, { value: "PAUSED", label: "Tạm dừng" }];
+        return [
+          {
+            value: "IN_PROGRESS",
+            label: translateProjectStatus("IN_PROGRESS"),
+          },
+          { value: "PAUSED", label: translateProjectStatus("PAUSED") },
+        ];
       case "PAUSED":
-        return [{ value: "PAUSED", label: "Tạm dừng" }, { value: "IN_PROGRESS", label: "Đang tiến hành" }];
+        return [
+          { value: "PAUSED", label: translateProjectStatus("PAUSED") },
+          {
+            value: "IN_PROGRESS",
+            label: translateProjectStatus("IN_PROGRESS"),
+          },
+        ];
       case "COMPLETED":
-        return [{ value: "COMPLETED", label: "Hoàn thành" }]; // Locked
+        return [
+          {
+            value: "COMPLETED",
+            label: translateProjectStatus("COMPLETED"),
+          },
+        ];
       default:
         return [{ value: normalized, label: normalized }];
     }
   };
 
   const getStatusLabel = (status: string) => {
-    const map: { [key: string]: string } = {
-      "DRAFT": "Bản nháp",
-      "IN_PROGRESS": "Đang tiến hành",
-      "PAUSED": "Tạm dừng",
-      "COMPLETED": "Hoàn thành"
-    };
-    return map[status?.toUpperCase() || ""] || status;
+    return translateProjectStatus(status);
   };
 
   const getStatusColor = (status: string) => {
@@ -464,13 +485,13 @@ const ModernProjectsPage: React.FC = () => {
               color: T.textPrimary,
               marginBottom: '8px',
             }}>
-              Quản lý dự án
+              {t("manager:projects.title")}
             </h1>
             <p style={{
               fontSize: '15px',
               color: T.textSecondary,
             }}>
-              {showDeletedProjects ? 'Các dự án đã xóa' : 'Quản lý các dự án gán nhãn dữ liệu và datasets'}
+              {showDeletedProjects ? t("manager:projects.deletedSubtitle") : t("manager:projects.subtitle")}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -485,7 +506,7 @@ const ModernProjectsPage: React.FC = () => {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                Dự án của tôi
+                {t("manager:projects.mine")}
               </button>
               <button
                 onClick={() => setShowDeletedProjects(true)}
@@ -496,7 +517,7 @@ const ModernProjectsPage: React.FC = () => {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                Dự án đã xóa ({projects.filter(p => p.status?.toUpperCase() === "INACTIVE").length})
+                {t("manager:projects.deleted")} ({projects.filter(p => p.status?.toUpperCase() === "INACTIVE").length})
               </button>
             </div>
 
@@ -511,7 +532,7 @@ const ModernProjectsPage: React.FC = () => {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                Lưới
+                {t("manager:projects.viewModes.grid")}
               </button>
               <button
                 onClick={() => setViewMode("list")}
@@ -522,7 +543,7 @@ const ModernProjectsPage: React.FC = () => {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                Danh sách
+                {t("manager:projects.viewModes.list")}
               </button>
             </div>
             {!showDeletedProjects && (
@@ -532,7 +553,7 @@ const ModernProjectsPage: React.FC = () => {
                 leftIcon="add"
                 className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
               >
-                Tạo dự án mới
+                {t("manager:projects.createProject")}
               </Button>
             )}
           </div>
@@ -542,10 +563,10 @@ const ModernProjectsPage: React.FC = () => {
         {!showDeletedProjects && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
             {[
-              { label: "Bản nháp", status: "DRAFT", color: "bg-slate-500/10 text-slate-500 border-slate-500/20" },
-              { label: "Đang tiến hành", status: "IN_PROGRESS", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
-              { label: "Tạm dừng", status: "PAUSED", color: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
-              { label: "Hoàn thành", status: "COMPLETED", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
+              { label: translateProjectStatus("DRAFT"), status: "DRAFT", color: "bg-slate-500/10 text-slate-500 border-slate-500/20" },
+              { label: translateProjectStatus("IN_PROGRESS"), status: "IN_PROGRESS", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
+              { label: translateProjectStatus("PAUSED"), status: "PAUSED", color: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
+              { label: translateProjectStatus("COMPLETED"), status: "COMPLETED", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
             ].map((stat) => (
               <div
                 key={stat.status}
@@ -568,11 +589,11 @@ const ModernProjectsPage: React.FC = () => {
               onChange={(e) => setSelectedStatus(e.target.value)}
               className="px-4 py-2 bg-background border border-input rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer min-w-[180px]"
             >
-              <option value="all">Tất cả trạng thái</option>
-              <option value="draft">Bản nháp</option>
-              <option value="in_progress">Đang tiến hành</option>
-              <option value="paused">Tạm dừng</option>
-              <option value="completed">Hoàn thành</option>
+              <option value="all">{t("manager:projects.filters.allStatus")}</option>
+              <option value="draft">{translateProjectStatus("DRAFT")}</option>
+              <option value="in_progress">{translateProjectStatus("IN_PROGRESS")}</option>
+              <option value="paused">{translateProjectStatus("PAUSED")}</option>
+              <option value="completed">{translateProjectStatus("COMPLETED")}</option>
             </select>
           </div>
         )}
@@ -585,10 +606,10 @@ const ModernProjectsPage: React.FC = () => {
             {showDeletedProjects ? "📦" : "📋"}
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-2">
-            {showDeletedProjects ? "Không có dự án đã xóa" : "Không có dự án"}
+                  {showDeletedProjects ? t("manager:projects.noDeleted") : t("manager:projects.noProject")}
           </h3>
           <p className="text-sm text-muted-foreground">
-            {showDeletedProjects ? "Tất cả dự án của bạn đều đang hoạt động" : "Hãy tạo dự án mới để bắt đầu"}
+            {showDeletedProjects ? t("manager:projects.allActive") : t("manager:projects.startCreate")}
           </p>
         </Card>
       ) : viewMode === "grid" ? (
@@ -611,7 +632,7 @@ const ModernProjectsPage: React.FC = () => {
                       color: getDataTypeColor(project.data_type)
                     }}
                   >
-                    {project.data_type}
+                    {translateDataType(project.data_type)}
                   </div>
                 </div>
                 <div
@@ -623,23 +644,23 @@ const ModernProjectsPage: React.FC = () => {
                   }}
                 >
                   {getStatusIcon(project.status)}
-                  <span className="uppercase">{project.status.replace('_', ' ')}</span>
+                  <span className="uppercase">{translateProjectStatus(project.status)}</span>
                 </div>
               </div>
 
               {/* Project Info */}
               <div className="space-y-3 mb-5 p-4 bg-muted/30 rounded-lg">
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">Manager:</span>
+                  <span className="text-muted-foreground">{t("manager:projects.card.manager")}:</span>
                   <span className="font-semibold text-foreground">
-                    {project.manager?.full_name || "Unknown"}
+                    {project.manager?.full_name || t("common:labels.unknown")}
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">Datasets:</span>
+                  <span className="text-muted-foreground">{t("common:labels.datasets")}:</span>
                   <span className="font-semibold text-foreground">
-                    {project.dataset_count ?? project.datasets?.length ?? 0} datasets
+                    {t("manager:projects.card.datasets", { count: project.dataset_count ?? project.datasets?.length ?? 0 })}
                   </span>
                 </div>
               </div>
@@ -654,7 +675,7 @@ const ModernProjectsPage: React.FC = () => {
                         onClick={() => handleOpenProject(project.project_id)}
                       leftIcon="visibility"
                     >
-                      Chi tiết
+                      {t("common:actions.viewDetail")}
                     </Button>
                     <Button
                       variant="secondary"
@@ -663,7 +684,7 @@ const ModernProjectsPage: React.FC = () => {
                       disabled={isDeleting}
                       leftIcon="edit"
                     >
-                      Chỉnh sửa
+                      {t("common:actions.edit")}
                     </Button>
                     <Button
                       variant="destructive"
@@ -671,7 +692,7 @@ const ModernProjectsPage: React.FC = () => {
                       onClick={() => handleDeleteProject(project.project_id)}
                       disabled={isDeleting}
                       leftIcon="delete"
-                      title="Ẩn dự án"
+                      title={t("manager:projects.actions.hideProject")}
                     />
                   </>
                 ) : (
@@ -682,7 +703,7 @@ const ModernProjectsPage: React.FC = () => {
                     disabled={isDeleting}
                     leftIcon="restore"
                   >
-                    Kích hoạt lại
+                    {t("common:actions.restore")}
                   </Button>
                 )}
               </div>
@@ -695,11 +716,11 @@ const ModernProjectsPage: React.FC = () => {
           <table className="w-full text-sm text-left">
             <thead className="bg-muted/50 text-muted-foreground font-semibold uppercase text-xs">
               <tr>
-                <th className="px-6 py-4">Tên dự án</th>
-                <th className="px-6 py-4">Loại</th>
-                <th className="px-6 py-4">Trạng thái</th>
-                <th className="px-6 py-4">Quản lý</th>
-                <th className="px-6 py-4 text-right">Thao tác</th>
+                <th className="px-6 py-4">{t("manager:projects.form.projectName")}</th>
+                <th className="px-6 py-4">{t("common:labels.type")}</th>
+                <th className="px-6 py-4">{t("common:labels.status")}</th>
+                <th className="px-6 py-4">{t("common:labels.manager")}</th>
+                <th className="px-6 py-4 text-right">{t("common:labels.action")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50 text-foreground">
@@ -716,7 +737,7 @@ const ModernProjectsPage: React.FC = () => {
                         color: getDataTypeColor(project.data_type)
                       }}
                     >
-                      {project.data_type}
+                      {translateDataType(project.data_type)}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -729,48 +750,50 @@ const ModernProjectsPage: React.FC = () => {
                       }}
                     >
                       {getStatusIcon(project.status)}
-                      <span className="uppercase">{project.status.replace('_', ' ')}</span>
+                      <span className="uppercase">{translateProjectStatus(project.status)}</span>
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-muted-foreground">{project.manager?.full_name}</td>
-                  <td className="px-6 py-4 text-right space-x-2">
+                  <td className="px-6 py-4 text-muted-foreground">{project.manager?.full_name || t("common:labels.unknown")}</td>
+                  <td className="px-6 py-4">
                     {project.status?.toUpperCase() !== "INACTIVE" ? (
-                      <>
+                      <div className="flex justify-end gap-2 flex-wrap">
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 w-8 p-0"
-                            onClick={() => handleOpenProject(project.project_id)}
-                          title="Xem chi tiết"
+                          className="h-8 px-3 text-xs"
+                          onClick={() => handleOpenProject(project.project_id)}
+                          title={t("common:actions.viewDetail")}
                         >
-                          Xem
+                          {t("common:actions.view")}
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 w-8 p-0"
+                          className="h-8 px-3 text-xs"
                           onClick={() => handleEditClick(project)}
                         >
-                          Sửa
+                          {t("common:actions.edit")}
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                          className="h-8 px-3 text-xs text-destructive hover:text-destructive"
                           onClick={() => handleDeleteProject(project.project_id)}
                         >
-                          Xóa
+                          {t("common:actions.delete")}
                         </Button>
-                      </>
+                      </div>
                     ) : (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="text-green-600 border-green-500/30 bg-green-500/10 hover:bg-green-500/20"
-                        onClick={() => handleActivateProject(project.project_id)}
-                      >
-                        Kích hoạt lại
-                      </Button>
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="text-green-600 border-green-500/30 bg-green-500/10 hover:bg-green-500/20"
+                          onClick={() => handleActivateProject(project.project_id)}
+                        >
+                          {t("common:actions.restore")}
+                        </Button>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -785,34 +808,34 @@ const ModernProjectsPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
             <h2 className="text-xl font-bold text-foreground mb-6">
-              Tạo dự án mới
+              {t("manager:projects.form.createTitle")}
             </h2>
 
             <div className="space-y-4 mb-6">
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Tên dự án *</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">{t("manager:projects.form.projectName")} *</label>
                 <input
                   type="text"
-                  placeholder="Tên dự án"
+                  placeholder={t("manager:projects.form.projectName")}
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   className="w-full px-4 py-2.5 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Loại dữ liệu *</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">{t("manager:projects.form.dataType")} *</label>
                 <input
                   type="text"
-                  value="Hình ảnh"
+                  value={t("manager:projects.form.imageType")}
                   disabled
                   className="w-full px-4 py-2.5 bg-muted border border-input rounded-lg text-sm text-muted-foreground cursor-not-allowed"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Mô tả</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">{t("manager:projects.form.description")}</label>
                 <textarea
-                  placeholder="Mô tả dự án..."
+                  placeholder={t("manager:projects.form.description")}
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
                   className="w-full px-4 py-2.5 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none min-h-[100px]"
@@ -827,14 +850,14 @@ const ModernProjectsPage: React.FC = () => {
                 onClick={() => setShowCreateModal(false)}
                 disabled={isCreating}
               >
-                Hủy
+                {t("common:actions.cancel")}
               </Button>
               <Button
                 variant="primary"
                 onClick={handleCreateProject}
                 isLoading={isCreating}
               >
-                Tạo mới
+                {t("common:actions.createNew")}
               </Button>
             </div>
           </Card>
@@ -845,38 +868,38 @@ const ModernProjectsPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
             <h2 className="text-xl font-bold text-foreground mb-6">
-              Chỉnh sửa dự án
+              {t("manager:projects.form.editTitle")}
             </h2>
 
             <div className="space-y-4 mb-6">
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Tên dự án *</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">{t("manager:projects.form.projectName")} *</label>
                 <input
                   type="text"
-                  placeholder="Tên dự án"
+                  placeholder={t("manager:projects.form.projectName")}
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   className="w-full px-4 py-2.5 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Loại dữ liệu</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">{t("manager:projects.form.dataType")}</label>
                 <select
                   value={editDataType}
                   onChange={(e) => setEditDataType(e.target.value)}
                   className="w-full px-4 py-2.5 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none cursor-pointer"
                   disabled
                 >
-                  <option value="image">Hình ảnh</option>
-                  <option value="text">Văn bản</option>
-                  <option value="audio">Âm thanh</option>
-                  <option value="video">Video</option>
+                  <option value="image">{t("manager:projects.form.imageType")}</option>
+                  <option value="text">{t("manager:projects.form.textType")}</option>
+                  <option value="audio">{t("manager:projects.form.audioType")}</option>
+                  <option value="video">{t("manager:projects.form.videoType")}</option>
                 </select>
-                <p className="text-xs text-muted-foreground mt-1">Không thể thay đổi loại dữ liệu sau khi tạo.</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("manager:projects.form.cannotChangeType")}</p>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Trạng thái</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">{t("manager:projects.form.status")}</label>
                 <select
                   value={editStatus}
                   onChange={(e) => setEditStatus(e.target.value)}
@@ -888,7 +911,7 @@ const ModernProjectsPage: React.FC = () => {
                   ))}
                 </select>
                 {editStatus?.toUpperCase() === "COMPLETED" && (
-                  <p className="text-xs text-muted-foreground mt-1">Dự án đã hoàn thành không thể thay đổi trạng thái.</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t("manager:projects.form.completedLocked")}</p>
                 )}
               </div>
             </div>
@@ -899,14 +922,14 @@ const ModernProjectsPage: React.FC = () => {
                 onClick={() => setShowEditModal(false)}
                 disabled={isUpdating}
               >
-                Hủy
+                {t("common:actions.cancel")}
               </Button>
               <Button
                 variant="primary"
                 onClick={handleUpdateProject}
                 isLoading={isUpdating}
               >
-                Lưu thay đổi
+                {t("common:actions.save")}
               </Button>
             </div>
           </Card>

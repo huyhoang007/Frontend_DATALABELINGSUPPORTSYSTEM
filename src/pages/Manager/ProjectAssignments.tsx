@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useOutletContext } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { userApi } from "../../api/userApi";
 import { assignmentApi } from "../../api/assignmentApi";
 import { Card } from "../../components/ui/Card";
@@ -22,6 +23,7 @@ import {
   TableCell,
 } from "../../components/ui/Table";
 import { cn } from "../../utils/cn";
+import { translateAssignmentStatus } from "../../i18n/helpers";
 
 /* ═══════════ Types ═══════════ */
 interface Assignment {
@@ -56,6 +58,7 @@ const STATUS_STYLES: Record<string, string> = {
 
 /* ═══════════ Component ═══════════ */
 export default function ProjectAssignments() {
+  const { t, i18n } = useTranslation(["manager", "common"]);
   const { projectId } = useParams<{ projectId: string }>();
   const queryClient = useQueryClient();
   const pid = projectId || "";
@@ -136,25 +139,24 @@ export default function ProjectAssignments() {
           users: cached,
           usersError:
             httpStatus === 403
-              ? "API yêu cầu quyền ADMIN — đang dùng dữ liệu đã cache. Đăng nhập ADMIN để cập nhật."
+              ? t("manager:assignments.usersAdminCache")
               : null,
         };
       } else {
         if (httpStatus === 403) {
           return {
             users: [],
-            usersError:
-              "GET /api/users yêu cầu quyền ADMIN. Đăng nhập ADMIN 1 lần để tải danh sách user, sau đó MANAGER có thể dùng cache.",
+            usersError: t("manager:assignments.usersAdminLogin"),
           };
         } else if (httpStatus === 401) {
           return {
             users: [],
-            usersError: "Hết phiên đăng nhập — vui lòng đăng nhập lại.",
+            usersError: t("manager:assignments.usersSessionExpired"),
           };
         } else {
           return {
             users: [],
-            usersError: err?.message || "Không thể tải danh sách user.",
+            usersError: err?.message || t("manager:assignments.usersLoadFailed"),
           };
         }
       }
@@ -210,15 +212,15 @@ export default function ProjectAssignments() {
   const handleCreate = async () => {
     setValidation("");
     if (!selDataset) {
-      setValidation("Please select a dataset");
+      setValidation(t("manager:assignments.datasetRequired"));
       return;
     }
     if (!selAnnotator) {
-      setValidation("Please select an annotator");
+      setValidation(t("manager:assignments.annotatorRequired"));
       return;
     }
     if (!selReviewer) {
-      setValidation("Please select a reviewer");
+      setValidation(t("manager:assignments.reviewerRequired"));
       return;
     }
 
@@ -230,7 +232,9 @@ export default function ProjectAssignments() {
         reviewerId: Number(selReviewer),
       });
       console.log("[ASSIGNMENTS] created", response);
-      showToast(`Created Assignment #${response.assignmentId}`);
+      showToast(
+        t("manager:assignments.created", { id: response.assignmentId }),
+      );
 
       // Refresh assignments list
       await invalidateProjectAssignmentData(queryClient, Number(pid));
@@ -242,9 +246,7 @@ export default function ProjectAssignments() {
       setSelReviewer("");
     } catch (err: any) {
       console.error("[ASSIGNMENTS] create error", err);
-      setValidation(
-        err?.message || "Không thể tạo assignment. Kiểm tra lại dữ liệu.",
-      );
+      setValidation(err?.message || t("manager:assignments.createFailed"));
     } finally {
       setCreating(false);
     }
@@ -252,14 +254,14 @@ export default function ProjectAssignments() {
 
   /* ── Delete Assignment ── */
   const handleDelete = async (assignmentId: number) => {
-    if (!confirm("Xóa assignment này?")) return;
+    if (!confirm(t("manager:assignments.deleteConfirm"))) return;
     try {
       await assignmentApi.deleteAssignment(assignmentId);
-      showToast(`Deleted Assignment #${assignmentId}`);
+      showToast(t("manager:assignments.deleted", { id: assignmentId }));
       await invalidateProjectAssignmentData(queryClient, Number(pid));
       await refetchAssignments();
     } catch (err: any) {
-      showToast(err?.message || "Không thể xóa assignment.");
+      showToast(err?.message || t("manager:assignments.deleteFailed"));
     }
   };
 
@@ -298,11 +300,10 @@ export default function ProjectAssignments() {
           </span>
           <div>
             <p className="font-medium text-orange-900 dark:text-orange-200 text-sm">
-              Du an COMPLETED - Chi co the xuat du lieu
+              {t("manager:assignments.completedLockedTitle")}
             </p>
             <p className="text-xs text-orange-800 dark:text-orange-300 mt-1">
-              Du an da hoan thanh tat ca cac tac vu. Chi co the xuat du lieu,
-              cac chuc nang khac bi khoa.
+              {t("manager:assignments.completedLockedDescription")}
             </p>
           </div>
         </div>
@@ -314,13 +315,13 @@ export default function ProjectAssignments() {
           <span className="material-symbols-outlined text-[18px]">
             assignment
           </span>
-          Tạo phân công
+          {t("manager:assignments.create")}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Select Data */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Chọn dữ liệu
+              {t("manager:assignments.dataset")}
             </label>
             <div className="relative">
               <select
@@ -331,10 +332,10 @@ export default function ProjectAssignments() {
               >
                 <option value="">
                   {loadingDatasets
-                    ? "Đang tải..."
+                    ? t("common:states.loading")
                     : datasets.length === 0
-                    ? "Không có dataset"
-                    : "— Chọn dataset —"}
+                    ? t("manager:assignments.noDataset")
+                    : t("manager:assignments.selectDataset")}
                 </option>
                 {datasets.map((d) => (
                   <option key={d.id} value={d.id}>
@@ -351,7 +352,7 @@ export default function ProjectAssignments() {
           {/* Select Annotator */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Chọn người chú thích
+              {t("manager:assignments.annotator")}
             </label>
             <div className="relative">
               <select
@@ -362,10 +363,10 @@ export default function ProjectAssignments() {
               >
                 <option value="">
                   {loadingUsers
-                    ? "Đang tải..."
+                    ? t("common:states.loading")
                     : annotators.length === 0
-                      ? "Không có người chú thích"
-                      : "— Chọn người chú thích —"}
+                      ? t("manager:assignments.noAnnotator")
+                      : t("manager:assignments.selectAnnotator")}
                 </option>
                 {annotators.map((a) => (
                   <option key={a.id} value={a.id}>
@@ -388,7 +389,7 @@ export default function ProjectAssignments() {
           {/* Select Reviewer */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Chọn người đánh giá
+              {t("manager:assignments.reviewer")}
             </label>
             <div className="relative">
               <select
@@ -399,10 +400,10 @@ export default function ProjectAssignments() {
               >
                 <option value="">
                   {loadingUsers
-                    ? "Đang tải..."
+                    ? t("common:states.loading")
                     : reviewers.length === 0
-                      ? "Không có người đánh giá"
-                      : "— Chọn người đánh giá —"}
+                      ? t("manager:assignments.noReviewer")
+                      : t("manager:assignments.selectReviewer")}
                 </option>
                 {reviewers.map((r) => (
                   <option key={r.id} value={r.id}>
@@ -439,7 +440,7 @@ export default function ProjectAssignments() {
               <span className="material-symbols-outlined text-base mr-1">
                 refresh
               </span>
-              Thử lại
+              {t("manager:assignments.retry")}
             </Button>
           </div>
         )}
@@ -469,14 +470,16 @@ export default function ProjectAssignments() {
                 add
               </span>
             )}
-            {creating ? "Đang tạo..." : "Tạo nhiệm vụ"}
+            {creating
+              ? t("manager:assignments.creating")
+              : t("manager:assignments.createTask")}
           </Button>
           {isProjectCompleted && (
             <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
               <span className="material-symbols-outlined text-[14px]">
                 info
               </span>
-              Du an COMPLETED khong the tao phan cong
+              {t("manager:assignments.completedCreateBlocked")}
             </p>
           )}
         </div>
@@ -489,22 +492,22 @@ export default function ProjectAssignments() {
             <span className="material-symbols-outlined text-[18px]">
               task_alt
             </span>
-            Danh sách phân công
+            {t("manager:assignments.list")}
           </h3>
           <div className="flex items-center gap-3">
             {assignments.length > 0 && (
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-yellow-400" />
-                  Chờ xử lý: {pending}
+                  {t("manager:assignments.counts.pending")}: {pending}
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-blue-400" />
-                  Đang thực hiện: {inProgress}
+                  {t("manager:assignments.counts.inProgress")}: {inProgress}
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-green-400" />
-                  Hoàn thành: {completed}
+                  {t("manager:assignments.counts.completed")}: {completed}
                 </span>
               </div>
             )}
@@ -522,7 +525,7 @@ export default function ProjectAssignments() {
               >
                 {loadingAssignments ? "progress_activity" : "refresh"}
               </span>
-              Làm mới
+              {t("manager:assignments.refresh")}
             </Button>
           </div>
         </div>
@@ -534,7 +537,7 @@ export default function ProjectAssignments() {
               progress_activity
             </span>
             <span className="text-muted-foreground text-sm">
-              Đang tải phân công...
+              {t("manager:assignments.loading")}
             </span>
           </div>
         )}
@@ -549,7 +552,7 @@ export default function ProjectAssignments() {
               {assignmentsErrorMessage}
             </p>
             <Button variant="ghost" size="sm" onClick={() => refetchAssignments()}>
-              Thử lại
+              {t("manager:assignments.retry")}
             </Button>
           </div>
         )}
@@ -562,11 +565,10 @@ export default function ProjectAssignments() {
               assignment
             </span>
             <h4 className="text-base font-semibold text-foreground mb-1">
-              Chưa có phân công nào
+              {t("manager:assignments.emptyTitle")}
             </h4>
             <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-              Chọn dataset, người chú thích và người đánh giá ở trên, sau đó
-              nhấn "Tạo nhiệm vụ" để phân công công việc.
+              {t("manager:assignments.emptyHint")}
             </p>
           </div>
         ) : (
@@ -575,13 +577,13 @@ export default function ProjectAssignments() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>NGUỒN DỮ LIỆU</TableHead>
-                    <TableHead>NGƯỜI CHÚ THÍCH</TableHead>
-                    <TableHead>NGƯỜI ĐÁNH GIÁ</TableHead>
-                    <TableHead>TIẾN ĐỘ</TableHead>
-                    <TableHead>TRẠNG THÁI</TableHead>
-                    <TableHead className="text-right">THAO TÁC</TableHead>
+                    <TableHead>{t("common:labels.id")}</TableHead>
+                    <TableHead>{t("manager:assignments.table.source")}</TableHead>
+                    <TableHead>{t("manager:assignments.table.annotator")}</TableHead>
+                    <TableHead>{t("manager:assignments.table.reviewer")}</TableHead>
+                    <TableHead>{t("manager:assignments.table.progress")}</TableHead>
+                    <TableHead>{t("manager:assignments.table.status")}</TableHead>
+                    <TableHead className="text-right">{t("manager:assignments.table.action")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -618,7 +620,7 @@ export default function ProjectAssignments() {
                                 "bg-muted text-muted-foreground",
                             )}
                           >
-                            {status.replace("_", " ")}
+                            {translateAssignmentStatus(status)}
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
@@ -652,7 +654,7 @@ export default function ProjectAssignments() {
                 </TableBody>
               </Table>
               <p className="text-xs text-muted-foreground pt-2">
-                Hiển thị {assignments.length} phân công
+                {t("manager:assignments.counts.showing", { count: assignments.length })}
               </p>
             </>
           )
@@ -663,30 +665,30 @@ export default function ProjectAssignments() {
       <ModalDialog
         isOpen={!!viewTask}
         onClose={() => setViewTask(null)}
-        title="Chi tiết phân công"
+        title={t("manager:assignments.detail.title")}
         actions={
           <Button variant="secondary" onClick={() => setViewTask(null)}>
-            Đóng
+            {t("common:actions.close")}
           </Button>
         }
       >
         {viewTask && (
           <div className="space-y-3 text-sm">
             <div>
-              <span className="font-medium text-foreground">Mã phân công:</span>{" "}
+              <span className="font-medium text-foreground">{t("manager:assignments.detail.assignmentCode")}:</span>{" "}
               <span className="text-muted-foreground font-mono">
                 #{viewTask.assignmentId}
               </span>
             </div>
             <div>
-              <span className="font-medium text-foreground">Dự án:</span>{" "}
+              <span className="font-medium text-foreground">{t("manager:assignments.detail.project")}:</span>{" "}
               <span className="text-muted-foreground">
                 {viewTask.projectName || "—"}
               </span>
             </div>
             <div>
               <span className="font-medium text-foreground">
-                Nguồn dữ liệu:
+                {t("manager:assignments.detail.source")}:
               </span>{" "}
               <span className="text-muted-foreground">
                 {viewTask.datasetName || "—"}
@@ -694,7 +696,7 @@ export default function ProjectAssignments() {
             </div>
             <div>
               <span className="font-medium text-foreground">
-                Người chú thích:
+                {t("manager:assignments.detail.annotator")}:
               </span>{" "}
               <span className="text-muted-foreground">
                 {viewTask.annotatorName || "—"}
@@ -702,34 +704,34 @@ export default function ProjectAssignments() {
             </div>
             <div>
               <span className="font-medium text-foreground">
-                Người đánh giá:
+                {t("manager:assignments.detail.reviewer")}:
               </span>{" "}
               <span className="text-muted-foreground">
                 {viewTask.reviewerName || "—"}
               </span>
             </div>
             <div>
-              <span className="font-medium text-foreground">Tiến độ:</span>{" "}
+              <span className="font-medium text-foreground">{t("manager:assignments.detail.progress")}:</span>{" "}
               <span className="text-muted-foreground">
                 {viewTask.progress || 0}%
               </span>
             </div>
             <div>
-              <span className="font-medium text-foreground">Trạng thái:</span>{" "}
+              <span className="font-medium text-foreground">{t("manager:assignments.detail.status")}:</span>{" "}
               <span
                 className={cn(
                   "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
                   STATUS_STYLES[String(viewTask.status).toUpperCase()],
                 )}
               >
-                {String(viewTask.status || "").replace("_", " ")}
+                {translateAssignmentStatus(viewTask.status || "")}
               </span>
             </div>
             {viewTask.createdAt && (
               <div>
-                <span className="font-medium text-foreground">Ngày tạo:</span>{" "}
+                <span className="font-medium text-foreground">{t("manager:assignments.detail.createdAt")}:</span>{" "}
                 <span className="text-muted-foreground">
-                  {new Date(viewTask.createdAt).toLocaleString("vi-VN")}
+                  {new Date(viewTask.createdAt).toLocaleString(i18n.language === "en" ? "en-US" : "vi-VN")}
                 </span>
               </div>
             )}

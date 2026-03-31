@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { labelApi } from "../../api/labelApi";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -23,6 +24,7 @@ interface Label {
 }
 
 export default function Labels() {
+    const { t } = useTranslation(["manager", "common"]);
     const navigate = useNavigate();
     const [labels, setLabels] = useState<Label[]>([]);
     const [search, setSearch] = useState("");
@@ -38,7 +40,7 @@ export default function Labels() {
             const data = await labelApi.getAllLabels();
             setLabels(Array.isArray(data) ? data : []);
         } catch (err) {
-            setError((err as Error)?.message || "Không thể tải danh sách nhãn");
+            setError((err as Error)?.message || t("manager:labels.loadFailed"));
         } finally {
             setLoading(false);
         }
@@ -54,7 +56,7 @@ export default function Labels() {
             setDeleteTarget(null);
             loadLabels();
         } catch (err) {
-            setError((err as Error)?.message || "Xóa thất bại");
+            setError((err as Error)?.message || t("manager:labels.deleteFailed"));
         } finally {
             setDeleting(false);
         }
@@ -66,7 +68,7 @@ export default function Labels() {
             await labelApi.activateLabel(labelId);
             loadLabels();
         } catch (err) {
-            setError((err as Error)?.message || "Kích hoạt lại thất bại");
+            setError((err as Error)?.message || t("manager:labels.activateFailed"));
         } finally {
             setActivatingId(null);
         }
@@ -79,10 +81,10 @@ export default function Labels() {
     return (
         <div className="p-8 space-y-6 max-w-5xl">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-foreground">Quản lí nhãn</h1>
+                <h1 className="text-2xl font-bold text-foreground">{t("manager:labels.title")}</h1>
                 <Button variant="secondary" onClick={() => navigate("/manager/labels/new")}>
                     <span className="material-symbols-outlined text-base mr-1">add</span>
-                    Thêm nhãn
+                    {t("manager:labels.create")}
                 </Button>
             </div>
 
@@ -90,23 +92,23 @@ export default function Labels() {
 
             <Card className="p-6 space-y-4">
                 <Input
-                    placeholder="Tìm kiếm nhãn..."
+                    placeholder={t("manager:labels.searchPlaceholder")}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="max-w-sm"
                 />
 
                 {loading ? (
-                    <p className="text-sm text-muted-foreground py-8 text-center">Đang tải...</p>
+                    <p className="text-sm text-muted-foreground py-8 text-center">{t("manager:labels.loading")}</p>
                 ) : filtered.length === 0 ? (
                     <div className="text-center py-12">
                         <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2 block">label_off</span>
                         <p className="text-muted-foreground">
-                            {search ? "Không tìm thấy nhãn phù hợp" : "Chưa có nhãn nào"}
+                            {search ? t("manager:labels.emptySearch") : t("manager:labels.emptyList")}
                         </p>
                         {!search && (
                             <Button variant="ghost" size="sm" className="mt-2" onClick={() => navigate("/manager/labels/new")}>
-                                Tạo nhãn đầu tiên
+                                {t("manager:labels.createFirst")}
                             </Button>
                         )}
                     </div>
@@ -114,13 +116,13 @@ export default function Labels() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-12">Màu</TableHead>
-                                <TableHead>Tên nhãn</TableHead>
-                                <TableHead>Loại</TableHead>
-                                <TableHead>Trạng thái</TableHead>
-                                <TableHead>Mô tả</TableHead>
-                                <TableHead>Phím tắt</TableHead>
-                                <TableHead className="text-right">Hành động</TableHead>
+                                <TableHead className="w-12">{t("manager:labels.table.color")}</TableHead>
+                                <TableHead>{t("manager:labels.table.name")}</TableHead>
+                                <TableHead>{t("manager:labels.table.type")}</TableHead>
+                                <TableHead>{t("manager:labels.table.status")}</TableHead>
+                                <TableHead>{t("manager:labels.table.description")}</TableHead>
+                                <TableHead>{t("manager:labels.table.shortcut")}</TableHead>
+                                <TableHead className="text-right">{t("manager:labels.table.action")}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -135,12 +137,16 @@ export default function Labels() {
                                     <TableCell className="font-medium">{label.labelName ?? label.name}</TableCell>
                                     <TableCell>
                                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground">
-                                            {label.labelType ?? label.type ?? "—"}
+                                            {label.labelType || label.type
+                                                ? t(`manager:labels.types.${label.labelType ?? label.type}`, {
+                                                    defaultValue: label.labelType ?? label.type,
+                                                })
+                                                : "—"}
                                         </span>
                                     </TableCell>
                                     <TableCell>
                                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${label.isActive !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                                            {label.isActive !== false ? 'Đang hoạt động' : 'Ngưng sử dụng'}
+                                            {label.isActive !== false ? t("manager:labels.active") : t("manager:labels.inactive")}
                                         </span>
                                     </TableCell>
                                     <TableCell className="text-muted-foreground max-w-[200px] truncate">{label.description || "—"}</TableCell>
@@ -151,7 +157,7 @@ export default function Labels() {
                                     </TableCell>
                                     <TableCell className="text-right">
                                         {label.isActive !== false ? (
-                                            <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(label)} title="Ngưng sử dụng nhãn">
+                                            <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(label)} title={t("manager:labels.deactivateTitle")}>
                                                 <span className="material-symbols-outlined text-base text-amber-600">block</span>
                                             </Button>
                                         ) : (
@@ -159,7 +165,7 @@ export default function Labels() {
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => handleActivate((label.labelId ?? label.id) as number)}
-                                                title="Kích hoạt lại"
+                                                title={t("manager:labels.reactivateTitle")}
                                                 disabled={activatingId === (label.labelId ?? label.id)}
                                             >
                                                 <span className="material-symbols-outlined text-base text-emerald-600">check_circle</span>
@@ -177,9 +183,11 @@ export default function Labels() {
                 isOpen={!!deleteTarget}
                 onClose={() => setDeleteTarget(null)}
                 onConfirm={handleDelete}
-                title="Xóa nhãn"
-                message={`Bạn có chắc muốn ngưng sử dụng nhãn "${deleteTarget?.labelName ?? deleteTarget?.name}"?`}
-                confirmText={deleting ? "Đang xử lý..." : "Ngưng sử dụng"}
+                title={t("manager:labels.deleteDialogTitle")}
+                message={t("manager:labels.deleteDialogMessage", {
+                    name: deleteTarget?.labelName ?? deleteTarget?.name ?? "",
+                })}
+                confirmText={deleting ? t("common:states.processing") : t("manager:labels.deleteDialogConfirm")}
                 isDestructive
             />
         </div>

@@ -1,51 +1,5 @@
 import * as React from "react";
-
-const GROUPS = [
-    {
-        title: "Công cụ vẽ",
-        rows: [
-            { keys: ["G"], desc: "Polygon (đa giác)" },
-            { keys: ["B"], desc: "Bounding Box (hộp)" },
-            { keys: ["L"], desc: "Polyline (đường)" },
-            { keys: ["K"], desc: "Points (điểm)" },
-            { keys: ["S", "V"], desc: "Select (chọn)" },
-        ],
-    },
-    {
-        title: "Annotation",
-        rows: [
-            { keys: ["Delete", "⌫"], desc: "Xóa annotation đang chọn" },
-            { keys: ["H"], desc: "Ẩn / hiện annotation đang chọn" },
-            { keys: ["Ctrl", "Z"], desc: "Undo" },
-            { keys: ["Ctrl", "Y"], desc: "Redo" },
-        ],
-    },
-    {
-        title: "Điều hướng ảnh",
-        rows: [
-            { keys: ["→", "D"], desc: "Ảnh tiếp theo" },
-            { keys: ["←", "A"], desc: "Ảnh trước" },
-        ],
-    },
-    {
-        title: "Zoom",
-        rows: [
-            { keys: ["+"], desc: "Phóng to" },
-            { keys: ["-"], desc: "Thu nhỏ" },
-            { keys: ["0"], desc: "Reset về 100%" },
-        ],
-    },
-    {
-        title: "Khác",
-        rows: [
-            { keys: ["Enter"], desc: "Hoàn thành polygon / polyline" },
-            { keys: ["Esc"], desc: "Hủy đang vẽ" },
-            { keys: ["P (giữ)"], desc: "Freehand polygon" },
-            { keys: ["Ctrl", "Enter"], desc: "Nộp bài" },
-            { keys: ["?"], desc: "Mở / đóng bảng phím tắt" },
-        ],
-    },
-];
+import { useTranslation } from "react-i18next";
 
 function Kbd({ children }) {
     return (
@@ -63,6 +17,12 @@ function Kbd({ children }) {
 }
 
 export default function ShortcutHelpModal({ onClose }) {
+    const { t } = useTranslation();
+    const shortcutGroups = t("annotator:workspace.shortcutHelp.groups", {
+        returnObjects: true,
+    });
+    const groups = Array.isArray(shortcutGroups) ? shortcutGroups : [];
+
     // Close on Escape
     React.useEffect(() => {
         const h = (e) => { if (e.key === "Escape") onClose(); };
@@ -96,7 +56,7 @@ export default function ShortcutHelpModal({ onClose }) {
                 {/* Header */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                     <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#e2e8f0", letterSpacing: "0.01em" }}>
-                        ⌨ Phím tắt
+                        ⌨ {t("annotator:workspace.shortcutHelp.title")}
                     </h3>
                     <button
                         onClick={onClose}
@@ -109,7 +69,7 @@ export default function ShortcutHelpModal({ onClose }) {
 
                 {/* Groups */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                    {GROUPS.map((group) => (
+                    {groups.map((group) => (
                         <div key={group.title}>
                             <div style={{
                                 fontSize: 10, fontWeight: 700, letterSpacing: "0.12em",
@@ -138,7 +98,8 @@ export default function ShortcutHelpModal({ onClose }) {
                 </div>
 
                 <p style={{ marginTop: 20, fontSize: 11, color: "#3a5068", textAlign: "center" }}>
-                    Nhấn <Kbd>Esc</Kbd> hoặc click bên ngoài để đóng
+                    {t("annotator:workspace.shortcutHelp.closeHint.prefix")} <Kbd>Esc</Kbd>{" "}
+                    {t("annotator:workspace.shortcutHelp.closeHint.suffix")}
                 </p>
             </div>
         </div>

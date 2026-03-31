@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { projectApi } from "../../api/projectApi";
 import { datasetApi } from "../../api/datasetApi";
 
@@ -25,6 +26,7 @@ const T = {
 };
 
 export default function UploadData() {
+  const { t, i18n } = useTranslation(["manager", "common"]);
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [batchName, setBatchName] = useState("");
@@ -162,7 +164,7 @@ export default function UploadData() {
       setTimeout(() => setStatus("idle"), 3000);
     } catch (err: any) {
       setStatus("error");
-      setError(err?.message || "Tải lên thất bại");
+      setError(err?.message || t("manager:uploadData.uploadFailed"));
     }
   };
 
@@ -191,7 +193,7 @@ export default function UploadData() {
           letterSpacing: "-0.02em",
         }}
       >
-        Upload dữ liệu
+        {t("manager:uploadData.title")}
       </h1>
 
       {/* Project & Batch */}
@@ -223,7 +225,7 @@ export default function UploadData() {
                 marginBottom: "6px",
               }}
             >
-              Dự án
+              {t("manager:uploadData.project")}
             </label>
             <select
               style={{
@@ -245,7 +247,7 @@ export default function UploadData() {
               onFocus={(e) => (e.currentTarget.style.borderColor = T.brand)}
               onBlur={(e) => (e.currentTarget.style.borderColor = T.border)}
             >
-              <option value="">-- Chọn dự án --</option>
+              <option value="">{t("manager:uploadData.selectProject")}</option>
               {projects.map((p) => (
                 <option
                   key={p.project_id ?? p.projectId}
@@ -268,11 +270,11 @@ export default function UploadData() {
                 marginBottom: "6px",
               }}
             >
-              Tên Batch
+              {t("manager:uploadData.batchName")}
             </label>
             <input
               type="text"
-              placeholder="VD: Human_Images_v1"
+              placeholder={t("manager:uploadData.batchPlaceholder")}
               value={batchName}
               onChange={(e) => setBatchName(e.target.value)}
               maxLength={100}
@@ -330,7 +332,9 @@ export default function UploadData() {
               >
                 {mode === "files" ? "insert_drive_file" : "folder_open"}
               </span>
-              {mode === "files" ? "Chọn file" : "Chọn thư mục"}
+              {mode === "files"
+                ? t("manager:uploadData.chooseFiles")
+                : t("manager:uploadData.chooseFolder")}
             </button>
           ))}
         </div>
@@ -374,12 +378,7 @@ export default function UploadData() {
           {uploadMode === "folder" ? (
             <>
               <p style={{ fontSize: "13px", color: T.textMuted }}>
-                Kéo thả{" "}
-                <strong style={{ color: T.textPrimary }}>thư mục</strong> vào
-                đây hoặc{" "}
-                <span style={{ color: T.brand, fontWeight: 600 }}>
-                  chọn thư mục
-                </span>
+                {t("manager:uploadData.dropFolderTitle")}
               </p>
               <p
                 style={{
@@ -388,17 +387,13 @@ export default function UploadData() {
                   marginTop: "4px",
                 }}
               >
-                Toàn bộ ảnh (PNG, JPG, JPEG, GIF, BMP, WEBP) trong thư mục sẽ
-                được tải lên
+                {t("manager:uploadData.dropFolderHint")}
               </p>
             </>
           ) : (
             <>
               <p style={{ fontSize: "13px", color: T.textMuted }}>
-                Kéo thả file vào đây hoặc{" "}
-                <span style={{ color: T.brand, fontWeight: 600 }}>
-                  chọn file
-                </span>
+                {t("manager:uploadData.dropFilesTitle")}
               </p>
               <p
                 style={{
@@ -407,7 +402,7 @@ export default function UploadData() {
                   marginTop: "4px",
                 }}
               >
-                PNG, JPG, JPEG, GIF, BMP, WEBP
+                {t("manager:uploadData.dropFilesHint")}
               </p>
             </>
           )}
@@ -472,11 +467,13 @@ export default function UploadData() {
                   >
                     folder
                   </span>
-                  {files.length} ảnh từ thư mục
-                  {batchName ? ` "${batchName}"` : ""}
+                  {t("manager:uploadData.folderImages", {
+                    count: files.length,
+                    name: batchName,
+                  })}
                 </>
               ) : (
-                `${files.length} file đã chọn`
+                t("manager:uploadData.selectedFiles", { count: files.length })
               )}
             </p>
             <div
@@ -597,11 +594,13 @@ export default function UploadData() {
             >
               {status === "uploading" ? "progress_activity" : "upload"}
             </span>
-            {status === "uploading" ? "Đang tải lên..." : "Tải lên"}
+            {status === "uploading"
+              ? t("manager:uploadData.uploading")
+              : t("manager:uploadData.upload")}
           </button>
           {status === "success" && (
             <span style={{ fontSize: "13px", color: T.green, fontWeight: 600 }}>
-              Tải lên thành công
+              {t("manager:uploadData.uploadSuccess")}
             </span>
           )}
           {status === "error" && (
@@ -631,13 +630,13 @@ export default function UploadData() {
               marginBottom: "16px",
             }}
           >
-            Danh sách Batch
+            {t("manager:uploadData.batchList")}
           </h2>
           {loadingDatasets ? (
-            <p style={{ fontSize: "13px", color: T.textMuted }}>Đang tải...</p>
+            <p style={{ fontSize: "13px", color: T.textMuted }}>{t("common:states.loading")}</p>
           ) : datasets.length === 0 ? (
             <p style={{ fontSize: "13px", color: T.textMuted }}>
-              Chưa có batch nào cho dự án này.
+              {t("manager:uploadData.noProjectBatch")}
             </p>
           ) : (
             <div
@@ -668,7 +667,7 @@ export default function UploadData() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  TÊN BATCH
+                  {t("manager:uploadData.table.batchName").toUpperCase()}
                 </p>
                 <p
                   style={{
@@ -679,7 +678,7 @@ export default function UploadData() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  SỐ FILE
+                  {t("manager:uploadData.table.fileCount").toUpperCase()}
                 </p>
                 <p
                   style={{
@@ -690,7 +689,7 @@ export default function UploadData() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  TRẠNG THÁI
+                  {t("manager:uploadData.table.status").toUpperCase()}
                 </p>
                 <p
                   style={{
@@ -701,7 +700,7 @@ export default function UploadData() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  NGÀY TẠO
+                  {t("manager:uploadData.table.createdAt").toUpperCase()}
                 </p>
               </div>
 
@@ -761,18 +760,14 @@ export default function UploadData() {
                           color: statusStyle.text,
                           width: "fit-content",
                         }}
-                      >
-                        {(
-                          {
-                            COMPLETED: "Hoàn thành",
-                            FAILED: "Thất bại",
-                            PROCESSING: "Đang xử lý",
-                          } as Record<string, string>
-                        )[ds.status] || ds.status}
+                        >
+                        {t(`manager:uploadData.statuses.${ds.status}`, {
+                          defaultValue: ds.status,
+                        })}
                       </span>
                       <span style={{ fontSize: "12px", color: T.textMuted }}>
                         {ds.createdAt
-                          ? new Date(ds.createdAt).toLocaleDateString("vi-VN")
+                          ? new Date(ds.createdAt).toLocaleDateString(i18n.language === "en" ? "en-US" : "vi-VN")
                           : "—"}
                       </span>
                     </div>

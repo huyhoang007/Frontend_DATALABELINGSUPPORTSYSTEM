@@ -1,5 +1,6 @@
 ﻿﻿import * as React from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Workspace3Column } from "../../components/layout/WorkspaceLayout";
 import { Button } from "../../components/ui/Button";
 import { annotationApi } from "../../api/annotationApi";
@@ -8,6 +9,7 @@ import { isFeatureEnabled } from "../../config/featureFlags";
 import { labelRuleApi } from "../../api/labelRuleApi";
 import { useToast } from "../../context/ToastContext";
 import { getCachedBlobUrl, preloadBlobUrl } from "../../utils/blobAssetCache";
+import { translate } from "../../i18n/helpers";
 
 /* â”€â”€ New modules â”€â”€ */
 import { useAnnotations } from "./useAnnotations";
@@ -131,14 +133,15 @@ function ThumbnailImg({ fileUrl, alt }) {
 
 /* ── Tool definitions ── */
 const TOOLS = [
-  { id: "polygon", icon: "pentagon", label: "Đa giác" },
-  { id: "bbox", icon: "crop_free", label: "Hộp" },
-  { id: "points", icon: "scatter_plot", label: "Điểm" },
-  { id: "polyline", icon: "polyline", label: "Đường" },
-  { id: "select", icon: "pan_tool_alt", label: "Chọn" },
+  { id: "polygon", icon: "pentagon", labelKey: "annotator:workspace.tools.polygon" },
+  { id: "bbox", icon: "crop_free", labelKey: "annotator:workspace.tools.bbox" },
+  { id: "points", icon: "scatter_plot", labelKey: "annotator:workspace.tools.points" },
+  { id: "polyline", icon: "polyline", labelKey: "annotator:workspace.tools.polyline" },
+  { id: "select", icon: "pan_tool_alt", labelKey: "annotator:workspace.tools.select" },
 ];
 
 export default function Workspace() {
+  const { t } = useTranslation(["annotator", "common"]);
   const { taskId } = useParams();
   const navigate = useNavigate();
   const { addToast } = useToast();
@@ -169,7 +172,7 @@ export default function Workspace() {
       const data = await annotationApi.openWorkspace(assignmentId);
       setWorkspace(data);
     } catch (err) {
-      setError(err?.message || "Failed to load workspace");
+      setError(err?.message || t("annotator:workspace.messages.loadingWorkspace"));
     } finally {
       setLoading(false);
     }
@@ -194,6 +197,14 @@ export default function Workspace() {
   const [showGuidelinePopover, setShowGuidelinePopover] = React.useState(false);
   const hydratedDoneAssignmentRef = React.useRef(null);
   const [isMobile, setIsMobile] = React.useState(() => window.innerWidth < 768);
+  const tools = React.useMemo(
+    () =>
+      TOOLS.map((tool) => ({
+        ...tool,
+        label: t(tool.labelKey),
+      })),
+    [t],
+  );
 
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -501,7 +512,10 @@ export default function Workspace() {
         }
       } catch (err) {
         console.error("[LABELS] fallback fetch error:", err);
-        addToast?.({ type: "error", message: "Khong tai duoc labels" });
+        addToast?.({
+          type: "error",
+          message: t("annotator:workspace.messages.labelsFailed"),
+        });
       } finally {
         if (!cancelled) setLabelsLoading(false);
       }
@@ -545,7 +559,11 @@ export default function Workspace() {
     }
     // 3. Last resort: wrap flat labels in a single group
     if (fallbackLabels.length > 0) {
-      return [{ ruleId: null, ruleName: "All Labels", labels: fallbackLabels }];
+      return [{
+        ruleId: null,
+        ruleName: translate("common:labels.label"),
+        labels: fallbackLabels,
+      }];
     }
     return [];
   }, [workspace, fallbackLabels, fallbackRuleGroups]);
@@ -654,7 +672,10 @@ export default function Workspace() {
   const handleSave = async () => {
     if (isReadOnly) return;
     await anno.saveNow();
-    addToast({ type: "success", message: "Đã lưu annotations" });
+    addToast({
+      type: "success",
+      message: t("annotator:workspace.messages.saveSuccess"),
+    });
   };
 
   /* â”€â”€ Submit assignment â”€â”€ */
@@ -703,18 +724,20 @@ export default function Workspace() {
       if (imageError) {
         addToast({
           type: "warning",
-          message: "Không thể nộp bài khi ảnh hiện tại chưa tải được",
+          message: t("annotator:workspace.messages.submitBlockedImage"),
         });
       } else if (hasIncompleteItems) {
         addToast({
           type: "warning",
-          message: `Chỉ có thể nộp bài sau khi tất cả ảnh đã được đánh dấu hoàn thành (${doneCount}/${totalImages})`,
+          message: t("annotator:workspace.messages.submitAllDone", {
+            done: doneCount,
+            total: totalImages,
+          }),
         });
       } else if (assignmentHasRejectedFeedback) {
         addToast({
           type: "warning",
-          message:
-            "Cần xử lý toàn bộ annotation bị reviewer trả về trước khi nộp lại",
+          message: t("annotator:workspace.messages.doneNeedFixRejected"),
         });
       }
       return;
@@ -730,7 +753,7 @@ export default function Workspace() {
       setIsSubmitting(false);
       addToast({
         type: "error",
-        message: "Nộp bài quá lâu - vui lòng thử lại",
+        message: t("annotator:workspace.messages.submitFailed"),
       });
     }, 10000);
 
@@ -749,7 +772,10 @@ export default function Workspace() {
         submitTimeoutRef.current = null;
       }
 
-      addToast({ type: "success", message: "Nộp bài thành công" });
+      addToast({
+        type: "success",
+        message: t("annotator:workspace.messages.submitSuccess"),
+      });
       // Small delay to ensure backend processed
       setTimeout(() => {
         navigate("/annotator/tasks");
@@ -769,7 +795,9 @@ export default function Workspace() {
       }
 
       const errorMsg =
-        err?.response?.data?.message || err?.message || "Nộp bài thất bại";
+        err?.response?.data?.message ||
+        err?.message ||
+        t("annotator:workspace.messages.submitFailed");
       addToast({ type: "error", message: errorMsg });
     } finally {
       setIsSubmitting(false);
@@ -800,10 +828,18 @@ export default function Workspace() {
     if (!currentItem || isReadOnly) return;
     if (anno.isDone(currentItem.itemId)) {
       anno.unmarkDone(currentItem.itemId);
-      addToast({ type: "info", message: "Đã bỏ đánh dấu Done" });
+      addToast({
+        type: "info",
+        message: t("annotator:workspace.actions.unmarkDone"),
+      });
     } else {
       const ok = anno.markDone(currentItem.itemId);
-      if (ok) addToast({ type: "success", message: "Đã đánh dấu Done" });
+      if (ok) {
+        addToast({
+          type: "success",
+          message: t("annotator:workspace.actions.markDone"),
+        });
+      }
     }
     // force re-render for sidebar
     setWorkspace((w) => ({ ...w }));
@@ -832,7 +868,9 @@ export default function Workspace() {
         <span className="material-symbols-outlined text-3xl text-muted-foreground animate-spin mr-2">
           progress_activity
         </span>
-        <span className="text-muted-foreground">Đang tải workspace...</span>
+        <span className="text-muted-foreground">
+          {t("annotator:workspace.messages.loadingWorkspace")}
+        </span>
       </div>
     );
   }
@@ -849,10 +887,10 @@ export default function Workspace() {
             onClick={() => navigate("/annotator/tasks")}
             leftIcon="arrow_back"
           >
-            Quay lại
+            {t("common:actions.back")}
           </Button>
           <Button variant="primary" onClick={fetchWorkspace}>
-            Thử lại
+            {t("common:actions.retry")}
           </Button>
         </div>
       </div>
@@ -864,13 +902,15 @@ export default function Workspace() {
         <span className="material-symbols-outlined text-5xl text-muted-foreground/40">
           assignment
         </span>
-        <p className="text-muted-foreground">Không tìm thấy bài tập</p>
+        <p className="text-muted-foreground">
+          {t("annotator:tasks.noAssignmentsTitle")}
+        </p>
         <Button
           variant="secondary"
           onClick={() => navigate("/annotator/tasks")}
           leftIcon="arrow_back"
         >
-          Quay lại
+          {t("common:actions.back")}
         </Button>
       </div>
     );
@@ -939,7 +979,10 @@ export default function Workspace() {
               className="text-xs font-medium whitespace-nowrap"
               style={{ color: "#64748b" }}
             >
-              {currentImageIndex + 1}/{totalImages} ảnh
+              {t("annotator:workspace.header.currentImage", {
+                current: currentImageIndex + 1,
+                total: totalImages,
+              })}
             </span>
           </div>
 
@@ -1056,7 +1099,7 @@ export default function Workspace() {
           <div className="relative mr-1" style={{ order: isMobile ? 2 : 0 }}>
             <button
               onClick={() => setShowGuidelinePopover((v) => !v)}
-              title="Hướng dẫn gán nhãn"
+              title={t("annotator:workspace.header.guideline")}
               className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
               style={{ color: "#7dd3fc" }}
             >
@@ -1074,7 +1117,7 @@ export default function Workspace() {
               >
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs font-bold" style={{ color: "#cbd5e1" }}>
-                    Hướng dẫn gán nhãn
+                    {t("annotator:workspace.header.guideline")}
                   </p>
                   <button
                     onClick={() => setShowGuidelinePopover(false)}
@@ -1099,7 +1142,7 @@ export default function Workspace() {
                 >
                   <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
                     {workspace?.projectGuidelineContent ||
-                      "Chưa có hướng dẫn cho dự án này."}
+                      t("annotator:workspace.messages.noGuideline")}
                   </p>
                 </div>
                 {workspace?.projectGuidelineFileUrl && (
@@ -1116,7 +1159,7 @@ export default function Workspace() {
                     >
                       download
                     </span>
-                    Tải file hướng dẫn
+                    {t("annotator:workspace.actions.downloadGuideline")}
                   </a>
                 )}
               </div>
@@ -1126,7 +1169,7 @@ export default function Workspace() {
           {/* Shortcut help button */}
           <button
             onClick={() => setShowShortcuts(true)}
-            title="Phím tắt (?)"
+            title={t("annotator:workspace.actions.shortcuts")}
             className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition-colors mr-1"
             style={{ color: "#64748b", fontSize: 13, fontWeight: 700 }}
           >
@@ -1146,7 +1189,7 @@ export default function Workspace() {
             <button
               onClick={handleSave}
               disabled={isReadOnly}
-              title="Lưu nháp (Ctrl+S)"
+              title={t("annotator:workspace.actions.saveDraft")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${isReadOnly ? "opacity-40 cursor-not-allowed" : "hover:brightness-110 active:scale-95"}`}
               style={{
                 background: "#1e3a5f",
@@ -1160,7 +1203,7 @@ export default function Workspace() {
               >
                 save
               </span>
-              <span>Lưu</span>
+              <span>{t("common:actions.save")}</span>
             </button>
 
             {/* Mark Done button */}
@@ -1168,8 +1211,8 @@ export default function Workspace() {
               onClick={handleMarkDone}
               title={
                 currentIsDone
-                  ? "Bỏ đánh dấu hoàn thành"
-                  : "Đánh dấu hoàn thành ảnh này"
+                  ? t("annotator:workspace.actions.unmarkDoneTitle")
+                  : t("annotator:workspace.actions.markDoneTitle")
               }
               disabled={
                 (!currentIsDone &&
@@ -1198,7 +1241,11 @@ export default function Workspace() {
               >
                 {currentIsDone ? "check_circle" : "task_alt"}
               </span>
-              <span>{currentIsDone ? "Bỏ hoàn thành" : "Xong ảnh"}</span>
+              <span>
+                {currentIsDone
+                  ? t("annotator:workspace.actions.unmarkDoneButton")
+                  : t("annotator:workspace.actions.markDoneButton")}
+              </span>
             </button>
 
             {/* Divider */}
@@ -1207,7 +1254,7 @@ export default function Workspace() {
             {/* Back to tasks */}
             <button
               onClick={() => navigate("/annotator/tasks")}
-              title="Quay lại danh sách task"
+              title={t("common:actions.backToList")}
               className="w-8 h-8 flex items-center justify-center rounded-lg transition-all hover:bg-white/10 active:scale-95"
               style={{ color: "#64748b" }}
             >
@@ -1248,7 +1295,10 @@ export default function Workspace() {
                   className="truncate flex-1"
                   title={workspace.projectName || `Assignment #${assignmentId}`}
                 >
-                  {workspace.projectName || `Assignment #${assignmentId}`}
+                  {workspace.projectName ||
+                    t("annotator:workspace.messages.projectFallback", {
+                      id: assignmentId,
+                    })}
                 </span>
               </div>
 
@@ -1258,7 +1308,7 @@ export default function Workspace() {
                 disabled={isSubmitBlocked || isSubmitting}
                 title={
                   imageError
-                    ? "Không thể nộp khi ảnh hiện tại chưa tải được"
+                    ? t("annotator:workspace.messages.submitBlockedImage")
                     : undefined
                 }
                 className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all shadow-lg flex items-center justify-center gap-1.5 ${isSubmitBlocked || isSubmitting ? "opacity-60 cursor-not-allowed" : "hover:brightness-110 active:scale-95"}`}
@@ -1296,13 +1346,13 @@ export default function Workspace() {
                 </span>
                 <span>
                   {isSubmitting
-                    ? "ĐANG GỬI..."
+                    ? t("annotator:workspace.messages.submitPending")
                     : isReadOnly
                       ? workspace?.assignmentStatus?.toUpperCase() ===
                         "APPROVED"
-                        ? "Chỉ xem"
-                        : "Đã nộp"
-                      : "Nộp bài"}
+                        ? t("annotator:workspace.actions.viewOnly")
+                        : t("annotator:workspace.actions.submitted")
+                      : t("annotator:workspace.actions.submit")}
                 </span>
               </button>
             </div>
@@ -1365,10 +1415,15 @@ export default function Workspace() {
                       className="w-full overflow-hidden"
                       style={{ height: 80, width: isMobile ? 92 : undefined }}
                     >
-                      <ThumbnailImg
-                        fileUrl={item.fileUrl}
-                        alt={item.fileName || `Item ${idx + 1}`}
-                      />
+                    <ThumbnailImg
+                      fileUrl={item.fileUrl}
+                      alt={
+                        item.fileName ||
+                        t("annotator:workspace.header.imageAlt", {
+                          index: idx + 1,
+                        })
+                      }
+                    />
                     </div>
                     {/* Selection Glow */}
                     {isActive && (
@@ -1399,7 +1454,7 @@ export default function Workspace() {
                 >
                   save
                 </span>
-                <span>Lưu nháp</span>
+                <span>{t("common:actions.saveDraft")}</span>
               </button>
             </div>
           </div>
@@ -1444,10 +1499,13 @@ export default function Workspace() {
                   </div>
                 ) : imageBlobUrl ? (
                   <img
-                    src={imageBlobUrl}
-                    alt={
-                      currentItem?.fileName || `Image ${currentImageIndex + 1}`
-                    }
+                  src={imageBlobUrl}
+                  alt={
+                    currentItem?.fileName ||
+                    t("annotator:workspace.header.imageAlt", {
+                      index: currentImageIndex + 1,
+                    })
+                  }
                     className="absolute inset-0 w-full h-full object-contain"
                     draggable={false}
                   />
@@ -1467,7 +1525,7 @@ export default function Workspace() {
                         className="text-sm font-medium mb-1"
                         style={{ color: "#f87171" }}
                       >
-                        Không tải được ảnh
+                        {t("annotator:workspace.messages.imageLoadFailed")}
                       </p>
                       <p
                         className="text-[10px] font-mono break-all mb-3"
@@ -1476,7 +1534,7 @@ export default function Workspace() {
                         {imageError.url}
                       </p>
                       <p className="text-xs mb-4" style={{ color: "#fca5a5" }}>
-                        Nộp bài bị khóa cho đến khi ảnh tải lại thành công.
+                        {t("annotator:workspace.messages.submitBlockedImageRetry")}
                       </p>
                       <button
                         onClick={() => {
@@ -1489,7 +1547,7 @@ export default function Workspace() {
                           color: "#fff",
                         }}
                       >
-                        Thử lại
+                        {t("annotator:workspace.actions.retry")}
                       </button>
                     </div>
                   </div>
@@ -1562,8 +1620,8 @@ export default function Workspace() {
               style={{ borderColor: "#253347", background: "#111d2c" }}
             >
               {(isReadOnly
-                ? TOOLS.filter((t) => t.id === "select")
-                : TOOLS
+                ? tools.filter((tool) => tool.id === "select")
+                : tools
               ).map((tool) => (
                 <button
                   key={tool.id}
@@ -1636,7 +1694,7 @@ export default function Workspace() {
                 >
                   layers
                 </span>
-                Kết quả ({anno.annotations.length})
+                {t("annotator:workspace.tabs.annotations")} ({anno.annotations.length})
               </button>
               <button
                 onClick={() => setRightTab("summary")}
@@ -1656,7 +1714,7 @@ export default function Workspace() {
                 >
                   analytics
                 </span>
-                Tổng hợp
+                {t("annotator:workspace.tabs.summary")}
               </button>
             </div>
 
@@ -1672,7 +1730,7 @@ export default function Workspace() {
                       progress_activity
                     </span>
                     <p className="text-xs" style={{ color: "#3a5068" }}>
-                      Dang tai...
+                      {t("annotator:workspace.messages.labelsLoading")}
                     </p>
                   </div>
                 ) : anno.annotations.length === 0 ? (
@@ -1684,7 +1742,7 @@ export default function Workspace() {
                       layers
                     </span>
                     <p className="text-xs" style={{ color: "#3a5068" }}>
-                      Chua co annotation
+                      {t("annotator:workspace.messages.annotationsEmpty")}
                     </p>
                   </div>
                 ) : (

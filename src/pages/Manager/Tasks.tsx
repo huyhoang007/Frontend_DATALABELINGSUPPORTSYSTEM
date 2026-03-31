@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { getMockData } from "../../utils/mockStorage";
 
 // Bảng màu Modern Enterprise UI
@@ -46,19 +47,14 @@ const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
 
 const STATUS_OPTIONS = ["ALL", "PENDING", "IN_PROGRESS", "COMPLETED", "RETURNED"];
 
-const STATUS_VI: Record<string, string> = {
-  ALL: "Tất cả",
-  PENDING: "Chờ xử lý",
-  IN_PROGRESS: "Đang thực hiện",
-  COMPLETED: "Hoàn thành",
-  RETURNED: "Trả lại",
-};
-
 export default function Tasks() {
+    const { t, i18n } = useTranslation(["manager", "common"]);
     const [tasks, setTasks] = useState<any[]>([]);
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [viewTask, setViewTask] = useState<any>(null);
     const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+    const getStatusLabel = (status: string) =>
+        t(`manager:tasks.statuses.${status}`, { defaultValue: status });
 
     useEffect(() => {
         setTasks(getMockData(STORAGE_KEY, seedTasks));
@@ -81,7 +77,7 @@ export default function Tasks() {
                 marginBottom: "32px",
                 letterSpacing: "-0.02em"
             }}>
-                Quản lý nhiệm vụ
+                {t("manager:tasks.title")}
             </h1>
 
             <div style={{
@@ -103,7 +99,7 @@ export default function Tasks() {
                         color: T.textMuted,
                         fontWeight: 600
                     }}>
-                        Trạng thái:
+                        {t("manager:tasks.filterStatus")}:
                     </label>
                     <select
                         style={{
@@ -123,7 +119,7 @@ export default function Tasks() {
                         onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
                         onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                     >
-                        {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{STATUS_VI[s]}</option>)}
+                        {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{getStatusLabel(s)}</option>)}
                     </select>
                 </div>
 
@@ -144,7 +140,7 @@ export default function Tasks() {
                             color: T.textMuted,
                             fontSize: "14px"
                         }}>
-                            Chưa có nhiệm vụ nào
+                            {t("manager:tasks.empty")}
                         </p>
                     </div>
                 ) : (
@@ -163,13 +159,13 @@ export default function Tasks() {
                             gap: "16px",
                             alignItems: "center"
                         }}>
-                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>TÊN NHIỆM VỤ</p>
-                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>DỰ ÁN</p>
-                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>NGƯỜI THỰC HIỆN</p>
-                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>TRẠNG THÁI</p>
-                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>TIẾN ĐỘ</p>
-                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>NGÀY TẠO</p>
-                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "right" }}>HÀNH ĐỘNG</p>
+                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("manager:tasks.table.name").toUpperCase()}</p>
+                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("manager:tasks.table.project").toUpperCase()}</p>
+                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("manager:tasks.table.assignee").toUpperCase()}</p>
+                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("manager:tasks.table.status").toUpperCase()}</p>
+                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("manager:tasks.table.progress").toUpperCase()}</p>
+                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("manager:tasks.table.createdAt").toUpperCase()}</p>
+                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "right" }}>{t("manager:tasks.table.action").toUpperCase()}</p>
                         </div>
 
                         {/* Table Body */}
@@ -208,7 +204,7 @@ export default function Tasks() {
                                             color: statusStyle.text,
                                             width: "fit-content"
                                         }}>
-                                            {STATUS_VI[task.status] || task.status}
+                                            {getStatusLabel(task.status)}
                                         </span>
                                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                             <div style={{
@@ -236,7 +232,7 @@ export default function Tasks() {
                                             </span>
                                         </div>
                                         <span style={{ fontSize: "11px", color: T.textMuted }}>
-                                            {new Date(task.createdAt).toLocaleDateString("vi-VN")}
+                                            {new Date(task.createdAt).toLocaleDateString(i18n.language === "en" ? "en-US" : "vi-VN")}
                                         </span>
                                         <div style={{ textAlign: "right" }}>
                                             <button
@@ -266,7 +262,7 @@ export default function Tasks() {
                                                 }}
                                             >
                                                 <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>visibility</span>
-                                                Xem
+                                                {t("manager:tasks.view")}
                                             </button>
                                         </div>
                                     </div>
@@ -302,24 +298,24 @@ export default function Tasks() {
                             color: T.textPrimary,
                             marginBottom: "24px"
                         }}>
-                            Chi tiết nhiệm vụ
+                            {t("manager:tasks.detailTitle")}
                         </h2>
 
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "13px" }}>
                             <div>
-                                <span style={{ fontWeight: 600, color: T.textPrimary }}>Tên:</span>{" "}
+                                <span style={{ fontWeight: 600, color: T.textPrimary }}>{t("manager:tasks.detail.name")}:</span>{" "}
                                 <span style={{ color: T.textMuted }}>{viewTask.taskName}</span>
                             </div>
                             <div>
-                                <span style={{ fontWeight: 600, color: T.textPrimary }}>Dự án:</span>{" "}
+                                <span style={{ fontWeight: 600, color: T.textPrimary }}>{t("manager:tasks.detail.project")}:</span>{" "}
                                 <span style={{ color: T.textMuted }}>{viewTask.project}</span>
                             </div>
                             <div>
-                                <span style={{ fontWeight: 600, color: T.textPrimary }}>Người thực hiện:</span>{" "}
+                                <span style={{ fontWeight: 600, color: T.textPrimary }}>{t("manager:tasks.detail.assignee")}:</span>{" "}
                                 <span style={{ color: T.textMuted }}>{viewTask.assignee}</span>
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                <span style={{ fontWeight: 600, color: T.textPrimary }}>Trạng thái:</span>
+                                <span style={{ fontWeight: 600, color: T.textPrimary }}>{t("manager:tasks.detail.status")}:</span>
                                 <span style={{
                                     display: "inline-flex",
                                     alignItems: "center",
@@ -332,16 +328,16 @@ export default function Tasks() {
                                     background: STATUS_STYLES[viewTask.status]?.bg || T.surfaceHover,
                                     color: STATUS_STYLES[viewTask.status]?.text || T.textMuted
                                 }}>
-                                    {STATUS_VI[viewTask.status] || viewTask.status}
+                                    {getStatusLabel(viewTask.status)}
                                 </span>
                             </div>
                             <div>
-                                <span style={{ fontWeight: 600, color: T.textPrimary }}>Tiến độ:</span>{" "}
+                                <span style={{ fontWeight: 600, color: T.textPrimary }}>{t("manager:tasks.detail.progress")}:</span>{" "}
                                 <span style={{ color: T.textMuted }}>{viewTask.progress}%</span>
                             </div>
                             <div>
-                                <span style={{ fontWeight: 600, color: T.textPrimary }}>Ngày tạo:</span>{" "}
-                                <span style={{ color: T.textMuted }}>{new Date(viewTask.createdAt).toLocaleString("vi-VN")}</span>
+                                <span style={{ fontWeight: 600, color: T.textPrimary }}>{t("manager:tasks.detail.createdAt")}:</span>{" "}
+                                <span style={{ color: T.textMuted }}>{new Date(viewTask.createdAt).toLocaleString(i18n.language === "en" ? "en-US" : "vi-VN")}</span>
                             </div>
                         </div>
 
@@ -363,7 +359,7 @@ export default function Tasks() {
                                 onMouseEnter={(e) => e.currentTarget.style.background = T.surfaceHover}
                                 onMouseLeave={(e) => e.currentTarget.style.background = T.surface}
                             >
-                                Đóng
+                                {t("manager:tasks.close")}
                             </button>
                         </div>
                     </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 // Modern Enterprise UI Color Palette
 const T = {
@@ -26,6 +27,7 @@ const T = {
 
 export default function Unauthorized() {
   const navigate = useNavigate();
+  const { t } = useTranslation(["common"]);
 
   return (
     <div style={{
@@ -55,7 +57,7 @@ export default function Unauthorized() {
           marginBottom: "8px",
           letterSpacing: "-0.02em"
         }}>
-          Truy cập bị từ chối
+          {t("common:unauthorized.title")}
         </h1>
 
         <p style={{
@@ -64,7 +66,7 @@ export default function Unauthorized() {
           marginBottom: "24px",
           lineHeight: "1.5"
         }}>
-          Bạn không có quyền truy cập trang này. Vui lòng liên hệ quản trị viên nếu bạn cho rằng đây là lỗi.
+          {t("common:unauthorized.description")}
         </p>
 
         <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
@@ -86,7 +88,7 @@ export default function Unauthorized() {
               transition: "all .15s"
             }}
           >
-            Về trang chủ
+            {t("common:actions.backToHome")}
           </button>
           <button
             onClick={() => navigate(-1)}
@@ -106,7 +108,7 @@ export default function Unauthorized() {
               transition: "all .15s"
             }}
           >
-            Quay lại
+            {t("common:actions.back")}
           </button>
         </div>
       </div>

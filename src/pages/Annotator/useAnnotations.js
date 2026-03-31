@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { annotationApi } from "../../api/annotationApi";
+import { translate } from "../../i18n/helpers";
 import {
   groupAnnotationsByKey,
   flattenToBeRows,
@@ -112,7 +113,7 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
         }
       } catch (err) {
         console.error("[ANNO] save error", err);
-        addToast?.({ type: "error", message: "Lưu annotation thất bại" });
+        addToast?.({ type: "error", message: translate("annotator:workspace.messages.saveFailed") });
       } finally {
         isSavingRef.current = false;
         // If there's a pending save, execute it
@@ -331,7 +332,7 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
       if (latestAnnotationsRef.current.length === 0) {
         addToast?.({
           type: "warning",
-          message: "Cần ít nhất 1 annotation để đánh dấu Done",
+          message: translate("annotator:workspace.messages.doneNeedAnnotation"),
         });
         return false;
       }
@@ -341,7 +342,7 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
       if (hasRejectedFeedback) {
         addToast?.({
           type: "warning",
-          message: "Cần xử lý annotation bị reviewer trả về trước khi đánh dấu hoàn thành",
+          message: translate("annotator:workspace.messages.doneNeedFixRejected"),
         });
         return false;
       }

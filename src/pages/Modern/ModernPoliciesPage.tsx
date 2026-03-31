@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { policyApi } from "../../api/policyApi";
 import { projectApi } from "../../api/projectApi";
 import { useToast } from "../../context/ToastContext";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { cn } from "../../utils/cn";
+import { translateDataType, translateProjectStatus } from "../../i18n/helpers";
 
 // Bảng màu Modern Enterprise UI (Atlassian/Jira style)
 const T = {
@@ -54,6 +56,7 @@ interface Policy {
 }
 
 const ModernPoliciesPage: React.FC = () => {
+  const { t } = useTranslation(["manager", "common"]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -151,7 +154,7 @@ const ModernPoliciesPage: React.FC = () => {
 
   const handleCreatePolicy = async () => {
     if (!newPolicy.errorName.trim()) {
-      addToast("Tên lỗi là bắt buộc", "error");
+      addToast(t("manager:policies.nameRequired"), "error");
       return;
     }
 
@@ -162,7 +165,7 @@ const ModernPoliciesPage: React.FC = () => {
         description: newPolicy.description || null,
         errorLevel: newPolicy.errorLevel,
       });
-      addToast("Tạo lỗi thành công!", "success");
+      addToast(t("manager:policies.createSuccess"), "success");
       setShowCreateModal(false);
       setNewPolicy({
         errorName: "",
@@ -171,7 +174,7 @@ const ModernPoliciesPage: React.FC = () => {
       });
       fetchPolicies(); // Refresh list
     } catch (error: any) {
-      addToast(error.message || "Không thể tạo lỗi", "error");
+      addToast(error.message || t("manager:policies.createFailed"), "error");
     } finally {
       setIsCreating(false);
     }
@@ -189,7 +192,7 @@ const ModernPoliciesPage: React.FC = () => {
 
   const handleUpdatePolicy = async () => {
     if (!selectedPolicy || !newPolicy.errorName.trim()) {
-      addToast("Tên lỗi là bắt buộc", "error");
+      addToast(t("manager:policies.nameRequired"), "error");
       return;
     }
 
@@ -200,7 +203,7 @@ const ModernPoliciesPage: React.FC = () => {
         description: newPolicy.description || null,
         errorLevel: newPolicy.errorLevel,
       });
-      addToast("Cập nhật lỗi thành công!", "success");
+      addToast(t("manager:policies.updateSuccess"), "success");
       setShowEditModal(false);
       setSelectedPolicy(null);
       setNewPolicy({
@@ -210,7 +213,7 @@ const ModernPoliciesPage: React.FC = () => {
       });
       fetchPolicies();
     } catch (error: any) {
-      addToast(error.message || "Không thể cập nhật lỗi", "error");
+      addToast(error.message || t("manager:policies.updateFailed"), "error");
     } finally {
       setIsCreating(false);
     }
@@ -227,7 +230,7 @@ const ModernPoliciesPage: React.FC = () => {
     setIsDeleting(true);
     try {
       await policyApi.delete(getPolicyId(policyToDelete));
-      addToast("Xóa lỗi thành công!", "success");
+      addToast(t("manager:policies.deleteSuccess"), "success");
       setShowDeleteConfirm(false);
       setPolicyToDelete(null);
       fetchPolicies();
@@ -238,12 +241,9 @@ const ModernPoliciesPage: React.FC = () => {
         errorMsg.includes("foreign key") ||
         errorMsg.includes("is still referenced")
       ) {
-        addToast(
-          "Policy này đang được sử dụng bởi các review task. Vui lòng xóa policy ra khỏi các reviewing trước khi xóa.",
-          "error",
-        );
+        addToast(t("manager:policies.deleteBlocked"), "error");
       } else {
-        addToast(errorMsg || "Không thể xóa lỗi", "error");
+        addToast(errorMsg || t("manager:policies.deleteFailed"), "error");
       }
     } finally {
       setIsDeleting(false);
@@ -252,7 +252,7 @@ const ModernPoliciesPage: React.FC = () => {
 
   // Helper functions
   const getPolicyName = (policy: Policy) =>
-    policy.errorName || policy.error_name || "Unknown";
+    policy.errorName || policy.error_name || t("manager:policies.unknown");
   const getPolicyId = (policy: Policy) =>
     policy.policyId || policy.policy_id || 0;
 
@@ -301,7 +301,7 @@ const ModernPoliciesPage: React.FC = () => {
                 marginBottom: "8px",
               }}
             >
-              Quản lý lỗi
+              {t("manager:policies.title")}
             </h1>
             <p
               style={{
@@ -309,7 +309,7 @@ const ModernPoliciesPage: React.FC = () => {
                 color: T.textSecondary,
               }}
             >
-              Quản lý các loại lỗi và tiêu chuẩn chất lượng cho dự án
+              {t("manager:policies.subtitle")}
             </p>
           </div>
           <Button
@@ -318,7 +318,7 @@ const ModernPoliciesPage: React.FC = () => {
             leftIcon="add"
             className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
           >
-            Tạo lỗi mới
+            {t("manager:policies.create")}
           </Button>
         </div>
 
@@ -360,7 +360,7 @@ const ModernPoliciesPage: React.FC = () => {
                 opacity: 0.8,
               }}
             >
-              Tổng các lỗi
+              {t("manager:policies.stats.total")}
             </div>
           </div>
           <div
@@ -396,7 +396,7 @@ const ModernPoliciesPage: React.FC = () => {
                 opacity: 0.8,
               }}
             >
-              Áp dụng cho dự án
+              {t("manager:policies.stats.appliedProjects")}
             </div>
           </div>
           <div
@@ -429,7 +429,7 @@ const ModernPoliciesPage: React.FC = () => {
                 opacity: 0.8,
               }}
             >
-              Lỗi cực nghiêm trọng
+              {t("manager:policies.stats.critical")}
             </div>
           </div>
           <div
@@ -462,7 +462,7 @@ const ModernPoliciesPage: React.FC = () => {
                 opacity: 0.8,
               }}
             >
-              Lỗi cao
+              {t("manager:policies.stats.high")}
             </div>
           </div>
           <div
@@ -495,7 +495,7 @@ const ModernPoliciesPage: React.FC = () => {
                 opacity: 0.8,
               }}
             >
-              Lỗi trung bình
+              {t("manager:policies.stats.medium")}
             </div>
           </div>
           <div
@@ -528,7 +528,7 @@ const ModernPoliciesPage: React.FC = () => {
                 opacity: 0.8,
               }}
             >
-              Lỗi nhẹ
+              {t("manager:policies.stats.low")}
             </div>
           </div>
         </div>
@@ -566,7 +566,7 @@ const ModernPoliciesPage: React.FC = () => {
                   color: getPolicyColor(getPolicyName(policy)),
                 }}
               >
-                Lỗi #{getPolicyId(policy)}
+                {t("manager:policies.card.code", { id: getPolicyId(policy) })}
               </div>
             </div>
 
@@ -577,7 +577,9 @@ const ModernPoliciesPage: React.FC = () => {
             {/* Applied Projects */}
             <div className="mb-4">
               <div className="text-xs font-semibold text-muted-foreground mb-2">
-                Áp dụng cho {policy.projects?.length || 0} dự án:
+                {t("manager:policies.card.appliedProjects", {
+                  count: policy.projects?.length || 0,
+                })}
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {policy.projects?.slice(0, 2).map((project) => (
@@ -590,7 +592,9 @@ const ModernPoliciesPage: React.FC = () => {
                 ))}
                 {(policy.projects?.length || 0) > 2 && (
                   <div className="px-2 py-1 bg-muted text-muted-foreground rounded-md text-[10px] font-medium">
-                    +{(policy.projects?.length || 0) - 2} khác
+                    {t("manager:policies.card.moreProjects", {
+                      count: (policy.projects?.length || 0) - 2,
+                    })}
                   </div>
                 )}
               </div>
@@ -609,7 +613,7 @@ const ModernPoliciesPage: React.FC = () => {
                   }}
                   leftIcon="edit"
                 >
-                  Sửa
+                  {t("common:actions.edit")}
                 </Button>
                 <Button
                   variant="destructive"
@@ -623,7 +627,9 @@ const ModernPoliciesPage: React.FC = () => {
                 />
               </div>
               <div className="text-xs text-muted-foreground font-medium flex items-center gap-1">
-                {policy.projects?.length || 0} dự án
+                {t("manager:policies.card.projectCount", {
+                  count: policy.projects?.length || 0,
+                })}
               </div>
             </div>
           </Card>
@@ -635,17 +641,19 @@ const ModernPoliciesPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
             <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-              {showEditModal ? "Chỉnh sửa lỗi" : "Tạo lỗi mới"}
+              {showEditModal
+                ? t("manager:policies.form.editTitle")
+                : t("manager:policies.form.createTitle")}
             </h2>
 
             <div className="space-y-4 mb-6">
               <div>
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">
-                  Tên lỗi *
+                  {t("manager:policies.form.name")} *
                 </label>
                 <input
                   type="text"
-                  placeholder="Tên lỗi (vd: Annotation Quality)"
+                  placeholder={t("manager:policies.form.placeholders.name")}
                   value={newPolicy.errorName}
                   onChange={(e) =>
                     setNewPolicy({ ...newPolicy, errorName: e.target.value })
@@ -655,10 +663,10 @@ const ModernPoliciesPage: React.FC = () => {
               </div>
               <div>
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">
-                  Mô tả
+                  {t("manager:policies.form.description")}
                 </label>
                 <textarea
-                  placeholder="Mô tả lỗi..."
+                  placeholder={t("manager:policies.form.placeholders.description")}
                   rows={4}
                   value={newPolicy.description}
                   onChange={(e) =>
@@ -669,7 +677,7 @@ const ModernPoliciesPage: React.FC = () => {
               </div>
               <div>
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">
-                  Mức độ lỗi *
+                  {t("manager:policies.form.severity")} *
                 </label>
                 <select
                   value={newPolicy.errorLevel}
@@ -678,10 +686,10 @@ const ModernPoliciesPage: React.FC = () => {
                   }
                   className="w-full px-4 py-2.5 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none cursor-pointer"
                 >
-                  <option value="LOW">Thấp</option>
-                  <option value="MEDIUM">Trung bình</option>
-                  <option value="HIGH">Cao</option>
-                  <option value="CRITICAL">Nghiêm trọng</option>
+                  <option value="LOW">{t("manager:errorTypes.severity.LOW")}</option>
+                  <option value="MEDIUM">{t("manager:errorTypes.severity.MEDIUM")}</option>
+                  <option value="HIGH">{t("manager:errorTypes.severity.HIGH")}</option>
+                  <option value="CRITICAL">{t("manager:errorTypes.severity.CRITICAL")}</option>
                 </select>
               </div>
             </div>
@@ -695,7 +703,7 @@ const ModernPoliciesPage: React.FC = () => {
                 }}
                 disabled={isCreating}
               >
-                Hủy
+                {t("common:actions.cancel")}
               </Button>
               <Button
                 variant="primary"
@@ -704,7 +712,9 @@ const ModernPoliciesPage: React.FC = () => {
                 }
                 isLoading={isCreating}
               >
-                {showEditModal ? "Cập nhật" : "Tạo lỗi"}
+                {showEditModal
+                  ? t("manager:policies.form.submitUpdate")
+                  : t("manager:policies.form.submitCreate")}
               </Button>
             </div>
           </Card>
@@ -723,12 +733,14 @@ const ModernPoliciesPage: React.FC = () => {
                 </h2>
                 <div
                   className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mt-1"
-                  style={{
-                    backgroundColor: `${getPolicyColor(getPolicyName(selectedPolicy))}20`,
-                    color: getPolicyColor(getPolicyName(selectedPolicy)),
-                  }}
-                >
-                  Lỗi #{getPolicyId(selectedPolicy)}
+                style={{
+                  backgroundColor: `${getPolicyColor(getPolicyName(selectedPolicy))}20`,
+                  color: getPolicyColor(getPolicyName(selectedPolicy)),
+                }}
+              >
+                  {t("manager:policies.card.code", {
+                    id: getPolicyId(selectedPolicy),
+                  })}
                 </div>
               </div>
               <button
@@ -743,7 +755,7 @@ const ModernPoliciesPage: React.FC = () => {
             <div className="p-6 overflow-y-auto space-y-6">
               <div>
                 <h3 className="text-sm font-bold text-foreground mb-2">
-                  Mô tả lỗi
+                  {t("manager:policies.detail.description")}
                 </h3>
                 <div className="p-4 bg-muted/50 rounded-lg text-sm text-foreground/80 leading-relaxed border border-border/50">
                   {selectedPolicy.description}
@@ -752,7 +764,7 @@ const ModernPoliciesPage: React.FC = () => {
 
               <div>
                 <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                  Dự án áp dụng
+                  {t("manager:policies.detail.appliedProjects")}
                   <span className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs">
                     {selectedPolicy.projects?.length || 0}
                   </span>
@@ -768,11 +780,14 @@ const ModernPoliciesPage: React.FC = () => {
                           {project.name}
                         </div>
                         <div className="text-xs text-muted-foreground mt-0.5">
-                          {project.data_type} • {project.status}
+                          {translateDataType(project.data_type)} •{" "}
+                          {translateProjectStatus(project.status)}
                         </div>
                       </div>
                       <div className="px-2 py-1 bg-blue-500/10 text-blue-600 rounded text-xs font-mono">
-                        Mã: {project.project_id}
+                        {t("manager:policies.detail.projectCode", {
+                          id: project.project_id,
+                        })}
                       </div>
                     </div>
                   ))}
@@ -783,7 +798,7 @@ const ModernPoliciesPage: React.FC = () => {
             {/* Modal Footer */}
             <div className="p-4 border-t border-border/50 bg-muted/20 flex gap-3 justify-end">
               <Button variant="ghost" onClick={() => setShowDetailModal(false)}>
-                Đóng
+                {t("common:actions.close")}
               </Button>
             </div>
           </Card>
@@ -795,14 +810,12 @@ const ModernPoliciesPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-sm p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
             <h3 className="text-lg font-bold text-foreground mb-2">
-              Xác nhận xóa
+              {t("manager:policies.deleteDialog.title")}
             </h3>
             <p className="text-sm text-muted-foreground mb-6">
-              Bạn có chắc chắn muốn xóa policy{" "}
-              <span className="font-semibold text-foreground">
-                "{getPolicyName(policyToDelete)}"
-              </span>{" "}
-              không? Hành động này không thể hoàn tác.
+              {t("manager:policies.deleteDialog.message", {
+                name: getPolicyName(policyToDelete),
+              })}
             </p>
             <div className="flex gap-3 justify-end">
               <Button
@@ -810,14 +823,14 @@ const ModernPoliciesPage: React.FC = () => {
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={isDeleting}
               >
-                Hủy
+                {t("common:actions.cancel")}
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleDeleteConfirm}
                 isLoading={isDeleting}
               >
-                Xóa
+                {t("common:actions.delete")}
               </Button>
             </div>
           </Card>
