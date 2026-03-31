@@ -197,6 +197,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
   /* ── UI local state ── */
   const [selectedGroupKey, setSelectedGroupKey] = React.useState(null);
   const [rejectingAnnoId, setRejectingAnnoId] = React.useState(null);
+  const [confirmingApproveId, setConfirmingApproveId] = React.useState(null);
   const [selectedPolicyId, setSelectedPolicyId] = React.useState(null);
   const [rejectNote, setRejectNote] = React.useState("");
   const [zoom, setZoom] = React.useState(100);
@@ -221,6 +222,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
   React.useEffect(() => {
     setSelectedGroupKey(null);
     setRejectingAnnoId(null);
+    setConfirmingApproveId(null);
     setSelectedPolicyId(null);
     setRejectNote("");
   }, [currentItemIndex]);
@@ -1242,79 +1244,97 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                           !anno.policyName &&
                           assignmentStatus !== "APPROVED" && (
                             <div
-                              className="flex gap-1.5"
+                              className="flex gap-1.5 flex-col"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <button
-                                onClick={() => handleApprove(anno.reviewingId)}
-                                disabled={
-                                  reviewSubmitting ||
-                                  !canReviewCurrentImage ||
-                                  isRejecting
-                                }
-                                title={
-                                  isFinalizedAssignment
-                                    ? t("reviewer:workspace.messages.finalized", {
-                                        status: assignmentStatus,
-                                      })
-                                    : !canReviewCurrentImage
-                                      ? t("reviewer:workspace.reviewBlockedImage")
-                                      : undefined
-                                }
-                                className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-bold transition"
-                                style={{
-                                  background: "rgba(0,191,165,0.1)",
-                                  color: "#00bfa5",
-                                  border: "1px solid rgba(0,191,165,0.2)",
-                                }}
-                              >
-                                {reviewSubmitting ? (
-                                  <span className="material-symbols-outlined text-sm animate-spin">
-                                    progress_activity
+                              {/* Confirm approve inline */}
+                              {confirmingApproveId === anno.reviewingId ? (
+                                <div className="flex flex-col gap-1.5 p-2 rounded" style={{ background: "rgba(0,191,165,0.08)", border: "1px solid rgba(0,191,165,0.25)" }}>
+                                  <span className="text-[11px] font-semibold" style={{ color: "#00bfa5" }}>
+                                    Xác nhận chấp nhận nhãn này?
                                   </span>
-                                ) : (
-                                  <span className="material-symbols-outlined text-sm">
-                                    check
-                                  </span>
-                                )}
-                                {t("reviewer:workspace.actions.approve")}
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setRejectingAnnoId(
-                                    isRejecting ? null : anno.reviewingId,
-                                  );
-                                  setSelectedPolicyId(null);
-                                  setRejectNote("");
-                                }}
-                                disabled={
-                                  reviewSubmitting ||
-                                  policies.length === 0 ||
-                                  !canReviewCurrentImage
-                                }
-                                title={
-                                  isFinalizedAssignment
-                                    ? t("reviewer:workspace.messages.finalized", {
-                                        status: assignmentStatus,
-                                      })
-                                    : !canReviewCurrentImage
-                                      ? t("reviewer:workspace.reviewBlockedImage")
-                                      : policies.length === 0
-                                        ? t("reviewer:workspace.noPolicies")
-                                        : t("reviewer:workspace.rejectCurrent")
-                                }
-                                className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-bold transition disabled:opacity-40"
-                                style={{
-                                  background: "rgba(248,113,113,0.1)",
-                                  color: "#f87171",
-                                  border: "1px solid rgba(248,113,113,0.2)",
-                                }}
-                              >
-                                <span className="material-symbols-outlined text-sm">
-                                  close
-                                </span>
-                                {t("reviewer:workspace.actions.reject")}
-                              </button>
+                                  <div className="flex gap-1.5">
+                                    <button
+                                      onClick={() => { setConfirmingApproveId(null); handleApprove(anno.reviewingId); }}
+                                      disabled={reviewSubmitting}
+                                      className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-bold transition"
+                                      style={{ background: "rgba(0,191,165,0.2)", color: "#00bfa5", border: "1px solid rgba(0,191,165,0.4)" }}
+                                    >
+                                      <span className="material-symbols-outlined text-sm">check_circle</span>
+                                      Xác nhận
+                                    </button>
+                                    <button
+                                      onClick={() => setConfirmingApproveId(null)}
+                                      className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-bold transition"
+                                      style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(148,163,184,0.2)" }}
+                                    >
+                                      <span className="material-symbols-outlined text-sm">close</span>
+                                      Huỷ
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex gap-1.5">
+                                  <button
+                                    onClick={() => setConfirmingApproveId(anno.reviewingId)}
+                                    disabled={
+                                      reviewSubmitting ||
+                                      !canReviewCurrentImage ||
+                                      isRejecting
+                                    }
+                                    title={
+                                      isFinalizedAssignment
+                                        ? t("reviewer:workspace.messages.finalized", { status: assignmentStatus })
+                                        : !canReviewCurrentImage
+                                          ? t("reviewer:workspace.reviewBlockedImage")
+                                          : undefined
+                                    }
+                                    className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-bold transition"
+                                    style={{
+                                      background: "rgba(0,191,165,0.1)",
+                                      color: "#00bfa5",
+                                      border: "1px solid rgba(0,191,165,0.2)",
+                                    }}
+                                  >
+                                    {reviewSubmitting ? (
+                                      <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                                    ) : (
+                                      <span className="material-symbols-outlined text-sm">check</span>
+                                    )}
+                                    {t("reviewer:workspace.actions.approve")}
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setRejectingAnnoId(isRejecting ? null : anno.reviewingId);
+                                      setSelectedPolicyId(null);
+                                      setRejectNote("");
+                                    }}
+                                    disabled={
+                                      reviewSubmitting ||
+                                      policies.length === 0 ||
+                                      !canReviewCurrentImage
+                                    }
+                                    title={
+                                      isFinalizedAssignment
+                                        ? t("reviewer:workspace.messages.finalized", { status: assignmentStatus })
+                                        : !canReviewCurrentImage
+                                          ? t("reviewer:workspace.reviewBlockedImage")
+                                          : policies.length === 0
+                                            ? t("reviewer:workspace.noPolicies")
+                                            : t("reviewer:workspace.rejectCurrent")
+                                    }
+                                    className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-bold transition disabled:opacity-40"
+                                    style={{
+                                      background: "rgba(248,113,113,0.1)",
+                                      color: "#f87171",
+                                      border: "1px solid rgba(248,113,113,0.2)",
+                                    }}
+                                  >
+                                    <span className="material-symbols-outlined text-sm">close</span>
+                                    {t("reviewer:workspace.actions.reject")}
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           )}
 

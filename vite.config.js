@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  root: path.resolve(__dirname),
   server: {
     port: 3000,
     proxy: {
@@ -18,5 +20,9 @@ export default defineConfig({
         secure: false,
       },
     },
+  },
+  optimizeDeps: {
+    // Chỉ scan trong thư mục src, tránh scan toàn bộ ổ đĩa
+    entries: ['./src/main.jsx'],
   },
 })
