@@ -37,7 +37,7 @@ interface Assignment {
   reviewerId: number;
   reviewerName: string;
   status: string;
-  displayStatus?: string;  // ← Backend trả về: "Đang xử lý", "Hoàn thành", etc
+  displayStatus?: string; // ← Backend trả về: "Đang xử lý", "Hoàn thành", etc
   progress: number;
   createdAt: string;
 }
@@ -157,17 +157,15 @@ export default function ProjectAssignments() {
         } else {
           return {
             users: [],
-            usersError: err?.message || t("manager:assignments.usersLoadFailed"),
+            usersError:
+              err?.message || t("manager:assignments.usersLoadFailed"),
           };
         }
       }
     }
   }, []);
 
-  const {
-    data: datasets = [],
-    isLoading: loadingDatasets,
-  } = useQuery({
+  const { data: datasets = [], isLoading: loadingDatasets } = useQuery({
     queryKey: projectQueryKeys.datasets(pid),
     queryFn: () => fetchProjectDatasets(Number(pid)),
     enabled: Boolean(pid),
@@ -335,8 +333,8 @@ export default function ProjectAssignments() {
                   {loadingDatasets
                     ? t("common:states.loading")
                     : datasets.length === 0
-                    ? t("manager:assignments.noDataset")
-                    : t("manager:assignments.selectDataset")}
+                      ? t("manager:assignments.noDataset")
+                      : t("manager:assignments.selectDataset")}
                 </option>
                 {datasets.map((d) => (
                   <option key={d.id} value={d.id}>
@@ -552,7 +550,11 @@ export default function ProjectAssignments() {
             <p className="text-sm text-destructive flex-1">
               {assignmentsErrorMessage}
             </p>
-            <Button variant="ghost" size="sm" onClick={() => refetchAssignments()}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => refetchAssignments()}
+            >
               {t("manager:assignments.retry")}
             </Button>
           </div>
@@ -579,19 +581,35 @@ export default function ProjectAssignments() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t("common:labels.id")}</TableHead>
-                    <TableHead>{t("manager:assignments.table.source")}</TableHead>
-                    <TableHead>{t("manager:assignments.table.annotator")}</TableHead>
-                    <TableHead>{t("manager:assignments.table.reviewer")}</TableHead>
-                    <TableHead>{t("manager:assignments.table.progress")}</TableHead>
-                    <TableHead>{t("manager:assignments.table.status")}</TableHead>
-                    <TableHead className="text-right">{t("manager:assignments.table.action")}</TableHead>
+                    <TableHead>
+                      {t("manager:assignments.table.source")}
+                    </TableHead>
+                    <TableHead>
+                      {t("manager:assignments.table.annotator")}
+                    </TableHead>
+                    <TableHead>
+                      {t("manager:assignments.table.reviewer")}
+                    </TableHead>
+                    <TableHead>
+                      {t("manager:assignments.table.progress")}
+                    </TableHead>
+                    <TableHead>
+                      {t("manager:assignments.table.status")}
+                    </TableHead>
+                    <TableHead className="text-right">
+                      {t("manager:assignments.table.action")}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {assignments.map((task) => {
                     // ✅ Ưu tiên dùng displayStatus (nếu backend trả về)
                     // ✅ Nếu không có, fallback dùng status gốc
-                    const displayStatusText = task.displayStatus || translateAssignmentStatus(String(task.status || "PENDING").toUpperCase());
+                    const displayStatusText =
+                      task.displayStatus ||
+                      translateAssignmentStatus(
+                        String(task.status || "PENDING").toUpperCase(),
+                      );
                     const status = String(
                       task.status || "PENDING",
                     ).toUpperCase();
@@ -624,7 +642,8 @@ export default function ProjectAssignments() {
                                 "bg-muted text-muted-foreground",
                             )}
                           >
-                            {displayStatusText}  {/* ← Hiển thị displayStatus từ backend */}
+                            {displayStatusText}{" "}
+                            {/* ← Hiển thị displayStatus từ backend */}
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
@@ -658,7 +677,9 @@ export default function ProjectAssignments() {
                 </TableBody>
               </Table>
               <p className="text-xs text-muted-foreground pt-2">
-                {t("manager:assignments.counts.showing", { count: assignments.length })}
+                {t("manager:assignments.counts.showing", {
+                  count: assignments.length,
+                })}
               </p>
             </>
           )
@@ -679,13 +700,17 @@ export default function ProjectAssignments() {
         {viewTask && (
           <div className="space-y-3 text-sm">
             <div>
-              <span className="font-medium text-foreground">{t("manager:assignments.detail.assignmentCode")}:</span>{" "}
+              <span className="font-medium text-foreground">
+                {t("manager:assignments.detail.assignmentCode")}:
+              </span>{" "}
               <span className="text-muted-foreground font-mono">
                 #{viewTask.assignmentId}
               </span>
             </div>
             <div>
-              <span className="font-medium text-foreground">{t("manager:assignments.detail.project")}:</span>{" "}
+              <span className="font-medium text-foreground">
+                {t("manager:assignments.detail.project")}:
+              </span>{" "}
               <span className="text-muted-foreground">
                 {viewTask.projectName || "—"}
               </span>
@@ -715,13 +740,17 @@ export default function ProjectAssignments() {
               </span>
             </div>
             <div>
-              <span className="font-medium text-foreground">{t("manager:assignments.detail.progress")}:</span>{" "}
+              <span className="font-medium text-foreground">
+                {t("manager:assignments.detail.progress")}:
+              </span>{" "}
               <span className="text-muted-foreground">
                 {viewTask.progress || 0}%
               </span>
             </div>
             <div>
-              <span className="font-medium text-foreground">{t("manager:assignments.detail.status")}:</span>{" "}
+              <span className="font-medium text-foreground">
+                {t("manager:assignments.detail.status")}:
+              </span>{" "}
               <span
                 className={cn(
                   "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
@@ -733,9 +762,13 @@ export default function ProjectAssignments() {
             </div>
             {viewTask.createdAt && (
               <div>
-                <span className="font-medium text-foreground">{t("manager:assignments.detail.createdAt")}:</span>{" "}
+                <span className="font-medium text-foreground">
+                  {t("manager:assignments.detail.createdAt")}:
+                </span>{" "}
                 <span className="text-muted-foreground">
-                  {new Date(viewTask.createdAt).toLocaleString(i18n.language === "en" ? "en-US" : "vi-VN")}
+                  {new Date(viewTask.createdAt).toLocaleString(
+                    i18n.language === "en" ? "en-US" : "vi-VN",
+                  )}
                 </span>
               </div>
             )}

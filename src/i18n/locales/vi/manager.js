@@ -48,8 +48,7 @@ const manager = {
       description: "Mô tả",
       status: "Trạng thái",
       cannotChangeType: "Không thể thay đổi loại dữ liệu sau khi tạo.",
-      completedLocked:
-        "Dự án đã hoàn thành không thể thay đổi trạng thái.",
+      completedLocked: "Dự án đã hoàn thành không thể thay đổi trạng thái.",
     },
     card: {
       manager: "Quản lý",
@@ -253,34 +252,31 @@ const manager = {
     },
   },
   export: {
-    datasetBatch: "Dataset / Batch",
+    datasetBatch: "Bộ dữ liệu",
     format: "Định dạng",
     loadingDatasets: "Đang tải...",
     noDatasets: "Không có bộ dữ liệu",
-    approvedOnly: "Chỉ export các annotation đã được duyệt (APPROVED).",
-    batchStatus: "Trạng thái Batch",
+    approvedOnly: "Chỉ xuất các nhãn dữ liệu đã được duyệt. Các nhãn dữ liệu được duyệt sẽ được bao gồm trong file xuất.",
+    batchStatus: "Trạng thái bộ dữ liệu",
     completedOnly:
-      "Batch chưa hoàn thành. Vui lòng đợi tất cả annotation được duyệt (APPROVED) trước khi export.",
+      "Bộ dữ liệu chưa hoàn thành. Vui lòng đợi tất cả annotation được duyệt trước khi xuất dữ liệu.",
     formatDescriptions: {
-      coco:
-        "Xuất file JSON theo chuẩn COCO (images, annotations, categories). Phù hợp với hầu hết ML framework.",
-      yolo:
-        "Xuất file ZIP gồm classes.txt, labels/*.txt (bbox chuẩn hóa 0-1) và ảnh gốc trong images/*.",
+      coco: "Xuất file JSON theo chuẩn COCO (images, annotations, categories). Phù hợp với hầu hết ML framework.",
+      yolo: "Xuất file ZIP gồm classes.txt, labels/*.txt (bbox chuẩn hóa 0-1) và ảnh gốc trong images/*.",
       pascalVoc:
         "Xuất file ZIP gồm Annotations/*.xml (bndbox) và ảnh gốc trong JPEGImages/*.",
-      csv:
-        "Xuất CSV phẳng, mỗi dòng là 1 annotation kèm tọa độ geometry thô.",
+      csv: "Xuất CSV phẳng, mỗi dòng là 1 annotation kèm tọa độ geometry thô.",
     },
     batchStatuses: {
       completed: "Hoàn thành",
       inProgress: "Đang xử lý",
       pending: "Chờ xử lý",
     },
-    export: "Export",
-    history: "Lịch sử Export",
-    emptyHistory: "Chưa có bản export nào.",
+    export: "Xuất dữ liệu",
+    history: "Lịch sử xuất dữ liệu",
+    emptyHistory: "Chưa có bản xuất nào.",
     table: {
-      dataset: "Dataset",
+      dataset: "Bộ dữ liệu",
       format: "Định dạng",
       file: "File",
       time: "Thời gian",
@@ -289,10 +285,10 @@ const manager = {
     statusCompleted: "Hoàn thành",
     statusFailed: "Thất bại",
     messages: {
-      selectDataset: "Vui lòng chọn dataset",
+      selectDataset: "Vui lòng chọn bộ dữ liệu",
       batchIncomplete:
-        "Chỉ có thể export batch đã hoàn thành (COMPLETED). Trạng thái hiện tại: {{status}}",
-      exportFailed: "Export thất bại — vui lòng thử lại",
+        "Chỉ có thể xuất bộ dữ liệu đã hoàn thành. Trạng thái hiện tại: {{status}}",
+      exportFailed: "Xuất dữ liệu thất bại — vui lòng thử lại",
     },
   },
   data: {
@@ -319,7 +315,7 @@ const manager = {
     uploadFailed: "Upload thất bại",
     loadingApi: "Đang tải từ API...",
     noBatch: "Chưa có batch nào.",
-    batchList: "Danh sách Batch",
+    batchList: "Danh sách dữ liệu",
     table: {
       batchName: "Tên bộ dữ liệu",
       files: "Files",
@@ -466,8 +462,7 @@ const manager = {
     deactivateTitle: "Ngưng sử dụng nhãn",
     reactivateTitle: "Kích hoạt lại",
     deleteDialogTitle: "Xóa nhãn",
-    deleteDialogMessage:
-      'Bạn có chắc muốn ngưng sử dụng nhãn "{{name}}"?',
+    deleteDialogMessage: 'Bạn có chắc muốn ngưng sử dụng nhãn "{{name}}"?',
     deleteDialogConfirm: "Ngưng sử dụng",
     table: {
       color: "Màu",
@@ -590,7 +585,7 @@ const manager = {
     upload: "Tải lên",
     uploadSuccess: "Tải lên thành công",
     uploadFailed: "Tải lên thất bại",
-    batchList: "Danh sách Batch",
+    batchList: "Danh sách dữ liệu",
     noProjectBatch: "Chưa có batch nào cho dự án này.",
     table: {
       batchName: "Tên bộ dữ liệu",

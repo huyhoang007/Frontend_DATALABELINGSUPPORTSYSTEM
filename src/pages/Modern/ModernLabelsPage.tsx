@@ -245,7 +245,9 @@ const ModernLabelsPage: React.FC = () => {
   };
 
   const handleDeleteLabel = async (labelId: number) => {
-    if (!window.confirm(t("manager:modernLabels.messages.confirmDeactivateLabel"))) {
+    if (
+      !window.confirm(t("manager:modernLabels.messages.confirmDeactivateLabel"))
+    ) {
       return;
     }
 
@@ -265,7 +267,9 @@ const ModernLabelsPage: React.FC = () => {
   };
 
   const handleActivateLabel = async (labelId: number) => {
-    if (!window.confirm(t("manager:modernLabels.messages.confirmReactivateLabel"))) {
+    if (
+      !window.confirm(t("manager:modernLabels.messages.confirmReactivateLabel"))
+    ) {
       return;
     }
 
@@ -276,7 +280,8 @@ const ModernLabelsPage: React.FC = () => {
       fetchLabels();
     } catch (error: any) {
       addToast(
-        error.message || t("manager:modernLabels.messages.labelReactivateFailed"),
+        error.message ||
+          t("manager:modernLabels.messages.labelReactivateFailed"),
         "error",
       );
     } finally {
@@ -299,7 +304,10 @@ const ModernLabelsPage: React.FC = () => {
       return;
     }
     if (selectedLabelIds.length === 0) {
-      addToast(t("manager:modernLabels.messages.selectAtLeastOneLabel"), "error");
+      addToast(
+        t("manager:modernLabels.messages.selectAtLeastOneLabel"),
+        "error",
+      );
       return;
     }
 
@@ -316,14 +324,18 @@ const ModernLabelsPage: React.FC = () => {
       setSelectedLabelIds([]);
       fetchLabelRules();
     } catch (error: any) {
-      addToast(error.message || t("manager:modernLabels.messages.ruleCreateFailed"), "error");
+      addToast(
+        error.message || t("manager:modernLabels.messages.ruleCreateFailed"),
+        "error",
+      );
     } finally {
       setIsCreatingRule(false);
     }
   };
 
   const handleDeleteRule = async (ruleId: number) => {
-    if (!window.confirm(t("manager:modernLabels.messages.confirmDeleteRule"))) return;
+    if (!window.confirm(t("manager:modernLabels.messages.confirmDeleteRule")))
+      return;
     try {
       await labelRuleApi.deleteRule(ruleId);
       addToast(t("manager:modernLabels.messages.ruleDeleted"), "success");
@@ -335,12 +347,12 @@ const ModernLabelsPage: React.FC = () => {
         errorMsg.includes("foreign key") ||
         errorMsg.includes("is still referenced")
       ) {
+        addToast(t("manager:modernLabels.messages.ruleDeleteBlocked"), "error");
+      } else {
         addToast(
-          t("manager:modernLabels.messages.ruleDeleteBlocked"),
+          errorMsg || t("manager:modernLabels.messages.ruleDeleteFailed"),
           "error",
         );
-      } else {
-        addToast(errorMsg || t("manager:modernLabels.messages.ruleDeleteFailed"), "error");
       }
     }
   };
@@ -373,7 +385,10 @@ const ModernLabelsPage: React.FC = () => {
       setEditingRule(null);
       fetchLabelRules();
     } catch (error: any) {
-      addToast(error.message || t("manager:modernLabels.messages.ruleUpdateFailed"), "error");
+      addToast(
+        error.message || t("manager:modernLabels.messages.ruleUpdateFailed"),
+        "error",
+      );
     } finally {
       setIsUpdatingRule(false);
     }
@@ -387,7 +402,10 @@ const ModernLabelsPage: React.FC = () => {
 
   const handleAttachLabels = async () => {
     if (!attachingRule || attachLabelIds.length === 0) {
-      addToast(t("manager:modernLabels.messages.selectAtLeastOneLabel"), "error");
+      addToast(
+        t("manager:modernLabels.messages.selectAtLeastOneLabel"),
+        "error",
+      );
       return;
     }
 
@@ -399,10 +417,7 @@ const ModernLabelsPage: React.FC = () => {
     );
 
     if (duplicates.length > 0) {
-      addToast(
-        t("manager:modernLabels.messages.ruleDuplicateLabel"),
-        "error",
-      );
+      addToast(t("manager:modernLabels.messages.ruleDuplicateLabel"), "error");
       return;
     }
 
@@ -422,7 +437,10 @@ const ModernLabelsPage: React.FC = () => {
       // Refresh data in background (don't wait)
       fetchLabelRules();
     } catch (error: any) {
-      addToast(error.message || t("manager:modernLabels.messages.labelsAttachFailed"), "error");
+      addToast(
+        error.message || t("manager:modernLabels.messages.labelsAttachFailed"),
+        "error",
+      );
     } finally {
       setIsAttachingLabels(false);
     }
@@ -462,7 +480,10 @@ const ModernLabelsPage: React.FC = () => {
       // Refresh data in background (don't wait)
       fetchLabelRules();
     } catch (error: any) {
-      addToast(error.message || t("manager:modernLabels.messages.labelsRemoveFailed"), "error");
+      addToast(
+        error.message || t("manager:modernLabels.messages.labelsRemoveFailed"),
+        "error",
+      );
     } finally {
       setIsAttachingLabels(false);
     }
@@ -803,7 +824,9 @@ const ModernLabelsPage: React.FC = () => {
                                   ),
                                 }}
                               >
-                                {getLabelTypeLabel(label.labelType || label.label_type)}
+                                {getLabelTypeLabel(
+                                  label.labelType || label.label_type,
+                                )}
                               </span>
                             </div>
                           )}
@@ -867,7 +890,9 @@ const ModernLabelsPage: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder={t("manager:modernLabels.modals.labelNamePlaceholder")}
+                  placeholder={t(
+                    "manager:modernLabels.modals.labelNamePlaceholder",
+                  )}
                   value={newLabel.labelName}
                   onChange={(e) =>
                     setNewLabel({ ...newLabel, labelName: e.target.value })
@@ -891,7 +916,9 @@ const ModernLabelsPage: React.FC = () => {
                   />
                   <input
                     type="text"
-                    placeholder={t("manager:modernLabels.modals.colorCodePlaceholder")}
+                    placeholder={t(
+                      "manager:modernLabels.modals.colorCodePlaceholder",
+                    )}
                     value={newLabel.colorCode}
                     onChange={(e) =>
                       setNewLabel({ ...newLabel, colorCode: e.target.value })
@@ -913,14 +940,19 @@ const ModernLabelsPage: React.FC = () => {
                   className="w-full px-4 py-2 bg-background border border-input rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer"
                 >
                   <option value="OBJECT">{getLabelTypeLabel("OBJECT")}</option>
-                  <option value="CLASSIFICATION">{getLabelTypeLabel("CLASSIFICATION")}</option>
-                  <option value="SEGMENTATION">{getLabelTypeLabel("SEGMENTATION")}</option>
+                  <option value="CLASSIFICATION">
+                    {getLabelTypeLabel("CLASSIFICATION")}
+                  </option>
+                  <option value="SEGMENTATION">
+                    {getLabelTypeLabel("SEGMENTATION")}
+                  </option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                  {t("manager:labels.form.shortcut")} {t("manager:labels.form.shortcutOptional")}
+                  {t("manager:labels.form.shortcut")}{" "}
+                  {t("manager:labels.form.shortcutOptional")}
                 </label>
                 <input
                   type="text"
@@ -955,7 +987,9 @@ const ModernLabelsPage: React.FC = () => {
                 disabled={isCreating}
                 leftIcon={isCreating ? "loading" : "save"}
               >
-                {isCreating ? t("common:states.processing") : t("common:actions.createNew")}
+                {isCreating
+                  ? t("common:states.processing")
+                  : t("common:actions.createNew")}
               </Button>
             </div>
           </Card>
@@ -1021,14 +1055,19 @@ const ModernLabelsPage: React.FC = () => {
                   className="w-full px-4 py-2 bg-background border border-input rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer"
                 >
                   <option value="OBJECT">{getLabelTypeLabel("OBJECT")}</option>
-                  <option value="CLASSIFICATION">{getLabelTypeLabel("CLASSIFICATION")}</option>
-                  <option value="SEGMENTATION">{getLabelTypeLabel("SEGMENTATION")}</option>
+                  <option value="CLASSIFICATION">
+                    {getLabelTypeLabel("CLASSIFICATION")}
+                  </option>
+                  <option value="SEGMENTATION">
+                    {getLabelTypeLabel("SEGMENTATION")}
+                  </option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                  {t("manager:labels.form.shortcut")} {t("manager:labels.form.shortcutOptional")}
+                  {t("manager:labels.form.shortcut")}{" "}
+                  {t("manager:labels.form.shortcutOptional")}
                 </label>
                 <input
                   type="text"
@@ -1063,7 +1102,9 @@ const ModernLabelsPage: React.FC = () => {
                 disabled={isUpdating}
                 leftIcon={isUpdating ? "loading" : "save"}
               >
-                {isUpdating ? t("common:states.processing") : t("common:actions.save")}
+                {isUpdating
+                  ? t("common:states.processing")
+                  : t("common:actions.save")}
               </Button>
             </div>
           </Card>
@@ -1085,7 +1126,9 @@ const ModernLabelsPage: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder={t("manager:modernLabels.modals.ruleNamePlaceholder")}
+                  placeholder={t(
+                    "manager:modernLabels.modals.ruleNamePlaceholder",
+                  )}
                   value={newRule.name}
                   onChange={(e) =>
                     setNewRule({ ...newRule, name: e.target.value })
@@ -1099,7 +1142,9 @@ const ModernLabelsPage: React.FC = () => {
                   {t("manager:modernLabels.modals.ruleContent")}
                 </label>
                 <textarea
-                  placeholder={t("manager:modernLabels.modals.ruleContentPlaceholder")}
+                  placeholder={t(
+                    "manager:modernLabels.modals.ruleContentPlaceholder",
+                  )}
                   value={newRule.ruleContent}
                   onChange={(e) =>
                     setNewRule({ ...newRule, ruleContent: e.target.value })
@@ -1113,9 +1158,11 @@ const ModernLabelsPage: React.FC = () => {
                 <label className="block text-xs font-medium text-muted-foreground mb-2">
                   {t("manager:modernLabels.modals.selectLabels")} *{" "}
                   <span className="text-primary font-semibold">
-                    ({t("manager:modernLabels.modals.selectedCount", {
+                    (
+                    {t("manager:modernLabels.modals.selectedCount", {
                       count: selectedLabelIds.length,
-                    })})
+                    })}
+                    )
                   </span>
                 </label>
                 {activeLabels.length === 0 ? (
@@ -1179,7 +1226,9 @@ const ModernLabelsPage: React.FC = () => {
                 disabled={isCreatingRule}
                 leftIcon={isCreatingRule ? "loading" : "save"}
               >
-                {isCreatingRule ? t("common:states.processing") : t("manager:modernLabels.createRule")}
+                {isCreatingRule
+                  ? t("common:states.processing")
+                  : t("manager:modernLabels.createRule")}
               </Button>
             </div>
           </Card>
@@ -1240,7 +1289,9 @@ const ModernLabelsPage: React.FC = () => {
                 disabled={isUpdatingRule}
                 leftIcon={isUpdatingRule ? "loading" : "save"}
               >
-                {isUpdatingRule ? t("common:states.processing") : t("common:actions.save")}
+                {isUpdatingRule
+                  ? t("common:states.processing")
+                  : t("common:actions.save")}
               </Button>
             </div>
           </Card>
@@ -1292,7 +1343,8 @@ const ModernLabelsPage: React.FC = () => {
               fetchLabelRules();
             } catch (error: any) {
               addToast(
-                error.message || t("manager:modernLabels.messages.labelsRemoveFailed"),
+                error.message ||
+                  t("manager:modernLabels.messages.labelsRemoveFailed"),
                 "error",
               );
             } finally {
