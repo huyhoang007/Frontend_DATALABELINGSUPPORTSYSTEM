@@ -84,8 +84,7 @@ const common = {
   },
   unauthorized: {
     title: "Truy cập bị từ chối",
-    description:
-      "Bạn không có quyền truy cập trang này...",
+    description: "Bạn không có quyền truy cập trang này...",
   },
   dataType: {
     image: "Gán nhãn hình ảnh",

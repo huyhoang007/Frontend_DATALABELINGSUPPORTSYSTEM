@@ -22,15 +22,21 @@ type HistoryEntry = {
 
 /**
  * Compute batch status from assignments
- * COMPLETED: all assignments are APPROVED
- * IN_PROGRESS: some APPROVED, some IN_PROGRESS/SUBMITTED
+ * COMPLETED: all assignments are APPROVED or COMPLETED
+ * IN_PROGRESS: some SUBMITTED, IN_PROGRESS, or RE_SUBMITTED
  * PENDING: no assignments or all PENDING
  */
 function computeBatchStatus(assignments: any[]): string {
     if (!assignments || assignments.length === 0) return "PENDING";
     const statuses = assignments.map((a: any) => a.status);
-    if (statuses.every((s: string) => s === "APPROVED")) return "COMPLETED";
+    
+    // Check if all assignments are completed/approved
+    const completeStatuses = ["APPROVED", "COMPLETED"];
+    if (statuses.every((s: string) => completeStatuses.includes(s))) return "COMPLETED";
+    
+    // Check if any assignment is in progress or submitted
     if (statuses.some((s: string) => ["IN_PROGRESS", "SUBMITTED", "RE_SUBMITTED"].includes(s))) return "IN_PROGRESS";
+    
     return "PENDING";
 }
 
@@ -104,11 +110,19 @@ export default function ProjectExport() {
         (async () => {
             try {
                 const assignments = await assignmentApi.getAssignmentsByProject(Number(projectId));
+                console.log("📊 All assignments:", assignments);
+                
                 const relevantAssignments = assignments.filter(
                     (a: any) => String(a.datasetId ?? a.dataset_id) === selectedDatasetId
                 );
-                setBatchStatus(computeBatchStatus(relevantAssignments));
+                console.log(`📊 Filtered assignments for dataset ${selectedDatasetId}:`, relevantAssignments);
+                
+                const statusResult = computeBatchStatus(relevantAssignments);
+                console.log("📊 Computed batch status:", statusResult);
+                
+                setBatchStatus(statusResult);
             } catch (err) {
+                console.error("❌ Error loading batch status:", err);
                 setBatchStatus("PENDING");
             }
         })();

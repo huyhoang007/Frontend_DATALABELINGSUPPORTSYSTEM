@@ -48,8 +48,7 @@ const admin = {
     unbanSuccess: "Đã bỏ cấm người dùng thành công",
     unbanFailed: "Bỏ cấm người dùng thất bại",
     changeRoleTitle: "Thay đổi vai trò",
-    changeRoleDescription:
-      "Thay đổi vai trò cho người dùng: {{name}}",
+    changeRoleDescription: "Thay đổi vai trò cho người dùng: {{name}}",
     changeRoleSuccess: "Đã thay đổi vai trò thành công",
     changeRoleFailed: "Thay đổi vai trò thất bại",
     selectNewRole: "Chọn vai trò mới",
