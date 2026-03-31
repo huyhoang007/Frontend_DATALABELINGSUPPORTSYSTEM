@@ -1,7 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { userApi } from '../../api/userApi';
 import { activityLogApi } from '../../api/activityLogApi';
+import {
+  translateAdminLogAction,
+  translateAdminLogTargetNoun,
+  translateRole,
+} from '../../i18n/helpers';
 
 // Bảng màu Modern Enterprise UI
 const T = {
@@ -35,15 +41,9 @@ interface RoleStats {
   admins: number;
 }
 
-interface RecentActivity {
-  id: number;
-  message: string;
-  timestamp: string;
-  type: string;
-}
-
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation(["admin", "common"]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [hoveredKpi, setHoveredKpi] = useState<number | null>(null);
@@ -54,23 +54,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
     managers: 0,
     admins: 0
   });
-  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const [recentActivityLogs, setRecentActivityLogs] = useState<any[]>([]);
 
   // Helper function to format time ago
   const formatTimeAgo = (dateString: string) => {
-    if (!dateString) return 'Không rõ';
+    if (!dateString) return t("admin:dashboard.unknownTime");
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
-    if (diffMins < 1) return 'Vừa xong';
-    if (diffMins < 60) return `${diffMins} phút trước`;
-    if (diffHours < 24) return `${diffHours} giờ trước`;
-    if (diffDays === 1) return 'Hôm qua';
-    if (diffDays < 7) return `${diffDays} ngày trước`;
-    return date.toLocaleDateString('vi-VN');
+    if (diffMins < 1) return t("admin:dashboard.justNow");
+    if (diffMins < 60) return t("admin:dashboard.minutesAgo", { count: diffMins });
+    if (diffHours < 24) return t("admin:dashboard.hoursAgo", { count: diffHours });
+    if (diffDays === 1) return t("admin:dashboard.yesterday");
+    if (diffDays < 7) return t("admin:dashboard.daysAgo", { count: diffDays });
+    return date.toLocaleDateString(i18n.language === "en" ? "en-US" : "vi-VN");
   };
 
   // Fetch real data from backend
@@ -108,49 +108,65 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
         const logsResponse = await activityLogApi.getAllLogs({ page: 0, size: 5 }) as any;
         const logs = logsResponse.content || logsResponse || [];
         
-        // Transform logs to activity format
-        const activities: RecentActivity[] = logs.map((log: any, index: number) => {
-          let message = '';
-          const username = log.username || `Người dùng #${log.userId}`;
-          
-          // Format message based on action type
-          if (log.action?.toLowerCase().includes('login')) {
-            message = `${username} đã đăng nhập`;
-          } else if (log.action?.toLowerCase().includes('create')) {
-            const target = log.target || log.targetType || 'đối tượng';
-            message = `${username} đã tạo ${target}`;
-          } else if (log.action?.toLowerCase().includes('update')) {
-            const target = log.target || log.targetType || 'đối tượng';
-            message = `${username} đã cập nhật ${target}`;
-          } else if (log.action?.toLowerCase().includes('delete')) {
-            const target = log.target || log.targetType || 'đối tượng';
-            message = `${username} đã xóa ${target}`;
-          } else {
-            message = `${username} - ${log.action}`;
-          }
-          
-          // Format timestamp
-          const timestamp = formatTimeAgo(log.timestamp || log.createdAt);
-          
-          return {
-            id: log.logId || log.id || index,
-            message,
-            timestamp,
-            type: log.action?.toLowerCase() || 'unknown'
-          };
-        });
-        
-        setRecentActivities(activities);
-        
+        setRecentActivityLogs(logs);
       } catch (error) {
         console.error('Failed to fetch recent activities:', error);
-        setRecentActivities([]);
+        setRecentActivityLogs([]);
       }
     };
 
     fetchDashboardData();
     fetchRecentActivities();
   }, []);
+
+  const recentActivities = useMemo(
+    () =>
+      recentActivityLogs.map((log: any, index: number) => {
+        const username =
+          log.username ||
+          t("admin:dashboard.activityMessages.userFallback", {
+            id: log.userId,
+          });
+        const target =
+          translateAdminLogTargetNoun(log.target || log.targetType) ||
+          t("admin:dashboard.activityMessages.targetFallback");
+
+        let message = "";
+        if (log.action?.toLowerCase().includes("login")) {
+          message = t("admin:dashboard.activityMessages.login", {
+            user: username,
+          });
+        } else if (log.action?.toLowerCase().includes("create")) {
+          message = t("admin:dashboard.activityMessages.create", {
+            user: username,
+            target,
+          });
+        } else if (log.action?.toLowerCase().includes("update")) {
+          message = t("admin:dashboard.activityMessages.update", {
+            user: username,
+            target,
+          });
+        } else if (log.action?.toLowerCase().includes("delete")) {
+          message = t("admin:dashboard.activityMessages.delete", {
+            user: username,
+            target,
+          });
+        } else {
+          message = t("admin:dashboard.activityMessages.generic", {
+            user: username,
+            action: translateAdminLogAction(log.action),
+          });
+        }
+
+        return {
+          id: log.logId || log.id || index,
+          message,
+          timestamp: formatTimeAgo(log.timestamp || log.createdAt),
+          type: log.action?.toLowerCase() || "unknown",
+        };
+      }),
+    [recentActivityLogs, t, i18n.language],
+  );
 
   return (
     <div style={{
@@ -177,7 +193,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             letterSpacing: "0.1em",
             marginBottom: "4px"
           }}>
-            Quản trị hệ thống
+            {t("admin:dashboard.systemAdmin")}
           </p>
           <h1 style={{
             fontSize: "28px",
@@ -186,13 +202,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             marginBottom: "8px",
             letterSpacing: "-0.02em"
           }}>
-            Bảng điều khiển Admin
+            {t("admin:dashboard.title")}
           </h1>
           <p style={{
             fontSize: "14px",
             color: T.textMuted
           }}>
-            Quản lý toàn bộ hệ thống Data Labeling
+            {t("admin:dashboard.subtitle")}
           </p>
         </div>
       </div>
@@ -214,7 +230,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
           textTransform: "uppercase",
           letterSpacing: "0.1em"
         }}>
-          Hành động quản trị
+          {t("admin:dashboard.adminActions")}
         </h3>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
           {/* Quản lý người dùng */}
@@ -241,7 +257,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             }}
           >
             <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>group</span>
-            Quản lý người dùng
+            {t("common:nav.users")}
           </button>
 
           {/* Theo dõi nhật ký */}
@@ -267,7 +283,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             }}
           >
             <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>bar_chart</span>
-            Theo dõi nhật ký
+            {t("common:nav.activityLogs")}
           </button>
         </div>
       </div>
@@ -300,7 +316,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
               textTransform: "uppercase",
               letterSpacing: "0.08em"
             }}>
-              Tổng người dùng
+              {t("admin:dashboard.totalUsers")}
             </p>
             <span className="material-symbols-outlined" style={{ fontSize: "20px", color: T.brand }}>
               group
@@ -337,14 +353,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             fontWeight: 700,
             color: T.textPrimary
           }}>
-            Phân bổ vai trò
+            {t("admin:dashboard.roleDistribution")}
           </h3>
           
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             {/* Annotators */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "14px", color: T.textSecondary }}>Người chú thích</span>
+                <span style={{ fontSize: "14px", color: T.textSecondary }}>{translateRole("ANNOTATOR")}</span>
                 <span style={{ fontSize: "16px", fontWeight: 700, color: T.textPrimary }}>{roleStats.annotators}</span>
               </div>
               <div style={{ 
@@ -366,7 +382,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             {/* Reviewers */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "14px", color: T.textSecondary }}>Người đánh giá</span>
+                <span style={{ fontSize: "14px", color: T.textSecondary }}>{translateRole("REVIEWER")}</span>
                 <span style={{ fontSize: "16px", fontWeight: 700, color: T.textPrimary }}>{roleStats.reviewers}</span>
               </div>
               <div style={{ 
@@ -388,7 +404,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             {/* Managers */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "14px", color: T.textSecondary }}>Quản lý</span>
+                <span style={{ fontSize: "14px", color: T.textSecondary }}>{translateRole("MANAGER")}</span>
                 <span style={{ fontSize: "16px", fontWeight: 700, color: T.textPrimary }}>{roleStats.managers}</span>
               </div>
               <div style={{ 
@@ -410,7 +426,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             {/* Admins */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "14px", color: T.textSecondary }}>Quản trị viên</span>
+                <span style={{ fontSize: "14px", color: T.textSecondary }}>{translateRole("ADMIN")}</span>
                 <span style={{ fontSize: "16px", fontWeight: 700, color: T.textPrimary }}>{roleStats.admins}</span>
               </div>
               <div style={{ 
@@ -445,7 +461,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
             fontWeight: 700,
             color: T.textPrimary
           }}>
-            Hoạt động gần đây
+            {t("admin:dashboard.recentActivity")}
           </h3>
           
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>

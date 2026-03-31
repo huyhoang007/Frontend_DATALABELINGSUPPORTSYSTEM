@@ -1,5 +1,6 @@
 ﻿import * as React from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useToast } from "../../context/ToastContext";
 import apiClient from "../../api/apiClient";
 import { isFeatureEnabled } from "../../config/featureFlags";
@@ -7,6 +8,7 @@ import { getCachedBlobUrl } from "../../utils/blobAssetCache";
 import useReviewWorkspace from "./useReviewWorkspace";
 import AnnotationOverlay from "../Annotator/AnnotationOverlay";
 import { groupAnnotationsByKey } from "../Annotator/geometryUtils";
+import { translateAssignmentStatus } from "../../i18n/helpers";
 
 /* ── Resolve fileUrl → proxy path ── */
 function resolveImagePath(fileUrl) {
@@ -125,6 +127,7 @@ function ThumbnailImg({ fileUrl, alt }) {
 
 /* ── Route guard ── */
 export default function ReviewWorkspace() {
+  const { t } = useTranslation(["reviewer", "common"]);
   const { assignmentId } = useParams();
   const navigate = useNavigate();
 
@@ -141,14 +144,20 @@ export default function ReviewWorkspace() {
         >
           error
         </span>
-        <h2 className="text-xl font-bold">Mã assignment không hợp lệ</h2>
-        <p style={{ color: "#64748b" }}>ID "{assignmentId}" không hợp lệ.</p>
+        <h2 className="text-xl font-bold">
+          {t("reviewer:workspace.invalidAssignment")}
+        </h2>
+        <p style={{ color: "#64748b" }}>
+          {t("reviewer:workspace.invalidAssignmentDescription", {
+            id: assignmentId,
+          })}
+        </p>
         <button
           onClick={() => navigate("/reviewer/queue")}
           className="px-4 py-2 rounded text-sm font-medium hover:opacity-80 transition"
           style={{ background: "#1e2f42", color: "#e2e8f0" }}
         >
-          ← Quay lại danh sách
+          ← {t("common:actions.backToList")}
         </button>
       </div>
     );
@@ -159,6 +168,7 @@ export default function ReviewWorkspace() {
 /* ── Main workspace ── */
 function ReviewWorkspaceInner({ assignmentIdNum }) {
   const navigate = useNavigate();
+  const { t } = useTranslation(["reviewer", "common"]);
   const { addToast } = useToast();
 
   const {
@@ -242,18 +252,18 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
         setSelectedPolicyId(null);
         setRejectNote("");
       }
-      addToast({ type: "success", message: "Đã chấp nhận" });
+      addToast({ type: "success", message: t("reviewer:workspace.messages.approved") });
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể chấp nhận annotation",
+        message: result.error || t("reviewer:workspace.messages.approveFailed"),
       });
     }
   };
 
   const handleReject = async (reviewingId) => {
     if (!selectedPolicyId) {
-      addToast({ type: "error", message: "Vui lòng chọn loại lỗi vi phạm" });
+      addToast({ type: "error", message: t("reviewer:workspace.reject.choosePolicy") });
       return;
     }
     const result = await handleReviewAnnotation(
@@ -263,14 +273,14 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
       rejectNote.trim() || undefined,
     );
     if (result.success) {
-      addToast({ type: "warning", message: "Đã từ chối" });
+      addToast({ type: "warning", message: t("reviewer:workspace.messages.rejected") });
       setRejectingAnnoId(null);
       setSelectedPolicyId(null);
       setRejectNote("");
     } else {
       addToast({
         type: "error",
-        message: result.error || "Không thể từ chối annotation",
+        message: result.error || t("reviewer:workspace.messages.rejectFailed"),
       });
     }
   };
@@ -279,25 +289,27 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
     if (isFinalizedAssignment) {
       addToast({
         type: "warning",
-        message: `Assignment đã ở trạng thái cuối ${assignmentStatus}, không thể nộp lại`,
+        message: t("reviewer:workspace.messages.finalized", {
+          status: assignmentStatus,
+        }),
       });
       return;
     }
     if (imageError) {
       addToast({
         type: "error",
-        message: "Không thể nộp đánh giá khi ảnh hiện tại tải thất bại",
+        message: t("reviewer:workspace.messages.imageBlocked"),
       });
       return;
     }
     const result = await handleSubmitReview();
     if (result.success) {
-      addToast({ type: "success", message: "Đã nộp đánh giá thành công!" });
+      addToast({ type: "success", message: t("reviewer:workspace.messages.submitSuccess") });
       setTimeout(() => navigate("/reviewer/queue"), 1200);
     } else {
       addToast({
         type: "error",
-        message: result.error || "Nộp đánh giá thất bại",
+        message: result.error || t("reviewer:workspace.messages.submitFailed"),
       });
     }
   };
@@ -336,7 +348,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
         >
           progress_activity
         </span>
-        <span style={{ color: "#64748b" }}>Đang tải workspace...</span>
+        <span style={{ color: "#64748b" }}>
+          {t("reviewer:workspace.loadingWorkspace")}
+        </span>
       </div>
     );
   }
@@ -354,14 +368,14 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
         >
           error
         </span>
-        <h2 className="text-xl font-bold">Không tải được workspace</h2>
+        <h2 className="text-xl font-bold">{t("reviewer:workspace.loadFailed")}</h2>
         <p style={{ color: "#64748b" }}>{workspaceError}</p>
         <button
           onClick={() => navigate("/reviewer/queue")}
           className="px-4 py-2 rounded text-sm font-medium hover:opacity-80 transition"
           style={{ background: "#1e2f42", color: "#e2e8f0" }}
         >
-          ← Quay lại danh sách
+          ← {t("common:actions.backToList")}
         </button>
       </div>
     );
@@ -449,7 +463,10 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
             className="text-xs font-medium whitespace-nowrap"
             style={{ color: "#64748b" }}
           >
-            {currentItemIndex + 1}/{totalImages} ảnh
+            {t("reviewer:workspace.currentImageProgress", {
+              current: currentItemIndex + 1,
+              total: totalImages,
+            })}
           </span>
         </div>
 
@@ -565,7 +582,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
         <div className="relative mr-2" style={{ order: isMobile ? 2 : 0 }}>
           <button
             onClick={() => setShowGuidelinePopover((v) => !v)}
-            title="Hướng dẫn gán nhãn"
+            title={t("reviewer:workspace.guideline")}
             className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
             style={{ color: "#7dd3fc" }}
           >
@@ -581,10 +598,10 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
               className="absolute right-0 top-9 z-50 w-80 rounded-lg border p-3 shadow-2xl"
               style={{ background: "#111d2c", borderColor: "#253347" }}
             >
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-bold" style={{ color: "#cbd5e1" }}>
-                  Hướng dẫn gán nhãn
-                </p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-bold" style={{ color: "#cbd5e1" }}>
+                    {t("reviewer:workspace.guideline")}
+                  </p>
                 <button
                   onClick={() => setShowGuidelinePopover(false)}
                   className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10"
@@ -608,7 +625,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
               >
                 <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
                   {workspace?.projectGuidelineContent ||
-                    "Chưa có hướng dẫn cho dự án này."}
+                    t("annotator:workspace.messages.noGuideline")}
                 </p>
               </div>
               {workspace?.projectGuidelineFileUrl && (
@@ -625,7 +642,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                   >
                     download
                   </span>
-                  Tải file hướng dẫn
+                  {t("annotator:workspace.actions.downloadGuideline")}
                 </a>
               )}
             </div>
@@ -649,12 +666,16 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
           }}
           title={
             isFinalizedAssignment
-              ? `Assignment đã ở trạng thái cuối ${assignmentStatus}`
+              ? t("reviewer:workspace.messages.finalized", {
+                  status: assignmentStatus,
+                })
               : hasImageLoadError
-                ? "Không thể nộp đánh giá khi ảnh hiện tại tải thất bại"
+                ? t("reviewer:workspace.messages.imageBlocked")
                 : !canSubmit
-                  ? `Còn ${reviewStats.pending} annotation chưa được đánh giá`
-                  : "Hoàn tất và nộp đánh giá"
+                  ? t("reviewer:workspace.messages.pendingRemaining", {
+                      count: reviewStats.pending,
+                    })
+                  : t("reviewer:workspace.actions.submitReview")
           }
         >
           {reviewSubmitting ? (
@@ -666,7 +687,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
               task_alt
             </span>
           )}
-          <span>Hoàn tất đánh giá</span>
+          <span>{t("reviewer:workspace.actions.submitReview")}</span>
           {!isFinalizedAssignment && !canSubmit && reviewStats.pending > 0 && (
             <span
               className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
@@ -734,7 +755,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                       : "#facc15",
               }}
             >
-              {workspace?.assignmentStatus || "SUBMITTED"}
+              {translateAssignmentStatus(workspace?.assignmentStatus || "SUBMITTED")}
             </div>
 
             {/* Nộp đánh giá */}
@@ -744,7 +765,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
               className="w-full py-2 rounded text-xs font-bold flex items-center justify-center gap-1.5 transition-opacity"
               title={
                 hasImageLoadError
-                  ? "Không thể nộp đánh giá khi ảnh hiện tại tải thất bại"
+                  ? t("reviewer:workspace.messages.imageBlocked")
                   : undefined
               }
               style={{
@@ -758,7 +779,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
               <span className="material-symbols-outlined text-[14px]">
                 send
               </span>
-              <span>Nộp đánh giá</span>
+              <span>{t("reviewer:workspace.actions.submitReview")}</span>
             </button>
           </div>
 
@@ -833,7 +854,10 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                   >
                     <ThumbnailImg
                       fileUrl={item.fileUrl}
-                      alt={item.fileName || `Ảnh ${idx + 1}`}
+                      alt={
+                        item.fileName ||
+                        t("reviewer:workspace.imageLabel", { index: idx + 1 })
+                      }
                     />
                   </div>
                   {/* Active glow */}
@@ -857,7 +881,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
               className="flex items-center justify-between text-[10px] mb-1.5"
               style={{ color: "#4a6788" }}
             >
-              <span>Tiến độ</span>
+              <span>{t("reviewer:workspace.stats.progress")}</span>
               <span className="font-mono">
                 {currentItemStats.total > 0
                   ? `${currentItemStats.approved + currentItemStats.rejected}/${currentItemStats.total}`
@@ -930,7 +954,12 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
               ) : imageBlobUrl ? (
                 <img
                   src={imageBlobUrl}
-                  alt={currentItem?.fileName || `Ảnh ${currentItemIndex + 1}`}
+                  alt={
+                    currentItem?.fileName ||
+                    t("reviewer:workspace.imageLabel", {
+                      index: currentItemIndex + 1,
+                    })
+                  }
                   className="absolute inset-0 w-full h-full object-contain"
                   draggable={false}
                 />
@@ -950,7 +979,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                       className="text-sm font-medium mb-1"
                       style={{ color: "#f87171" }}
                     >
-                      Không tải được ảnh
+                      {t("reviewer:workspace.brokenImage")}
                     </p>
                     <p
                       className="text-[10px] font-mono break-all"
@@ -959,7 +988,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                       {imageError.url}
                     </p>
                     <p className="text-xs mt-3" style={{ color: "#cbd5e1" }}>
-                      Đánh giá và nộp bài đã bị khóa cho đến khi ảnh tải được.
+                      {t("reviewer:workspace.messages.imageRetryLocked")}
                     </p>
                   </div>
                 </div>
@@ -1069,7 +1098,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
               >
                 fact_check
               </span>
-              Đánh giá ({currentAnnotations.length})
+              {t("reviewer:workspace.tabs.review")} ({currentAnnotations.length})
             </button>
             <button
               onClick={() => setRightTab("summary")}
@@ -1086,7 +1115,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
               >
                 analytics
               </span>
-              Tổng kết
+              {t("reviewer:workspace.tabs.summary")}
             </button>
           </div>
 
@@ -1104,7 +1133,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                       progress_activity
                     </span>
                     <span className="text-xs" style={{ color: "#3a5068" }}>
-                      Đang tải...
+                      {t("common:states.loading")}
                     </span>
                   </div>
                 )}
@@ -1118,7 +1147,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                       label_off
                     </span>
                     <p className="text-xs" style={{ color: "#3a5068" }}>
-                      Không có annotation
+                      {t("annotator:workspace.messages.annotationsEmpty")}
                     </p>
                   </div>
                 )}
@@ -1137,8 +1166,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                       isAwaitingRereview(anno);
                     const isApproved = anno.status === "APPROVED";
                     const statusLabel = isAwaitingRereview(anno)
-                      ? "PENDING"
-                      : anno.status || "PENDING";
+                      ? t("status:review.pending")
+                      : translateAssignmentStatus(anno.status || "PENDING");
 
                     return (
                       <div
@@ -1202,7 +1231,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                             </span>
                           )}
                           {anno.isImproved && anno.status !== "APPROVED" && (
-                            <span style={{ color: "#60a5fa" }}>↺ Đã sửa</span>
+                            <span style={{ color: "#60a5fa" }}>
+                              {t("reviewer:workspace.improved")}
+                            </span>
                           )}
                         </div>
 
@@ -1223,9 +1254,11 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                 }
                                 title={
                                   isFinalizedAssignment
-                                    ? `Assignment đã ở trạng thái cuối ${assignmentStatus}`
+                                    ? t("reviewer:workspace.messages.finalized", {
+                                        status: assignmentStatus,
+                                      })
                                     : !canReviewCurrentImage
-                                      ? "Không thể đánh giá khi ảnh hiện tại tải thất bại"
+                                      ? t("reviewer:workspace.reviewBlockedImage")
                                       : undefined
                                 }
                                 className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-bold transition"
@@ -1244,7 +1277,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                     check
                                   </span>
                                 )}
-                                Chấp nhận
+                                {t("reviewer:workspace.actions.approve")}
                               </button>
                               <button
                                 onClick={() => {
@@ -1261,12 +1294,14 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                 }
                                 title={
                                   isFinalizedAssignment
-                                    ? `Assignment đã ở trạng thái cuối ${assignmentStatus}`
+                                    ? t("reviewer:workspace.messages.finalized", {
+                                        status: assignmentStatus,
+                                      })
                                     : !canReviewCurrentImage
-                                      ? "Không thể đánh giá khi ảnh hiện tại tải thất bại"
+                                      ? t("reviewer:workspace.reviewBlockedImage")
                                       : policies.length === 0
-                                        ? "Chưa có policy được cấu hình"
-                                        : "Từ chối annotation này"
+                                        ? t("reviewer:workspace.noPolicies")
+                                        : t("reviewer:workspace.rejectCurrent")
                                 }
                                 className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-bold transition disabled:opacity-40"
                                 style={{
@@ -1278,7 +1313,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                 <span className="material-symbols-outlined text-sm">
                                   close
                                 </span>
-                                Từ chối
+                                {t("reviewer:workspace.actions.reject")}
                               </button>
                             </div>
                           )}
@@ -1293,7 +1328,12 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                               color: "#f87171",
                             }}
                           >
-                            <div>✓ Đã từ chối: {anno.policyName}</div>
+                            <div>
+                              ✓{" "}
+                              {t("reviewer:workspace.rejectedBy", {
+                                policy: anno.policyName,
+                              })}
+                            </div>
                             {anno.note && (
                               <div
                                 className="mt-1 p-1.5 rounded text-xs"
@@ -1323,7 +1363,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                               className="text-[10px] font-bold uppercase"
                               style={{ color: "#f87171" }}
                             >
-                              Chọn lỗi vi phạm
+                              {t("reviewer:workspace.reject.selectViolation")}
                             </p>
                             <div className="space-y-1 max-h-32 overflow-y-auto">
                               {policies.map((p) => (
@@ -1364,12 +1404,12 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                 className="text-[10px] font-bold uppercase mb-1"
                                 style={{ color: "#f87171" }}
                               >
-                                Lý do từ chối
+                                {t("reviewer:workspace.reject.reason")}
                               </p>
                               <textarea
                                 value={rejectNote}
                                 onChange={(e) => setRejectNote(e.target.value)}
-                                placeholder="Ghi chú lý do (không bắt buộc)..."
+                                placeholder={t("reviewer:workspace.reject.optionalNote")}
                                 rows={2}
                                 className="w-full px-2 py-1.5 rounded text-xs resize-none focus:outline-none"
                                 style={{
@@ -1391,7 +1431,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                   border: "1px solid #253347",
                                 }}
                               >
-                                Hủy
+                                {t("common:actions.cancel")}
                               </button>
                               <button
                                 onClick={() => handleReject(anno.reviewingId)}
@@ -1412,8 +1452,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                 }}
                               >
                                 {reviewSubmitting
-                                  ? "Đang xử lý..."
-                                  : "Xác nhận từ chối"}
+                                  ? t("common:states.processing")
+                                  : t("reviewer:workspace.actions.confirmReject")}
                               </button>
                             </div>
                           </div>
@@ -1449,6 +1489,7 @@ function ReviewSummaryPanel({
   currentItemIndex,
   setCurrentItemIndex,
 }) {
+  const { t } = useTranslation(["reviewer"]);
   /* Build per-label stats across all cached annotations */
   const labelStats = React.useMemo(() => {
     const map = new Map();
@@ -1499,12 +1540,12 @@ function ReviewSummaryPanel({
           className="text-[10px] font-bold uppercase mb-2"
           style={{ color: "#4a6788" }}
         >
-          Tổng quan
+          {t("workspace.stats.overview")}
         </p>
         <div className="grid grid-cols-3 gap-2">
-          {statCard("Chấp nhận", reviewStats.approved, "#00bfa5")}
-          {statCard("Từ chối", reviewStats.rejected, "#f87171")}
-          {statCard("Chờ duyệt", reviewStats.pending, "#facc15")}
+          {statCard(t("workspace.stats.accepted"), reviewStats.approved, "#00bfa5")}
+          {statCard(t("workspace.stats.rejected"), reviewStats.rejected, "#f87171")}
+          {statCard(t("workspace.stats.pending"), reviewStats.pending, "#facc15")}
         </div>
         <div className="mt-2 flex items-center gap-2">
           <div
@@ -1537,7 +1578,7 @@ function ReviewSummaryPanel({
           className="text-[10px] font-bold uppercase mb-2"
           style={{ color: "#4a6788" }}
         >
-          Theo ảnh ({items.length})
+          {t("workspace.stats.byImage")} ({items.length})
         </p>
         <div className="space-y-1">
           {items.map((item, idx) => {
@@ -1563,17 +1604,23 @@ function ReviewSummaryPanel({
                     className="text-xs font-medium"
                     style={{ color: isActive ? "#00bfa5" : "#94a3b8" }}
                   >
-                    Ảnh {idx + 1}
+                    {t("workspace.imageLabel", { index: idx + 1 })}
                   </span>
                   <div className="flex items-center gap-2 text-[10px] font-mono">
                     {approved > 0 && (
-                      <span style={{ color: "#00bfa5" }}>A{approved}</span>
+                      <span style={{ color: "#00bfa5" }}>
+                        {t("workspace.stats.approvedShort", { count: approved })}
+                      </span>
                     )}
                     {rejected > 0 && (
-                      <span style={{ color: "#f87171" }}>R{rejected}</span>
+                      <span style={{ color: "#f87171" }}>
+                        {t("workspace.stats.rejectedShort", { count: rejected })}
+                      </span>
                     )}
                     {pending > 0 && (
-                      <span style={{ color: "#facc15" }}>P{pending}</span>
+                      <span style={{ color: "#facc15" }}>
+                        {t("workspace.stats.pendingShort", { count: pending })}
+                      </span>
                     )}
                     {annos.length === 0 && (
                       <span style={{ color: "#3a5068" }}>—</span>
@@ -1593,7 +1640,7 @@ function ReviewSummaryPanel({
             className="text-[10px] font-bold uppercase mb-2"
             style={{ color: "#4a6788" }}
           >
-            Theo nhãn ({labelStats.length})
+            {t("workspace.stats.byLabel")} ({labelStats.length})
           </p>
           <div className="space-y-1.5">
             {labelStats.map((ls) => (
@@ -1618,13 +1665,19 @@ function ReviewSummaryPanel({
                 </div>
                 <div className="flex gap-2 text-[10px] pl-0">
                   {ls.approved > 0 && (
-                    <span style={{ color: "#00bfa5" }}>✓ A{ls.approved}</span>
+                    <span style={{ color: "#00bfa5" }}>
+                      ✓ {t("workspace.stats.approvedShort", { count: ls.approved })}
+                    </span>
                   )}
                   {ls.rejected > 0 && (
-                    <span style={{ color: "#f87171" }}>✕ R{ls.rejected}</span>
+                    <span style={{ color: "#f87171" }}>
+                      ✕ {t("workspace.stats.rejectedShort", { count: ls.rejected })}
+                    </span>
                   )}
                   {ls.pending > 0 && (
-                    <span style={{ color: "#facc15" }}>⏳ P{ls.pending}</span>
+                    <span style={{ color: "#facc15" }}>
+                      ⏳ {t("workspace.stats.pendingShort", { count: ls.pending })}
+                    </span>
                   )}
                 </div>
               </div>

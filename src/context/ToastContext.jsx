@@ -1,6 +1,7 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../utils/cn";
+import { translate } from "../i18n/helpers";
 
 const ToastContext = React.createContext(null);
 
@@ -56,7 +57,7 @@ export function ToastProvider({ children }) {
                             <button
                                 onClick={() => removeToast(toast.id)}
                                 className="ml-2 hover:bg-white/20 rounded-lg p-1 transition-colors"
-                                title="Đóng"
+                                title={translate("common:toast.close")}
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>

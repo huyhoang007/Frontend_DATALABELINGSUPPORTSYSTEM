@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { labelApi } from "../../api/labelApi";
 import { labelRuleApi } from "../../api/labelRuleApi";
 import { useToast } from "../../context/ToastContext";
@@ -64,6 +65,7 @@ interface LabelRule {
 }
 
 const ModernLabelsPage: React.FC = () => {
+  const { t } = useTranslation(["manager", "common"]);
   const [activeTab, setActiveTab] = useState<"labels" | "rules">("labels");
   const [showCreateLabelModal, setShowCreateLabelModal] = useState(false);
   const [showEditLabelModal, setShowEditLabelModal] = useState(false);
@@ -166,7 +168,7 @@ const ModernLabelsPage: React.FC = () => {
 
   const handleCreateLabel = async () => {
     if (!newLabel.labelName.trim() || !newLabel.colorCode) {
-      addToast("Tên nhãn và mã màu là bắt buộc", "error");
+      addToast(t("manager:modernLabels.messages.labelRequired"), "error");
       return;
     }
 
@@ -179,7 +181,7 @@ const ModernLabelsPage: React.FC = () => {
         description: newLabel.description || null,
         shortcutKey: newLabel.shortcutKey || null,
       });
-      addToast("Tạo nhãn thành công!", "success");
+      addToast(t("manager:modernLabels.messages.labelCreated"), "success");
       setShowCreateLabelModal(false);
       setNewLabel({
         labelName: "",
@@ -193,8 +195,8 @@ const ModernLabelsPage: React.FC = () => {
       const raw = error?.response?.data?.message || error?.message || "";
       const msg =
         typeof raw === "string" && raw.toLowerCase().includes("already exist")
-          ? "Nhãn này với loại đã tồn tại. Hãy chọn tên hoặc loại khác"
-          : raw || "Không thể tạo nhãn";
+          ? t("manager:labels.form.validation.duplicate")
+          : raw || t("manager:modernLabels.messages.labelCreateFailed");
       addToast(msg, "error");
     } finally {
       setIsCreating(false);
@@ -215,7 +217,7 @@ const ModernLabelsPage: React.FC = () => {
 
   const handleUpdateLabel = async () => {
     if (!editingLabel || !editLabel.labelName.trim()) {
-      addToast("Tên nhãn là bắt buộc", "error");
+      addToast(t("manager:labels.form.validation.nameRequired"), "error");
       return;
     }
 
@@ -228,46 +230,55 @@ const ModernLabelsPage: React.FC = () => {
         description: editLabel.description || null,
         shortcutKey: editLabel.shortcutKey || null,
       });
-      addToast("Cập nhật nhãn thành công!", "success");
+      addToast(t("manager:modernLabels.messages.labelUpdated"), "success");
       setShowEditLabelModal(false);
       setEditingLabel(null);
       fetchLabels(); // Refresh list
     } catch (error: any) {
-      addToast(error.message || "Không thể cập nhật nhãn", "error");
+      addToast(
+        error.message || t("manager:modernLabels.messages.labelUpdateFailed"),
+        "error",
+      );
     } finally {
       setIsUpdating(false);
     }
   };
 
   const handleDeleteLabel = async (labelId: number) => {
-    if (!window.confirm("Bạn có chắc chắn muốn ngưng sử dụng nhãn này?")) {
+    if (!window.confirm(t("manager:modernLabels.messages.confirmDeactivateLabel"))) {
       return;
     }
 
     setIsDeleting(true);
     try {
       await labelApi.deleteLabel(labelId);
-      addToast("Đã ngưng sử dụng nhãn!", "success");
+      addToast(t("manager:modernLabels.messages.labelDeactivated"), "success");
       fetchLabels(); // Refresh list
     } catch (error: any) {
-      addToast(error.message || "Không thể xóa nhãn", "error");
+      addToast(
+        error.message || t("manager:modernLabels.messages.labelDeleteFailed"),
+        "error",
+      );
     } finally {
       setIsDeleting(false);
     }
   };
 
   const handleActivateLabel = async (labelId: number) => {
-    if (!window.confirm("Kích hoạt lại nhãn này?")) {
+    if (!window.confirm(t("manager:modernLabels.messages.confirmReactivateLabel"))) {
       return;
     }
 
     setIsActivating(true);
     try {
       await labelApi.activateLabel(labelId);
-      addToast("Kích hoạt lại nhãn thành công!", "success");
+      addToast(t("manager:modernLabels.messages.labelReactivated"), "success");
       fetchLabels();
     } catch (error: any) {
-      addToast(error.message || "Không thể kích hoạt lại nhãn", "error");
+      addToast(
+        error.message || t("manager:modernLabels.messages.labelReactivateFailed"),
+        "error",
+      );
     } finally {
       setIsActivating(false);
     }
@@ -284,11 +295,11 @@ const ModernLabelsPage: React.FC = () => {
 
   const handleCreateRule = async () => {
     if (!newRule.name.trim()) {
-      addToast("Tên rule là bắt buộc", "error");
+      addToast(t("manager:modernLabels.messages.ruleNameRequired"), "error");
       return;
     }
     if (selectedLabelIds.length === 0) {
-      addToast("Vui lòng chọn ít nhất một label", "error");
+      addToast(t("manager:modernLabels.messages.selectAtLeastOneLabel"), "error");
       return;
     }
 
@@ -299,23 +310,23 @@ const ModernLabelsPage: React.FC = () => {
         ruleContent: newRule.ruleContent || null,
         labelIds: selectedLabelIds,
       });
-      addToast("Tạo rule thành công!", "success");
+      addToast(t("manager:modernLabels.messages.ruleCreated"), "success");
       setShowCreateRuleModal(false);
       setNewRule({ name: "", ruleContent: "" });
       setSelectedLabelIds([]);
       fetchLabelRules();
     } catch (error: any) {
-      addToast(error.message || "Không thể tạo rule", "error");
+      addToast(error.message || t("manager:modernLabels.messages.ruleCreateFailed"), "error");
     } finally {
       setIsCreatingRule(false);
     }
   };
 
   const handleDeleteRule = async (ruleId: number) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa rule này?")) return;
+    if (!window.confirm(t("manager:modernLabels.messages.confirmDeleteRule"))) return;
     try {
       await labelRuleApi.deleteRule(ruleId);
-      addToast("Xóa rule thành công!", "success");
+      addToast(t("manager:modernLabels.messages.ruleDeleted"), "success");
       fetchLabelRules();
     } catch (error: any) {
       const errorMsg = error.message || "";
@@ -325,11 +336,11 @@ const ModernLabelsPage: React.FC = () => {
         errorMsg.includes("is still referenced")
       ) {
         addToast(
-          "Rule này đang được sử dụng bởi các project. Vui lòng xóa rule khỏi các project trước khi xóa.",
+          t("manager:modernLabels.messages.ruleDeleteBlocked"),
           "error",
         );
       } else {
-        addToast(errorMsg || "Không thể xóa rule", "error");
+        addToast(errorMsg || t("manager:modernLabels.messages.ruleDeleteFailed"), "error");
       }
     }
   };
@@ -345,7 +356,7 @@ const ModernLabelsPage: React.FC = () => {
 
   const handleUpdateRule = async () => {
     if (!editingRule || !editRule.name.trim()) {
-      addToast("Tên rule là bắt buộc", "error");
+      addToast(t("manager:modernLabels.messages.ruleNameRequired"), "error");
       return;
     }
     setIsUpdatingRule(true);
@@ -357,12 +368,12 @@ const ModernLabelsPage: React.FC = () => {
           ruleContent: editRule.ruleContent || null,
         },
       );
-      addToast("Cập nhật rule thành công!", "success");
+      addToast(t("manager:modernLabels.messages.ruleUpdated"), "success");
       setShowEditRuleModal(false);
       setEditingRule(null);
       fetchLabelRules();
     } catch (error: any) {
-      addToast(error.message || "Không thể cập nhật rule", "error");
+      addToast(error.message || t("manager:modernLabels.messages.ruleUpdateFailed"), "error");
     } finally {
       setIsUpdatingRule(false);
     }
@@ -376,7 +387,7 @@ const ModernLabelsPage: React.FC = () => {
 
   const handleAttachLabels = async () => {
     if (!attachingRule || attachLabelIds.length === 0) {
-      addToast("Vui lòng chọn ít nhất một label", "error");
+      addToast(t("manager:modernLabels.messages.selectAtLeastOneLabel"), "error");
       return;
     }
 
@@ -389,7 +400,7 @@ const ModernLabelsPage: React.FC = () => {
 
     if (duplicates.length > 0) {
       addToast(
-        "Label đã có trong rule, vui lòng bỏ chọn để xoá hoặc chọn label khác",
+        t("manager:modernLabels.messages.ruleDuplicateLabel"),
         "error",
       );
       return;
@@ -407,11 +418,11 @@ const ModernLabelsPage: React.FC = () => {
         (attachingRule.ruleId ?? attachingRule.rule_id) as number,
         attachLabelIds,
       );
-      addToast("Thêm label vào rule thành công!", "success");
+      addToast(t("manager:modernLabels.messages.labelsAttached"), "success");
       // Refresh data in background (don't wait)
       fetchLabelRules();
     } catch (error: any) {
-      addToast(error.message || "Không thể thêm label", "error");
+      addToast(error.message || t("manager:modernLabels.messages.labelsAttachFailed"), "error");
     } finally {
       setIsAttachingLabels(false);
     }
@@ -443,13 +454,15 @@ const ModernLabelsPage: React.FC = () => {
         remainingLabelIds,
       );
       addToast(
-        `Bỏ ${attachLabelIds.length} label khỏi rule thành công!`,
+        t("manager:modernLabels.messages.labelsRemoved", {
+          count: attachLabelIds.length,
+        }),
         "success",
       );
       // Refresh data in background (don't wait)
       fetchLabelRules();
     } catch (error: any) {
-      addToast(error.message || "Không thể bỏ label", "error");
+      addToast(error.message || t("manager:modernLabels.messages.labelsRemoveFailed"), "error");
     } finally {
       setIsAttachingLabels(false);
     }
@@ -457,9 +470,13 @@ const ModernLabelsPage: React.FC = () => {
 
   // Helper to get label name/color from backend response
   const getLabelName = (label: Label) =>
-    label.labelName || label.label_name || "Unknown";
+    label.labelName || label.label_name || t("common:labels.unknown");
   const getLabelColor = (label: Label) =>
     label.colorCode || label.color_code || "#3b82f6";
+  const getLabelTypeLabel = (type?: string) =>
+    t(`manager:labels.types.${(type || "CLASSIFICATION").toUpperCase()}`, {
+      defaultValue: type || t("common:labels.unknown"),
+    });
 
   const getLabelTypeColor = (type?: string) => {
     switch (type?.toUpperCase()) {
@@ -514,7 +531,7 @@ const ModernLabelsPage: React.FC = () => {
                 marginBottom: "8px",
               }}
             >
-              Quản lý nhãn & quy tắc
+              {t("manager:modernLabels.title")}
             </h1>
             <p
               style={{
@@ -522,7 +539,7 @@ const ModernLabelsPage: React.FC = () => {
                 color: T.textSecondary,
               }}
             >
-              Quản lý labels và label rules cho các dự án gán nhãn
+              {t("manager:modernLabels.subtitle")}
             </p>
           </div>
           <div style={{ display: "flex", gap: "12px" }}>
@@ -531,7 +548,7 @@ const ModernLabelsPage: React.FC = () => {
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
               onClick={() => setShowCreateLabelModal(true)}
             >
-              Tạo Label
+              {t("manager:modernLabels.createLabel")}
             </Button>
             <Button
               variant="primary"
@@ -542,7 +559,7 @@ const ModernLabelsPage: React.FC = () => {
                 setShowCreateRuleModal(true);
               }}
             >
-              Tạo Rule
+              {t("manager:modernLabels.createRule")}
             </Button>
           </div>
         </div>
@@ -558,7 +575,7 @@ const ModernLabelsPage: React.FC = () => {
                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
             )}
           >
-            Nhãn ({labels.length})
+            {t("manager:modernLabels.tabs.labels", { count: labels.length })}
           </button>
           <button
             onClick={() => setActiveTab("rules")}
@@ -569,7 +586,7 @@ const ModernLabelsPage: React.FC = () => {
                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
             )}
           >
-            Quy tắc nhãn ({labelRules.length})
+            {t("manager:modernLabels.tabs.rules", { count: labelRules.length })}
           </button>
         </div>
       </Card>
@@ -581,17 +598,17 @@ const ModernLabelsPage: React.FC = () => {
           <Card className="p-4 mb-6 bg-card dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="text-sm text-muted-foreground">
-                Tổng nhãn:{" "}
+                {t("manager:modernLabels.stats.total")}{" "}
                 <span className="font-semibold text-foreground">
                   {labels.length}
                 </span>
                 {" · "}
-                Đang hoạt động:{" "}
+                {t("manager:modernLabels.stats.active")}{" "}
                 <span className="font-semibold text-emerald-600">
                   {activeLabels.length}
                 </span>
                 {" · "}
-                Ngưng sử dụng:{" "}
+                {t("manager:modernLabels.stats.inactive")}{" "}
                 <span className="font-semibold text-amber-600">
                   {labels.length - activeLabels.length}
                 </span>
@@ -602,21 +619,21 @@ const ModernLabelsPage: React.FC = () => {
                   size="sm"
                   onClick={() => setLabelView("all")}
                 >
-                  Tất cả
+                  {t("manager:modernLabels.filters.all")}
                 </Button>
                 <Button
                   variant={labelView === "active" ? "primary" : "secondary"}
                   size="sm"
                   onClick={() => setLabelView("active")}
                 >
-                  Đang hoạt động
+                  {t("manager:modernLabels.filters.active")}
                 </Button>
                 <Button
                   variant={labelView === "inactive" ? "primary" : "secondary"}
                   size="sm"
                   onClick={() => setLabelView("inactive")}
                 >
-                  Ngưng sử dụng
+                  {t("manager:modernLabels.filters.inactive")}
                 </Button>
               </div>
             </div>
@@ -649,7 +666,7 @@ const ModernLabelsPage: React.FC = () => {
                         color: getLabelColor(label),
                       }}
                     >
-                      {label.labelType || label.label_type || "CLASSIFICATION"}
+                      {getLabelTypeLabel(label.labelType || label.label_type)}
                     </span>
                     <span
                       className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
@@ -661,8 +678,8 @@ const ModernLabelsPage: React.FC = () => {
                       }}
                     >
                       {isLabelActive(label)
-                        ? "Đang hoạt động"
-                        : "Ngưng sử dụng"}
+                        ? t("manager:labels.active")
+                        : t("manager:labels.inactive")}
                     </span>
                   </div>
                 </div>
@@ -675,7 +692,7 @@ const ModernLabelsPage: React.FC = () => {
                       color: getLabelColor(label),
                     }}
                   >
-                    Mã: {getLabelId(label)}
+                    {t("common:labels.id")}: {getLabelId(label)}
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -688,7 +705,7 @@ const ModernLabelsPage: React.FC = () => {
                       }}
                       disabled={isDeleting || isActivating}
                     >
-                      Sửa
+                      {t("common:actions.edit")}
                     </Button>
                     {isLabelActive(label) ? (
                       <Button
@@ -701,7 +718,7 @@ const ModernLabelsPage: React.FC = () => {
                         }}
                         disabled={isDeleting || isActivating}
                       >
-                        Ngưng dùng
+                        {t("manager:modernLabels.actions.deactivate")}
                       </Button>
                     ) : (
                       <Button
@@ -714,7 +731,7 @@ const ModernLabelsPage: React.FC = () => {
                         }}
                         disabled={isDeleting || isActivating}
                       >
-                        Kích hoạt lại
+                        {t("manager:modernLabels.actions.reactivate")}
                       </Button>
                     )}
                   </div>
@@ -729,7 +746,7 @@ const ModernLabelsPage: React.FC = () => {
           {labelRules.length === 0 ? (
             <div className="p-12 text-center">
               <p className="text-muted-foreground">
-                Chưa có rule nào. Hãy tạo rule đầu tiên!
+                {t("manager:modernLabels.emptyRules")}
               </p>
             </div>
           ) : null}
@@ -748,7 +765,9 @@ const ModernLabelsPage: React.FC = () => {
                       {rule.name}
                     </h3>
                     <div className="px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-500 text-xs font-bold uppercase tracking-wide">
-                      Quy tắc #{rule.ruleId ?? rule.rule_id}
+                      {t("manager:modernLabels.ruleBadge", {
+                        id: rule.ruleId ?? rule.rule_id,
+                      })}
                     </div>
                   </div>
 
@@ -759,7 +778,9 @@ const ModernLabelsPage: React.FC = () => {
                   {/* Associated Labels */}
                   <div className="mb-4">
                     <div className="text-xs text-muted-foreground mb-2 font-medium">
-                      Nhãn liên kết ({rule.labels?.length || 0}):
+                      {t("manager:modernLabels.linkedLabels", {
+                        count: rule.labels?.length || 0,
+                      })}
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {rule.labels?.map((label: any) => (
@@ -790,7 +811,7 @@ const ModernLabelsPage: React.FC = () => {
                                   ),
                                 }}
                               >
-                                {label.labelType || label.label_type}
+                                {getLabelTypeLabel(label.labelType || label.label_type)}
                               </span>
                             </div>
                           )}
@@ -807,7 +828,7 @@ const ModernLabelsPage: React.FC = () => {
                       className="h-8 text-xs text-blue-600 bg-blue-500/10 hover:bg-blue-500/20 border-blue-200 dark:border-blue-800"
                       onClick={() => handleEditRuleClick(rule)}
                     >
-                      Chỉnh sửa
+                      {t("common:actions.edit")}
                     </Button>
 
                     <Button
@@ -816,7 +837,7 @@ const ModernLabelsPage: React.FC = () => {
                       className="h-8 text-xs text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-200 dark:border-emerald-800"
                       onClick={() => handleAttachLabelsClick(rule)}
                     >
-                      Thêm label
+                      {t("manager:modernLabels.actions.attachLabels")}
                     </Button>
 
                     <Button
@@ -829,7 +850,7 @@ const ModernLabelsPage: React.FC = () => {
                         )
                       }
                     >
-                      Xóa
+                      {t("common:actions.delete")}
                     </Button>
                   </div>
                 </div>
@@ -844,17 +865,17 @@ const ModernLabelsPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
             <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-              Tạo label mới
+              {t("manager:modernLabels.modals.createLabelTitle")}
             </h2>
 
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                  Tên nhãn *
+                  {t("manager:labels.form.name")} *
                 </label>
                 <input
                   type="text"
-                  placeholder="Tên label (vd: Person, Car, Building)"
+                  placeholder={t("manager:modernLabels.modals.labelNamePlaceholder")}
                   value={newLabel.labelName}
                   onChange={(e) =>
                     setNewLabel({ ...newLabel, labelName: e.target.value })
@@ -865,7 +886,7 @@ const ModernLabelsPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                  Mã màu *
+                  {t("manager:modernLabels.modals.colorCode")} *
                 </label>
                 <div className="flex gap-3">
                   <input
@@ -878,7 +899,7 @@ const ModernLabelsPage: React.FC = () => {
                   />
                   <input
                     type="text"
-                    placeholder="Mã màu (vd: #3b82f6)"
+                    placeholder={t("manager:modernLabels.modals.colorCodePlaceholder")}
                     value={newLabel.colorCode}
                     onChange={(e) =>
                       setNewLabel({ ...newLabel, colorCode: e.target.value })
@@ -890,7 +911,7 @@ const ModernLabelsPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                  Loại nhãn *
+                  {t("manager:labels.form.type")} *
                 </label>
                 <select
                   value={newLabel.labelType}
@@ -899,19 +920,19 @@ const ModernLabelsPage: React.FC = () => {
                   }
                   className="w-full px-4 py-2 bg-background border border-input rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer"
                 >
-                  <option value="OBJECT">Phát hiện đối tượng</option>
-                  <option value="CLASSIFICATION">Phân loại</option>
-                  <option value="SEGMENTATION">Phân đoạn</option>
+                  <option value="OBJECT">{getLabelTypeLabel("OBJECT")}</option>
+                  <option value="CLASSIFICATION">{getLabelTypeLabel("CLASSIFICATION")}</option>
+                  <option value="SEGMENTATION">{getLabelTypeLabel("SEGMENTATION")}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                  Phím tắt (tùy chọn)
+                  {t("manager:labels.form.shortcut")} {t("manager:labels.form.shortcutOptional")}
                 </label>
                 <input
                   type="text"
-                  placeholder="VD: P, ctrl+1, alt+a, ..."
+                  placeholder={t("manager:labels.form.placeholders.shortcut")}
                   value={newLabel.shortcutKey}
                   onChange={(e) =>
                     setNewLabel({
@@ -923,7 +944,7 @@ const ModernLabelsPage: React.FC = () => {
                   maxLength={20}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Có thể nhập nhiều ký tự để tìm kiếm nhanh khi gán nhãn
+                  {t("manager:labels.form.shortcutHint")}
                 </p>
               </div>
             </div>
@@ -934,7 +955,7 @@ const ModernLabelsPage: React.FC = () => {
                 onClick={() => setShowCreateLabelModal(false)}
                 disabled={isCreating}
               >
-                Hủy
+                {t("common:actions.cancel")}
               </Button>
               <Button
                 variant="primary"
@@ -942,7 +963,7 @@ const ModernLabelsPage: React.FC = () => {
                 disabled={isCreating}
                 leftIcon={isCreating ? "loading" : "save"}
               >
-                {isCreating ? "Đang tạo..." : "Tạo mới"}
+                {isCreating ? t("common:states.processing") : t("common:actions.createNew")}
               </Button>
             </div>
           </Card>
@@ -954,13 +975,13 @@ const ModernLabelsPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
             <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-              Chỉnh sửa label
+              {t("manager:modernLabels.modals.editLabelTitle")}
             </h2>
 
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                  Tên nhãn *
+                  {t("manager:labels.form.name")} *
                 </label>
                 <input
                   type="text"
@@ -974,7 +995,7 @@ const ModernLabelsPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                  Mã màu *
+                  {t("manager:modernLabels.modals.colorCode")} *
                 </label>
                 <div className="flex gap-3">
                   <input
@@ -998,7 +1019,7 @@ const ModernLabelsPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                  Loại nhãn *
+                  {t("manager:labels.form.type")} *
                 </label>
                 <select
                   value={editLabel.labelType}
@@ -1007,19 +1028,19 @@ const ModernLabelsPage: React.FC = () => {
                   }
                   className="w-full px-4 py-2 bg-background border border-input rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer"
                 >
-                  <option value="OBJECT">Phát hiện đối tượng</option>
-                  <option value="CLASSIFICATION">Phân loại</option>
-                  <option value="SEGMENTATION">Phân đoạn</option>
+                  <option value="OBJECT">{getLabelTypeLabel("OBJECT")}</option>
+                  <option value="CLASSIFICATION">{getLabelTypeLabel("CLASSIFICATION")}</option>
+                  <option value="SEGMENTATION">{getLabelTypeLabel("SEGMENTATION")}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                  Phím tắt (tùy chọn)
+                  {t("manager:labels.form.shortcut")} {t("manager:labels.form.shortcutOptional")}
                 </label>
                 <input
                   type="text"
-                  placeholder="VD: P, ctrl+1, alt+a, ..."
+                  placeholder={t("manager:labels.form.placeholders.shortcut")}
                   value={editLabel.shortcutKey}
                   onChange={(e) =>
                     setEditLabel({
@@ -1031,7 +1052,7 @@ const ModernLabelsPage: React.FC = () => {
                   maxLength={20}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Có thể nhập nhiều ký tự để tìm kiếm nhanh khi gán nhãn
+                  {t("manager:labels.form.shortcutHint")}
                 </p>
               </div>
             </div>
@@ -1042,7 +1063,7 @@ const ModernLabelsPage: React.FC = () => {
                 onClick={() => setShowEditLabelModal(false)}
                 disabled={isUpdating}
               >
-                Hủy
+                {t("common:actions.cancel")}
               </Button>
               <Button
                 variant="primary"
@@ -1050,7 +1071,7 @@ const ModernLabelsPage: React.FC = () => {
                 disabled={isUpdating}
                 leftIcon={isUpdating ? "loading" : "save"}
               >
-                {isUpdating ? "Đang lưu..." : "Lưu thay đổi"}
+                {isUpdating ? t("common:states.processing") : t("common:actions.save")}
               </Button>
             </div>
           </Card>
@@ -1062,17 +1083,17 @@ const ModernLabelsPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
             <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-              Tạo rule mới
+              {t("manager:modernLabels.modals.createRuleTitle")}
             </h2>
 
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                  Tên rule *
+                  {t("manager:modernLabels.modals.ruleName")} *
                 </label>
                 <input
                   type="text"
-                  placeholder="Tên quy tắc"
+                  placeholder={t("manager:modernLabels.modals.ruleNamePlaceholder")}
                   value={newRule.name}
                   onChange={(e) =>
                     setNewRule({ ...newRule, name: e.target.value })
@@ -1083,10 +1104,10 @@ const ModernLabelsPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                  Nội dung rule (tùy chọn)
+                  {t("manager:modernLabels.modals.ruleContent")}
                 </label>
                 <textarea
-                  placeholder="Mô tả chi tiết quy tắc..."
+                  placeholder={t("manager:modernLabels.modals.ruleContentPlaceholder")}
                   value={newRule.ruleContent}
                   onChange={(e) =>
                     setNewRule({ ...newRule, ruleContent: e.target.value })
@@ -1098,14 +1119,16 @@ const ModernLabelsPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-2">
-                  Chọn labels *{" "}
+                  {t("manager:modernLabels.modals.selectLabels")} *{" "}
                   <span className="text-primary font-semibold">
-                    ({selectedLabelIds.length} đã chọn)
+                    ({t("manager:modernLabels.modals.selectedCount", {
+                      count: selectedLabelIds.length,
+                    })})
                   </span>
                 </label>
                 {activeLabels.length === 0 ? (
                   <p className="text-xs text-muted-foreground italic py-2">
-                    Chưa có label nào. Hãy tạo label trước.
+                    {t("manager:modernLabels.modals.noLabelsBeforeRule")}
                   </p>
                 ) : (
                   <div className="max-h-48 overflow-y-auto border border-input rounded-lg divide-y divide-border/50 bg-background">
@@ -1156,7 +1179,7 @@ const ModernLabelsPage: React.FC = () => {
                 }}
                 disabled={isCreatingRule}
               >
-                Hủy
+                {t("common:actions.cancel")}
               </Button>
               <Button
                 variant="primary"
@@ -1164,7 +1187,7 @@ const ModernLabelsPage: React.FC = () => {
                 disabled={isCreatingRule}
                 leftIcon={isCreatingRule ? "loading" : "save"}
               >
-                {isCreatingRule ? "Đang tạo..." : "Tạo rule"}
+                {isCreatingRule ? t("common:states.processing") : t("manager:modernLabels.createRule")}
               </Button>
             </div>
           </Card>
@@ -1176,13 +1199,13 @@ const ModernLabelsPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
             <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-              {showEditRuleModal ? "Chỉnh sửa rule" : "Tạo rule mới"}
+              {t("manager:modernLabels.modals.editRuleTitle")}
             </h2>
 
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                  Tên rule *
+                  {t("manager:modernLabels.modals.ruleName")} *
                 </label>
                 <input
                   type="text"
@@ -1195,7 +1218,7 @@ const ModernLabelsPage: React.FC = () => {
               </div>
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                  Nội dung rule (tùy chọn)
+                  {t("manager:modernLabels.modals.ruleContent")}
                 </label>
                 <textarea
                   value={editRule.ruleContent}
@@ -1217,7 +1240,7 @@ const ModernLabelsPage: React.FC = () => {
                 }}
                 disabled={isUpdatingRule}
               >
-                Hủy
+                {t("common:actions.cancel")}
               </Button>
               <Button
                 variant="primary"
@@ -1225,7 +1248,7 @@ const ModernLabelsPage: React.FC = () => {
                 disabled={isUpdatingRule}
                 leftIcon={isUpdatingRule ? "loading" : "save"}
               >
-                {isUpdatingRule ? "Đang lưu..." : "Lưu thay đổi"}
+                {isUpdatingRule ? t("common:states.processing") : t("common:actions.save")}
               </Button>
             </div>
           </Card>
@@ -1269,11 +1292,17 @@ const ModernLabelsPage: React.FC = () => {
                 (attachingRule.ruleId ?? attachingRule.rule_id) as number,
                 remainingLabelIds,
               );
-              addToast("Bỏ label khỏi rule thành công!", "success");
+              addToast(
+                t("manager:modernLabels.messages.labelRemovedFromRule"),
+                "success",
+              );
               // Refresh data in background
               fetchLabelRules();
             } catch (error: any) {
-              addToast(error.message || "Không thể bỏ label", "error");
+              addToast(
+                error.message || t("manager:modernLabels.messages.labelsRemoveFailed"),
+                "error",
+              );
             } finally {
               setIsAttachingLabels(false);
             }
@@ -1283,10 +1312,10 @@ const ModernLabelsPage: React.FC = () => {
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
               <Card className="w-full max-w-lg p-6 bg-card dark:bg-slate-900 shadow-2xl border-border animate-in zoom-in-95 duration-200">
                 <h2 className="text-2xl font-bold text-foreground mb-1 flex items-center gap-2">
-                  Thêm label vào rule
+                  {t("manager:modernLabels.modals.attachLabelsTitle")}
                 </h2>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Rule:{" "}
+                  {t("manager:modernLabels.modals.rulePrefix")}{" "}
                   <span className="font-semibold text-foreground">
                     {attachingRule.name}
                   </span>
@@ -1299,7 +1328,9 @@ const ModernLabelsPage: React.FC = () => {
                       <span className="material-symbols-outlined text-sm text-green-500">
                         check_circle
                       </span>
-                      Label đã có ({attachedLabels.length})
+                      {t("manager:modernLabels.modals.attachedLabels", {
+                        count: attachedLabels.length,
+                      })}
                     </label>
                     <div className="border border-green-500/30 rounded-lg divide-y divide-border/50 bg-green-500/5 mb-4">
                       {attachedLabels.map((label) => {
@@ -1343,7 +1374,7 @@ const ModernLabelsPage: React.FC = () => {
                               disabled={isAttachingLabels}
                               className="text-amber-600 hover:bg-amber-500/10 shrink-0"
                             >
-                              Bỏ
+                              {t("manager:modernLabels.actions.remove")}
                             </Button>
                           </div>
                         );
@@ -1359,7 +1390,9 @@ const ModernLabelsPage: React.FC = () => {
                       <span className="material-symbols-outlined text-sm text-blue-500">
                         add_circle
                       </span>
-                      Label chưa có ({notAttachedLabels.length})
+                      {t("manager:modernLabels.modals.availableLabels", {
+                        count: notAttachedLabels.length,
+                      })}
                     </label>
                     <div className="max-h-56 overflow-y-auto border border-input rounded-lg divide-y divide-border/50 bg-background mb-6">
                       {notAttachedLabels.map((label) => {
@@ -1416,7 +1449,7 @@ const ModernLabelsPage: React.FC = () => {
 
                 {activeLabels.length === 0 && (
                   <p className="text-xs text-muted-foreground italic py-2">
-                    Chưa có label nào.
+                    {t("manager:modernLabels.modals.noLabels")}
                   </p>
                 )}
 
@@ -1430,7 +1463,7 @@ const ModernLabelsPage: React.FC = () => {
                     }}
                     disabled={isAttachingLabels}
                   >
-                    Hủy
+                    {t("common:actions.cancel")}
                   </Button>
                   <Button
                     variant="primary"
@@ -1439,8 +1472,10 @@ const ModernLabelsPage: React.FC = () => {
                     leftIcon={isAttachingLabels ? "loading" : "save"}
                   >
                     {isAttachingLabels
-                      ? "Đang thêm..."
-                      : `Thêm ${attachLabelIds.length > 0 ? attachLabelIds.length + " label" : ""}`}
+                      ? t("common:states.processing")
+                      : t("manager:modernLabels.modals.addSelected", {
+                          count: attachLabelIds.length,
+                        })}
                   </Button>
                 </div>
               </Card>

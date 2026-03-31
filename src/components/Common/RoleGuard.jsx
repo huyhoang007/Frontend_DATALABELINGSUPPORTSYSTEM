@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { normalizeRole } from '../../utils/roleUtils';
+import { useTranslation } from 'react-i18next';
 
 /**
  * RoleGuard - Protects routes based on user role
@@ -14,12 +15,13 @@ import { normalizeRole } from '../../utils/roleUtils';
 export function RoleGuard({ allowedRoles, children }) {
     const { user, isLoading } = useAuth();
     const location = useLocation();
+    const { t } = useTranslation(["common"]);
 
     // Wait for auth to load
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="text-muted-foreground">Loading...</div>
+                <div className="text-muted-foreground">{t("common:states.loading")}</div>
             </div>
         );
     }

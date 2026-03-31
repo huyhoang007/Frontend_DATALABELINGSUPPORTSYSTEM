@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { policiesAPI } from "../../services/api";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -8,6 +9,7 @@ import { Input } from "../../components/ui/Input";
 const SEVERITIES = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
 
 export default function CreateErrorType() {
+    const { t } = useTranslation(["manager", "common"]);
     const navigate = useNavigate();
     const [form, setForm] = useState({
         errorName: "",
@@ -24,9 +26,9 @@ export default function CreateErrorType() {
 
     const validate = () => {
         const e: Record<string, string> = {};
-        if (!form.errorName.trim()) e.errorName = "Tên loại lỗi là bắt buộc";
-        else if (form.errorName.length > 100) e.errorName = "Tối đa 100 ký tự";
-        if (form.description.length > 300) e.description = "Tối đa 300 ký tự";
+        if (!form.errorName.trim()) e.errorName = t("manager:errorTypes.form.validation.nameRequired");
+        else if (form.errorName.length > 100) e.errorName = t("manager:errorTypes.form.validation.nameTooLong");
+        if (form.description.length > 300) e.description = t("manager:errorTypes.form.validation.descriptionTooLong");
         setErrors(e);
         return Object.keys(e).length === 0;
     };
@@ -43,10 +45,10 @@ export default function CreateErrorType() {
             navigate("/manager/error-types");
         } catch (err: any) {
             console.error("Failed to create policy:", err);
-            const raw = err?.response?.data?.message || err?.response?.data || err?.message || "Lỗi khi tạo loại lỗi";
-            const msg = typeof raw === "string" ? raw : "Lỗi khi tạo loại lỗi";
+            const raw = err?.response?.data?.message || err?.response?.data || err?.message || t("manager:errorTypes.form.validation.createFailed");
+            const msg = typeof raw === "string" ? raw : t("manager:errorTypes.form.validation.createFailed");
             const translated = msg.toLowerCase().includes("already exist")
-                ? "Tên loại lỗi này đã tồn tại, vui lòng chọn tên khác"
+                ? t("manager:errorTypes.form.validation.duplicate")
                 : msg;
             setErrors({ errorName: translated });
         } finally {
@@ -60,33 +62,33 @@ export default function CreateErrorType() {
                 <button onClick={() => navigate("/manager/error-types")} className="text-muted-foreground hover:text-foreground transition-colors">
                     <span className="material-symbols-outlined">arrow_back</span>
                 </button>
-                <h1 className="text-2xl font-bold text-foreground">Thêm loại lỗi mới</h1>
+                <h1 className="text-2xl font-bold text-foreground">{t("manager:errorTypes.form.title")}</h1>
             </div>
 
             <Card className="p-6 space-y-5">
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Tên loại lỗi <span className="text-destructive">*</span></label>
-                    <Input placeholder="VD: Missing Label" value={form.errorName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("errorName", e.target.value)} maxLength={100} />
+                    <label className="block text-sm font-medium text-foreground mb-1">{t("manager:errorTypes.form.name")} <span className="text-destructive">*</span></label>
+                    <Input placeholder={t("manager:errorTypes.form.placeholders.name")} value={form.errorName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => set("errorName", e.target.value)} maxLength={100} />
                     {errors.errorName && <p className="text-xs text-destructive mt-1">{errors.errorName}</p>}
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Mức độ nghiêm trọng</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">{t("manager:errorTypes.form.severity")}</label>
                     <select
                         className="w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         value={form.errorLevel}
                         onChange={(e) => set("errorLevel", e.target.value)}
                     >
-                        {SEVERITIES.map((s) => <option key={s} value={s}>{s}</option>)}
+                        {SEVERITIES.map((s) => <option key={s} value={s}>{t(`manager:errorTypes.severity.${s}`, { defaultValue: s })}</option>)}
                     </select>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">Mô tả</label>
+                    <label className="block text-sm font-medium text-foreground mb-1">{t("manager:errorTypes.form.description")}</label>
                     <textarea
                         className="w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                         rows={3}
-                        placeholder="Mô tả chi tiết..."
+                        placeholder={t("manager:errorTypes.form.placeholders.description")}
                         value={form.description}
                         onChange={(e) => set("description", e.target.value)}
                         maxLength={300}
@@ -96,9 +98,9 @@ export default function CreateErrorType() {
 
                 <div className="flex items-center gap-3 pt-2 border-t border-border">
                     <Button variant="secondary" onClick={handleSave} disabled={saving}>
-                        {saving ? "Đang lưu..." : "Lưu"}
+                        {saving ? t("common:states.saving") : t("common:actions.save")}
                     </Button>
-                    <Button variant="ghost" onClick={() => navigate("/manager/error-types")}>Hủy</Button>
+                    <Button variant="ghost" onClick={() => navigate("/manager/error-types")}>{t("common:actions.cancel")}</Button>
                 </div>
             </Card>
         </div>

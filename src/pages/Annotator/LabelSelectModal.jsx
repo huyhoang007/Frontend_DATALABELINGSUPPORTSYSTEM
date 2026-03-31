@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 
 /**
  * Label selection modal – grouped by LabelRule.
@@ -14,6 +15,7 @@ export default function LabelSelectModal({
   onSave,
   onCancel,
 }) {
+  const { t } = useTranslation(["annotator", "common"]);
   const [selectedIds, setSelectedIds] = React.useState(initialSelectedIds);
   const [search, setSearch] = React.useState("");
   const [activeRuleIdx, setActiveRuleIdx] = React.useState(0);
@@ -140,7 +142,7 @@ export default function LabelSelectModal({
             className="text-[13px] font-semibold mb-2.5"
             style={{ color: "#e2e8f0" }}
           >
-            Chọn label cho đối tượng
+            {t("annotator:workspace.modal.selectLabel")}
           </p>
           <div className="relative">
             <span
@@ -151,7 +153,7 @@ export default function LabelSelectModal({
             </span>
             <input
               type="text"
-              placeholder="Tìm label rule hoặc label..."
+              placeholder={t("annotator:workspace.modal.searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-8 pr-8 py-1.5 text-xs rounded-lg focus:outline-none"
@@ -200,7 +202,9 @@ export default function LabelSelectModal({
               >
                 label
               </span>
-              Labels ({allLabelsFlat.length})
+              {t("annotator:workspace.modal.labels", {
+                count: allLabelsFlat.length,
+              })}
             </button>
             <button
               onClick={() =>
@@ -223,7 +227,9 @@ export default function LabelSelectModal({
               >
                 rule
               </span>
-              Label Rules ({labelGroups.length})
+              {t("annotator:workspace.modal.labelRules", {
+                count: labelGroups.length,
+              })}
             </button>
           </div>
         </div>
@@ -243,7 +249,7 @@ export default function LabelSelectModal({
                           className="text-xs text-center py-8"
                           style={{ color: "#4a6788" }}
                         >
-                          Không tìm thấy kết quả
+                          {t("annotator:workspace.modal.noResults")}
                         </p>
                       );
                     }
@@ -263,7 +269,9 @@ export default function LabelSelectModal({
                                 className="text-[11px] font-semibold"
                                 style={{ color: "#4a6788" }}
                               >
-                                Labels ({searchLabelsFlat.length})
+                                {t("annotator:workspace.modal.labels", {
+                                  count: searchLabelsFlat.length,
+                                })}
                               </span>
                             </div>
                             <div className="flex flex-wrap gap-2">
@@ -292,7 +300,9 @@ export default function LabelSelectModal({
                                 className="text-[11px] font-semibold"
                                 style={{ color: "#4a6788" }}
                               >
-                                Label Rules ({searchRuleGroups.length})
+                                {t("annotator:workspace.modal.labelRules", {
+                                  count: searchRuleGroups.length,
+                                })}
                               </span>
                             </div>
                             {searchRuleGroups.map((g) => (
@@ -332,7 +342,9 @@ export default function LabelSelectModal({
                                       color: "#4a6788",
                                     }}
                                   >
-                                    {g.labels?.length || 0} labels
+                                    {t("annotator:workspace.modal.ruleItemCount", {
+                                      count: g.labels?.length || 0,
+                                    })}
                                   </span>
                                 </div>
                                 {g.labels?.length > 0 && (
@@ -368,7 +380,7 @@ export default function LabelSelectModal({
                             className="text-xs text-center py-8"
                             style={{ color: "#4a6788" }}
                           >
-                            Không tìm thấy label
+                            {t("annotator:workspace.modal.noLabelResults")}
                           </p>
                         );
                       }
@@ -397,7 +409,7 @@ export default function LabelSelectModal({
                               className="text-xs text-center py-8"
                               style={{ color: "#4a6788" }}
                             >
-                              Không tìm thấy label rule
+                            {t("annotator:workspace.modal.noRuleResults")}
                             </p>
                           );
                         }
@@ -439,7 +451,9 @@ export default function LabelSelectModal({
                                   color: "#4a6788",
                                 }}
                               >
-                                {g.labels?.length || 0} labels
+                                  {t("annotator:workspace.modal.ruleItemCount", {
+                                    count: g.labels?.length || 0,
+                                  })}
                               </span>
                             </div>
                             {/* Labels inside the rule */}
@@ -460,7 +474,7 @@ export default function LabelSelectModal({
                                   className="text-[10px]"
                                   style={{ color: "#3a5068" }}
                                 >
-                                  Chưa có label nào trong rule này
+                                  {t("annotator:workspace.modal.ruleEmpty")}
                                 </p>
                               </div>
                             )}
@@ -479,11 +493,11 @@ export default function LabelSelectModal({
         >
           <div className="flex-1 flex flex-wrap gap-1 min-w-0 overflow-hidden">
             <span className="text-[10px] w-full" style={{ color: "#4a6788" }}>
-              Mỗi đối tượng chỉ chọn 1 label.
+              {t("annotator:workspace.modal.singleSelect")}
             </span>
             {selectedNames.length === 0 ? (
               <span className="text-[11px]" style={{ color: "#4a6788" }}>
-                Chưa chọn label nào
+                {t("annotator:workspace.modal.noSelectedLabel")}
               </span>
             ) : (
               selectedNames.map((name, i) => (
@@ -510,7 +524,7 @@ export default function LabelSelectModal({
               border: "1px solid #253347",
             }}
           >
-            Hủy
+            {t("common:actions.cancel")}
           </button>
           <button
             onClick={handleSave}
@@ -522,7 +536,7 @@ export default function LabelSelectModal({
               cursor: selectedIds.length === 0 ? "not-allowed" : "pointer",
             }}
           >
-            Lưu
+            {t("common:actions.save")}
           </button>
         </div>
       </div>

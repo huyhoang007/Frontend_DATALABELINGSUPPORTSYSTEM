@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOutletContext } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Card } from "../../components/ui/Card";
 import { cn } from "../../utils/cn";
 import { projectApi } from "../../api/projectApi";
@@ -10,6 +11,7 @@ import {
     invalidateProjectSummaryData,
     projectQueryKeys,
 } from "../../query/projectQueries";
+import { translateRole } from "../../i18n/helpers";
 
 const toNumber = (value: any) => {
     const parsed = Number(value);
@@ -18,6 +20,7 @@ const toNumber = (value: any) => {
 
 export default function ProjectOverview() {
     const { project } = useOutletContext<{ project: any }>();
+    const { t } = useTranslation(["manager", "common"]);
     const queryClient = useQueryClient();
     const isProjectCompleted = project?.status?.toLowerCase() === "completed";
     const [guidelineContent, setGuidelineContent] = useState("");
@@ -61,7 +64,7 @@ export default function ProjectOverview() {
         return (
             <div className="flex items-center justify-center py-20">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                <span className="ml-3 text-muted-foreground">Đang tải dữ liệu...</span>
+                <span className="ml-3 text-muted-foreground">{t("common:states.loadingData")}</span>
             </div>
         );
     }
@@ -71,7 +74,7 @@ export default function ProjectOverview() {
             <Card className="p-8 bg-card/80 backdrop-blur border-border/60 text-center">
                 <div className="text-red-400 text-sm mb-2">! {errorMessage}</div>
                 <button onClick={() => window.location.reload()} className="text-xs text-primary underline">
-                    Thử lại
+                    {t("common:actions.retry")}
                 </button>
             </Card>
         );
@@ -94,10 +97,10 @@ export default function ProjectOverview() {
             });
             await invalidateProjectSummaryData(queryClient, projectId);
             await queryClient.invalidateQueries({ queryKey: projectQueryKeys.overview(projectId) });
-            setGuidelineMessage("Đã lưu hướng dẫn gán nhãn thành công.");
+            setGuidelineMessage(t("manager:overview.saveGuidelineSuccess"));
             setGuidelineMessageType("success");
         } catch (err: any) {
-            setGuidelineMessage(err?.message || "Không thể lưu hướng dẫn gán nhãn.");
+            setGuidelineMessage(err?.message || t("manager:overview.saveGuidelineFailed"));
             setGuidelineMessageType("error");
         } finally {
             setSavingGuideline(false);
@@ -147,34 +150,34 @@ export default function ProjectOverview() {
             {/* KPI Cards */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <Card className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
-                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Dữ liệu</div>
+                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("manager:overview.data")}</div>
                     <div className="text-3xl font-bold text-foreground">{totalItems.toLocaleString()}</div>
-                    <div className="text-xs text-muted-foreground mt-1">items</div>
+                    <div className="text-xs text-muted-foreground mt-1">{t("manager:overview.totalItemsUnit")}</div>
                 </Card>
                 <Card className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
-                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Nhóm</div>
+                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("manager:overview.team")}</div>
                     <div className="text-3xl font-bold text-foreground">{totalTeamMembers}</div>
-                    <div className="text-xs text-emerald-500 font-medium mt-1">Avg Score: {teamAvgScore.toFixed(1)}</div>
+                    <div className="text-xs text-emerald-500 font-medium mt-1">{t("manager:overview.averageScore", { score: teamAvgScore.toFixed(1) })}</div>
                 </Card>
                 <Card className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
-                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Chú thích</div>
+                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("manager:overview.annotations")}</div>
                     <div className="flex items-center justify-center gap-3 mt-1">
                         <div>
                             <span className="text-sm font-bold text-emerald-500">{acceptedAnnotations}</span>
-                            <div className="text-[10px] text-muted-foreground">Đã duyệt</div>
+                            <div className="text-[10px] text-muted-foreground">{t("manager:overview.accepted")}</div>
                         </div>
                         <div>
                             <span className="text-sm font-bold text-amber-500">{totalAnnotations - acceptedAnnotations - rejectedAnnotations}</span>
-                            <div className="text-[10px] text-muted-foreground">Chờ duyệt</div>
+                            <div className="text-[10px] text-muted-foreground">{t("manager:overview.pending")}</div>
                         </div>
                         <div>
                             <span className="text-sm font-bold text-red-400">{rejectedAnnotations}</span>
-                            <div className="text-[10px] text-muted-foreground">Từ chối</div>
+                            <div className="text-[10px] text-muted-foreground">{t("manager:overview.rejected")}</div>
                         </div>
                     </div>
                 </Card>
                 <Card className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
-                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Chất lượng</div>
+                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("manager:overview.quality")}</div>
                     <div className="text-3xl font-bold text-foreground">{overallQualityScore.toFixed(0)}%</div>
                     <div className={cn(
                         "text-xs font-medium mt-1",
@@ -184,9 +187,9 @@ export default function ProjectOverview() {
                     </div>
                 </Card>
                 <Card className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
-                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Chính sách</div>
+                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("manager:overview.policy")}</div>
                     <div className="text-3xl font-bold text-foreground">{policyComplianceRate.toFixed(0)}%</div>
-                    <div className="text-xs text-red-400 font-medium mt-1">{totalPolicyViolations} Vi phạm</div>
+                    <div className="text-xs text-red-400 font-medium mt-1">{t("manager:overview.violations", { count: totalPolicyViolations })}</div>
                 </Card>
             </div>
 
@@ -194,16 +197,16 @@ export default function ProjectOverview() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="p-6 bg-card/80 backdrop-blur border-border/60">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-base font-bold text-foreground">Tổng quan tiến độ</h3>
+                        <h3 className="text-base font-bold text-foreground">{t("manager:overview.progressOverview")}</h3>
                         <span className="text-xs text-muted-foreground">
-                            Tổng thể: {overallProgress.toFixed(1)}%
+                            {t("manager:overview.overall")}: {overallProgress.toFixed(1)}%
                         </span>
                     </div>
                     <div className="space-y-5">
                         {[
-                            { label: "Đã gán nhãn", value: labeledItems, pct: progress?.labelingProgress ?? 0, color: "bg-blue-500" },
-                            { label: "Đã đánh giá", value: reviewedItems, pct: progress?.reviewingProgress ?? 0, color: "bg-emerald-500" },
-                            { label: "Đã duyệt", value: approvedItems, pct: progress?.approvalProgress ?? 0, color: "bg-amber-500" },
+                            { label: t("manager:overview.labelingDone"), value: labeledItems, pct: progress?.labelingProgress ?? 0, color: "bg-blue-500" },
+                            { label: t("manager:overview.reviewingDone"), value: reviewedItems, pct: progress?.reviewingProgress ?? 0, color: "bg-emerald-500" },
+                            { label: t("manager:overview.approvalDone"), value: approvedItems, pct: progress?.approvalProgress ?? 0, color: "bg-amber-500" },
                         ].map((bar) => (
                             <div key={bar.label}>
                                 <div className="flex justify-between items-center mb-2">
@@ -222,19 +225,19 @@ export default function ProjectOverview() {
                 </Card>
 
                 <Card className="p-6 bg-card/80 backdrop-blur border-border/60">
-                    <h3 className="text-base font-bold text-foreground mb-6">Chỉ số chất lượng</h3>
+                    <h3 className="text-base font-bold text-foreground mb-6">{t("manager:overview.qualityMetrics")}</h3>
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-foreground font-medium">Độ chính xác chú thích</span>
+                            <span className="text-sm text-foreground font-medium">{t("manager:overview.annotationAccuracy")}</span>
                             <span className="text-sm font-bold text-emerald-500">{annotationAccuracy.toFixed(1)}%</span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-foreground font-medium">Cân bằng phân phối nhãn</span>
+                            <span className="text-sm text-foreground font-medium">{t("manager:overview.labelBalance")}</span>
                             <span className="text-sm font-bold text-blue-500">{labelDistributionBalance.toFixed(1)}%</span>
                         </div>
                         {quality?.mostUsedLabel && (
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-foreground font-medium">Nhãn dùng nhiều nhất</span>
+                                <span className="text-sm text-foreground font-medium">{t("manager:overview.mostUsedLabel")}</span>
                                 <span className="text-sm font-bold text-amber-500">
                                     {quality.mostUsedLabel} ({quality.mostUsedLabelCount})
                                 </span>
@@ -242,14 +245,14 @@ export default function ProjectOverview() {
                         )}
                         {quality?.leastUsedLabel && (
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-foreground font-medium">Nhãn dùng ít nhất</span>
+                                <span className="text-sm text-foreground font-medium">{t("manager:overview.leastUsedLabel")}</span>
                                 <span className="text-sm font-bold text-muted-foreground">
                                     {quality.leastUsedLabel} ({quality.leastUsedLabelCount})
                                 </span>
                             </div>
                         )}
                         <div className="pt-4 border-t border-border/50 flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground font-medium">Chất lượng tổng thể</span>
+                            <span className="text-sm text-muted-foreground font-medium">{t("manager:overview.overallQuality")}</span>
                             <span className={cn(
                                 "text-xs font-bold px-2.5 py-1 rounded-md",
                                 overallQualityScore >= 80 ? "bg-emerald-500/10 text-emerald-500" : overallQualityScore >= 50 ? "bg-amber-500/10 text-amber-500" : "bg-red-500/10 text-red-500"
@@ -264,16 +267,16 @@ export default function ProjectOverview() {
             {/* Team Contributions */}
             {contributors.length > 0 && (
                 <Card className="p-6 bg-card/80 backdrop-blur border-border/60">
-                    <h3 className="text-base font-bold text-foreground mb-4">Đóng góp hàng đầu</h3>
+                    <h3 className="text-base font-bold text-foreground mb-4">{t("manager:overview.topContributors")}</h3>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-border/50">
-                                    <th className="text-left py-2 text-muted-foreground font-medium">Thành viên</th>
-                                    <th className="text-left py-2 text-muted-foreground font-medium">Vai trò</th>
-                                    <th className="text-center py-2 text-muted-foreground font-medium">Nhiệm vụ</th>
-                                    <th className="text-center py-2 text-muted-foreground font-medium">Hoàn thành</th>
-                                    <th className="text-center py-2 text-muted-foreground font-medium">Điểm</th>
+                                    <th className="text-left py-2 text-muted-foreground font-medium">{t("manager:overview.member")}</th>
+                                    <th className="text-left py-2 text-muted-foreground font-medium">{t("manager:overview.role")}</th>
+                                    <th className="text-center py-2 text-muted-foreground font-medium">{t("manager:overview.tasks")}</th>
+                                    <th className="text-center py-2 text-muted-foreground font-medium">{t("manager:overview.completed")}</th>
+                                    <th className="text-center py-2 text-muted-foreground font-medium">{t("manager:overview.score")}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -285,7 +288,7 @@ export default function ProjectOverview() {
                                                 "text-xs px-2 py-0.5 rounded-full font-medium",
                                                 c.role === "ANNOTATOR" ? "bg-blue-500/10 text-blue-500" : "bg-purple-500/10 text-purple-500"
                                             )}>
-                                                {c.role}
+                                                {translateRole(c.role)}
                                             </span>
                                         </td>
                                         <td className="py-2.5 text-center text-muted-foreground">{c.totalAssignments ?? 0}</td>
@@ -309,7 +312,7 @@ export default function ProjectOverview() {
             {/* Alerts */}
             {alerts.length > 0 && (
                 <Card className="p-6 bg-card/80 backdrop-blur border-amber-500/30 border">
-                    <h3 className="text-base font-bold text-amber-500 mb-3">Cảnh báo</h3>
+                    <h3 className="text-base font-bold text-amber-500 mb-3">{t("manager:overview.alerts")}</h3>
                     <ul className="space-y-2">
                         {alerts.map((alert: string, idx: number) => (
                             <li key={idx} className="text-sm text-foreground flex items-start gap-2">
@@ -324,7 +327,7 @@ export default function ProjectOverview() {
             {/* Description */}
             {project.description && (
                 <Card className="p-6 bg-card/80 backdrop-blur border-border/60">
-                    <h3 className="text-base font-bold text-foreground mb-3">Mô tả dự án</h3>
+                    <h3 className="text-base font-bold text-foreground mb-3">{t("manager:overview.projectDescription")}</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">{project.description}</p>
                 </Card>
             )}
@@ -332,9 +335,9 @@ export default function ProjectOverview() {
             {/* Annotation Guideline */}
             <Card className="p-6 bg-card/80 backdrop-blur border-border/60">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-base font-bold text-foreground">Hướng dẫn gán nhãn</h3>
+                    <h3 className="text-base font-bold text-foreground">{t("manager:overview.annotationGuideline")}</h3>
                     <div className="flex items-center gap-2">
-                        <label className="text-xs text-muted-foreground">Version</label>
+                        <label className="text-xs text-muted-foreground">{t("manager:overview.guidelineVersion")}</label>
                         <input
                             value={guidelineVersion}
                             onChange={(e) => setGuidelineVersion(e.target.value)}
@@ -348,7 +351,7 @@ export default function ProjectOverview() {
                 {isProjectCompleted && (
                     <div className="px-3 py-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded mb-3 flex items-start gap-2">
                         <span className="material-symbols-outlined text-orange-600 dark:text-orange-400 text-sm mt-0.5">lock</span>
-                        <p className="text-xs text-orange-900 dark:text-orange-200">Du an COMPLETED - khong the chinh sua huong dan gan nhan</p>
+                        <p className="text-xs text-orange-900 dark:text-orange-200">{t("manager:overview.guidelineLocked")}</p>
                     </div>
                 )}
                 
@@ -358,29 +361,29 @@ export default function ProjectOverview() {
                     disabled={isProjectCompleted}
                     rows={8}
                     className={`w-full px-3 py-2 rounded border border-border bg-background text-sm text-foreground resize-y ${isProjectCompleted ? "opacity-50 cursor-not-allowed" : ""}`}
-                    placeholder="Nhập hướng dẫn gán nhãn tổng quát cho dự án: quy tắc vẽ, xử lý che khuất, tiêu chí reject..."
+                    placeholder={t("manager:overview.guidelineContentPlaceholder")}
                 />
                 <div className="mt-3">
-                    <label className="text-xs text-muted-foreground block mb-2">Đường dẫn file hướng dẫn (PDF, Word, v.v.)</label>
+                    <label className="text-xs text-muted-foreground block mb-2">{t("manager:overview.guidelineFileLabel")}</label>
                     <input
                         value={guidelineFileUrl}
                         onChange={(e) => setGuidelineFileUrl(e.target.value)}
                         disabled={isProjectCompleted}
                         type="url"
                         className={`w-full px-3 py-2 rounded border border-border bg-background text-sm text-foreground ${isProjectCompleted ? "opacity-50 cursor-not-allowed" : ""}`}
-                        placeholder="https://example.com/guideline.pdf hoặc đường dẫn file cục bộ"
+                        placeholder={t("manager:overview.guidelineFilePlaceholder")}
                     />
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                     <p className="text-xs text-muted-foreground">
-                        Nội dung này sẽ hiển thị trong workspace của Annotator và Reviewer.
+                        {t("manager:overview.guidelineHint")}
                     </p>
                     <button
                         onClick={handleSaveGuideline}
                         disabled={savingGuideline || isProjectCompleted}
                         className={`px-4 py-2 rounded bg-primary text-primary-foreground text-xs font-semibold ${savingGuideline || isProjectCompleted ? "opacity-60 cursor-not-allowed" : ""}`}
                     >
-                        {savingGuideline ? "Đang lưu..." : "Lưu hướng dẫn"}
+                        {savingGuideline ? t("common:states.saving") : t("manager:overview.saveGuideline")}
                     </button>
                 </div>
             </Card>

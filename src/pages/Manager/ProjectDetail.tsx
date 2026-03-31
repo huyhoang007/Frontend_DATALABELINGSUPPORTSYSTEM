@@ -1,6 +1,8 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate, useLocation, Outlet } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import i18n from "../../i18n";
 import {
     fetchProjectDetail,
     getHotspotQueryBehavior,
@@ -9,6 +11,7 @@ import {
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { cn } from "../../utils/cn";
+import { translateDataType, translateProjectStatus } from "../../i18n/helpers";
 
 interface ProjectData {
     project_id: number;
@@ -22,19 +25,19 @@ interface ProjectData {
     created_at?: string;
 }
 
-const TABS = [
-    { key: "", label: "Tổng quan", icon: "dashboard" },
-    { key: "data", label: "Dữ liệu", icon: "cloud_upload" },
-    { key: "labels", label: "Quy tắc nhãn", icon: "rule" },
-    { key: "assignments", label: "Phân công", icon: "assignment" },
-    { key: "errors", label: "Lỗi", icon: "bug_report" },
-    { key: "export", label: "Xuất dữ liệu", icon: "download" },
-];
-
 const ProjectDetail: React.FC = () => {
     const { projectId } = useParams<{ projectId: string }>();
     const navigate = useNavigate();
     const location = useLocation();
+    const { t } = useTranslation(["manager", "common"]);
+    const TABS = [
+        { key: "", label: t("manager:projectDetail.tabs.overview"), icon: "dashboard" },
+        { key: "data", label: t("manager:projectDetail.tabs.data"), icon: "cloud_upload" },
+        { key: "labels", label: t("manager:projectDetail.tabs.labels"), icon: "rule" },
+        { key: "assignments", label: t("manager:projectDetail.tabs.assignments"), icon: "assignment" },
+        { key: "errors", label: t("manager:projectDetail.tabs.errors"), icon: "bug_report" },
+        { key: "export", label: t("manager:projectDetail.tabs.export"), icon: "download" },
+    ];
 
     // Determine active tab from URL
     const basePath = `/manager/projects/${projectId}`;
@@ -61,24 +64,15 @@ const ProjectDetail: React.FC = () => {
         }
     };
 
-    const getDataTypeLabel = (dt: string) => {
-        switch (dt) {
-            case "image": return "Image Annotation";
-            case "text": return "Text Annotation";
-            case "video": return "Video Annotation";
-            default: return dt;
-        }
-    };
-
     const formatDate = (dateStr?: string) => {
         if (!dateStr) return "N/A";
-        try { return new Date(dateStr).toLocaleDateString("vi-VN"); } catch { return dateStr; }
+        try { return new Date(dateStr).toLocaleDateString(i18n.language === "en" ? "en-US" : "vi-VN"); } catch { return dateStr; }
     };
 
     if (isLoading) {
         return (
             <div className="p-8 min-h-full bg-transparent flex items-center justify-center">
-                <div className="text-muted-foreground text-sm">Đang tải dữ liệu...</div>
+                <div className="text-muted-foreground text-sm">{t("common:states.loadingData")}</div>
             </div>
         );
     }
@@ -88,12 +82,12 @@ const ProjectDetail: React.FC = () => {
             <div className="p-8 min-h-full bg-transparent">
                 <Card className="p-12 bg-card/80 backdrop-blur border-border/60 text-center max-w-lg mx-auto">
                     <div className="text-4xl mb-4">P</div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Không tìm thấy dự án</h2>
+                    <h2 className="text-xl font-bold text-foreground mb-2">{t("manager:projectDetail.notFoundTitle")}</h2>
                     <p className="text-muted-foreground mb-6 text-sm">
-                        Dự án với ID "{projectId}" không tồn tại hoặc đã bị xóa.
+                        {t("manager:projectDetail.notFoundDescription", { projectId })}
                     </p>
                     <Button variant="secondary" onClick={() => navigate("/manager/projects")} leftIcon="arrow_back">
-                        Quay lại danh sách
+                        {t("common:actions.backToList")}
                     </Button>
                 </Card>
             </div>
@@ -115,15 +109,15 @@ const ProjectDetail: React.FC = () => {
                         <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                             <span className="flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-[16px]">category</span>
-                                Loại: {getDataTypeLabel(project.data_type)}
+                                {t("common:labels.type")}: {translateDataType(project.data_type)}
                             </span>
                             <span className="flex items-center gap-1.5">
                                 <span className={cn("w-2 h-2 rounded-full", getStatusDot(project.status))} />
-                                Trạng thái: <span className="capitalize">{project.status.replace("_", " ")}</span>
+                                {t("common:labels.status")}: <span className="capitalize">{translateProjectStatus(project.status)}</span>
                             </span>
                             <span className="flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-[16px]">calendar_today</span>
-                                Ngày tạo: {formatDate(project.created_at)}
+                                {t("common:labels.createdAt")}: {formatDate(project.created_at)}
                             </span>
                         </div>
                     </div>

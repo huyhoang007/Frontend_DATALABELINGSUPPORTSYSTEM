@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useOutletContext } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { policiesAPI } from "../../services/api";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -41,6 +42,7 @@ const SEVERITY_STYLES: Record<string, string> = {
 };
 
 export default function ProjectErrors() {
+  const { t } = useTranslation(["manager", "common"]);
   const { projectId } = useParams<{ projectId: string }>();
   const pid = Number(projectId) || 0;
   const { project: parentProject } = (useOutletContext() as any) || {};
@@ -76,7 +78,7 @@ export default function ProjectErrors() {
       setProjectPolicies(projPolicies);
     } catch (err) {
       console.error("Failed to load policies:", err);
-      showToast("Lỗi tải dữ liệu policies");
+      showToast(t("manager:projectErrors.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -90,7 +92,7 @@ export default function ProjectErrors() {
 
   const addToProject = async (policyId: number) => {
     if (projectPolicyIds.has(policyId)) {
-      showToast("Error type đã có trong project");
+      showToast(t("manager:projectErrors.alreadyAdded"));
       return;
     }
     setActionLoading(policyId);
@@ -98,10 +100,10 @@ export default function ProjectErrors() {
       await policiesAPI.assignToProject(pid, policyId);
       const added = globalPolicies.find((p) => p.policyId === policyId);
       if (added) setProjectPolicies((prev) => [...prev, added]);
-      showToast("Đã thêm vào project");
+      showToast(t("manager:projectErrors.addSuccess"));
     } catch (err) {
       console.error("Failed to assign policy:", err);
-      showToast("Lỗi khi thêm error type vào project");
+      showToast(t("manager:projectErrors.addFailed"));
     } finally {
       setActionLoading(null);
     }
@@ -112,10 +114,10 @@ export default function ProjectErrors() {
     try {
       await policiesAPI.removeFromProject(pid, policyId);
       setProjectPolicies((prev) => prev.filter((p) => p.policyId !== policyId));
-      showToast("Đã gỡ khỏi project");
+      showToast(t("manager:projectErrors.removeSuccess"));
     } catch (err) {
       console.error("Failed to remove policy:", err);
-      showToast("Lỗi khi gỡ error type khỏi project");
+      showToast(t("manager:projectErrors.removeFailed"));
     } finally {
       setActionLoading(null);
     }
@@ -126,13 +128,13 @@ export default function ProjectErrors() {
   );
 
   const renderTable = (items: PolicyItem[], mode: "global" | "project") => (
-    <Table>
+      <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Tên</TableHead>
-          <TableHead>Mức độ</TableHead>
-          <TableHead>Mô tả</TableHead>
-          <TableHead className="text-right">Hành động</TableHead>
+          <TableHead>{t("manager:errorTypes.table.name")}</TableHead>
+          <TableHead>{t("manager:errorTypes.table.severity")}</TableHead>
+          <TableHead>{t("manager:errorTypes.table.description")}</TableHead>
+          <TableHead className="text-right">{t("manager:errorTypes.table.action")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -143,7 +145,9 @@ export default function ProjectErrors() {
               <span
                 className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${SEVERITY_STYLES[item.errorLevel] || "bg-muted text-muted-foreground"}`}
               >
-                {item.errorLevel}
+                {t(`manager:errorTypes.severity.${item.errorLevel}`, {
+                  defaultValue: item.errorLevel,
+                })}
               </span>
             </TableCell>
             <TableCell className="text-muted-foreground max-w-[200px] truncate">
@@ -165,10 +169,10 @@ export default function ProjectErrors() {
                     add
                   </span>
                   {actionLoading === item.policyId
-                    ? "Đang thêm..."
+                    ? t("manager:projectErrors.addLoading")
                     : projectPolicyIds.has(item.policyId)
-                      ? "Đã thêm"
-                      : "Thêm vào project"}
+                      ? t("manager:projectErrors.addDone")
+                      : t("manager:projectErrors.addAction")}
                 </Button>
               ) : (
                 <Button
@@ -178,13 +182,15 @@ export default function ProjectErrors() {
                     actionLoading === item.policyId || isProjectCompleted
                   }
                   onClick={() => removeFromProject(item.policyId)}
-                  title="Gỡ khỏi project"
+                  title={t("manager:projectErrors.removeTitle")}
                 >
                   <span className="material-symbols-outlined text-base text-destructive">
                     remove_circle
                   </span>
                   <span className="ml-1 text-destructive">
-                    {actionLoading === item.policyId ? "Đang gỡ..." : "Gỡ"}
+                    {actionLoading === item.policyId
+                      ? t("manager:projectErrors.removeLoading")
+                      : t("manager:projectErrors.removeAction")}
                   </span>
                 </Button>
               )}
@@ -205,9 +211,9 @@ export default function ProjectErrors() {
       )}
 
       <div>
-        <h2 className="text-base font-bold text-foreground">Lỗi</h2>
+        <h2 className="text-base font-bold text-foreground">{t("manager:projectErrors.title")}</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Danh sách lỗi/loại lỗi dùng trong project
+          {t("manager:projectErrors.subtitle")}
         </p>
       </div>
 
@@ -218,11 +224,10 @@ export default function ProjectErrors() {
           </span>
           <div className="text-sm text-orange-900 dark:text-orange-200">
             <p className="font-semibold">
-              Du an COMPLETED - Chi co the xuat du lieu
+              {t("manager:assignments.completedLockedTitle")}
             </p>
             <p className="mt-1 text-orange-800 dark:text-orange-300">
-              Dự án này đã hoàn thành và bị khóa. Bạn chỉ có thể xuất dữ liệu.
-              Không thể thêm hay xóa loại lỗi.
+              {t("manager:assignments.completedLockedDescription")}
             </p>
           </div>
         </div>
@@ -234,14 +239,14 @@ export default function ProjectErrors() {
           <span className="material-symbols-outlined text-[16px]">
             bug_report
           </span>
-          Loại lỗi của dự án{" "}
+          {t("manager:projectErrors.projectList")}
         </h3>
         {loading ? (
           <div className="text-center py-8">
             <span className="material-symbols-outlined text-2xl text-muted-foreground animate-spin block mb-2">
               progress_activity
             </span>
-            <p className="text-sm text-muted-foreground">Đang tải...</p>
+            <p className="text-sm text-muted-foreground">{t("manager:projectErrors.loading")}</p>
           </div>
         ) : projectPolicies.length === 0 ? (
           <div className="text-center py-8">
@@ -249,7 +254,7 @@ export default function ProjectErrors() {
               bug_report
             </span>
             <p className="text-muted-foreground text-sm">
-              Chưa có loại lỗi nào được thêm vào dự án
+              {t("manager:projectErrors.emptyProject")}
             </p>
           </div>
         ) : (
@@ -261,10 +266,10 @@ export default function ProjectErrors() {
       <Card className="p-6 space-y-4">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
           <span className="material-symbols-outlined text-[16px]">list</span>
-          Tất cả loại lỗi
+          {t("manager:projectErrors.globalList")}
         </h3>
         <Input
-          placeholder="Tìm kiếm error type..."
+          placeholder={t("manager:projectErrors.searchPlaceholder")}
           value={search}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setSearch(e.target.value)
@@ -276,7 +281,7 @@ export default function ProjectErrors() {
             <span className="material-symbols-outlined text-2xl text-muted-foreground animate-spin block mb-2">
               progress_activity
             </span>
-            <p className="text-sm text-muted-foreground">Đang tải...</p>
+            <p className="text-sm text-muted-foreground">{t("manager:projectErrors.loading")}</p>
           </div>
         ) : filteredGlobal.length === 0 ? (
           <div className="text-center py-8">
@@ -284,7 +289,7 @@ export default function ProjectErrors() {
               search_off
             </span>
             <p className="text-muted-foreground text-sm">
-              {search ? "Không tìm thấy" : "Chưa có error type nào"}
+              {search ? t("manager:projectErrors.emptySearch") : t("manager:projectErrors.emptyGlobal")}
             </p>
           </div>
         ) : (

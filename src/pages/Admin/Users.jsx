@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { userApi } from "../../api/userApi";
+import { translateRole } from "../../i18n/helpers";
 
 // Bảng màu Modern Enterprise UI
 const T = {
@@ -27,6 +29,7 @@ const T = {
 };
 
 export default function AdminUsers() {
+  const { t, i18n } = useTranslation(["admin", "common"]);
   const { user } = useAuth();
   const { addToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -75,49 +78,49 @@ export default function AdminUsers() {
       setUsers(data.content || data || []);
     } catch (error) {
       console.error("Failed to fetch users:", error);
-      addToast("Không thể tải danh sách người dùng", "error");
+      addToast(t("admin:users.loadFailed"), "error");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleApproveUser = async (userId) => {
-    if (!window.confirm("Bạn có chắc muốn chấp nhận tài khoản này?")) {
+    if (!window.confirm(t("admin:users.approveConfirm"))) {
       return;
     }
 
     setProcessingUserId(userId);
     try {
       await userApi.approveUser(userId);
-      addToast("Đã chấp nhận tài khoản thành công!", "success");
+      addToast(t("admin:users.approveSuccess"), "success");
       fetchUsers(); // Reload list
     } catch (error) {
       console.error("Failed to approve user:", error);
-      addToast(error.message || "Chấp nhận tài khoản thất bại", "error");
+      addToast(error.message || t("admin:users.approveFailed"), "error");
     } finally {
       setProcessingUserId(null);
     }
   };
 
   const handleRejectUser = async (userId) => {
-    const reason = window.prompt("Lý do từ chối (tùy chọn):");
+    const reason = window.prompt(t("admin:users.rejectPrompt"));
     if (reason === null) return; // User cancelled
 
     setProcessingUserId(userId);
     try {
       await userApi.rejectUser(userId, reason);
-      addToast("Đã từ chối tài khoản", "info");
+      addToast(t("admin:users.rejectSuccess"), "info");
       fetchUsers(); // Reload list
     } catch (error) {
       console.error("Failed to reject user:", error);
-      addToast(error.message || "Từ chối tài khoản thất bại", "error");
+      addToast(error.message || t("admin:users.rejectFailed"), "error");
     } finally {
       setProcessingUserId(null);
     }
   };
 
   const handleBanUser = async (userId) => {
-    if (!window.confirm("Bạn có chắc muốn cấm người dùng này?")) {
+    if (!window.confirm(t("admin:users.banConfirm"))) {
       return;
     }
 
@@ -125,18 +128,18 @@ export default function AdminUsers() {
     try {
       // Use suspendUser instead of banUser if backend doesn't have /ban endpoint
       await userApi.suspendUser(userId);
-      addToast("Đã cấm người dùng thành công", "success");
+      addToast(t("admin:users.banSuccess"), "success");
       fetchUsers();
     } catch (error) {
       console.error("Failed to ban user:", error);
-      addToast(error.message || "Cấm người dùng thất bại", "error");
+      addToast(error.message || t("admin:users.banFailed"), "error");
     } finally {
       setProcessingUserId(null);
     }
   };
 
   const handleUnbanUser = async (userId) => {
-    if (!window.confirm("Bạn có chắc muốn bỏ cấm người dùng này?")) {
+    if (!window.confirm(t("admin:users.unbanConfirm"))) {
       return;
     }
 
@@ -144,11 +147,11 @@ export default function AdminUsers() {
     try {
       // Use activateUser instead of unbanUser if backend doesn't have /unban endpoint
       await userApi.activateUser(userId);
-      addToast("Đã bỏ cấm người dùng thành công", "success");
+      addToast(t("admin:users.unbanSuccess"), "success");
       fetchUsers();
     } catch (error) {
       console.error("Failed to unban user:", error);
-      addToast(error.message || "Bỏ cấm người dùng thất bại", "error");
+      addToast(error.message || t("admin:users.unbanFailed"), "error");
     } finally {
       setProcessingUserId(null);
     }
@@ -174,13 +177,13 @@ export default function AdminUsers() {
     try {
       // Use updateUser API with roleId
       await userApi.updateUser(selectedUser.userId, { roleId: newRole });
-      addToast("Đã thay đổi vai trò thành công", "success");
+      addToast(t("admin:users.changeRoleSuccess"), "success");
       setShowRoleModal(false);
       setSelectedUser(null);
       fetchUsers();
     } catch (error) {
       console.error("Failed to change role:", error);
-      addToast(error.message || "Thay đổi vai trò thất bại", "error");
+      addToast(error.message || t("admin:users.changeRoleFailed"), "error");
     } finally {
       setProcessingUserId(null);
     }
@@ -193,14 +196,14 @@ export default function AdminUsers() {
       !newUser.password ||
       !newUser.fullName
     ) {
-      addToast("Vui lòng điền đầy đủ các trường bắt buộc", "error");
+      addToast(t("admin:users.createRequired"), "error");
       return;
     }
 
     setIsCreating(true);
     try {
       await userApi.createUser(newUser);
-      addToast("Tạo người dùng thành công!", "success");
+      addToast(t("admin:users.createSuccess"), "success");
       setShowCreateModal(false);
       setNewUser({
         username: "",
@@ -211,17 +214,17 @@ export default function AdminUsers() {
       });
       fetchUsers(); // Refresh list
     } catch (error) {
-      // Map backend error codes to Vietnamese messages
+      // Map backend error codes to localized messages
       const backendMessage = error.data?.message || error.message || "";
       const errorMessages = {
-        EMAIL_ALREADY_EXISTS: "Email đã tồn tại trong hệ thống",
-        USERNAME_ALREADY_EXISTS: "Tên đăng nhập đã tồn tại",
-        ROLE_NOT_FOUND: "Role không hợp lệ",
+        EMAIL_ALREADY_EXISTS: t("admin:users.errors.emailExists"),
+        USERNAME_ALREADY_EXISTS: t("admin:users.errors.usernameExists"),
+        ROLE_NOT_FOUND: t("admin:users.errors.roleNotFound"),
       };
       const displayMessage =
         errorMessages[backendMessage] ||
         backendMessage ||
-        "Tạo user thất bại. Vui lòng thử lại.";
+        t("admin:users.createFailed");
       addToast(displayMessage, "error");
     } finally {
       setIsCreating(false);
@@ -230,21 +233,21 @@ export default function AdminUsers() {
 
   const getRoleLabel = (roleId) => {
     switch (roleId) {
-      case 1: return { name: "Quản trị viên", color: "#ef4444" };
-      case 2: return { name: "Quản lý", color: "#10b981" };
-      case 3: return { name: "Người gán nhãn", color: "#3b82f6" };
-      case 4: return { name: "Người đánh giá", color: "#f59e0b" };
-      default: return { name: "Không xác định", color: "#6b7280" };
+      case 1: return { name: translateRole("ADMIN"), color: "#ef4444" };
+      case 2: return { name: translateRole("MANAGER"), color: "#10b981" };
+      case 3: return { name: translateRole("ANNOTATOR"), color: "#3b82f6" };
+      case 4: return { name: translateRole("REVIEWER"), color: "#f59e0b" };
+      default: return { name: translateRole("UNKNOWN"), color: "#6b7280" };
     }
   };
 
   const getRoleLabelFromName = (roleName) => {
     switch (roleName?.toUpperCase()) {
-      case "ANNOTATOR": return { name: "Người gán nhãn", color: "#3b82f6" };
-      case "MANAGER": return { name: "Quản lý", color: "#10b981" };
-      case "REVIEWER": return { name: "Người đánh giá", color: "#f59e0b" };
-      case "ADMIN": return { name: "Quản trị viên", color: "#ef4444" };
-      default: return { name: roleName || "Không xác định", color: "#6b7280" };
+      case "ANNOTATOR": return { name: translateRole("ANNOTATOR"), color: "#3b82f6" };
+      case "MANAGER": return { name: translateRole("MANAGER"), color: "#10b981" };
+      case "REVIEWER": return { name: translateRole("REVIEWER"), color: "#f59e0b" };
+      case "ADMIN": return { name: translateRole("ADMIN"), color: "#ef4444" };
+      default: return { name: roleName || translateRole("UNKNOWN"), color: "#6b7280" };
     }
   };
 
@@ -283,6 +286,23 @@ export default function AdminUsers() {
     }
   };
 
+  const getStatusLabel = (status) => {
+    switch (status?.toLowerCase()) {
+      case "active":
+        return t("admin:users.statuses.active");
+      case "pending":
+        return t("admin:users.statuses.pending");
+      case "banned":
+        return t("admin:users.statuses.banned");
+      case "suspended":
+        return t("admin:users.statuses.suspended");
+      case "inactive":
+        return t("admin:users.statuses.inactive");
+      default:
+        return status || t("admin:users.statuses.unknown");
+    }
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif" }}>
       <main style={{ padding: "32px 40px", width: "100%" }}>
@@ -307,7 +327,7 @@ export default function AdminUsers() {
                 letterSpacing: "0.1em",
                 marginBottom: "4px"
               }}>
-                Quản lý hệ thống
+                {t("admin:users.systemManagement")}
               </p>
               <h1 style={{
                 fontSize: "28px",
@@ -316,10 +336,10 @@ export default function AdminUsers() {
                 letterSpacing: "-0.02em",
                 marginBottom: "8px"
               }}>
-                Quản lý người dùng
+                {t("admin:users.title")}
               </h1>
               <p style={{ fontSize: "14px", color: T.textMuted }}>
-                Quản lý người dùng và phân quyền trong hệ thống
+                {t("admin:users.subtitle")}
               </p>
             </div>
             <button
@@ -339,7 +359,7 @@ export default function AdminUsers() {
                 transition: "all .15s"
               }}
             >
-              Tạo người dùng
+              {t("admin:users.create")}
             </button>
           </div>
 
@@ -348,7 +368,7 @@ export default function AdminUsers() {
             {[
               { 
                 value: "all", 
-                label: "Tất cả", 
+                label: t("admin:users.filters.all"), 
                 count: users.filter((u) => {
                   const isBanned = u.status?.toLowerCase() === "banned" || 
                                    u.status?.toLowerCase() === "suspended" || 
@@ -358,20 +378,20 @@ export default function AdminUsers() {
               },
               {
                 value: "pending",
-                label: "Chờ duyệt",
+                label: t("admin:users.filters.pending"),
                 count: users.filter(
                   (u) => u.status?.toLowerCase() === "pending",
                 ).length,
               },
               {
                 value: "active",
-                label: "Hoạt động",
+                label: t("admin:users.filters.active"),
                 count: users.filter((u) => u.status?.toLowerCase() === "active")
                   .length,
               },
               {
                 value: "banned",
-                label: "Bị cấm",
+                label: t("admin:users.filters.banned"),
                 count: users.filter(
                   (u) => u.status?.toLowerCase() === "banned" || u.status?.toLowerCase() === "suspended" || u.status?.toLowerCase() === "inactive",
                 ).length,
@@ -420,7 +440,7 @@ export default function AdminUsers() {
                 <div style={{ fontSize: "32px", marginBottom: "16px" }}>
                   <span className="material-symbols-outlined" style={{ fontSize: "32px", color: T.textMuted, animation: "spin 1s linear infinite" }}>progress_activity</span>
                 </div>
-                <p style={{ fontSize: "13px" }}>Đang tải người dùng...</p>
+                <p style={{ fontSize: "13px" }}>{t("admin:users.loading")}</p>
               </div>
             ) : users.length === 0 ? (
               <div style={{
@@ -429,10 +449,10 @@ export default function AdminUsers() {
                 padding: "64px 0"
               }}>
                 <p style={{ fontSize: "16px", fontWeight: 600, marginBottom: "8px", color: T.textPrimary }}>
-                  Không tìm thấy người dùng
+                  {t("admin:users.emptyTitle")}
                 </p>
                 <p style={{ fontSize: "13px" }}>
-                  Nhấn "Tạo người dùng" để thêm người dùng đầu tiên
+                  {t("admin:users.emptyHint")}
                 </p>
               </div>
             ) : (
@@ -446,12 +466,12 @@ export default function AdminUsers() {
                   borderBottom: `1px solid ${T.border}`,
                   gap: "12px"
                 }}>
-                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>NGƯỜI DÙNG</p>
-                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>EMAIL</p>
-                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>VAI TRÒ</p>
-                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>TRẠNG THÁI</p>
-                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>NGÀY TẠO</p>
-                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>THAO TÁC</p>
+                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("admin:users.table.user")}</p>
+                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("admin:users.table.email")}</p>
+                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("admin:users.table.role")}</p>
+                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("admin:users.table.status")}</p>
+                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("admin:users.table.createdAt")}</p>
+                  <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("admin:users.table.actions")}</p>
                 </div>
 
                 {/* Table Body */}
@@ -531,14 +551,13 @@ export default function AdminUsers() {
                           background: `${getStatusColor(u.status)}20`,
                           color: getStatusColor(u.status)
                         }}>
-                          {u.status === 'active' ? 'Hoạt động' : 
-                           u.status === 'pending' ? 'Chờ duyệt' : 
-                           u.status === 'banned' || u.status === 'suspended' || u.status === 'inactive' ? 'Bị cấm' : 
-                           u.status || "Hoạt động"}
+                          {getStatusLabel(u.status)}
                         </span>
                         <span style={{ fontSize: "12px", color: T.textMuted }}>
                           {u.createdAt
-                            ? new Date(u.createdAt).toLocaleDateString()
+                            ? new Date(u.createdAt).toLocaleDateString(
+                                i18n.language === "en" ? "en-US" : "vi-VN",
+                              )
                             : "-"}
                         </span>
                         <div>
@@ -563,7 +582,7 @@ export default function AdminUsers() {
                                   fontFamily: "inherit"
                                 }}
                               >
-                                ✔ Chấp nhận
+                                {`✔ ${t("admin:users.actions.approve")}`}
                               </button>
                               <button
                                 onClick={() => handleRejectUser(u.userId)}
@@ -584,7 +603,7 @@ export default function AdminUsers() {
                                   fontFamily: "inherit"
                                 }}
                               >
-                                ✖ Từ chối
+                                {`✖ ${t("admin:users.actions.reject")}`}
                               </button>
                             </div>
                           ) : (u.status?.toLowerCase() === "banned" || 
@@ -609,7 +628,7 @@ export default function AdminUsers() {
                                 fontFamily: "inherit"
                               }}
                             >
-                              Bỏ cấm
+                              {t("admin:users.actions.unban")}
                             </button>
                           ) : u.roleName && u.roleName.toUpperCase() !== "ADMIN" ? (
                             <div style={{ display: "flex", gap: "8px" }}>
@@ -631,9 +650,9 @@ export default function AdminUsers() {
                                   transition: "all .15s",
                                   fontFamily: "inherit"
                                 }}
-                                title="Thay đổi vai trò"
+                                title={t("admin:users.actions.changeRole")}
                               >
-                                Vai trò
+                                {t("admin:users.actions.changeRole")}
                               </button>
                               <button
                                 onClick={() => handleBanUser(u.userId)}
@@ -653,9 +672,9 @@ export default function AdminUsers() {
                                   transition: "all .15s",
                                   fontFamily: "inherit"
                                 }}
-                                title="Cấm người dùng"
+                                title={t("admin:users.actions.ban")}
                               >
-                                Cấm
+                                {t("admin:users.actions.ban")}
                               </button>
                             </div>
                           ) : null
@@ -678,9 +697,11 @@ export default function AdminUsers() {
                 borderTop: `1px solid ${T.border}`
               }}>
                 <div style={{ fontSize: "13px", color: T.textMuted }}>
-                  Hiển thị {indexOfFirstUser + 1}-
-                  {Math.min(indexOfLastUser, filteredUsers.length)} /{" "}
-                  {filteredUsers.length} người dùng
+                  {t("admin:users.showing", {
+                    start: indexOfFirstUser + 1,
+                    end: Math.min(indexOfLastUser, filteredUsers.length),
+                    total: filteredUsers.length,
+                  })}
                 </div>
                 <div style={{ display: "flex", gap: "8px" }}>
                   <button
@@ -704,7 +725,7 @@ export default function AdminUsers() {
                     onMouseEnter={(e) => currentPage !== 1 && (e.currentTarget.style.background = T.surfaceHover)}
                     onMouseLeave={(e) => currentPage !== 1 && (e.currentTarget.style.background = T.surface)}
                   >
-                    ← Trước
+                    {`← ${t("admin:users.pagination.prev")}`}
                   </button>
                   <div style={{
                     padding: "8px 16px",
@@ -715,7 +736,10 @@ export default function AdminUsers() {
                     color: T.brand,
                     fontWeight: 700
                   }}>
-                    {currentPage} / {totalPages}
+                    {t("admin:users.pagination.page", {
+                      current: currentPage,
+                      total: totalPages,
+                    })}
                   </div>
                   <button
                     onClick={() =>
@@ -738,7 +762,7 @@ export default function AdminUsers() {
                     onMouseEnter={(e) => currentPage !== totalPages && (e.currentTarget.style.background = T.surfaceHover)}
                     onMouseLeave={(e) => currentPage !== totalPages && (e.currentTarget.style.background = T.surface)}
                   >
-                    Tiếp →
+                    {`${t("admin:users.pagination.next")} →`}
                   </button>
                 </div>
               </div>
@@ -771,13 +795,13 @@ export default function AdminUsers() {
                   color: T.textPrimary,
                   marginBottom: "24px"
                 }}>
-                  Tạo người dùng mới
+                  {t("admin:users.createTitle")}
                 </h2>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div>
                     <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: T.textMuted, marginBottom: "6px" }}>
-                      Tên đăng nhập <span style={{ color: T.red }}>*</span>
+                      {t("admin:users.fields.username")} <span style={{ color: T.red }}>*</span>
                     </label>
                     <input
                       type="text"
@@ -796,7 +820,7 @@ export default function AdminUsers() {
                         fontFamily: "inherit",
                         outline: "none"
                       }}
-                      placeholder="johndoe"
+                      placeholder={t("admin:users.placeholders.username")}
                       onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
                       onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                     />
@@ -810,7 +834,7 @@ export default function AdminUsers() {
                       color: T.textMuted,
                       marginBottom: "6px"
                     }}>
-                      Email <span style={{ color: T.red }}>*</span>
+                      {t("admin:users.fields.email")} <span style={{ color: T.red }}>*</span>
                     </label>
                     <input
                       type="email"
@@ -829,7 +853,7 @@ export default function AdminUsers() {
                         fontFamily: "inherit",
                         outline: "none"
                       }}
-                      placeholder="john@example.com"
+                      placeholder={t("admin:users.placeholders.email")}
                       onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
                       onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                     />
@@ -837,7 +861,7 @@ export default function AdminUsers() {
 
                   <div>
                     <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: T.textMuted, marginBottom: "6px" }}>
-                      Họ và tên <span style={{ color: T.red }}>*</span>
+                      {t("admin:users.fields.fullName")} <span style={{ color: T.red }}>*</span>
                     </label>
                     <input
                       type="text"
@@ -856,7 +880,7 @@ export default function AdminUsers() {
                         fontFamily: "inherit",
                         outline: "none"
                       }}
-                      placeholder="John Doe"
+                      placeholder={t("admin:users.placeholders.fullName")}
                       onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
                       onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                     />
@@ -864,7 +888,7 @@ export default function AdminUsers() {
 
                   <div>
                     <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: T.textMuted, marginBottom: "6px" }}>
-                      Vai trò <span style={{ color: T.red }}>*</span>
+                      {t("admin:users.fields.role")} <span style={{ color: T.red }}>*</span>
                     </label>
                     <select
                       value={newUser.roleId}
@@ -873,15 +897,15 @@ export default function AdminUsers() {
                       onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
                       onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                     >
-                      <option value={2}>Quản lý</option>
-                      <option value={3}>Người gán nhãn</option>
-                      <option value={4}>Người đánh giá</option>
+                      <option value={2}>{translateRole("MANAGER")}</option>
+                      <option value={3}>{translateRole("ANNOTATOR")}</option>
+                      <option value={4}>{translateRole("REVIEWER")}</option>
                     </select>
                   </div>
 
                   <div>
                     <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: T.textMuted, marginBottom: "6px" }}>
-                      Mật khẩu <span style={{ color: T.red }}>*</span>
+                      {t("admin:users.fields.password")} <span style={{ color: T.red }}>*</span>
                     </label>
                     <input
                       type="password"
@@ -900,7 +924,7 @@ export default function AdminUsers() {
                         fontFamily: "inherit",
                         outline: "none"
                       }}
-                      placeholder="••••••••"
+                      placeholder={t("admin:users.placeholders.password")}
                       onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
                       onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                     />
@@ -927,7 +951,7 @@ export default function AdminUsers() {
                     onMouseEnter={(e) => !isCreating && (e.currentTarget.style.background = T.surfaceHover)}
                     onMouseLeave={(e) => !isCreating && (e.currentTarget.style.background = T.surface)}
                   >
-                    Hủy
+                    {t("common:actions.cancel")}
                   </button>
                   <button
                     onClick={handleCreateUser}
@@ -949,7 +973,9 @@ export default function AdminUsers() {
                     onMouseEnter={(e) => !isCreating && (e.currentTarget.style.background = T.brandHover)}
                     onMouseLeave={(e) => !isCreating && (e.currentTarget.style.background = T.brand)}
                   >
-                    {isCreating ? "Đang tạo..." : "Tạo"}
+                    {isCreating
+                      ? t("admin:users.createButtonLoading")
+                      : t("common:actions.create")}
                   </button>
                 </div>
               </div>
@@ -982,14 +1008,16 @@ export default function AdminUsers() {
                   color: T.textPrimary,
                   marginBottom: "8px"
                 }}>
-                  Thay đổi vai trò
+                  {t("admin:users.changeRoleTitle")}
                 </h2>
                 <p style={{
                   fontSize: "13px",
                   color: T.textMuted,
                   marginBottom: "24px"
                 }}>
-                  Thay đổi vai trò cho người dùng: <strong>{selectedUser.fullName || selectedUser.username}</strong>
+                  {t("admin:users.changeRoleDescription", {
+                    name: selectedUser.fullName || selectedUser.username,
+                  })}
                 </p>
 
                 <div>
@@ -1000,7 +1028,7 @@ export default function AdminUsers() {
                     color: T.textMuted,
                     marginBottom: "8px"
                   }}>
-                    Chọn vai trò mới <span style={{ color: T.red }}>*</span>
+                    {t("admin:users.selectNewRole")} <span style={{ color: T.red }}>*</span>
                   </label>
                   <select
                     value={newRole}
@@ -1020,9 +1048,9 @@ export default function AdminUsers() {
                     onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
                     onBlur={(e) => e.currentTarget.style.borderColor = T.border}
                   >
-                    <option value={2}>Quản lý</option>
-                    <option value={3}>Người gán nhãn</option>
-                    <option value={4}>Người đánh giá</option>
+                    <option value={2}>{translateRole("MANAGER")}</option>
+                    <option value={3}>{translateRole("ANNOTATOR")}</option>
+                    <option value={4}>{translateRole("REVIEWER")}</option>
                   </select>
                 </div>
 
@@ -1049,7 +1077,7 @@ export default function AdminUsers() {
                     onMouseEnter={(e) => processingUserId !== selectedUser.userId && (e.currentTarget.style.background = T.surfaceHover)}
                     onMouseLeave={(e) => processingUserId !== selectedUser.userId && (e.currentTarget.style.background = T.surface)}
                   >
-                    Hủy
+                    {t("common:actions.cancel")}
                   </button>
                   <button
                     onClick={handleChangeRole}
@@ -1071,7 +1099,9 @@ export default function AdminUsers() {
                     onMouseEnter={(e) => processingUserId !== selectedUser.userId && (e.currentTarget.style.background = T.brandHover)}
                     onMouseLeave={(e) => processingUserId !== selectedUser.userId && (e.currentTarget.style.background = T.brand)}
                   >
-                    {processingUserId === selectedUser.userId ? "Đang xử lý..." : "Lưu thay đổi"}
+                    {processingUserId === selectedUser.userId
+                      ? t("admin:users.processing")
+                      : t("admin:users.actions.saveChanges")}
                   </button>
                 </div>
               </div>

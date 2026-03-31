@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
@@ -145,6 +146,7 @@ function Field({ label, type = 'text', placeholder, value, onChange, error }) {
 /* ─── Login Form ─── */
 function LoginForm({ onSwitch }) {
   const navigate = useNavigate();
+  const { t } = useTranslation(["auth"]);
   const { login } = useAuth();
   const { addToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -154,13 +156,13 @@ function LoginForm({ onSwitch }) {
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!username || !password) {
-      addToast('Vui lòng nhập đầy đủ thông tin', 'error');
+      addToast(t('auth:login.required'), 'error');
       return;
     }
     setIsLoading(true);
     try {
       const user = await login({ username, password });
-      addToast(`Chào mừng trở lại, ${user.username}!`, 'success');
+      addToast(t('auth:login.success', { username: user.username }), 'success');
       const roleRoutes = {
         ANNOTATOR: '/annotator/tasks',
         REVIEWER: '/reviewer/queue',
@@ -169,7 +171,7 @@ function LoginForm({ onSwitch }) {
       };
       navigate(roleRoutes[user.role] || '/');
     } catch (error) {
-      addToast(error.message || 'Đăng nhập thất bại', 'error');
+      addToast(error.message || t('auth:login.failed'), 'error');
     } finally {
       setIsLoading(false);
     }
@@ -177,8 +179,8 @@ function LoginForm({ onSwitch }) {
 
   return (
     <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <Field label="Tên đăng nhập" placeholder="username" value={username} onChange={e => setUsername(e.target.value)} />
-      <Field label="Mật khẩu" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} />
+      <Field label={t('auth:login.fields.username.label')} placeholder={t('auth:login.fields.username.placeholder')} value={username} onChange={e => setUsername(e.target.value)} />
+      <Field label={t('auth:login.fields.password.label')} type="password" placeholder={t('auth:login.fields.password.placeholder')} value={password} onChange={e => setPassword(e.target.value)} />
 
       <button
         className="login-btn"
@@ -194,13 +196,13 @@ function LoginForm({ onSwitch }) {
           fontFamily: 'inherit', boxShadow: '0 4px 24px rgba(37,99,235,0.5)',
         }}
       >
-        {isLoading ? 'ĐANG XÁC THỰC...' : 'ĐĂNG NHẬP'}
+        {isLoading ? t('auth:login.authenticating') : t('auth:login.submit')}
       </button>
 
       <div style={{ textAlign: 'center' }}>
         <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>
-          Chưa có tài khoản?{' '}
-          <button type="button" className="switch-link" onClick={onSwitch}>Đăng ký</button>
+          {t('auth:login.newAccount')}{' '}
+          <button type="button" className="switch-link" onClick={onSwitch}>{t('auth:login.switchToRegister')}</button>
         </p>
       </div>
     </form>
@@ -209,6 +211,7 @@ function LoginForm({ onSwitch }) {
 
 /* ─── Register Form ─── */
 function RegisterForm({ onSwitch }) {
+  const { t } = useTranslation(["auth"]);
   const { register } = useAuth();
   const { addToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -222,11 +225,11 @@ function RegisterForm({ onSwitch }) {
 
   const validate = () => {
     const errs = {};
-    if (!form.username.trim() || form.username.length < 3) errs.username = 'Tối thiểu 3 ký tự';
-    if (!form.fullName.trim()) errs.fullName = 'Bắt buộc';
-    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) errs.email = 'Email không hợp lệ';
-    if (!form.password || form.password.length < 6) errs.password = 'Tối thiểu 6 ký tự';
-    if (form.password !== form.confirmPassword) errs.confirmPassword = 'Mật khẩu không khớp';
+    if (!form.username.trim() || form.username.length < 3) errs.username = t('auth:register.validation.shortMin3');
+    if (!form.fullName.trim()) errs.fullName = t('auth:register.validation.shortRequired');
+    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) errs.email = t('auth:register.validation.emailInvalid');
+    if (!form.password || form.password.length < 6) errs.password = t('auth:register.validation.shortMin6');
+    if (form.password !== form.confirmPassword) errs.confirmPassword = t('auth:register.validation.passwordMismatch');
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -237,10 +240,10 @@ function RegisterForm({ onSwitch }) {
     setIsLoading(true);
     try {
       await register({ username: form.username, email: form.email, password: form.password, fullName: form.fullName });
-      addToast('Đăng ký thành công! Tài khoản đang chờ phê duyệt.', 'success');
+      addToast(t('auth:register.success'), 'success');
       onSwitch();
     } catch (error) {
-      addToast(error.message || 'Đăng ký thất bại', 'error');
+      addToast(error.message || t('auth:register.failed'), 'error');
     } finally {
       setIsLoading(false);
     }
@@ -249,13 +252,13 @@ function RegisterForm({ onSwitch }) {
   return (
     <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '13px' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-        <Field label="Tên đăng nhập" placeholder="username" value={form.username} onChange={set('username')} error={errors.username} />
-        <Field label="Họ và tên" placeholder="Nguyễn Văn A" value={form.fullName} onChange={set('fullName')} error={errors.fullName} />
+        <Field label={t('auth:register.fields.username.label')} placeholder={t('auth:register.fields.username.placeholder')} value={form.username} onChange={set('username')} error={errors.username} />
+        <Field label={t('auth:register.fields.fullName.label')} placeholder={t('auth:register.fields.fullName.placeholder')} value={form.fullName} onChange={set('fullName')} error={errors.fullName} />
       </div>
-      <Field label="Email" type="email" placeholder="email@example.com" value={form.email} onChange={set('email')} error={errors.email} />
+      <Field label={t('auth:register.fields.email.label')} type="email" placeholder={t('auth:register.fields.email.placeholder')} value={form.email} onChange={set('email')} error={errors.email} />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-        <Field label="Mật khẩu" type="password" placeholder="••••••••" value={form.password} onChange={set('password')} error={errors.password} />
-        <Field label="Xác nhận mật khẩu" type="password" placeholder="••••••••" value={form.confirmPassword} onChange={set('confirmPassword')} error={errors.confirmPassword} />
+        <Field label={t('auth:register.fields.password.label')} type="password" placeholder={t('auth:register.fields.password.placeholder')} value={form.password} onChange={set('password')} error={errors.password} />
+        <Field label={t('auth:register.fields.confirmPassword.label')} type="password" placeholder={t('auth:register.fields.confirmPassword.placeholder')} value={form.confirmPassword} onChange={set('confirmPassword')} error={errors.confirmPassword} />
       </div>
 
       <button
@@ -272,13 +275,13 @@ function RegisterForm({ onSwitch }) {
           fontFamily: 'inherit', boxShadow: '0 4px 24px rgba(109,40,217,0.5)',
         }}
       >
-        {isLoading ? 'ĐANG TẠO TÀI KHOẢN...' : 'TẠO TÀI KHOẢN'}
+        {isLoading ? t('auth:register.creating') : t('auth:register.submit')}
       </button>
 
       <div style={{ textAlign: 'center' }}>
         <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>
-          Đã có tài khoản?{' '}
-          <button type="button" className="switch-link" onClick={onSwitch}>Đăng nhập</button>
+          {t('auth:register.hasAccount')}{' '}
+          <button type="button" className="switch-link" onClick={onSwitch}>{t('auth:register.switchToLogin')}</button>
         </p>
       </div>
     </form>
@@ -288,6 +291,7 @@ function RegisterForm({ onSwitch }) {
 /* ─── Main Page ─── */
 export default function Login() {
   const [mode, setMode] = useState('login'); // 'login' | 'register'
+  const { t } = useTranslation(["auth"]);
 
   const isRegister = mode === 'register';
 
@@ -362,7 +366,7 @@ export default function Login() {
                 letterSpacing: '0.22em', textTransform: 'uppercase',
                 color: 'rgba(255,255,255,0.55)',
               }}>
-                Nền tảng gán nhãn dữ liệu
+                {t('auth:marketing.eyebrow')}
               </span>
             </div>
             <h1 style={{
@@ -370,21 +374,19 @@ export default function Login() {
               lineHeight: 1.06, letterSpacing: '-0.02em',
               margin: '0 0 24px 0', color: '#fff',
             }}>
-              Gán nhãn<br />dữ liệu<br />
+              {t('auth:marketing.titleLine1')}<br />{t('auth:marketing.titleLine2')}<br />
               <span style={{
                 background: 'linear-gradient(90deg, #60a5fa 0%, #93c5fd 60%, #bfdbfe 100%)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               }}>
-                chính xác hơn
+                {t('auth:marketing.titleAccent')}
               </span>
             </h1>
             <p style={{
               fontSize: '14px', color: 'rgba(255,255,255,0.55)',
               lineHeight: 1.85, margin: '0 0 36px 0', maxWidth: '380px',
             }}>
-              Quản lý, phân công và theo dõi tiến độ gán nhãn
-              dữ liệu ngay trên một nền tảng. Được tin dùng
-              bởi các nhóm ở mọi quy mô, cho dữ liệu ở mọi quy mô.
+              {t('auth:marketing.description')}
             </p>
           </div>
 
@@ -422,13 +424,13 @@ export default function Login() {
                 <h2 style={{
                   fontSize: '28px', fontWeight: 900,
                   color: '#fff', letterSpacing: '-0.02em', margin: '0 0 6px 0',
-                }}>DataLabel</h2>
+                }}>{t('common:appName')}</h2>
                 <p style={{
                   fontSize: '9.5px', fontWeight: 700,
                   letterSpacing: '0.22em', textTransform: 'uppercase',
                   color: 'rgba(255,255,255,0.38)', margin: 0,
                 }}>
-                  {isRegister ? 'Tạo tài khoản mới' : 'Hệ thống gán nhãn dữ liệu nội bộ'}
+                  {isRegister ? t('auth:register.title') : t('auth:login.subtitle')}
                 </p>
               </div>
 
@@ -454,9 +456,9 @@ export default function Login() {
                   justifyContent: 'center', gap: '8px', margin: 0,
                 }}>
                   <span style={{ width: '3px', height: '3px', background: '#60a5fa', borderRadius: '50%', display: 'inline-block' }} />
-                  Truy cập hạn chế
+                  {t('auth:marketing.restricted')}
                   <span style={{ width: '3px', height: '3px', background: '#60a5fa', borderRadius: '50%', display: 'inline-block' }} />
-                  Chỉ nội bộ
+                  {t('auth:marketing.internalOnly')}
                 </p>
               </div>
             </div>

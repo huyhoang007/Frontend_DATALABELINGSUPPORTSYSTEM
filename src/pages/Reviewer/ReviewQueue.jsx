@@ -1,8 +1,10 @@
 import * as React from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useTranslation } from "react-i18next";
 import reviewApi from "../../api/reviewApi";
+import { useAuth } from "../../context/AuthContext";
+import { translateAssignmentStatus } from "../../i18n/helpers";
 
 // Bảng màu Modern Enterprise UI
 const T = {
@@ -35,6 +37,7 @@ const STATUS_STYLES = {
 };
 
 export default function ReviewQueue() {
+  const { t } = useTranslation(["reviewer", "common"]);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
@@ -66,7 +69,7 @@ export default function ReviewQueue() {
           setError(
             err?.response?.data?.message ||
               err?.message ||
-              "Không thể tải danh sách phân công",
+              t("reviewer:queue.loadFailed"),
           );
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -132,14 +135,7 @@ export default function ReviewQueue() {
     setFilterByStatus(filterByStatus === status ? null : status);
   };
 
-  const getStatusLabel = (status) => {
-    if (status === "SUBMITTED") return "CHỜ DUYỆT";
-    if (status === "RE_SUBMITTED") return "NỘP LẠI";
-    if (status === "REJECTED") return "TỪ CHỐI";
-    if (status === "APPROVED") return "ĐÃ CHẤP NHẬN";
-    if (status === "PENDING") return "CHỜ XỬ LÝ";
-    return status;
-  };
+  const getStatusLabel = (status) => translateAssignmentStatus(status).toUpperCase();
 
   // Stats - count from all assignments except IN_PROGRESS, not just queue
   const pendingCount = assignments.filter(
@@ -195,7 +191,7 @@ export default function ReviewQueue() {
                 marginBottom: "4px",
               }}
             >
-              Hàng đợi đánh giá
+              {t("reviewer:queue.title")}
             </p>
             <h1
               style={{
@@ -206,19 +202,12 @@ export default function ReviewQueue() {
                 marginBottom: "8px",
               }}
             >
-              Hàng đợi đánh giá
+              {t("reviewer:queue.title")}
             </h1>
             <p style={{ fontSize: "14px", color: T.textMuted }}>
-              <span
-                style={{
-                  fontFamily: "monospace",
-                  color: T.brand,
-                  fontWeight: 700,
-                }}
-              >
-                {displayValue(queueTotalCount)}
-              </span>{" "}
-              nhiệm vụ đang chờ đánh giá.
+              {t("reviewer:queue.subtitle", {
+                count: displayValue(queueTotalCount),
+              })}
             </p>
           </div>
         </div>
@@ -234,28 +223,28 @@ export default function ReviewQueue() {
         >
           {[
             {
-              label: "Chờ duyệt",
+              label: t("reviewer:queue.kpi.submitted"),
               value: pendingCount,
               color: T.purple,
               bg: T.purpleBg,
               status: "SUBMITTED",
             },
             {
-              label: "Nộp lại",
+              label: t("reviewer:queue.kpi.resubmitted"),
               value: resubmittedCount,
               color: "#BF5700",
               bg: "#FFF0E6",
               status: "RE_SUBMITTED",
             },
             {
-              label: "Đã chấp nhận",
+              label: t("reviewer:queue.kpi.approved"),
               value: approvedCount,
               color: T.green,
               bg: T.greenBg,
               status: "APPROVED",
             },
             {
-              label: "Đã từ chối",
+              label: t("reviewer:queue.kpi.rejected"),
               value: rejectedCount,
               color: T.red,
               bg: T.redBg,
@@ -366,7 +355,7 @@ export default function ReviewQueue() {
                 outline: "none",
                 transition: "all .15s",
               }}
-              placeholder="Tìm kiếm theo project, annotator..."
+              placeholder={t("reviewer:queue.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={(e) => {
@@ -408,7 +397,7 @@ export default function ReviewQueue() {
                 fontSize: "13px",
               }}
             >
-              Đang tải...
+              {t("common:states.loading")}
             </span>
           </div>
         )}
@@ -476,7 +465,7 @@ export default function ReviewQueue() {
                   marginBottom: "8px",
                 }}
               >
-                Không có nhiệm vụ nào cần đánh giá
+                {t("reviewer:queue.noReviewTitle")}
               </h4>
               <p
                 style={{
@@ -485,7 +474,7 @@ export default function ReviewQueue() {
                   textAlign: "center",
                 }}
               >
-                Tuyệt vời! Bạn đã hoàn thành tất cả các đánh giá.
+                {t("reviewer:queue.noReviewHint")}
               </p>
             </div>
           </div>
@@ -534,7 +523,7 @@ export default function ReviewQueue() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  DỰ ÁN
+                  {t("reviewer:queue.table.project")}
                 </p>
                 <p
                   style={{
@@ -545,7 +534,7 @@ export default function ReviewQueue() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  NGƯỜI GÁN NHÃN
+                  {t("reviewer:queue.table.annotator")}
                 </p>
                 <p
                   style={{
@@ -556,7 +545,7 @@ export default function ReviewQueue() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  BỘ DỮ LIỆU
+                  {t("reviewer:queue.table.dataset")}
                 </p>
                 <p
                   style={{
@@ -567,7 +556,7 @@ export default function ReviewQueue() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  TRẠNG THÁI
+                  {t("reviewer:queue.table.status")}
                 </p>
                 <p
                   style={{
@@ -578,7 +567,7 @@ export default function ReviewQueue() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  TIẾN ĐỘ GÁN NHÃN
+                  {t("reviewer:queue.table.progress")}
                 </p>
                 <p
                   style={{
@@ -590,7 +579,7 @@ export default function ReviewQueue() {
                     textAlign: "right",
                   }}
                 >
-                  THAO TÁC
+                  {t("reviewer:queue.table.action")}
                 </p>
               </div>
             )}
@@ -713,7 +702,7 @@ export default function ReviewQueue() {
                               marginBottom: "4px",
                             }}
                           >
-                            Người gán nhãn
+                            {t("reviewer:queue.table.annotator")}
                           </p>
                           <p
                             style={{ fontSize: "12px", color: T.textSecondary }}
@@ -732,7 +721,7 @@ export default function ReviewQueue() {
                               marginBottom: "4px",
                             }}
                           >
-                            Tiến độ gán nhãn
+                            {t("reviewer:queue.table.progress")}
                           </p>
                           <div
                             style={{
@@ -791,7 +780,9 @@ export default function ReviewQueue() {
                           fontFamily: "inherit",
                         }}
                       >
-                        {status === "APPROVED" ? "Xem" : "Đánh giá"}
+                        {status === "APPROVED"
+                          ? t("reviewer:queue.actions.view")
+                          : t("reviewer:queue.actions.review")}
                       </button>
                     </div>
                   );
@@ -916,7 +907,7 @@ export default function ReviewQueue() {
                           letterSpacing: "0.06em",
                         }}
                       >
-                        Gán nhãn
+                        {t("common:labels.label")}
                       </span>
                     </div>
 
@@ -952,7 +943,9 @@ export default function ReviewQueue() {
                           (e.currentTarget.style.background = T.brand)
                         }
                       >
-                        {status === "APPROVED" ? "Xem" : "Đánh giá"}
+                        {status === "APPROVED"
+                          ? t("reviewer:queue.actions.view")
+                          : t("reviewer:queue.actions.review")}
                       </button>
                     </div>
                   </div>
@@ -972,19 +965,21 @@ export default function ReviewQueue() {
               fontWeight: 500,
             }}
           >
-            Hiển thị {reviewableAssignments.length} trong tổng số{" "}
-            {filterByStatus === "SUBMITTED"
-              ? pendingCount
-              : filterByStatus === "RE_SUBMITTED"
-                ? resubmittedCount
-                : filterByStatus === "APPROVED"
-                  ? approvedCount
-                  : filterByStatus === "REJECTED"
-                    ? rejectedCount
-                    : filterByStatus === "QUEUE"
-                      ? queueTotalCount
-                      : assignments.length}{" "}
-            nhiệm vụ
+            {t("reviewer:queue.showingCount", {
+              shown: reviewableAssignments.length,
+              total:
+                filterByStatus === "SUBMITTED"
+                  ? pendingCount
+                  : filterByStatus === "RE_SUBMITTED"
+                    ? resubmittedCount
+                    : filterByStatus === "APPROVED"
+                      ? approvedCount
+                      : filterByStatus === "REJECTED"
+                        ? rejectedCount
+                        : filterByStatus === "QUEUE"
+                          ? queueTotalCount
+                          : assignments.length,
+            })}
           </p>
         )}
       </div>

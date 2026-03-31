@@ -40,6 +40,7 @@ import { ManagerLayout } from "./layouts/ManagerLayout";
 import { AdminLayout } from "./layouts/AdminLayout";
 import { AnnotatorLayout } from "./layouts/AnnotatorLayout";
 import { ReviewerLayout } from "./layouts/ReviewerLayout";
+import { LanguageSwitcher } from "./components/i18n/LanguageSwitcher";
 
 // Helper to get role-based redirect
 function getRoleBasedRedirectWrapper() {
@@ -59,7 +60,7 @@ function App() {
     <ThemeProvider>
       <div className="min-h-screen bg-background text-foreground">
         <BrowserRouter>
-
+          <LanguageSwitcher />
           <Routes>
             <Route
               path="/"

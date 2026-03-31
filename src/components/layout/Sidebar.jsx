@@ -2,32 +2,35 @@ import * as React from "react";
 import { cn } from "../../utils/cn";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useTranslation } from "react-i18next";
+import { translateRole } from "../../i18n/helpers";
 
 export function Sidebar() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const { t } = useTranslation(["common"]);
 
     // Define role-specific navigation links
     const adminLinks = [
-        { to: "/admin/dashboard", label: "Tổng quan", icon: "dashboard" },
-        { to: "/admin/users", label: "Quản lý người dùng", icon: "group" },
-        { to: "/admin/logs", label: "Theo dõi nhật ký", icon: "history" },
+        { to: "/admin/dashboard", label: t("common:nav.overview"), icon: "dashboard" },
+        { to: "/admin/users", label: t("common:nav.users"), icon: "group" },
+        { to: "/admin/logs", label: t("common:nav.activityLogs"), icon: "history" },
     ];
 
     const managerLinks = [
-        { to: "/manager/dashboard", label: "Tổng quan", icon: "dashboard" },
-        { to: "/manager/projects", label: "Dự án", icon: "folder" },
-        { to: "/manager/labels", label: "Tạo nhãn", icon: "label" },
-        { to: "/manager/policies", label: "Tạo policy", icon: "policy" },
+        { to: "/manager/dashboard", label: t("common:nav.overview"), icon: "dashboard" },
+        { to: "/manager/projects", label: t("common:nav.projects"), icon: "folder" },
+        { to: "/manager/labels", label: t("common:nav.createLabel"), icon: "label" },
+        { to: "/manager/policies", label: t("common:nav.createPolicy"), icon: "policy" },
     ];
 
     const annotatorLinks = [
-        { to: "/annotator/dashboard", label: "Tổng quan", icon: "dashboard" },
-        { to: "/annotator/tasks", label: "Nhiệm vụ của tôi", icon: "assignment" },
+        { to: "/annotator/dashboard", label: t("common:nav.overview"), icon: "dashboard" },
+        { to: "/annotator/tasks", label: t("common:nav.myTasks"), icon: "assignment" },
     ];
 
     const reviewerLinks = [
-        { to: "/reviewer/queue", label: "Hàng đợi đánh giá", icon: "checklist" },
+        { to: "/reviewer/queue", label: t("common:nav.reviewQueue"), icon: "checklist" },
     ];
 
     // Select links based on user role (source of truth from AuthContext)
@@ -38,7 +41,7 @@ export function Sidebar() {
     else links = managerLinks;
 
     // Determine role display and badge
-    const roleDisplay = user?.role === "ADMIN" ? "Quản trị viên" : user?.role === "ANNOTATOR" ? "Người gán nhãn" : user?.role === "REVIEWER" ? "Người đánh giá" : "Quản lý";
+    const roleDisplay = translateRole(user?.role);
     const roleBadge = user?.role === "ADMIN" ? "AD" : user?.role === "ANNOTATOR" ? "AN" : user?.role === "REVIEWER" ? "RV" : "MG";
 
     const handleLogout = () => {
@@ -107,7 +110,7 @@ export function Sidebar() {
                     </div>
                     <div className="ml-3">
                         <p className="text-sm font-medium text-foreground">{roleDisplay}</p>
-                        <p className="text-xs text-muted-foreground group-hover:text-red-500 transition-colors">Đăng xuất</p>
+                        <p className="text-xs text-muted-foreground group-hover:text-red-500 transition-colors">{t("common:actions.logout")}</p>
                     </div>
                 </div>
             </div>

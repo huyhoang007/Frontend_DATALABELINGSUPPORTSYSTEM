@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { policiesAPI } from "../../services/api";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -25,6 +26,7 @@ const SEVERITY_STYLES: Record<string, string> = {
 };
 
 export default function ErrorTypes() {
+    const { t } = useTranslation(["manager", "common"]);
     const navigate = useNavigate();
     const [items, setItems] = useState<PolicyItem[]>([]);
     const [deleteTarget, setDeleteTarget] = useState<PolicyItem | null>(null);
@@ -61,10 +63,10 @@ export default function ErrorTypes() {
     return (
         <div className="p-8 space-y-6 max-w-5xl">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-foreground">Loại lỗi</h1>
+                <h1 className="text-2xl font-bold text-foreground">{t("manager:errorTypes.title")}</h1>
                 <Button variant="secondary" onClick={() => navigate("/manager/error-types/new")}>
                     <span className="material-symbols-outlined text-base mr-1">add</span>
-                    Thêm loại lỗi
+                    {t("manager:errorTypes.create")}
                 </Button>
             </div>
 
@@ -72,21 +74,21 @@ export default function ErrorTypes() {
                 {loading ? (
                     <div className="text-center py-12">
                         <span className="material-symbols-outlined text-2xl text-muted-foreground animate-spin block mb-2">progress_activity</span>
-                        <p className="text-sm text-muted-foreground">Đang tải...</p>
+                        <p className="text-sm text-muted-foreground">{t("manager:errorTypes.loading")}</p>
                     </div>
                 ) : items.length === 0 ? (
                     <div className="text-center py-12">
                         <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2 block">bug_report</span>
-                        <p className="text-muted-foreground">Chưa có loại lỗi nào</p>
+                        <p className="text-muted-foreground">{t("manager:errorTypes.empty")}</p>
                     </div>
                 ) : (
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Tên</TableHead>
-                                <TableHead>Mức độ</TableHead>
-                                <TableHead>Mô tả</TableHead>
-                                <TableHead className="text-right">Hành động</TableHead>
+                                <TableHead>{t("manager:errorTypes.table.name")}</TableHead>
+                                <TableHead>{t("manager:errorTypes.table.severity")}</TableHead>
+                                <TableHead>{t("manager:errorTypes.table.description")}</TableHead>
+                                <TableHead className="text-right">{t("manager:errorTypes.table.action")}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -95,12 +97,12 @@ export default function ErrorTypes() {
                                     <TableCell className="font-medium">{item.errorName}</TableCell>
                                     <TableCell>
                                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${SEVERITY_STYLES[item.errorLevel] || "bg-muted text-muted-foreground"}`}>
-                                            {item.errorLevel}
+                                            {t(`manager:errorTypes.severity.${item.errorLevel}`, { defaultValue: item.errorLevel })}
                                         </span>
                                     </TableCell>
                                     <TableCell className="text-muted-foreground max-w-[200px] truncate">{item.description || "—"}</TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(item)} title="Xóa">
+                                        <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(item)} title={t("common:actions.delete")}>
                                             <span className="material-symbols-outlined text-base text-destructive">delete</span>
                                         </Button>
                                     </TableCell>
@@ -115,8 +117,10 @@ export default function ErrorTypes() {
                 isOpen={!!deleteTarget}
                 onClose={() => setDeleteTarget(null)}
                 onConfirm={handleDelete}
-                title="Xóa loại lỗi"
-                message={`Bạn có chắc muốn xóa "${deleteTarget?.errorName}"?`}
+                title={t("manager:errorTypes.deleteTitle")}
+                message={t("manager:errorTypes.deleteMessage", {
+                    name: deleteTarget?.errorName ?? "",
+                })}
                 isDestructive
             />
         </div>
