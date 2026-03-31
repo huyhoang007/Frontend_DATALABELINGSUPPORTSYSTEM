@@ -80,7 +80,18 @@ export default function ProjectData() {
     enabled: Boolean(numericProjectId),
     placeholderData: (previousData) => previousData,
     ...getHotspotQueryBehavior(30_000, 300_000),
+    // ✅ Auto-refresh datasets every 10 seconds to detect status changes
+    refetchInterval: 10_000,
   });
+
+  // ✅ Auto-refresh datasets to detect when reviewer approves annotations
+  useEffect(() => {
+    if (!numericProjectId) return;
+    const interval = setInterval(() => {
+      refetchDatasets();
+    }, 10_000);
+    return () => clearInterval(interval);
+  }, [numericProjectId, refetchDatasets]);
 
   const validateFile = (f: File): string | null => {
     const ext = "." + f.name.split(".").pop()?.toLowerCase();
