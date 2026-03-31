@@ -141,6 +141,7 @@ const ModernProjectsPage: React.FC = () => {
         raw_status: p.status ? p.status.toLowerCase() : "unknown",
         manager_id: p.managerId,
         manager: { full_name: legacyViewerName },
+        dataset_count: Number(p.datasetCount ?? p.dataset_count ?? 0),
         datasets: [],
       }));
 
@@ -638,7 +639,7 @@ const ModernProjectsPage: React.FC = () => {
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground">Datasets:</span>
                   <span className="font-semibold text-foreground">
-                    {project.datasets?.length || 0} datasets
+                    {project.dataset_count ?? project.datasets?.length ?? 0} datasets
                   </span>
                 </div>
               </div>

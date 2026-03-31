@@ -12,6 +12,11 @@ interface ManagerDashboardProps {
   onLogout?: () => void;
 }
 
+const resolveProjectId = (project: any) => project?.projectId ?? project?.project_id;
+
+const normalizeAssignmentStatus = (status?: string) =>
+  (status || "").toUpperCase();
+
 const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const [myProjects, setMyProjects] = useState<Project[]>([]);
@@ -38,10 +43,11 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
       const projectList = Array.isArray(response) ? response : [];
       // Map backend projectId to frontend project_id
       const mappedProjects = projectList.map((p: any) => ({
-        project_id: p.projectId || p.project_id,
+        project_id: resolveProjectId(p),
         name: p.name,
         data_type: p.type || p.dataType || p.data_type,
         status: p.status,
+        dataset_count: Number(p.datasetCount ?? p.dataset_count ?? 0),
         datasets: p.datasets,
         manager_id: p.managerId || p.manager_id,
       }));
@@ -73,12 +79,14 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
       
       const allAssignments: any[] = [];
       for (const project of projects) {
+        const projectId = resolveProjectId(project);
+        if (!projectId) continue;
         try {
-          const assignments: any = await assignmentApi.getAssignmentsByProject(project.project_id);
+          const assignments: any = await assignmentApi.getAssignmentsByProject(projectId);
           const assignmentList = Array.isArray(assignments) ? assignments : ((assignments as any)?.content || []);
           allAssignments.push(...assignmentList);
         } catch (err) {
-          console.error(`Failed to fetch assignments for project ${project.project_id}:`, err);
+          console.error(`Failed to fetch assignments for project ${projectId}:`, err);
         }
       }
       
@@ -92,13 +100,13 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
         
         const total = annotatorAssignments.length;
         const completed = annotatorAssignments.filter(
-          (a: any) => a.status?.toUpperCase() === 'COMPLETED' || a.status?.toUpperCase() === 'APPROVED'
+          (a: any) => ["COMPLETED", "APPROVED"].includes(normalizeAssignmentStatus(a.status))
         ).length;
         const inProgress = annotatorAssignments.filter(
-          (a: any) => a.status?.toUpperCase() === 'IN_PROGRESS'
+          (a: any) => ["IN_PROGRESS", "SUBMITTED", "RE_SUBMITTED", "REJECTED"].includes(normalizeAssignmentStatus(a.status))
         ).length;
         const pending = annotatorAssignments.filter(
-          (a: any) => a.status?.toUpperCase() === 'PENDING'
+          (a: any) => ["PENDING", "DRAFT"].includes(normalizeAssignmentStatus(a.status))
         ).length;
         
         // Calculate average progress percentage
@@ -209,7 +217,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
 
         <Card className="p-6 transition-all hover:shadow-md bg-white/80 dark:bg-slate-800/80">
           <div className="text-3xl font-bold text-foreground mb-1">
-            {myProjects.reduce((sum, p) => sum + (p.datasets?.length || 0), 0)}
+            {myProjects.reduce((sum, p: any) => sum + (p.dataset_count ?? p.datasets?.length ?? 0), 0)}
           </div>
           <div className="text-xs font-medium text-muted-foreground">Datasets</div>
         </Card>
@@ -256,7 +264,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
                           {project.name}
                         </h4>
                         <div className="text-xs text-muted-foreground truncate">
-                          {project.data_type} • {project.datasets?.length || 0} datasets
+                          {project.data_type} • {(project as any).dataset_count ?? project.datasets?.length ?? 0} datasets
                         </div>
                       </div>
                       <div className={`px-3 py-1 rounded-full text-[10px] font-bold border ${getStatusColor(project.status)}`}>
