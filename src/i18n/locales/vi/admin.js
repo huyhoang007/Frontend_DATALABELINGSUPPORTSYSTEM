@@ -145,8 +145,8 @@ const admin = {
   policies: {
     title: "Quản lý chính sách",
     subtitle: "Cấu hình chính sách và quy tắc toàn hệ thống",
-    create: "Tạo chính sách",
-    createTitle: "Tạo chính sách mới",
+    create: "Tạo lỗi",
+    createTitle: "Tạo lỗi mới",
     name: "Tên chính sách",
     description: "Mô tả",
     rules: "Quy tắc (JSON)",

@@ -37,6 +37,7 @@ interface Assignment {
   reviewerId: number;
   reviewerName: string;
   status: string;
+  displayStatus?: string;  // ← Backend trả về: "Đang xử lý", "Hoàn thành", etc
   progress: number;
   createdAt: string;
 }
@@ -588,6 +589,9 @@ export default function ProjectAssignments() {
                 </TableHeader>
                 <TableBody>
                   {assignments.map((task) => {
+                    // ✅ Ưu tiên dùng displayStatus (nếu backend trả về)
+                    // ✅ Nếu không có, fallback dùng status gốc
+                    const displayStatusText = task.displayStatus || translateAssignmentStatus(String(task.status || "PENDING").toUpperCase());
                     const status = String(
                       task.status || "PENDING",
                     ).toUpperCase();
@@ -620,7 +624,7 @@ export default function ProjectAssignments() {
                                 "bg-muted text-muted-foreground",
                             )}
                           >
-                            {translateAssignmentStatus(status)}
+                            {displayStatusText}  {/* ← Hiển thị displayStatus từ backend */}
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
