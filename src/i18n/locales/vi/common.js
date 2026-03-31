@@ -4,7 +4,7 @@ const common = {
     overview: "Tổng quan",
     projects: "Dự án",
     createLabel: "Tạo nhãn",
-    createPolicy: "Tạo chính sách",
+    createPolicy: "Tạo lỗi",
     myTasks: "Nhiệm vụ của tôi",
     reviewQueue: "Hàng đợi đánh giá",
     users: "Quản lý người dùng",

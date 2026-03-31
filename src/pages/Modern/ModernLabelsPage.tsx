@@ -685,15 +685,7 @@ const ModernLabelsPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-border/50">
-                  <div
-                    className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
-                    style={{
-                      backgroundColor: `${getLabelColor(label)}20`,
-                      color: getLabelColor(label),
-                    }}
-                  >
-                    {t("common:labels.id")}: {getLabelId(label)}
-                  </div>
+                  <div></div>
                   <div className="flex gap-2">
                     <Button
                       variant="ghost"
