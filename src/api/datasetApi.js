@@ -89,6 +89,15 @@ export const datasetApi = {
         return await apiClient.delete(`/api/items/${itemId}`);
     },
 
+    /**
+     * Delete an entire dataset
+     * @param {number} datasetId
+     * @returns {Promise<void>}
+     */
+    deleteDataset: async (datasetId) => {
+        return await apiClient.delete(`/api/datasets/${datasetId}`);
+    },
+
     // ─── Export ───────────────────────────────────────────────────────────────
 
     /**

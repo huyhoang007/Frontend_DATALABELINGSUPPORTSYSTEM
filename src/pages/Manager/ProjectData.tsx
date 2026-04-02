@@ -61,6 +61,11 @@ export default function ProjectData() {
   const [selectedDatasetId, setSelectedDatasetId] = useState<number | null>(null);
   const [selectedDatasetName, setSelectedDatasetName] = useState("");
 
+  // Delete dataset confirmation modal state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [datasetToDelete, setDatasetToDelete] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const showToast = useCallback((msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(""), 3000);
@@ -249,6 +254,24 @@ export default function ProjectData() {
       else if (s === 401) setError(t("manager:data.errors.sessionExpired"));
       else if (s === 403) setError(t("manager:data.errors.noPermission"));
       else setError(err?.message || t("manager:data.uploadFailed"));
+    }
+  };
+
+  const handleDeleteDataset = async () => {
+    if (!datasetToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await datasetApi.deleteDataset(datasetToDelete.datasetId);
+      showToast(t("manager:data.deleteSuccessToast"));
+      setDeleteConfirmOpen(false);
+      setDatasetToDelete(null);
+      await invalidateProjectDatasetData(queryClient, numericProjectId);
+      await refetchDatasets();
+    } catch (err: any) {
+      showToast(err?.message || t("manager:data.deleteFailedToast"));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -553,20 +576,35 @@ export default function ProjectData() {
                         : "—"}
                     </TableCell>
                     <TableCell className="text-right">
-                      <button
-                        onClick={() => {
-                          setSelectedDatasetId(ds.datasetId);
-                          setSelectedDatasetName(ds.name);
-                          setPreviewModalOpen(true);
-                        }}
-                        title={t("manager:data.table.viewImages")}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-base">
-                          preview
-                        </span>
-                        {t("common:actions.view")}
-                      </button>
+                      <div className="flex gap-1 justify-end">
+                        <button
+                          onClick={() => {
+                            setSelectedDatasetId(ds.datasetId);
+                            setSelectedDatasetName(ds.name);
+                            setPreviewModalOpen(true);
+                          }}
+                          title={t("manager:data.table.viewImages")}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-base">
+                            preview
+                          </span>
+                          {t("common:actions.view")}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setDatasetToDelete(ds);
+                            setDeleteConfirmOpen(true);
+                          }}
+                          title={t("manager:data.table.deleteDataset")}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30 transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-base">
+                            delete
+                          </span>
+                          {t("common:actions.delete")}
+                        </button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -589,6 +627,60 @@ export default function ProjectData() {
           }}
         />
       )}
+
+      {/* Delete Dataset Confirmation Modal */}
+      {deleteConfirmOpen && datasetToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-background rounded-lg shadow-lg max-w-md w-full mx-4">
+            <div className="p-6 space-y-4">
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-outlined text-2xl text-red-600 dark:text-red-400 mt-0.5">
+                  warning
+                </span>
+                <div>
+                  <h3 className="font-bold text-foreground">
+                    {t("manager:data.deleteConfirmTitle")}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {t("manager:data.deleteConfirmMessage", {
+                      datasetName: datasetToDelete.name,
+                    })}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => {
+                    setDeleteConfirmOpen(false);
+                    setDatasetToDelete(null);
+                  }}
+                  disabled={isDeleting}
+                  className="px-3 py-1.5 text-sm font-medium rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                >
+                  {t("common:actions.cancel")}
+                </button>
+                <button
+                  onClick={handleDeleteDataset}
+                  disabled={isDeleting}
+                  className="px-3 py-1.5 text-sm font-medium rounded bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                  {isDeleting ? (
+                    <>
+                      <span className="material-symbols-outlined text-sm animate-spin inline mr-1">
+                        progress_activity
+                      </span>
+                      {t("common:actions.deleting")}
+                    </>
+                  ) : (
+                    t("common:actions.delete")
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

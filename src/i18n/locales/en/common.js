@@ -22,6 +22,7 @@ const common = {
     createNew: "Create New",
     edit: "Edit",
     delete: "Delete",
+    deleting: "Deleting",
     view: "View",
     viewDetail: "View Detail",
     retry: "Retry",

@@ -22,6 +22,7 @@ const common = {
     createNew: "Tạo mới",
     edit: "Chỉnh sửa",
     delete: "Xóa",
+    deleting: "Đang xóa",
     view: "Xem",
     viewDetail: "Xem chi tiết",
     retry: "Thử lại",
