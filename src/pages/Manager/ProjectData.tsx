@@ -6,6 +6,7 @@ import { datasetApi } from "../../api/datasetApi";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
+import { ImagePreviewModal } from "../../components/Manager/ImagePreviewModal";
 import {
   fetchProjectDatasets,
   getHotspotQueryBehavior,
@@ -26,7 +27,6 @@ const BATCH_STATUS_MAP = {
     "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
   IN_PROGRESS:
     "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  REJECTED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
   COMPLETED:
     "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
 };
@@ -55,6 +55,11 @@ export default function ProjectData() {
   const [progress, setProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
   const [toast, setToast] = useState("");
+  
+  // Image preview modal state
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [selectedDatasetId, setSelectedDatasetId] = useState<number | null>(null);
+  const [selectedDatasetName, setSelectedDatasetName] = useState("");
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -193,8 +198,6 @@ export default function ProjectData() {
         return t("manager:data.batchStatuses.completed");
       case "IN_PROGRESS":
         return t("manager:data.batchStatuses.inProgress");
-      case "REJECTED":
-        return t("manager:data.batchStatuses.rejected");
       default:
         return t("manager:data.batchStatuses.pending");
     }
@@ -523,6 +526,7 @@ export default function ProjectData() {
                 <TableHead>{t("manager:data.table.files")}</TableHead>
                 <TableHead>{t("manager:data.table.status")}</TableHead>
                 <TableHead>{t("manager:data.table.createdAt")}</TableHead>
+                <TableHead className="text-right">{t("common:table.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -548,6 +552,22 @@ export default function ProjectData() {
                           )
                         : "—"}
                     </TableCell>
+                    <TableCell className="text-right">
+                      <button
+                        onClick={() => {
+                          setSelectedDatasetId(ds.datasetId);
+                          setSelectedDatasetName(ds.name);
+                          setPreviewModalOpen(true);
+                        }}
+                        title={t("manager:data.table.viewImages")}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-base">
+                          preview
+                        </span>
+                        {t("common:actions.view")}
+                      </button>
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -555,6 +575,20 @@ export default function ProjectData() {
           </Table>
         )}
       </Card>
+
+      {/* Image Preview Modal */}
+      {selectedDatasetId && (
+        <ImagePreviewModal
+          datasetId={selectedDatasetId}
+          datasetName={selectedDatasetName}
+          isOpen={previewModalOpen}
+          onClose={() => {
+            setPreviewModalOpen(false);
+            setSelectedDatasetId(null);
+            setSelectedDatasetName("");
+          }}
+        />
+      )}
     </div>
   );
 }

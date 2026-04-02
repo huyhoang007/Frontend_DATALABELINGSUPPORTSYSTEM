@@ -256,7 +256,8 @@ const manager = {
     format: "Định dạng",
     loadingDatasets: "Đang tải...",
     noDatasets: "Không có bộ dữ liệu",
-    approvedOnly: "Chỉ xuất các nhãn dữ liệu đã được duyệt. Các nhãn dữ liệu được duyệt sẽ được bao gồm trong file xuất.",
+    approvedOnly:
+      "Chỉ xuất các nhãn dữ liệu đã được duyệt. Các nhãn dữ liệu được duyệt sẽ được bao gồm trong file xuất.",
     batchStatus: "Trạng thái bộ dữ liệu",
     completedOnly:
       "Bộ dữ liệu chưa hoàn thành. Vui lòng đợi tất cả annotation được duyệt trước khi xuất dữ liệu.",
@@ -321,6 +322,7 @@ const manager = {
       files: "Files",
       status: "Trạng thái",
       createdAt: "Ngày tạo",
+      viewImages: "Xem ảnh trong batch này",
     },
     disabledReasons: {
       completed: "Dự án đã hoàn thành, chỉ có thể xuất dữ liệu",
@@ -339,6 +341,14 @@ const manager = {
       sessionExpired: "Hết phiên đăng nhập",
       noPermission: "Không có quyền upload",
     },
+  },
+  imagePreview: {
+    title: "Xem trước ảnh",
+    loading: "Đang tải ảnh...",
+    loadFailed: "Không thể tải ảnh",
+    noImages: "Không có ảnh trong batch này",
+    images: "ảnh",
+    showingImage: "Hiển thị ảnh {{current}} của {{total}}",
   },
   labelRules: {
     title: "Bộ nhãn",

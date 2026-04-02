@@ -324,6 +324,7 @@ const manager = {
       files: "Files",
       status: "Status",
       createdAt: "Created At",
+      viewImages: "View images in this batch",
     },
     disabledReasons: {
       completed: "Project is completed, export only is available",
@@ -342,6 +343,14 @@ const manager = {
       sessionExpired: "Session expired",
       noPermission: "You do not have permission to upload",
     },
+  },
+  imagePreview: {
+    title: "Image Preview",
+    loading: "Loading images...",
+    loadFailed: "Failed to load images",
+    noImages: "No images in this batch",
+    images: "images",
+    showingImage: "Showing image {{current}} of {{total}}",
   },
   labelRules: {
     title: "Label Rules",

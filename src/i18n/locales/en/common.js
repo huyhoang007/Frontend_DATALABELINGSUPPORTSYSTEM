@@ -74,6 +74,9 @@ const common = {
     policy: "Policy",
     unknown: "Unknown",
   },
+  table: {
+    actions: "Actions",
+  },
   empty: {
     noData: "No data",
     noProjects: "No projects",

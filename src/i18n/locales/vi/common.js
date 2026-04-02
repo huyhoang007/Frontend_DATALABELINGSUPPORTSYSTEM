@@ -74,6 +74,9 @@ const common = {
     policy: "Chính sách",
     unknown: "Không xác định",
   },
+  table: {
+    actions: "Thao tác",
+  },
   empty: {
     noData: "Không có dữ liệu",
     noProjects: "Không có dự án",
