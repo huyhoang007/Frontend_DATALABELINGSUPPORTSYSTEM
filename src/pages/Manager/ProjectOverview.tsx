@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOutletContext } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -47,16 +47,28 @@ export default function ProjectOverview() {
     }, [guidelineMessage]);
 
     const projectId = project?.projectId ?? project?.project_id;
+    type OverviewData = {
+        summary: any;
+        contributors: any[];
+        assignments: any[];
+        datasets: any[];
+        teamAverageScore: number;
+    };
+    const hotspot = getHotspotQueryBehavior(30_000, 300_000) as {
+        staleTime: number;
+        gcTime: number;
+        refetchOnMount: boolean | "always";
+    };
     const {
         data: overviewData,
         isLoading: loading,
         error,
-    } = useQuery({
+    } = useQuery<OverviewData>({
         queryKey: projectQueryKeys.overview(projectId),
         queryFn: () => fetchProjectOverview(projectId),
         enabled: Boolean(projectId),
-        placeholderData: (previousData) => previousData,
-        ...getHotspotQueryBehavior(30_000, 300_000),
+        placeholderData: (previousData: OverviewData | undefined) => previousData,
+        ...hotspot,
     });
     const errorMessage = error ? (error as any)?.message || String(error) : null;
 
@@ -135,6 +147,7 @@ export default function ProjectOverview() {
     const totalAnnotations = quality?.totalAnnotations ?? 0;
     const acceptedAnnotations = quality?.acceptedAnnotations ?? 0;
     const totalPolicyViolations = quality?.totalPolicyViolations ?? 0;
+    void totalPolicyViolations; // kept for future use
     const rawRejectedAnnotations = quality?.rejectedAnnotations ?? 0;
     const rejectedAnnotations = rawRejectedAnnotations;
     const reviewedAnnotations = acceptedAnnotations + rejectedAnnotations;
