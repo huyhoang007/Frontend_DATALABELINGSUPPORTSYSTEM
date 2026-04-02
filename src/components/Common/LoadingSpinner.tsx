@@ -10,25 +10,14 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 40,
 }) => {
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '200px',
-      gap: '12px',
-    }}>
-      <div style={{
-        width: size,
-        height: size,
-        border: '3px solid #e5e7eb',
-        borderTop: '3px solid #3b82f6',
-        borderRadius: '50%',
-        animation: 'spin 0.8s linear infinite',
-      }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <div className="flex flex-col items-center justify-center min-h-[200px] gap-3">
+      <div
+        className="rounded-full border-[3px] border-gray-200 border-t-blue-500 animate-spin"
+        style={{ width: size, height: size }}
+        aria-hidden="true"
+      />
       {message && (
-        <span style={{ fontSize: '14px', color: '#6b7280' }}>{message}</span>
+        <span className="text-sm text-gray-500">{message}</span>
       )}
     </div>
   );

@@ -1,10 +1,6 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
-/**
- * LabelSummaryPanel — assignment-level summary using current live annotations for
- * the active item and backend annotations for the remaining items.
- */
 export default function LabelSummaryPanel({
   workspace,
   currentItem,
@@ -125,150 +121,101 @@ export default function LabelSummaryPanel({
       : 0;
 
   return (
-    <div className="p-3 space-y-3 overflow-y-auto">
+    <div className="space-y-3 overflow-y-auto p-3">
       <div className="grid grid-cols-2 gap-2">
-        <div
-          className="rounded-lg p-2.5 text-center"
-          style={{ background: "#0e1621", border: "1px solid #1e2f42" }}
-        >
-          <div
-            className="text-xl font-bold tabular-nums"
-            style={{ color: "#00bfa5" }}
-          >
+        <div className="rounded-lg border border-slate-800 bg-slate-950 p-2.5 text-center">
+          <div className="text-xl font-bold tabular-nums text-emerald-400">
             {totalAnnotations}
           </div>
-          <div className="text-[10px] mt-0.5" style={{ color: "#4a6788" }}>
+          <div className="mt-0.5 text-[10px] text-slate-500">
             {t("workspace.summary.totalRegions")}
           </div>
         </div>
-        <div
-          className="rounded-lg p-2.5 text-center"
-          style={{ background: "#0e1621", border: "1px solid #1e2f42" }}
-        >
-          <div
-            className="text-xl font-bold tabular-nums"
-            style={{ color: "#7dd3fc" }}
-          >
+        <div className="rounded-lg border border-slate-800 bg-slate-950 p-2.5 text-center">
+          <div className="text-xl font-bold tabular-nums text-sky-300">
             {summary.length}
           </div>
-          <div className="text-[10px] mt-0.5" style={{ color: "#4a6788" }}>
+          <div className="mt-0.5 text-[10px] text-slate-500">
             {t("workspace.summary.labelTypes")}
           </div>
         </div>
       </div>
 
-      <div
-        className="rounded-lg p-2.5"
-        style={{ background: "#0e1621", border: "1px solid #1e2f42" }}
-      >
-        <div className="flex items-center justify-between mb-1.5">
-          <span
-            className="text-[10px] font-semibold uppercase tracking-wide"
-            style={{ color: "#4a6788" }}
-          >
+      <div className="rounded-lg border border-slate-800 bg-slate-950 p-2.5">
+        <div className="mb-1.5 flex items-center justify-between">
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
             {t("workspace.summary.imageCoverage")}
           </span>
-          <span
-            className="text-[10px] font-bold tabular-nums"
-            style={{ color: "#00bfa5" }}
-          >
+          <span className="text-[10px] font-bold tabular-nums text-emerald-400">
             {annotatedImageCount}/{totalImages}
           </span>
         </div>
-        <div
-          className="w-full h-1.5 rounded-full overflow-hidden"
-          style={{ background: "#1e2f42" }}
-        >
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
           <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${coveragePct}%`, background: "#00bfa5" }}
+            className="h-full rounded-full bg-emerald-400 transition-all duration-500"
+            style={{ width: `${coveragePct}%` }}
           />
         </div>
-        <div className="flex items-center justify-between mt-1.5">
-          <span className="text-[9px]" style={{ color: "#00bfa5" }}>
+        <div className="mt-1.5 flex items-center justify-between">
+          <span className="text-[9px] text-emerald-400">
             {t("workspace.summary.annotated", { count: annotatedImageCount })}
           </span>
-          <span className="text-[9px]" style={{ color: "#4a6788" }}>
+          <span className="text-[9px] text-slate-500">
             {t("workspace.summary.unannotated", { count: unannotatedCount })}
           </span>
         </div>
       </div>
 
       <div>
-        <div
-          className="flex items-center px-2 py-1.5 rounded-t"
-          style={{ background: "#0e1621", borderBottom: "1px solid #1e2f42" }}
-        >
-          <span
-            className="flex-1 text-[10px] font-semibold uppercase tracking-wide"
-            style={{ color: "#4a6788" }}
-          >
+        <div className="flex items-center rounded-t bg-slate-950 px-2 py-1.5 border-b border-slate-800">
+          <span className="flex-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
             {t("workspace.summary.label")}
           </span>
-          <span
-            className="text-[10px] font-semibold uppercase tracking-wide w-14 text-center"
-            style={{ color: "#4a6788" }}
-          >
+          <span className="w-14 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-500">
             {t("workspace.summary.shapes")}
           </span>
-          <span
-            className="text-[10px] font-semibold uppercase tracking-wide w-14 text-center"
-            style={{ color: "#4a6788" }}
-          >
+          <span className="w-14 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-500">
             {t("workspace.summary.images")}
           </span>
         </div>
 
-        <div
-          className="rounded-b overflow-hidden"
-          style={{ border: "1px solid #1e2f42", borderTop: "none" }}
-        >
+        <div className="overflow-hidden rounded-b border border-slate-800 border-t-0">
           {summary.length > 0 ? (
             summary.map((entry, idx) => (
               <div
                 key={entry.labelId}
-                className="flex items-center px-2 py-2 gap-2 transition-colors hover:bg-white/5"
-                style={{
-                  borderBottom:
-                    idx < summary.length - 1 ? "1px solid #1a2637" : "none",
-                  background: idx % 2 === 0 ? "transparent" : "rgba(0,0,0,0.15)",
-                }}
+                className={`flex items-center gap-2 px-2 py-2 transition-colors hover:bg-white/5 ${
+                  idx % 2 === 0 ? "bg-transparent" : "bg-black/15"
+                } ${idx < summary.length - 1 ? "border-b border-slate-900" : ""}`}
               >
                 <div
-                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
                   style={{ background: entry.colorCode }}
                 />
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <div
-                    className="text-xs font-medium truncate"
-                    style={{ color: "#cbd5e1" }}
+                    className="truncate text-xs font-medium text-slate-300"
                     title={entry.labelName}
                   >
                     {entry.labelName}
                   </div>
                   {entry.labelType && (
-                    <div className="text-[9px] uppercase" style={{ color: "#4a6788" }}>
+                    <div className="text-[9px] uppercase text-slate-500">
                       {entry.labelType}
                     </div>
                   )}
                 </div>
-                <span
-                  className="text-xs font-bold tabular-nums w-14 text-center"
-                  style={{ color: "#00bfa5" }}
-                >
+                <span className="w-14 text-center text-xs font-bold tabular-nums text-emerald-400">
                   {entry.shapeCount}
                 </span>
-                <span
-                  className="text-xs tabular-nums w-14 text-center"
-                  style={{ color: "#94a3b8" }}
-                >
+                <span className="w-14 text-center text-xs tabular-nums text-slate-400">
                   {entry.imageCount}/{totalImages}
                 </span>
               </div>
             ))
           ) : (
             <div className="flex items-center justify-center py-4">
-              <p className="text-[10px] text-center" style={{ color: "#4a6788" }}>
+              <p className="text-center text-[10px] text-slate-500">
                 {t("workspace.summary.empty")}
               </p>
             </div>
@@ -276,7 +223,7 @@ export default function LabelSummaryPanel({
         </div>
       </div>
 
-      <p className="text-[9px] text-center pt-1" style={{ color: "#2a3f55" }}>
+      <p className="pt-1 text-center text-[9px] text-slate-700">
         {t("workspace.summary.unsavedHint")}
       </p>
     </div>

@@ -1,34 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Card } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
 import { annotationApi } from "../../api/annotationApi";
 
-// Bảng màu Modern Enterprise UI (Atlassian/Jira style)
-const T = {
-  bg: "#F7F8F9",
-  surface: "#FFFFFF",
-  surfaceHover: "#F1F2F4",
-  border: "#DCDFE4",
-  borderStrong: "#B3B9C4",
-  textPrimary: "#172B4D",
-  textSecondary: "#44546F",
-  textMuted: "#626F86",
-  brand: "#0C66E4",
-  brandHover: "#0055CC",
-  brandLight: "#E9F2FF",
-  green: "#1F845A",
-  greenBg: "#DCFFF1",
-  amber: "#A54800",
-  amberBg: "#FFF7D6",
-  purple: "#5E4DB2",
-  purpleBg: "#F3F0FF",
-  red: "#DE350B",
-  redBg: "#FFEBE6",
-};
-
-/* ── Status tabs matching BE statuses ── */
 const TABS = [
   "ALL",
   "PENDING",
@@ -39,47 +13,39 @@ const TABS = [
   "REJECTED",
 ];
 
-/* ── Status badge styles ── */
-const STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> =
-  {
-    PENDING: { bg: T.amberBg, text: T.amber, dot: "#FF8B00" },
-    IN_PROGRESS: { bg: T.brandLight, text: T.brand, dot: T.brand },
-    SUBMITTED: { bg: T.purpleBg, text: T.purple, dot: T.purple },
-    RE_SUBMITTED: { bg: "#FFF3E0", text: "#BF5700", dot: "#BF5700" },
-    APPROVED: { bg: T.greenBg, text: T.green, dot: T.green },
-    REJECTED: { bg: T.redBg, text: T.red, dot: T.red },
-  };
+const STATUS_STYLES: Record<string, { badge: string; dot: string }> = {
+  PENDING: { badge: "bg-amber-100 text-amber-700", dot: "bg-amber-500" },
+  IN_PROGRESS: { badge: "bg-blue-100 text-blue-700", dot: "bg-blue-600" },
+  SUBMITTED: { badge: "bg-violet-100 text-violet-700", dot: "bg-violet-600" },
+  RE_SUBMITTED: { badge: "bg-orange-100 text-orange-700", dot: "bg-orange-600" },
+  APPROVED: { badge: "bg-emerald-100 text-emerald-700", dot: "bg-emerald-600" },
+  REJECTED: { badge: "bg-red-100 text-red-700", dot: "bg-red-600" },
+};
 
 interface AnnotatorDashboardProps {
   user: any;
 }
 
-const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
+const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
   const { t } = useTranslation(["annotator", "common"]);
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("ALL");
   const [search, setSearch] = useState("");
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [hoveredKpi, setHoveredKpi] = useState<number | null>(null);
-
   const [assignments, setAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  /* ── Fetch assignments from BE API ── */
   const fetchAssignments = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
       const data: any = await annotationApi.getMyAssignments();
-      const apiList = Array.isArray(data)
-        ? data
-        : data?.content || data?.data || [];
-      console.log("[ANNOTATOR_DASHBOARD] API assignments:", apiList.length);
+      const apiList = Array.isArray(data) ? data : data?.content || data?.data || [];
       setAssignments(apiList);
     } catch (err: any) {
-      console.error("[ANNOTATOR_DASHBOARD] API failed", err);
       const status = err?.status;
       if (status === 401) {
         setError(t("annotator:tasks.errors.expiredSession"));
@@ -91,13 +57,12 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
     }
 
     setLoading(false);
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchAssignments();
   }, [fetchAssignments]);
 
-  /* ── Filtering ── */
   const filteredAssignments = useMemo(() => {
     return assignments.filter((a) => {
       if ((a.projectStatus || "").toUpperCase() === "PAUSED") {
@@ -125,517 +90,203 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
   );
 
   const handleOpen = (assignment: any) => {
-    // Navigate using assignmentId (BE concept)
     navigate(`/annotator/task/${assignment.assignmentId}`);
   };
 
-  /* ── Active count ── */
-  const activeStatuses = ["PENDING", "IN_PROGRESS", "REJECTED", "RE_SUBMITTED"];
+  const activeStatuses = ["PENDING", "IN_PROGRESS", "REJECTED"];
   const activeCount = visibleAssignments.filter((a) =>
     activeStatuses.includes((a.status || "").toUpperCase()),
   ).length;
+
   const getStatusLabel = (status: string) =>
     t(`annotator:tasks.statuses.${status}`, { defaultValue: status });
 
+  const kpis = [
+    {
+      label: t("annotator:dashboard.completed"),
+      value: visibleAssignments.filter((task) =>
+        ["APPROVED", "COMPLETED"].includes((task.status || "").toUpperCase()),
+      ).length,
+      icon: "check_circle",
+      border: "border-t-emerald-600",
+      iconColor: "text-emerald-600",
+    },
+    {
+      label: t("annotator:dashboard.inProgress"),
+      value: visibleAssignments.filter((task) =>
+        ["IN_PROGRESS", "REJECTED"].includes((task.status || "").toUpperCase()),
+      ).length,
+      icon: "pending",
+      border: "border-t-blue-600",
+      iconColor: "text-blue-600",
+    },
+    {
+      label: t("annotator:dashboard.pending"),
+      value: visibleAssignments.filter(
+        (task) => (task.status || "").toUpperCase() === "PENDING",
+      ).length,
+      icon: "schedule",
+      border: "border-t-amber-500",
+      iconColor: "text-amber-600",
+    },
+    {
+      label: t("annotator:dashboard.resubmitted"),
+      value: visibleAssignments.filter((task) =>
+        ["SUBMITTED", "RE_SUBMITTED"].includes((task.status || "").toUpperCase()),
+      ).length,
+      icon: "restart_alt",
+      border: "border-t-orange-600",
+      iconColor: "text-orange-600",
+    },
+  ];
+
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: T.bg,
-        fontFamily: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif",
-        color: T.textPrimary,
-      }}
-    >
-      <div style={{ padding: "32px 40px", width: "100%" }}>
-        {/* Page title */}
-        <div style={{ marginBottom: "32px" }}>
-          <p
-            style={{
-              fontSize: "11px",
-              fontWeight: 700,
-              color: T.textMuted,
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              marginBottom: "4px",
-            }}
-          >
+    <div className="min-h-screen bg-slate-50 font-['IBM_Plex_Sans','Segoe_UI',system-ui,sans-serif] text-slate-900">
+      <div className="w-full px-6 py-8 md:px-10">
+        <div className="mb-8">
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">
             {t("annotator:dashboard.title")}
           </p>
-          <h1
-            style={{
-              fontSize: "24px",
-              fontWeight: 800,
-              color: T.textPrimary,
-              letterSpacing: "-0.02em",
-              marginBottom: "4px",
-            }}
-          >
+          <h1 className="mb-1 text-3xl font-extrabold tracking-tight text-slate-900">
             {t("annotator:dashboard.title")}
           </h1>
-          <p style={{ fontSize: "13px", color: T.textMuted, marginTop: "4px" }}>
+          <p className="text-sm text-slate-500">
             {t("annotator:dashboard.subtitle")}
             {!loading && ` ${t("annotator:tasks.activeTasks", { count: activeCount })}`}
           </p>
         </div>
 
-        {/* Stats KPI Cards */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-            gap: "16px",
-            marginBottom: "32px",
-          }}
-        >
-          {[
-            {
-              label: t("annotator:dashboard.completed"),
-              value: visibleAssignments.filter(
-                (task) => ["APPROVED", "COMPLETED"].includes((task.status || "").toUpperCase()),
-              ).length,
-              icon: "check_circle",
-              color: T.green,
-            },
-            {
-              label: t("annotator:dashboard.inProgress"),
-              value: visibleAssignments.filter((task) =>
-                ["IN_PROGRESS", "REJECTED"].includes(
-                  (task.status || "").toUpperCase(),
-                ),
-              ).length,
-              icon: "pending",
-              color: T.brand,
-            },
-            {
-              label: t("annotator:dashboard.pending"),
-              value: visibleAssignments.filter(
-                (task) => (task.status || "").toUpperCase() === "PENDING",
-              ).length,
-              icon: "schedule",
-              color: T.amber,
-            },
-            {
-              label: t("annotator:dashboard.resubmitted"),
-              value: visibleAssignments.filter(
-                (task) =>
-                  ["SUBMITTED", "RE_SUBMITTED"].includes(
-                    (task.status || "").toUpperCase(),
-                  ),
-              ).length,
-              icon: "restart_alt",
-              color: "#BF5700",
-            },
-          ].map((kpi, idx) => (
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {kpis.map((kpi, idx) => (
             <div
               key={kpi.label}
               onMouseEnter={() => setHoveredKpi(idx)}
               onMouseLeave={() => setHoveredKpi(null)}
-              style={{
-                background: T.surface,
-                border: `1px solid ${T.border}`,
-                borderRadius: "6px",
-                padding: "20px",
-                borderTop: `3px solid ${kpi.color}`,
-                boxShadow:
-                  hoveredKpi === idx ? "0 4px 12px rgba(9,30,66,.12)" : "none",
-                transition: "all .2s",
-              }}
+              className={`rounded-lg border border-slate-200 border-t-[3px] bg-white p-5 transition ${
+                hoveredKpi === idx ? "shadow-lg shadow-slate-200/80" : "shadow-sm"
+              } ${kpi.border}`}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  marginBottom: "12px",
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    color: T.textMuted,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                  }}
-                >
+              <div className="mb-3 flex items-start justify-between">
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">
                   {kpi.label}
                 </p>
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: "20px", color: kpi.color }}
-                >
+                <span className={`material-symbols-outlined text-xl ${kpi.iconColor}`}>
                   {kpi.icon}
                 </span>
               </div>
-              <p
-                style={{
-                  fontSize: "32px",
-                  fontWeight: 800,
-                  color: T.textPrimary,
-                  lineHeight: 1,
-                }}
-              >
+              <p className="text-[32px] font-extrabold leading-none text-slate-900">
                 {kpi.value}
               </p>
             </div>
           ))}
         </div>
 
-        {/* Controls */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "16px",
-            marginBottom: "24px",
-            flexWrap: "wrap",
-          }}
-        >
-          {/* Status Tabs */}
-          <div
-            style={{
-              display: "inline-flex",
-              padding: "4px",
-              background: T.surfaceHover,
-              borderRadius: "6px",
-              border: `1px solid ${T.border}`,
-              flexWrap: "wrap",
-              gap: "4px",
-            }}
-          >
-            {TABS.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                style={{
-                  padding: "6px 12px",
-                  borderRadius: "4px",
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                  transition: "all .15s",
-                  background: activeTab === tab ? T.surface : "transparent",
-                  color: activeTab === tab ? T.brand : T.textMuted,
-                  border:
-                    activeTab === tab
-                      ? `1px solid ${T.brand}20`
-                      : "1px solid transparent",
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  boxShadow:
-                    activeTab === tab ? "0 1px 3px rgba(9,30,66,.08)" : "none",
-                }}
-                onMouseEnter={(e) => {
-                  if (activeTab !== tab) {
-                    e.currentTarget.style.background = T.surface + "80";
-                    e.currentTarget.style.color = T.textPrimary;
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeTab !== tab) {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.color = T.textMuted;
-                  }
-                }}
-              >
-                {getStatusLabel(tab)}
-              </button>
-            ))}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="inline-flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1">
+            {TABS.map((tab) => {
+              const active = activeTab === tab;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] transition ${
+                    active
+                      ? "border border-blue-100 bg-white text-blue-700 shadow-sm"
+                      : "border border-transparent text-slate-500 hover:bg-white/70 hover:text-slate-900"
+                  }`}
+                >
+                  {getStatusLabel(tab)}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Search */}
-          <div
-            style={{ width: "100%", maxWidth: "320px", position: "relative" }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "12px",
-                transform: "translateY(-50%)",
-                pointerEvents: "none",
-              }}
-            >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "18px", color: T.textMuted }}
-              >
-                search
-              </span>
-            </div>
+          <div className="relative w-full max-w-xs">
+            <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg text-slate-500">
+              search
+            </span>
             <input
               type="text"
-              style={{
-                width: "100%",
-                paddingLeft: "40px",
-                paddingRight: "12px",
-                paddingTop: "8px",
-                paddingBottom: "8px",
-                background: T.surface,
-                border: `1px solid ${T.border}`,
-                borderRadius: "6px",
-                fontSize: "13px",
-                color: T.textPrimary,
-                fontFamily: "inherit",
-                outline: "none",
-                transition: "all .15s",
-              }}
+              className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               placeholder={t("annotator:tasks.searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = T.brand;
-                e.currentTarget.style.boxShadow = `0 0 0 3px ${T.brand}20`;
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = T.border;
-                e.currentTarget.style.boxShadow = "none";
-              }}
             />
           </div>
         </div>
 
-        {/* Loading */}
         {loading && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "64px 0",
-            }}
-          >
-            <span
-              className="material-symbols-outlined"
-              style={{
-                fontSize: "32px",
-                color: T.textMuted,
-                animation: "spin 1s linear infinite",
-              }}
-            >
+          <div className="flex items-center justify-center py-16 text-slate-500">
+            <span className="material-symbols-outlined animate-spin text-3xl">
               progress_activity
             </span>
-            <span
-              style={{
-                marginLeft: "8px",
-                color: T.textMuted,
-                fontSize: "13px",
-              }}
-            >
-              {t("common:states.loading")}
-            </span>
+            <span className="ml-2 text-sm">{t("common:states.loading")}</span>
           </div>
         )}
 
-        {/* Error */}
         {error && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "12px 16px",
-              borderRadius: "6px",
-              background: T.redBg,
-              border: `1px solid ${T.red}40`,
-              marginBottom: "16px",
-            }}
-          >
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: "18px", color: T.red }}
-            >
+          <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+            <span className="material-symbols-outlined text-lg text-red-600">
               error
             </span>
-            <p style={{ fontSize: "13px", color: T.red, flex: 1 }}>{error}</p>
+            <p className="flex-1 text-sm text-red-700">{error}</p>
             <button
               onClick={fetchAssignments}
-              style={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: T.red,
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                fontFamily: "inherit",
-              }}
+              className="text-sm font-semibold text-red-700 transition hover:text-red-800"
             >
               {t("annotator:tasks.retryLoad")}
             </button>
           </div>
         )}
 
-        {/* Empty State */}
         {!loading && filteredAssignments.length === 0 && (
-          <div
-            style={{
-              borderRadius: "6px",
-              border: `1px solid ${T.border}`,
-              background: T.surface,
-              overflow: "hidden",
-              boxShadow: "0 1px 3px rgba(9,30,66,.08)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "600px",
-                width: "100%",
-              }}
-            >
-              <span
-                className="material-symbols-outlined"
-                style={{
-                  fontSize: "64px",
-                  color: T.textMuted + "40",
-                  marginBottom: "16px",
-                }}
-              >
+          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <div className="flex h-[600px] w-full flex-col items-center justify-center px-4 text-center">
+              <span className="material-symbols-outlined mb-4 text-6xl text-slate-300">
                 assignment
               </span>
-              <h4
-                style={{
-                  fontSize: "20px",
-                  fontWeight: 700,
-                  color: T.textPrimary,
-                  marginBottom: "8px",
-                }}
-              >
+              <h4 className="mb-2 text-2xl font-bold text-slate-900">
                 {t("annotator:tasks.noAssignmentsTitle")}
               </h4>
-              <p
-                style={{
-                  fontSize: "14px",
-                  color: T.textMuted,
-                  textAlign: "center",
-                  maxWidth: "480px",
-                  margin: "0 auto",
-                  padding: "0 16px",
-                }}
-              >
+              <p className="max-w-xl text-sm text-slate-500">
                 {t("annotator:tasks.noAssignmentsHint")}
               </p>
             </div>
           </div>
         )}
 
-        {/* Task List Table with data */}
         {!loading && filteredAssignments.length > 0 && (
-          <div
-            style={{
-              borderRadius: "6px",
-              border: `1px solid ${T.border}`,
-              background: T.surface,
-              overflow: "hidden",
-              boxShadow: "0 1px 3px rgba(9,30,66,.08)",
-            }}
-          >
-            {/* Table header */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "60px 2fr 1.5fr 1.2fr 1.5fr 1fr 100px",
-                padding: "12px 24px",
-                borderBottom: `1px solid ${T.border}`,
-                background: "#FAFBFC",
-                gap: "16px",
-                alignItems: "center",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
+          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <div className="grid grid-cols-[60px_2fr_1.5fr_1.2fr_1.5fr_1fr_100px] items-center gap-4 border-b border-slate-200 bg-slate-50 px-6 py-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
                 ID
               </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
                 {t("annotator:tasks.table.project")}
               </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
                 {t("annotator:tasks.table.dataset")}
               </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
                 {t("annotator:tasks.table.reviewer")}
               </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
                 {t("annotator:tasks.table.progress")}
               </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
                 {t("annotator:tasks.table.status")}
               </p>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  textAlign: "right",
-                }}
-              >
+              <p className="text-right text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
                 {t("annotator:tasks.table.action")}
               </p>
             </div>
 
-            {/* Table rows */}
             <div>
               {filteredAssignments.map((a, idx) => {
                 const status = (a.status || "PENDING").toUpperCase();
                 const statusStyle = STATUS_STYLES[status] || {
-                  bg: T.surfaceHover,
-                  text: T.textMuted,
-                  dot: T.textMuted,
+                  badge: "bg-slate-100 text-slate-500",
+                  dot: "bg-slate-500",
                 };
 
                 return (
@@ -644,179 +295,65 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                     onMouseEnter={() => setHoveredRow(idx)}
                     onMouseLeave={() => setHoveredRow(null)}
                     onClick={() => handleOpen(a)}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns:
-                        "60px 2fr 1.5fr 1.2fr 1.5fr 1fr 100px",
-                      alignItems: "center",
-                      padding: "16px 24px",
-                      background:
-                        hoveredRow === idx
-                          ? T.brandLight
-                          : idx % 2 === 0
-                            ? T.surface
-                            : "#FAFBFC",
-                      borderBottom: `1px solid ${T.border}`,
-                      cursor: "pointer",
-                      transition: "all .15s",
-                      gap: "16px",
-                    }}
+                    className={`grid cursor-pointer grid-cols-[60px_2fr_1.5fr_1.2fr_1.5fr_1fr_100px] items-center gap-4 border-b border-slate-200 px-6 py-4 transition ${
+                      hoveredRow === idx
+                        ? "bg-blue-50"
+                        : idx % 2 === 0
+                          ? "bg-white"
+                          : "bg-slate-50/60"
+                    }`}
                   >
-                    {/* ID */}
                     <span
-                      style={{
-                        fontFamily: "monospace",
-                        fontSize: "12px",
-                        color: hoveredRow === idx ? T.textPrimary : T.textMuted,
-                        transition: "color .15s",
-                      }}
+                      className={`font-mono text-xs transition ${
+                        hoveredRow === idx ? "text-slate-900" : "text-slate-500"
+                      }`}
                     >
                       #{a.assignmentId}
                     </span>
 
-                    {/* Project */}
                     <span
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        color: hoveredRow === idx ? T.brand : T.textPrimary,
-                        transition: "color .15s",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
+                      className={`truncate text-sm font-bold transition ${
+                        hoveredRow === idx ? "text-blue-700" : "text-slate-900"
+                      }`}
                     >
                       {a.projectName || "—"}
                     </span>
 
-                    {/* Dataset */}
-                    <span
-                      style={{
-                        fontSize: "13px",
-                        color: T.textMuted,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
+                    <span className="truncate text-sm text-slate-500">
                       {a.datasetName || "—"}
                     </span>
 
-                    {/* Reviewer */}
-                    <span
-                      style={{
-                        fontSize: "13px",
-                        color: T.textMuted,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
+                    <span className="truncate text-sm text-slate-500">
                       {a.reviewerName || "—"}
                     </span>
 
-                    {/* Progress */}
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          flex: 1,
-                          height: "6px",
-                          background: T.border,
-                          borderRadius: "99px",
-                          overflow: "hidden",
-                          minWidth: "100px",
-                        }}
-                      >
+                    <div className="flex items-center gap-3">
+                      <div className="min-w-[100px] flex-1 overflow-hidden rounded-full bg-slate-200">
                         <div
-                          style={{
-                            height: "100%",
-                            background: `linear-gradient(to right, ${T.brand}, ${T.brandHover})`,
-                            borderRadius: "99px",
-                            width: `${a.progress || 0}%`,
-                            transition: "width .5s ease",
-                          }}
+                          className="h-1.5 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 transition-all duration-500"
+                          style={{ width: `${a.progress || 0}%` }}
                         />
                       </div>
-                      <span
-                        style={{
-                          fontSize: "12px",
-                          fontWeight: 800,
-                          color: T.textPrimary,
-                          minWidth: "45px",
-                          textAlign: "right",
-                        }}
-                      >
+                      <span className="min-w-[45px] text-right text-xs font-extrabold text-slate-900">
                         {a.progress || 0}%
                       </span>
                     </div>
 
-                    {/* Status */}
                     <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "4px",
-                        padding: "4px 10px",
-                        borderRadius: "4px",
-                        fontSize: "10px",
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.06em",
-                        background: statusStyle.bg,
-                        color: statusStyle.text,
-                      }}
+                      className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.06em] ${statusStyle.badge}`}
                     >
-                      <span
-                        style={{
-                          width: "6px",
-                          height: "6px",
-                          borderRadius: "50%",
-                          display: "inline-block",
-                          background: statusStyle.dot,
-                        }}
-                      />
+                      <span className={`inline-block h-1.5 w-1.5 rounded-full ${statusStyle.dot}`} />
                       {getStatusLabel(status)}
                     </span>
 
-                    {/* Action */}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        gap: "8px",
-                      }}
-                    >
+                    <div className="flex justify-end gap-2">
                       {["PENDING", "REJECTED"].includes(status) && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleOpen(a);
                           }}
-                          style={{
-                            height: "32px",
-                            padding: "0 16px",
-                            fontSize: "12px",
-                            fontWeight: 700,
-                            color: "#FFFFFF",
-                            background: T.brand,
-                            border: "none",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                            fontFamily: "inherit",
-                            transition: "all .15s",
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.background = T.brandHover)
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.background = T.brand)
-                          }
+                          className="h-8 rounded-md bg-blue-600 px-4 text-xs font-bold text-white transition hover:bg-blue-700"
                         >
                           {t("annotator:tasks.actions.start")}
                         </button>
@@ -827,64 +364,20 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
                             e.stopPropagation();
                             handleOpen(a);
                           }}
-                          style={{
-                            height: "32px",
-                            padding: "0 16px",
-                            fontSize: "12px",
-                            fontWeight: 700,
-                            color: T.amber,
-                            background: T.amberBg,
-                            border: `1px solid ${T.amber}40`,
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                            fontFamily: "inherit",
-                            transition: "all .15s",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = T.amber + "20";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = T.amberBg;
-                          }}
+                          className="h-8 rounded-md border border-amber-200 bg-amber-100 px-4 text-xs font-bold text-amber-700 transition hover:bg-amber-200"
                         >
                           {t("annotator:tasks.actions.continue")}
                         </button>
                       )}
-                      {["SUBMITTED", "APPROVED", "COMPLETED"].includes(
-                        status,
-                      ) && (
+                      {["SUBMITTED", "APPROVED", "COMPLETED"].includes(status) && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleOpen(a);
                           }}
-                          style={{
-                            height: "32px",
-                            padding: "0 16px",
-                            fontSize: "12px",
-                            fontWeight: 700,
-                            color: T.textSecondary,
-                            background: T.surfaceHover,
-                            border: `1px solid ${T.border}`,
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                            fontFamily: "inherit",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            transition: "all .15s",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = T.border;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = T.surfaceHover;
-                          }}
+                          className="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-100 px-4 text-xs font-bold text-slate-600 transition hover:bg-slate-200"
                         >
-                          <span
-                            className="material-symbols-outlined"
-                            style={{ fontSize: "16px" }}
-                          >
+                          <span className="material-symbols-outlined text-base">
                             visibility
                           </span>
                           {t("annotator:tasks.actions.view")}
@@ -898,11 +391,8 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
           </div>
         )}
 
-        {/* Count */}
         {!loading && assignments.length > 0 && (
-          <p
-            style={{ fontSize: "12px", color: T.textMuted, marginTop: "12px" }}
-          >
+          <p className="mt-3 text-xs text-slate-500">
             {t("annotator:tasks.showingCount", {
               shown: filteredAssignments.length,
               total: assignments.length,

@@ -10,11 +10,15 @@ export function Workspace3Column({ left, center, right, leftWidth = "w-72", righ
             </aside>
 
             {/* Center Column (Canvas) - Flexible */}
-            <main className="flex-1 flex flex-col relative overflow-hidden bg-muted/20 relative group">
+            <main className="relative flex flex-1 flex-col overflow-hidden bg-muted/20 group">
                 {/* Dotted pattern background for canvas feel */}
-                <div className="absolute inset-0 opacity-[0.05] pointer-events-none"
-                    style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
-                </div>
+                <div
+                    className="pointer-events-none absolute inset-0 opacity-[0.05]"
+                    style={{
+                        backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
+                        backgroundSize: '24px 24px',
+                    }}
+                />
                 <div className="relative z-10 flex-1 flex flex-col">
                     {center}
                 </div>

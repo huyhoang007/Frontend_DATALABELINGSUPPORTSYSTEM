@@ -7,92 +7,42 @@ interface ToastProps {
   onClose: () => void;
 }
 
+const typeConfig = {
+  success: { bg: 'bg-green-500', icon: 'OK' },
+  error:   { bg: 'bg-red-500',   icon: 'X' },
+  warning: { bg: 'bg-orange-500', icon: '!' },
+  info:    { bg: 'bg-blue-500',  icon: 'i' },
+};
+
 const Toast: React.FC<ToastProps> = ({ message, type, duration = 3000, onClose }) => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false);
-      setTimeout(onClose, 300); // Wait for fade out animation
+      setTimeout(onClose, 300);
     }, duration);
-
     return () => clearTimeout(timer);
   }, [duration, onClose]);
 
-  const getTypeStyles = () => {
-    switch (type) {
-      case 'success':
-        return {
-          backgroundColor: '#4caf50',
-          icon: 'OK'
-        };
-      case 'error':
-        return {
-          backgroundColor: '#f44336',
-          icon: 'X'
-        };
-      case 'warning':
-        return {
-          backgroundColor: '#ff9800',
-          icon: '!'
-        };
-      case 'info':
-        return {
-          backgroundColor: '#2196f3',
-          icon: 'i'
-        };
-      default:
-        return {
-          backgroundColor: '#2196f3',
-          icon: 'i'
-        };
-    }
+  const { bg, icon } = typeConfig[type] ?? typeConfig.info;
+
+  const handleClose = () => {
+    setIsVisible(false);
+    setTimeout(onClose, 300);
   };
 
-  const typeStyles = getTypeStyles();
-
   return (
-    <div style={{
-      position: 'fixed',
-      top: '20px',
-      right: '20px',
-      backgroundColor: typeStyles.backgroundColor,
-      color: 'white',
-      padding: '16px 20px',
-      borderRadius: '8px',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-      minWidth: '300px',
-      maxWidth: '500px',
-      zIndex: 1200,
-      transform: isVisible ? 'translateX(0)' : 'translateX(100%)',
-      opacity: isVisible ? 1 : 0,
-      transition: 'all 0.3s ease-in-out'
-    }}>
-      <span style={{ fontSize: '20px' }}>
-        {typeStyles.icon}
-      </span>
-      
-      <span style={{ flex: 1, fontSize: '16px' }}>
-        {message}
-      </span>
-      
+    <div
+      className={`fixed right-5 top-5 z-[1200] flex min-w-[300px] max-w-[500px] items-center gap-3 rounded-lg px-5 py-4 text-white shadow-xl transition-all duration-300 ${bg} ${
+        isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
+      }`}
+    >
+      <span className="text-xl">{icon}</span>
+      <span className="flex-1 text-base">{message}</span>
       <button
-        onClick={() => {
-          setIsVisible(false);
-          setTimeout(onClose, 300);
-        }}
-        style={{
-          background: 'none',
-          border: 'none',
-          color: 'white',
-          fontSize: '20px',
-          cursor: 'pointer',
-          padding: '0',
-          opacity: 0.8
-        }}
+        onClick={handleClose}
+        className="bg-transparent border-none text-white text-xl cursor-pointer p-0 opacity-80 hover:opacity-100"
       >
         ×
       </button>
@@ -119,12 +69,8 @@ export const ToastManager: React.FC<ToastManagerProps> = ({ toasts, removeToast 
       {toasts.map((toast, index) => (
         <div
           key={toast.id}
-          style={{
-            position: 'fixed',
-            top: `${20 + index * 80}px`,
-            right: '20px',
-            zIndex: 1200
-          }}
+          className="fixed right-5 z-[1200]"
+          style={{ top: `${20 + index * 80}px` }}
         >
           <Toast
             message={toast.message}

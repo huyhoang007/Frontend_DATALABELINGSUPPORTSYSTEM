@@ -1,436 +1,310 @@
-import React, { useState } from 'react';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-
-// Bảng màu Modern Enterprise UI
-const T = {
-  bg: "#F7F8F9",
-  surface: "#FFFFFF",
-  surfaceHover: "#F1F2F4",
-  border: "#DCDFE4",
-  textPrimary: "#172B4D",
-  textSecondary: "#44546F",
-  textMuted: "#626F86",
-  brand: "#0C66E4",
-  brandHover: "#0055CC",
-  brandLight: "#E9F2FF",
-  green: "#1F845A",
-  greenBg: "#DCFFF1",
-  amber: "#A54800",
-  amberBg: "#FFF7D6",
-  purple: "#5E4DB2",
-  purpleBg: "#F3F0FF",
-  red: "#DE350B",
-  redBg: "#FFEBE6",
-};
+import React, { useState } from "react";
 
 interface ReviewerDashboardProps {
   user: any;
   onLogout: () => void;
 }
 
-const ReviewerDashboard: React.FC<ReviewerDashboardProps> = ({ user, onLogout }) => {
+const ReviewerDashboard: React.FC<ReviewerDashboardProps> = ({
+  user,
+  onLogout,
+}) => {
   const [hoveredKpi, setHoveredKpi] = useState<number | null>(null);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
   const mockReviews = [
     {
       id: 1,
-      taskName: 'Gán nhãn hình ảnh xe cộ',
-      annotator: 'Nguyễn Văn A',
-      project: 'AI Vision Recognition',
-      status: 'pending',
-      submittedAt: '2024-02-12T10:30:00Z',
-      priority: 'high',
+      taskName: "GÃ¡n nhÃ£n hÃ¬nh áº£nh xe cá»™",
+      annotator: "Nguyá»…n VÄƒn A",
+      project: "AI Vision Recognition",
+      status: "pending",
+      submittedAt: "2024-02-12T10:30:00Z",
+      priority: "high",
       accuracy: null,
-      itemsCount: 150
+      itemsCount: 150,
     },
     {
       id: 2,
-      taskName: 'Phân loại văn bản',
-      annotator: 'Trần Thị B',
-      project: 'OCR Document Processing',
-      status: 'approved',
-      submittedAt: '2024-02-11T14:20:00Z',
-      priority: 'medium',
+      taskName: "PhÃ¢n loáº¡i vÄƒn báº£n",
+      annotator: "Tráº§n Thá»‹ B",
+      project: "OCR Document Processing",
+      status: "approved",
+      submittedAt: "2024-02-11T14:20:00Z",
+      priority: "medium",
       accuracy: 95,
-      itemsCount: 200
+      itemsCount: 200,
     },
     {
       id: 3,
-      taskName: 'Gán nhãn y tế',
-      annotator: 'Lê Văn C',
-      project: 'Medical Image Analysis',
-      status: 'rejected',
-      submittedAt: '2024-02-10T09:15:00Z',
-      priority: 'low',
+      taskName: "GÃ¡n nhÃ£n y táº¿",
+      annotator: "LÃª VÄƒn C",
+      project: "Medical Image Analysis",
+      status: "rejected",
+      submittedAt: "2024-02-10T09:15:00Z",
+      priority: "low",
       accuracy: 78,
-      itemsCount: 80
+      itemsCount: 80,
     },
     {
       id: 4,
-      taskName: 'Nhận diện đối tượng',
-      annotator: 'Hoàng Thị D',
-      project: 'AI Vision Recognition',
-      status: 'in_review',
-      submittedAt: '2024-02-12T16:45:00Z',
-      priority: 'high',
+      taskName: "Nháº­n diá»‡n Ä‘á»‘i tÆ°á»£ng",
+      annotator: "HoÃ ng Thá»‹ D",
+      project: "AI Vision Recognition",
+      status: "in_review",
+      submittedAt: "2024-02-12T16:45:00Z",
+      priority: "high",
       accuracy: null,
-      itemsCount: 300
-    }
+      itemsCount: 300,
+    },
   ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'approved': return '#10b981';
-      case 'rejected': return '#ef4444';
-      case 'pending': return '#f59e0b';
-      case 'in_review': return '#8b5cf6';
-      default: return '#6b7280';
+      case "approved":
+        return "text-emerald-600 bg-emerald-100";
+      case "rejected":
+        return "text-red-600 bg-red-100";
+      case "pending":
+        return "text-amber-600 bg-amber-100";
+      case "in_review":
+        return "text-violet-600 bg-violet-100";
+      default:
+        return "text-slate-500 bg-slate-100";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'approved': return 'V';
-      case 'rejected': return 'X';
-      case 'pending': return 'O';
-      case 'in_review': return 'R';
-      default: return '?';
+      case "approved":
+        return "V";
+      case "rejected":
+        return "X";
+      case "pending":
+        return "O";
+      case "in_review":
+        return "R";
+      default:
+        return "?";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return '#ef4444';
-      case 'medium': return '#f59e0b';
-      case 'low': return '#10b981';
-      default: return '#6b7280';
+      case "high":
+        return "text-red-600 bg-red-100";
+      case "medium":
+        return "text-amber-600 bg-amber-100";
+      case "low":
+        return "text-emerald-600 bg-emerald-100";
+      default:
+        return "text-slate-500 bg-slate-100";
     }
   };
 
   const getAccuracyColor = (accuracy: number | null) => {
-    if (accuracy === null) return '#6b7280';
-    if (accuracy >= 90) return '#10b981';
-    if (accuracy >= 80) return '#f59e0b';
-    return '#ef4444';
+    if (accuracy === null) return "text-slate-500";
+    if (accuracy >= 90) return "text-emerald-600";
+    if (accuracy >= 80) return "text-amber-600";
+    return "text-red-600";
   };
 
+  const stats = [
+    {
+      label: "Chá» review",
+      value: mockReviews.filter((r) => r.status === "pending").length,
+      icon: "schedule",
+      border: "border-t-amber-500",
+      iconColor: "text-amber-600",
+    },
+    {
+      label: "ÄÃ£ duyá»‡t",
+      value: mockReviews.filter((r) => r.status === "approved").length,
+      icon: "check_circle",
+      border: "border-t-emerald-600",
+      iconColor: "text-emerald-600",
+    },
+    {
+      label: "Tá»« chá»‘i",
+      value: mockReviews.filter((r) => r.status === "rejected").length,
+      icon: "cancel",
+      border: "border-t-red-600",
+      iconColor: "text-red-600",
+    },
+    {
+      label: "Äang review",
+      value: mockReviews.filter((r) => r.status === "in_review").length,
+      icon: "rate_review",
+      border: "border-t-violet-600",
+      iconColor: "text-violet-600",
+    },
+  ];
+
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif" }}>
-      {/* Header */}
-      <div style={{
-        padding: "20px 40px",
-        background: T.surface,
-        borderBottom: `1px solid ${T.border}`,
-        position: "sticky",
-        top: 0,
-        zIndex: 50
-      }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <div className="min-h-screen bg-slate-50 font-['IBM_Plex_Sans','Segoe_UI',system-ui,sans-serif]">
+      <div className="sticky top-0 z-50 border-b border-slate-200 bg-white px-10 py-5">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 style={{ fontSize: "24px", fontWeight: 800, color: T.textPrimary, letterSpacing: "-0.02em" }}>
-              Bảng điều khiển Reviewer
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
+              Báº£ng Ä‘iá»u khiá»ƒn Reviewer
             </h1>
-            <p style={{ fontSize: "13px", color: T.textMuted, marginTop: "4px" }}>
-              Chào mừng, {user.full_name}
+            <p className="mt-1 text-sm text-slate-500">
+              ChÃ o má»«ng, {user.full_name}
             </p>
           </div>
           <button
             onClick={onLogout}
-            style={{
-              padding: "8px 16px",
-              fontSize: "13px",
-              fontWeight: 600,
-              color: T.red,
-              background: "transparent",
-              border: `1px solid ${T.border}`,
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontFamily: "inherit",
-              transition: "all .15s"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = T.redBg;
-              e.currentTarget.style.borderColor = T.red + "40";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.borderColor = T.border;
-            }}
+            className="rounded-md border border-slate-300 bg-transparent px-4 py-2 text-sm font-semibold text-red-600 transition hover:border-red-200 hover:bg-red-50"
           >
-            Đăng xuất
+            ÄÄƒng xuáº¥t
           </button>
         </div>
       </div>
 
-      <div style={{ padding: "32px 40px", maxWidth: "1400px", margin: "0 auto" }}>
-        {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "16px", marginBottom: "32px" }}>
-          {[
-            { label: "Chờ review", value: mockReviews.filter(r => r.status === 'pending').length, icon: "schedule", color: T.amber },
-            { label: "Đã duyệt", value: mockReviews.filter(r => r.status === 'approved').length, icon: "check_circle", color: T.green },
-            { label: "Từ chối", value: mockReviews.filter(r => r.status === 'rejected').length, icon: "cancel", color: T.red },
-            { label: "Đang review", value: mockReviews.filter(r => r.status === 'in_review').length, icon: "rate_review", color: T.purple },
-          ].map((stat, idx) => (
+      <div className="mx-auto max-w-7xl px-10 py-8">
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {stats.map((stat, idx) => (
             <div
               key={stat.label}
               onMouseEnter={() => setHoveredKpi(idx)}
               onMouseLeave={() => setHoveredKpi(null)}
-              style={{
-                background: T.surface,
-                border: `1px solid ${T.border}`,
-                borderRadius: "6px",
-                padding: "20px",
-                borderTop: `3px solid ${stat.color}`,
-                boxShadow: hoveredKpi === idx ? "0 4px 12px rgba(9,30,66,.12)" : "none",
-                transition: "all .2s"
-              }}
+              className={`rounded-lg border border-slate-200 border-t-[3px] bg-white p-5 transition ${
+                hoveredKpi === idx ? "shadow-lg shadow-slate-200/80" : "shadow-sm"
+              } ${stat.border}`}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
-                <p style={{
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em"
-                }}>
+              <div className="mb-3 flex items-start justify-between">
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">
                   {stat.label}
                 </p>
-                <span className="material-symbols-outlined" style={{ fontSize: "20px", color: stat.color }}>
+                <span className={`material-symbols-outlined text-xl ${stat.iconColor}`}>
                   {stat.icon}
                 </span>
               </div>
-              <p style={{
-                fontSize: "32px",
-                fontWeight: 800,
-                color: T.textPrimary,
-                lineHeight: 1
-              }}>
+              <p className="text-[32px] font-extrabold leading-none text-slate-900">
                 {stat.value}
               </p>
             </div>
           ))}
         </div>
 
-        {/* Review Tasks */}
-        <div style={{
-          background: T.surface,
-          border: `1px solid ${T.border}`,
-          borderRadius: "6px",
-          padding: "32px",
-          boxShadow: "0 1px 3px rgba(9,30,66,.08)"
-        }}>
-          <h2 style={{
-            fontSize: "18px",
-            fontWeight: 700,
-            color: T.textPrimary,
-            marginBottom: "24px"
-          }}>
-            Nhiệm vụ Review
+        <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
+          <h2 className="mb-6 text-xl font-bold text-slate-900">
+            Nhiá»‡m vá»¥ Review
           </h2>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div className="flex flex-col gap-4">
             {mockReviews.map((review, idx) => (
               <div
                 key={review.id}
                 onMouseEnter={() => setHoveredCard(idx)}
                 onMouseLeave={() => setHoveredCard(null)}
-                style={{
-                  padding: "20px",
-                  borderRadius: "6px",
-                  border: `1px solid ${T.border}`,
-                  background: hoveredCard === idx ? T.surfaceHover : T.surface,
-                  transition: "all .15s"
-                }}
+                className={`rounded-lg border border-slate-200 p-5 transition ${
+                  hoveredCard === idx ? "bg-slate-50" : "bg-white"
+                }`}
               >
-                <div style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: "16px",
-                  marginBottom: "16px"
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <h3 style={{
-                      fontSize: "16px",
-                      fontWeight: 700,
-                      color: T.textPrimary
-                    }}>
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-lg font-bold text-slate-900">
                       {review.taskName}
                     </h3>
-                    <div style={{
-                      padding: "4px 10px",
-                      borderRadius: "4px",
-                      fontSize: "10px",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.06em",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px",
-                      background: `${getStatusColor(review.status)}15`,
-                      color: getStatusColor(review.status)
-                    }}>
+                    <div
+                      className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.06em] ${getStatusColor(
+                        review.status,
+                      )}`}
+                    >
                       <span>{getStatusIcon(review.status)}</span>
                       {review.status}
                     </div>
                   </div>
-                  <div style={{
-                    padding: "4px 10px",
-                    borderRadius: "4px",
-                    fontSize: "10px",
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                    background: `${getPriorityColor(review.priority)}15`,
-                    color: getPriorityColor(review.priority)
-                  }}>
-                    Ưu tiên {review.priority === 'high' ? 'cao' : review.priority === 'medium' ? 'trung bình' : 'thấp'}
+                  <div
+                    className={`rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.06em] ${getPriorityColor(
+                      review.priority,
+                    )}`}
+                  >
+                    Æ¯u tiÃªn{" "}
+                    {review.priority === "high"
+                      ? "cao"
+                      : review.priority === "medium"
+                        ? "trung bÃ¬nh"
+                        : "tháº¥p"}
                   </div>
                 </div>
 
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                  gap: "16px",
-                  marginBottom: "16px",
-                  fontSize: "13px"
-                }}>
+                <div className="mb-4 grid grid-cols-1 gap-4 text-sm md:grid-cols-2 xl:grid-cols-4">
                   <div>
-                    <span style={{ color: T.textMuted, display: "block", marginBottom: "4px" }}>Người gán nhãn</span>
-                    <span style={{ fontWeight: 600, color: T.textPrimary }}>{review.annotator}</span>
+                    <span className="mb-1 block text-slate-500">
+                      NgÆ°á»i gÃ¡n nhÃ£n
+                    </span>
+                    <span className="font-semibold text-slate-900">
+                      {review.annotator}
+                    </span>
                   </div>
                   <div>
-                    <span style={{ color: T.textMuted, display: "block", marginBottom: "4px" }}>Dự án</span>
-                    <span style={{ fontWeight: 600, color: T.textPrimary }}>{review.project}</span>
+                    <span className="mb-1 block text-slate-500">Dá»± Ã¡n</span>
+                    <span className="font-semibold text-slate-900">
+                      {review.project}
+                    </span>
                   </div>
                   <div>
-                    <span style={{ color: T.textMuted, display: "block", marginBottom: "4px" }}>Số items</span>
-                    <span style={{ fontWeight: 600, color: T.textPrimary }}>{review.itemsCount}</span>
+                    <span className="mb-1 block text-slate-500">Sá»‘ items</span>
+                    <span className="font-semibold text-slate-900">
+                      {review.itemsCount}
+                    </span>
                   </div>
                   <div>
-                    <span style={{ color: T.textMuted, display: "block", marginBottom: "4px" }}>Gửi lúc</span>
-                    <span style={{ fontWeight: 600, color: T.textPrimary }}>
-                      {new Date(review.submittedAt).toLocaleDateString('vi-VN')}
+                    <span className="mb-1 block text-slate-500">Gá»­i lÃºc</span>
+                    <span className="font-semibold text-slate-900">
+                      {new Date(review.submittedAt).toLocaleDateString("vi-VN")}
                     </span>
                   </div>
                 </div>
 
                 {review.accuracy !== null && (
-                  <div style={{ marginBottom: "16px" }}>
-                    <div style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "6px",
-                      fontSize: "12px"
-                    }}>
-                      <span style={{ color: T.textMuted }}>Độ chính xác</span>
-                      <span style={{
-                        fontWeight: 800,
-                        color: getAccuracyColor(review.accuracy)
-                      }}>
+                  <div className="mb-4">
+                    <div className="mb-1.5 flex justify-between text-xs">
+                      <span className="text-slate-500">Äá»™ chÃ­nh xÃ¡c</span>
+                      <span
+                        className={`font-extrabold ${getAccuracyColor(
+                          review.accuracy,
+                        )}`}
+                      >
                         {review.accuracy}%
                       </span>
                     </div>
-                    <div style={{
-                      height: "6px",
-                      width: "100%",
-                      background: T.border,
-                      borderRadius: "99px",
-                      overflow: "hidden"
-                    }}>
-                      <div style={{
-                        height: "100%",
-                        borderRadius: "99px",
-                        width: `${review.accuracy}%`,
-                        background: getAccuracyColor(review.accuracy),
-                        transition: "width .5s ease"
-                      }} />
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                      <div
+                        className={`h-full rounded-full ${
+                          review.accuracy >= 90
+                            ? "bg-emerald-600"
+                            : review.accuracy >= 80
+                              ? "bg-amber-500"
+                              : "bg-red-500"
+                        }`}
+                        style={{ width: `${review.accuracy}%` }}
+                      />
                     </div>
                   </div>
                 )}
 
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", paddingTop: "8px" }}>
-                  <button style={{
-                    height: "36px",
-                    padding: "0 16px",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    color: T.textPrimary,
-                    background: T.surfaceHover,
-                    border: `1px solid ${T.border}`,
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                    transition: "all .15s"
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = T.border}
-                  onMouseLeave={(e) => e.currentTarget.style.background = T.surfaceHover}
-                  >
-                    Xem chi tiết
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <button className="h-9 rounded-md border border-slate-300 bg-slate-100 px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-200">
+                    Xem chi tiáº¿t
                   </button>
 
-                  {review.status === 'pending' && (
+                  {review.status === "pending" && (
                     <>
-                      <button style={{
-                        height: "36px",
-                        padding: "0 16px",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        color: T.green,
-                        background: T.greenBg,
-                        border: `1px solid ${T.green}40`,
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontFamily: "inherit",
-                        transition: "all .15s"
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = T.green + "30"}
-                      onMouseLeave={(e) => e.currentTarget.style.background = T.greenBg}
-                      >
-                        Duyệt
+                      <button className="h-9 rounded-md border border-emerald-200 bg-emerald-100 px-4 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-200">
+                        Duyá»‡t
                       </button>
-                      <button style={{
-                        height: "36px",
-                        padding: "0 16px",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        color: T.red,
-                        background: T.redBg,
-                        border: `1px solid ${T.red}40`,
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontFamily: "inherit",
-                        transition: "all .15s"
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = T.red + "30"}
-                      onMouseLeave={(e) => e.currentTarget.style.background = T.redBg}
-                      >
-                        Từ chối
+                      <button className="h-9 rounded-md border border-red-200 bg-red-100 px-4 text-sm font-semibold text-red-700 transition hover:bg-red-200">
+                        Tá»« chá»‘i
                       </button>
                     </>
                   )}
 
-                  {review.status === 'in_review' && (
-                    <button style={{
-                      height: "36px",
-                      padding: "0 16px",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      color: T.purple,
-                      background: T.purpleBg,
-                      border: `1px solid ${T.purple}40`,
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                      fontFamily: "inherit",
-                      transition: "all .15s"
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = T.purple + "30"}
-                    onMouseLeave={(e) => e.currentTarget.style.background = T.purpleBg}
-                    >
-                      Tiếp tục review
+                  {review.status === "in_review" && (
+                    <button className="h-9 rounded-md border border-violet-200 bg-violet-100 px-4 text-sm font-semibold text-violet-700 transition hover:bg-violet-200">
+                      Tiáº¿p tá»¥c review
                     </button>
                   )}
                 </div>

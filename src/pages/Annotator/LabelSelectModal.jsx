@@ -1,14 +1,6 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
-/**
- * Label selection modal – grouped by LabelRule.
- *
- * Props:
- *  labelGroups: { ruleId, ruleName, labels: [{id, name, color, type}] }[]
- *  onSave(labelIds: number[])
- *  onCancel()
- */
 export default function LabelSelectModal({
   labelGroups = [],
   initialSelectedIds = [],
@@ -19,23 +11,19 @@ export default function LabelSelectModal({
   const [selectedIds, setSelectedIds] = React.useState(initialSelectedIds);
   const [search, setSearch] = React.useState("");
   const [activeRuleIdx, setActiveRuleIdx] = React.useState(0);
-  const [viewMode, setViewMode] = React.useState(null); // null | "labels" | "rules"
+  const [viewMode, setViewMode] = React.useState(null);
 
   const isSearching = search.trim().length > 0;
 
-  // Only reset selectedIds when modal first opens (when initialSelectedIds changes from empty/different)
   React.useEffect(() => {
-    // Only update if we haven't selected anything yet, or if initial changed significantly
     setSelectedIds((prev) => {
-      // If user has already selected, don't override
       if (prev.length > 0 && initialSelectedIds.length === prev.length) {
         return prev;
       }
       return initialSelectedIds;
     });
-  }, [initialSelectedIds?.join(",")]); // Use string join to prevent re-render on object reference change
+  }, [initialSelectedIds?.join(",")]);
 
-  /* ── filtered groups when searching ── */
   const searchResults = React.useMemo(() => {
     if (!isSearching) return [];
     const q = search.toLowerCase();
@@ -51,20 +39,17 @@ export default function LabelSelectModal({
       .filter((g) => g.labels.length > 0);
   }, [search, labelGroups, isSearching]);
 
-  /* ── flat labels list (for "labels" view) ── */
   const allLabelsFlat = React.useMemo(
     () => labelGroups.flatMap((g) => g.labels),
     [labelGroups],
   );
 
-  /* ── filtered flat labels when searching ── */
   const searchLabelsFlat = React.useMemo(() => {
     if (!isSearching) return [];
     const q = search.toLowerCase();
     return allLabelsFlat.filter((l) => l.name.toLowerCase().includes(q));
   }, [search, allLabelsFlat, isSearching]);
 
-  /* ── filtered rule groups when searching in rules view ── */
   const searchRuleGroups = React.useMemo(() => {
     if (!isSearching) return labelGroups;
     const q = search.toLowerCase();
@@ -85,16 +70,11 @@ export default function LabelSelectModal({
   const currentGroup = labelGroups[activeRuleIdx] || null;
 
   const toggle = (id) => {
-    // Toggle: click to select, click again to deselect
-    setSelectedIds((prev) => {
-      if (prev.includes(id)) {
-        // If already selected, remove it
-        return prev.filter((selectedId) => selectedId !== id);
-      } else {
-        // If not selected, add it (single-select mode: replace the list)
-        return [id];
-      }
-    });
+    setSelectedIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((selectedId) => selectedId !== id)
+        : [id],
+    );
   };
 
   const handleSave = () => {
@@ -102,7 +82,6 @@ export default function LabelSelectModal({
     onSave(selectedIds);
   };
 
-  /* build name map for footer display */
   const selectedNames = selectedIds
     .map((id) => allLabelsFlat.find((l) => l.id === id)?.name)
     .filter(Boolean);
@@ -117,38 +96,22 @@ export default function LabelSelectModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/55"
       onClick={(e) => {
         if (e.target === e.currentTarget) onCancel?.();
       }}
     >
       <div
-        className="flex flex-col overflow-hidden rounded-xl shadow-2xl"
-        style={{
-          width: 560,
-          maxHeight: 500,
-          background: "#0f1923",
-          border: "1px solid #1e2f42",
-        }}
+        className="flex max-h-[500px] w-[560px] flex-col overflow-hidden rounded-xl border border-slate-700 bg-slate-950 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div
-          className="px-4 pt-4 pb-3 shrink-0"
-          style={{ borderBottom: "1px solid #1e2f42" }}
-        >
-          <p
-            className="text-[13px] font-semibold mb-2.5"
-            style={{ color: "#e2e8f0" }}
-          >
+        <div className="shrink-0 border-b border-slate-700 px-4 pb-3 pt-4">
+          <p className="mb-2.5 text-[13px] font-semibold text-slate-200">
             {t("annotator:workspace.modal.selectLabel")}
           </p>
+
           <div className="relative">
-            <span
-              className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2"
-              style={{ fontSize: 16, color: "#4a6788", pointerEvents: "none" }}
-            >
+            <span className="material-symbols-outlined pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-base text-slate-500">
               search
             </span>
             <input
@@ -156,52 +119,30 @@ export default function LabelSelectModal({
               placeholder={t("annotator:workspace.modal.searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-8 pr-8 py-1.5 text-xs rounded-lg focus:outline-none"
-              style={{
-                background: "#182233",
-                border: "1px solid #253347",
-                color: "#e2e8f0",
-              }}
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 py-1.5 pl-8 pr-8 text-xs text-slate-200 outline-none transition placeholder:text-slate-500 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-400/10"
             />
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2"
-                style={{ color: "#4a6788" }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-slate-300"
               >
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: 14 }}
-                >
-                  close
-                </span>
+                <span className="material-symbols-outlined text-sm">close</span>
               </button>
             )}
           </div>
 
-          {/* ── Toggle buttons: Labels / Label Rules ── */}
-          <div className="flex gap-2 mt-2.5">
+          <div className="mt-2.5 flex gap-2">
             <button
               onClick={() =>
                 setViewMode((prev) => (prev === "labels" ? null : "labels"))
               }
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
-              style={
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition ${
                 viewMode === "labels"
-                  ? { background: "#00bfa5", color: "#fff" }
-                  : {
-                      background: "#182233",
-                      color: "#4a6788",
-                      border: "1px solid #253347",
-                    }
-              }
+                  ? "bg-emerald-500 text-white"
+                  : "border border-slate-700 bg-slate-900 text-slate-500 hover:text-slate-300"
+              }`}
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 14 }}
-              >
-                label
-              </span>
+              <span className="material-symbols-outlined text-sm">label</span>
               {t("annotator:workspace.modal.labels", {
                 count: allLabelsFlat.length,
               })}
@@ -210,23 +151,13 @@ export default function LabelSelectModal({
               onClick={() =>
                 setViewMode((prev) => (prev === "rules" ? null : "rules"))
               }
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
-              style={
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition ${
                 viewMode === "rules"
-                  ? { background: "#00bfa5", color: "#fff" }
-                  : {
-                      background: "#182233",
-                      color: "#4a6788",
-                      border: "1px solid #253347",
-                    }
-              }
+                  ? "bg-emerald-500 text-white"
+                  : "border border-slate-700 bg-slate-900 text-slate-500 hover:text-slate-300"
+              }`}
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 14 }}
-              >
-                rule
-              </span>
+              <span className="material-symbols-outlined text-sm">rule</span>
               {t("annotator:workspace.modal.labelRules", {
                 count: labelGroups.length,
               })}
@@ -234,41 +165,29 @@ export default function LabelSelectModal({
           </div>
         </div>
 
-        {/* Body — only show when a view is active or searching */}
         {(viewMode !== null || isSearching) && (
           <div className="flex flex-1 overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-3 space-y-4">
-              {/* ── When searching without a specific tab: show BOTH labels + rules ── */}
+            <div className="flex-1 space-y-4 overflow-y-auto p-3">
               {isSearching && viewMode === null
                 ? (() => {
                     const hasLabels = searchLabelsFlat.length > 0;
                     const hasRules = searchRuleGroups.length > 0;
                     if (!hasLabels && !hasRules) {
                       return (
-                        <p
-                          className="text-xs text-center py-8"
-                          style={{ color: "#4a6788" }}
-                        >
+                        <p className="py-8 text-center text-xs text-slate-500">
                           {t("annotator:workspace.modal.noResults")}
                         </p>
                       );
                     }
                     return (
                       <>
-                        {/* Labels section */}
                         {hasLabels && (
                           <div>
-                            <div className="flex items-center gap-1.5 mb-2">
-                              <span
-                                className="material-symbols-outlined"
-                                style={{ fontSize: 13, color: "#4a6788" }}
-                              >
+                            <div className="mb-2 flex items-center gap-1.5">
+                              <span className="material-symbols-outlined text-[13px] text-slate-500">
                                 label
                               </span>
-                              <span
-                                className="text-[11px] font-semibold"
-                                style={{ color: "#4a6788" }}
-                              >
+                              <span className="text-[11px] font-semibold text-slate-500">
                                 {t("annotator:workspace.modal.labels", {
                                   count: searchLabelsFlat.length,
                                 })}
@@ -286,82 +205,27 @@ export default function LabelSelectModal({
                             </div>
                           </div>
                         )}
-                        {/* Label Rules section */}
+
                         {hasRules && (
                           <div>
-                            <div className="flex items-center gap-1.5 mb-2">
-                              <span
-                                className="material-symbols-outlined"
-                                style={{ fontSize: 13, color: "#4a6788" }}
-                              >
+                            <div className="mb-2 flex items-center gap-1.5">
+                              <span className="material-symbols-outlined text-[13px] text-slate-500">
                                 rule
                               </span>
-                              <span
-                                className="text-[11px] font-semibold"
-                                style={{ color: "#4a6788" }}
-                              >
+                              <span className="text-[11px] font-semibold text-slate-500">
                                 {t("annotator:workspace.modal.labelRules", {
                                   count: searchRuleGroups.length,
                                 })}
                               </span>
                             </div>
                             {searchRuleGroups.map((g) => (
-                              <div
+                              <RuleGroup
                                 key={g.ruleId ?? g.ruleName}
-                                className="rounded-lg overflow-hidden mb-2"
-                                style={{
-                                  background: "#182233",
-                                  border: "1px solid #253347",
-                                }}
-                              >
-                                <div
-                                  className="flex items-center gap-2 px-3 py-2"
-                                  style={{
-                                    borderBottom:
-                                      g.labels?.length > 0
-                                        ? "1px solid #253347"
-                                        : "none",
-                                  }}
-                                >
-                                  <span
-                                    className="material-symbols-outlined"
-                                    style={{ fontSize: 14, color: "#00bfa5" }}
-                                  >
-                                    rule
-                                  </span>
-                                  <span
-                                    className="text-xs font-bold"
-                                    style={{ color: "#e2e8f0" }}
-                                  >
-                                    {g.ruleName}
-                                  </span>
-                                  <span
-                                    className="text-[10px] ml-auto px-1.5 py-0.5 rounded-full"
-                                    style={{
-                                      background: "#0e1621",
-                                      color: "#4a6788",
-                                    }}
-                                  >
-                                    {t("annotator:workspace.modal.ruleItemCount", {
-                                      count: g.labels?.length || 0,
-                                    })}
-                                  </span>
-                                </div>
-                                {g.labels?.length > 0 && (
-                                  <div className="flex flex-wrap gap-2 p-3">
-                                    {g.labels.map((label) => (
-                                      <LabelChip
-                                        key={label.id}
-                                        label={label}
-                                        selected={selectedIds.includes(
-                                          label.id,
-                                        )}
-                                        onClick={() => toggle(label.id)}
-                                      />
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
+                                group={g}
+                                selectedIds={selectedIds}
+                                toggle={toggle}
+                                t={t}
+                              />
                             ))}
                           </div>
                         )}
@@ -369,17 +233,13 @@ export default function LabelSelectModal({
                     );
                   })()
                 : viewMode === "labels"
-                  ? /* ── Flat labels view ── */
-                    (() => {
+                  ? (() => {
                       const displayLabels = isSearching
                         ? searchLabelsFlat
                         : allLabelsFlat;
                       if (displayLabels.length === 0) {
                         return (
-                          <p
-                            className="text-xs text-center py-8"
-                            style={{ color: "#4a6788" }}
-                          >
+                          <p className="py-8 text-center text-xs text-slate-500">
                             {t("annotator:workspace.modal.noLabelResults")}
                           </p>
                         );
@@ -398,87 +258,25 @@ export default function LabelSelectModal({
                       );
                     })()
                   : viewMode === "rules"
-                    ? /* ── Grouped by Label Rule view (with search filtering) ── */
-                      (() => {
+                    ? (() => {
                         const displayGroups = isSearching
                           ? searchRuleGroups
                           : labelGroups;
                         if (displayGroups.length === 0) {
                           return (
-                            <p
-                              className="text-xs text-center py-8"
-                              style={{ color: "#4a6788" }}
-                            >
-                            {t("annotator:workspace.modal.noRuleResults")}
+                            <p className="py-8 text-center text-xs text-slate-500">
+                              {t("annotator:workspace.modal.noRuleResults")}
                             </p>
                           );
                         }
                         return displayGroups.map((g) => (
-                          <div
+                          <RuleGroup
                             key={g.ruleId ?? g.ruleName}
-                            className="rounded-lg overflow-hidden"
-                            style={{
-                              background: "#182233",
-                              border: "1px solid #253347",
-                            }}
-                          >
-                            {/* Rule name header */}
-                            <div
-                              className="flex items-center gap-2 px-3 py-2"
-                              style={{
-                                borderBottom:
-                                  g.labels?.length > 0
-                                    ? "1px solid #253347"
-                                    : "none",
-                              }}
-                            >
-                              <span
-                                className="material-symbols-outlined"
-                                style={{ fontSize: 14, color: "#00bfa5" }}
-                              >
-                                rule
-                              </span>
-                              <span
-                                className="text-xs font-bold"
-                                style={{ color: "#e2e8f0" }}
-                              >
-                                {g.ruleName}
-                              </span>
-                              <span
-                                className="text-[10px] ml-auto px-1.5 py-0.5 rounded-full"
-                                style={{
-                                  background: "#0e1621",
-                                  color: "#4a6788",
-                                }}
-                              >
-                                  {t("annotator:workspace.modal.ruleItemCount", {
-                                    count: g.labels?.length || 0,
-                                  })}
-                              </span>
-                            </div>
-                            {/* Labels inside the rule */}
-                            {g.labels?.length > 0 ? (
-                              <div className="flex flex-wrap gap-2 p-3">
-                                {g.labels.map((label) => (
-                                  <LabelChip
-                                    key={label.id}
-                                    label={label}
-                                    selected={selectedIds.includes(label.id)}
-                                    onClick={() => toggle(label.id)}
-                                  />
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="px-3 py-2">
-                                <p
-                                  className="text-[10px]"
-                                  style={{ color: "#3a5068" }}
-                                >
-                                  {t("annotator:workspace.modal.ruleEmpty")}
-                                </p>
-                              </div>
-                            )}
-                          </div>
+                            group={g}
+                            selectedIds={selectedIds}
+                            toggle={toggle}
+                            t={t}
+                          />
                         ));
                       })()
                     : null}
@@ -486,29 +284,20 @@ export default function LabelSelectModal({
           </div>
         )}
 
-        {/* Footer */}
-        <div
-          className="px-4 py-3 flex items-center gap-3 shrink-0"
-          style={{ borderTop: "1px solid #1e2f42" }}
-        >
-          <div className="flex-1 flex flex-wrap gap-1 min-w-0 overflow-hidden">
-            <span className="text-[10px] w-full" style={{ color: "#4a6788" }}>
+        <div className="flex shrink-0 items-center gap-3 border-t border-slate-700 px-4 py-3">
+          <div className="flex min-w-0 flex-1 flex-wrap gap-1 overflow-hidden">
+            <span className="w-full text-[10px] text-slate-500">
               {t("annotator:workspace.modal.singleSelect")}
             </span>
             {selectedNames.length === 0 ? (
-              <span className="text-[11px]" style={{ color: "#4a6788" }}>
+              <span className="text-[11px] text-slate-500">
                 {t("annotator:workspace.modal.noSelectedLabel")}
               </span>
             ) : (
               selectedNames.map((name, i) => (
                 <span
                   key={i}
-                  className="text-[11px] px-2 py-0.5 rounded-full font-medium"
-                  style={{
-                    background: "#182233",
-                    color: "#00bfa5",
-                    border: "1px solid #253347",
-                  }}
+                  className="rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[11px] font-medium text-emerald-400"
                 >
                   {name}
                 </span>
@@ -517,24 +306,18 @@ export default function LabelSelectModal({
           </div>
           <button
             onClick={onCancel}
-            className="shrink-0 px-4 py-1.5 text-xs font-medium rounded-lg transition-colors"
-            style={{
-              background: "#1e2f42",
-              color: "#94a3b8",
-              border: "1px solid #253347",
-            }}
+            className="shrink-0 rounded-lg border border-slate-700 bg-slate-800 px-4 py-1.5 text-xs font-medium text-slate-400 transition hover:bg-slate-700 hover:text-slate-200"
           >
             {t("common:actions.cancel")}
           </button>
           <button
             onClick={handleSave}
             disabled={selectedIds.length === 0}
-            className="shrink-0 px-4 py-1.5 text-xs font-bold rounded-lg transition-opacity"
-            style={{
-              background: selectedIds.length > 0 ? "#00bfa5" : "#0e3d35",
-              color: selectedIds.length > 0 ? "#fff" : "#2a6b5e",
-              cursor: selectedIds.length === 0 ? "not-allowed" : "pointer",
-            }}
+            className={`shrink-0 rounded-lg px-4 py-1.5 text-xs font-bold transition ${
+              selectedIds.length > 0
+                ? "bg-emerald-500 text-white hover:bg-emerald-400"
+                : "cursor-not-allowed bg-emerald-950 text-emerald-800"
+            }`}
           >
             {t("common:actions.save")}
           </button>
@@ -544,7 +327,47 @@ export default function LabelSelectModal({
   );
 }
 
-/* ── Label chip button ── */
+function RuleGroup({ group, selectedIds, toggle, t }) {
+  return (
+    <div className="mb-2 overflow-hidden rounded-lg border border-slate-700 bg-slate-900">
+      <div
+        className={`flex items-center gap-2 px-3 py-2 ${
+          group.labels?.length > 0 ? "border-b border-slate-700" : ""
+        }`}
+      >
+        <span className="material-symbols-outlined text-sm text-emerald-400">
+          rule
+        </span>
+        <span className="text-xs font-bold text-slate-200">{group.ruleName}</span>
+        <span className="ml-auto rounded-full bg-slate-950 px-1.5 py-0.5 text-[10px] text-slate-500">
+          {t("annotator:workspace.modal.ruleItemCount", {
+            count: group.labels?.length || 0,
+          })}
+        </span>
+      </div>
+
+      {group.labels?.length > 0 ? (
+        <div className="flex flex-wrap gap-2 p-3">
+          {group.labels.map((label) => (
+            <LabelChip
+              key={label.id}
+              label={label}
+              selected={selectedIds.includes(label.id)}
+              onClick={() => toggle(label.id)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="px-3 py-2">
+          <p className="text-[10px] text-slate-600">
+            {t("annotator:workspace.modal.ruleEmpty")}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LabelChip({ label, selected, onClick }) {
   const getLabelTypeColor = (type) => {
     switch (type?.toUpperCase()) {
@@ -567,32 +390,29 @@ function LabelChip({ label, selected, onClick }) {
         e.stopPropagation();
         onClick?.();
       }}
-      className="flex flex-col items-start gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+      className="flex flex-col items-start gap-1 rounded-lg px-3 py-1.5 text-xs font-medium transition"
       style={{
         background: selected ? `${label.color}22` : "#182233",
         border: selected ? `1.5px solid ${label.color}` : "1.5px solid #253347",
         color: selected ? label.color : "#94a3b8",
       }}
     >
-      <div className="flex items-center gap-1.5 w-full">
+      <div className="flex w-full items-center gap-1.5">
         <span
-          className="w-2 h-2 rounded-full shrink-0"
+          className="h-2 w-2 shrink-0 rounded-full"
           style={{ background: label.color }}
         />
         <span className="font-medium">{label.name}</span>
         {selected && (
-          <span
-            className="material-symbols-outlined ml-auto"
-            style={{ fontSize: 12 }}
-          >
+          <span className="material-symbols-outlined ml-auto text-[12px]">
             check
           </span>
         )}
       </div>
       {label.type && (
-        <div className="flex items-center gap-1 ml-4">
+        <div className="ml-4 flex items-center gap-1">
           <span
-            className="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
+            className="rounded-full px-1.5 py-0.5 text-[9px] font-bold"
             style={{
               backgroundColor: `${getLabelTypeColor(label.type)}20`,
               color: getLabelTypeColor(label.type),

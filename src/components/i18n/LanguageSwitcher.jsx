@@ -176,7 +176,9 @@ export function LanguageSwitcher() {
 
   return (
     <div
-      className="fixed z-[1100] rounded-full border shadow-2xl backdrop-blur-md p-[3px] flex items-center gap-0.5 select-none"
+      className={`fixed z-[1100] flex select-none items-center gap-0.5 rounded-full border p-[3px] shadow-2xl backdrop-blur-md ${
+        isDragging ? "cursor-grabbing" : isDragReady ? "cursor-grab" : "cursor-default"
+      }`}
       onPointerDown={handlePointerDown}
       style={{
         top: position.top,
@@ -184,7 +186,6 @@ export function LanguageSwitcher() {
         background: "rgba(255,255,255,0.92)",
         borderColor: "rgba(148,163,184,0.25)",
         boxShadow: "0 12px 32px rgba(15,23,42,0.18)",
-        cursor: isDragging ? "grabbing" : isDragReady ? "grab" : "default",
       }}
     >
       {LANGUAGES.map((language) => {
@@ -194,26 +195,20 @@ export function LanguageSwitcher() {
             key={language.code}
             onClick={() => handleButtonClick(language.code)}
             title={language.label}
-            className="flex items-center gap-1.5 rounded-full transition-all px-2.5 py-1"
-            style={
+            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-all ${
               isActive
-                ? {
-                    background: "#eef2ff",
-                    color: "#1f2937",
-                    boxShadow: "inset 0 0 0 1px rgba(99,102,241,0.15)",
-                  }
-                : {
-                    background: "transparent",
-                    color: "#64748b",
-                  }
+                ? "bg-indigo-50 text-slate-800 shadow-[inset_0_0_0_1px_rgba(99,102,241,0.15)]"
+                : "bg-transparent text-slate-500"
+            }`}
+            style={
+              undefined
             }
             aria-label={language.label}
           >
             <span
-              className="w-7 h-7 rounded-full flex items-center justify-center shadow-sm overflow-hidden shrink-0"
+              className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_2px_8px_rgba(15,23,42,0.12)]"
               style={{
                 background: "#fff",
-                boxShadow: "0 2px 8px rgba(15,23,42,0.12)",
               }}
             >
               <img

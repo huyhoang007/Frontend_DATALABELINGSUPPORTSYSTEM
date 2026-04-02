@@ -1,370 +1,243 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getMockData } from "../../utils/mockStorage";
-
-// Bảng màu Modern Enterprise UI
-const T = {
-  bg: "#F7F8F9",
-  surface: "#FFFFFF",
-  surfaceHover: "#F1F2F4",
-  border: "#DCDFE4",
-  textPrimary: "#172B4D",
-  textSecondary: "#44546F",
-  textMuted: "#626F86",
-  brand: "#0C66E4",
-  brandHover: "#0055CC",
-  brandLight: "#E9F2FF",
-  green: "#1F845A",
-  greenBg: "#DCFFF1",
-  amber: "#A54800",
-  amberBg: "#FFF7D6",
-  purple: "#5E4DB2",
-  purpleBg: "#F3F0FF",
-  red: "#DE350B",
-  redBg: "#FFEBE6",
-};
-
-// TODO_BACKEND: Replace with real API when available
 
 const STORAGE_KEY = "mock_tasks";
 
 function seedTasks() {
-    return [
-        { id: crypto.randomUUID(), taskName: "Label Batch Human_v1", project: "Human Detection", assignee: "Nguyễn Văn A", status: "IN_PROGRESS", progress: 65, createdAt: "2026-02-10T08:00:00" },
-        { id: crypto.randomUUID(), taskName: "Label Batch Car_v2", project: "Vehicle Detection", assignee: "Trần Thị B", status: "COMPLETED", progress: 100, createdAt: "2026-02-08T10:30:00" },
-        { id: crypto.randomUUID(), taskName: "Review Batch Dog_v1", project: "Animal Classification", assignee: "Lê Văn C", status: "PENDING", progress: 0, createdAt: "2026-02-15T14:00:00" },
-        { id: crypto.randomUUID(), taskName: "Label Batch Sign_v1", project: "Traffic Sign", assignee: "Phạm Thị D", status: "RETURNED", progress: 30, createdAt: "2026-02-12T09:00:00" },
-        { id: crypto.randomUUID(), taskName: "Label Batch Face_v3", project: "Face Recognition", assignee: "Nguyễn Văn A", status: "IN_PROGRESS", progress: 45, createdAt: "2026-02-14T11:00:00" },
-    ];
+  return [
+    { id: crypto.randomUUID(), taskName: "Label Batch Human_v1", project: "Human Detection", assignee: "Nguyá»…n VÄƒn A", status: "IN_PROGRESS", progress: 65, createdAt: "2026-02-10T08:00:00" },
+    { id: crypto.randomUUID(), taskName: "Label Batch Car_v2", project: "Vehicle Detection", assignee: "Tráº§n Thá»‹ B", status: "COMPLETED", progress: 100, createdAt: "2026-02-08T10:30:00" },
+    { id: crypto.randomUUID(), taskName: "Review Batch Dog_v1", project: "Animal Classification", assignee: "LÃª VÄƒn C", status: "PENDING", progress: 0, createdAt: "2026-02-15T14:00:00" },
+    { id: crypto.randomUUID(), taskName: "Label Batch Sign_v1", project: "Traffic Sign", assignee: "Pháº¡m Thá»‹ D", status: "RETURNED", progress: 30, createdAt: "2026-02-12T09:00:00" },
+    { id: crypto.randomUUID(), taskName: "Label Batch Face_v3", project: "Face Recognition", assignee: "Nguyá»…n VÄƒn A", status: "IN_PROGRESS", progress: 45, createdAt: "2026-02-14T11:00:00" },
+  ];
 }
 
-const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
-    PENDING: { bg: T.amberBg, text: T.amber },
-    IN_PROGRESS: { bg: T.brandLight, text: T.brand },
-    COMPLETED: { bg: T.greenBg, text: T.green },
-    RETURNED: { bg: T.redBg, text: T.red },
+const STATUS_STYLES: Record<string, string> = {
+  PENDING: "bg-amber-50 text-amber-700",
+  IN_PROGRESS: "bg-blue-50 text-blue-700",
+  COMPLETED: "bg-emerald-50 text-emerald-700",
+  RETURNED: "bg-red-50 text-red-700",
 };
 
 const STATUS_OPTIONS = ["ALL", "PENDING", "IN_PROGRESS", "COMPLETED", "RETURNED"];
 
+const tableHeaderClass =
+  "text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500";
+
 export default function Tasks() {
-    const { t, i18n } = useTranslation(["manager", "common"]);
-    const [tasks, setTasks] = useState<any[]>([]);
-    const [statusFilter, setStatusFilter] = useState("ALL");
-    const [viewTask, setViewTask] = useState<any>(null);
-    const [hoveredRow, setHoveredRow] = useState<number | null>(null);
-    const getStatusLabel = (status: string) =>
-        t(`manager:tasks.statuses.${status}`, { defaultValue: status });
+  const { t, i18n } = useTranslation(["manager", "common"]);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [viewTask, setViewTask] = useState<any>(null);
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
-    useEffect(() => {
-        setTasks(getMockData(STORAGE_KEY, seedTasks));
-    }, []);
+  const getStatusLabel = (status: string) =>
+    t(`manager:tasks.statuses.${status}`, { defaultValue: status });
 
-    const filtered = statusFilter === "ALL" ? tasks : tasks.filter((t) => t.status === statusFilter);
+  useEffect(() => {
+    setTasks(getMockData(STORAGE_KEY, seedTasks));
+  }, []);
 
-    return (
-        <div style={{
-            padding: "32px 40px",
-            maxWidth: "1400px",
-            minHeight: "100vh",
-            background: T.bg,
-            fontFamily: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif"
-        }}>
-            <h1 style={{
-                fontSize: "28px",
-                fontWeight: 800,
-                color: T.textPrimary,
-                marginBottom: "32px",
-                letterSpacing: "-0.02em"
-            }}>
-                {t("manager:tasks.title")}
-            </h1>
+  const filtered = useMemo(
+    () =>
+      statusFilter === "ALL"
+        ? tasks
+        : tasks.filter((task) => task.status === statusFilter),
+    [statusFilter, tasks],
+  );
 
-            <div style={{
-                padding: "24px",
-                background: T.surface,
-                border: `1px solid ${T.border}`,
-                borderRadius: "6px",
-                boxShadow: "0 1px 3px rgba(9,30,66,.08)"
-            }}>
-                {/* Filters */}
-                <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    marginBottom: "24px"
-                }}>
-                    <label style={{
-                        fontSize: "13px",
-                        color: T.textMuted,
-                        fontWeight: 600
-                    }}>
-                        {t("manager:tasks.filterStatus")}:
-                    </label>
-                    <select
-                        style={{
-                            padding: "8px 16px",
-                            borderRadius: "4px",
-                            border: `1px solid ${T.border}`,
-                            background: T.surface,
-                            color: T.textPrimary,
-                            fontSize: "13px",
-                            fontWeight: 600,
-                            outline: "none",
-                            cursor: "pointer",
-                            fontFamily: "inherit"
-                        }}
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        onFocus={(e) => e.currentTarget.style.borderColor = T.brand}
-                        onBlur={(e) => e.currentTarget.style.borderColor = T.border}
-                    >
-                        {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{getStatusLabel(s)}</option>)}
-                    </select>
-                </div>
+  return (
+    <div className="min-h-screen bg-slate-50 px-10 py-8 font-['IBM_Plex_Sans','Segoe_UI',system-ui,sans-serif]">
+      <h1 className="mb-8 text-[28px] font-extrabold tracking-[-0.02em] text-slate-900">
+        {t("manager:tasks.title")}
+      </h1>
 
-                {filtered.length === 0 ? (
-                    <div style={{
-                        textAlign: "center",
-                        padding: "64px 0"
-                    }}>
-                        <span className="material-symbols-outlined" style={{
-                            fontSize: "64px",
-                            color: T.textMuted + "40",
-                            marginBottom: "8px",
-                            display: "block"
-                        }}>
-                            task_alt
-                        </span>
-                        <p style={{
-                            color: T.textMuted,
-                            fontSize: "14px"
-                        }}>
-                            {t("manager:tasks.empty")}
-                        </p>
-                    </div>
-                ) : (
-                    <div style={{
-                        border: `1px solid ${T.border}`,
-                        borderRadius: "6px",
-                        overflow: "hidden"
-                    }}>
-                        {/* Table Header */}
-                        <div style={{
-                            display: "grid",
-                            gridTemplateColumns: "2fr 1.5fr 1.2fr 1fr 1fr 1.2fr 100px",
-                            padding: "12px 24px",
-                            background: "#FAFBFC",
-                            borderBottom: `1px solid ${T.border}`,
-                            gap: "16px",
-                            alignItems: "center"
-                        }}>
-                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("manager:tasks.table.name").toUpperCase()}</p>
-                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("manager:tasks.table.project").toUpperCase()}</p>
-                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("manager:tasks.table.assignee").toUpperCase()}</p>
-                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("manager:tasks.table.status").toUpperCase()}</p>
-                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("manager:tasks.table.progress").toUpperCase()}</p>
-                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t("manager:tasks.table.createdAt").toUpperCase()}</p>
-                            <p style={{ fontSize: "10px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "right" }}>{t("manager:tasks.table.action").toUpperCase()}</p>
-                        </div>
+      <div className="rounded-md border border-slate-300 bg-white p-6 shadow-sm">
+        <div className="mb-6 flex items-center gap-3">
+          <label className="text-sm font-semibold text-slate-500">
+            {t("manager:tasks.filterStatus")}:
+          </label>
+          <select
+            className="cursor-pointer rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-600"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            {STATUS_OPTIONS.map((status) => (
+              <option key={status} value={status}>
+                {getStatusLabel(status)}
+              </option>
+            ))}
+          </select>
+        </div>
 
-                        {/* Table Body */}
-                        <div>
-                            {filtered.map((task, idx) => {
-                                const statusStyle = STATUS_STYLES[task.status] || { bg: T.surfaceHover, text: T.textMuted };
-                                return (
-                                    <div
-                                        key={task.id}
-                                        onMouseEnter={() => setHoveredRow(idx)}
-                                        onMouseLeave={() => setHoveredRow(null)}
-                                        style={{
-                                            display: "grid",
-                                            gridTemplateColumns: "2fr 1.5fr 1.2fr 1fr 1fr 1.2fr 100px",
-                                            padding: "16px 24px",
-                                            background: hoveredRow === idx ? T.brandLight : (idx % 2 === 0 ? T.surface : "#FAFBFC"),
-                                            borderBottom: `1px solid ${T.border}`,
-                                            transition: "all .15s",
-                                            gap: "16px",
-                                            alignItems: "center"
-                                        }}
-                                    >
-                                        <span style={{ fontSize: "13px", fontWeight: 700, color: T.textPrimary }}>{task.taskName}</span>
-                                        <span style={{ fontSize: "13px", color: T.textMuted }}>{task.project}</span>
-                                        <span style={{ fontSize: "13px", color: T.textPrimary }}>{task.assignee}</span>
-                                        <span style={{
-                                            display: "inline-flex",
-                                            alignItems: "center",
-                                            padding: "4px 10px",
-                                            borderRadius: "4px",
-                                            fontSize: "10px",
-                                            fontWeight: 700,
-                                            textTransform: "uppercase",
-                                            letterSpacing: "0.06em",
-                                            background: statusStyle.bg,
-                                            color: statusStyle.text,
-                                            width: "fit-content"
-                                        }}>
-                                            {getStatusLabel(task.status)}
-                                        </span>
-                                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                            <div style={{
-                                                width: "80px",
-                                                height: "6px",
-                                                background: T.border,
-                                                borderRadius: "99px",
-                                                overflow: "hidden"
-                                            }}>
-                                                <div style={{
-                                                    height: "100%",
-                                                    borderRadius: "99px",
-                                                    background: T.brand,
-                                                    width: `${task.progress}%`,
-                                                    transition: "width .5s ease"
-                                                }} />
-                                            </div>
-                                            <span style={{
-                                                fontSize: "11px",
-                                                color: T.textMuted,
-                                                width: "32px",
-                                                fontWeight: 700
-                                            }}>
-                                                {task.progress}%
-                                            </span>
-                                        </div>
-                                        <span style={{ fontSize: "11px", color: T.textMuted }}>
-                                            {new Date(task.createdAt).toLocaleDateString(i18n.language === "en" ? "en-US" : "vi-VN")}
-                                        </span>
-                                        <div style={{ textAlign: "right" }}>
-                                            <button
-                                                onClick={() => setViewTask(task)}
-                                                style={{
-                                                    display: "inline-flex",
-                                                    alignItems: "center",
-                                                    gap: "4px",
-                                                    padding: "6px 12px",
-                                                    fontSize: "12px",
-                                                    fontWeight: 600,
-                                                    color: T.brand,
-                                                    background: "transparent",
-                                                    border: `1px solid ${T.border}`,
-                                                    borderRadius: "4px",
-                                                    cursor: "pointer",
-                                                    transition: "all .15s",
-                                                    fontFamily: "inherit"
-                                                }}
-                                                onMouseEnter={(e) => {
-                                                    e.currentTarget.style.background = T.brandLight;
-                                                    e.currentTarget.style.borderColor = T.brand + "40";
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    e.currentTarget.style.background = "transparent";
-                                                    e.currentTarget.style.borderColor = T.border;
-                                                }}
-                                            >
-                                                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>visibility</span>
-                                                {t("manager:tasks.view")}
-                                            </button>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
+        {filtered.length === 0 ? (
+          <div className="py-16 text-center">
+            <span className="material-symbols-outlined mb-2 block text-6xl text-slate-300">
+              task_alt
+            </span>
+            <p className="text-sm text-slate-500">{t("manager:tasks.empty")}</p>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-md border border-slate-300">
+            <div className="grid grid-cols-[2fr_1.5fr_1.2fr_1fr_1fr_1.2fr_100px] items-center gap-4 border-b border-slate-300 bg-slate-50 px-6 py-3">
+              <p className={tableHeaderClass}>
+                {t("manager:tasks.table.name").toUpperCase()}
+              </p>
+              <p className={tableHeaderClass}>
+                {t("manager:tasks.table.project").toUpperCase()}
+              </p>
+              <p className={tableHeaderClass}>
+                {t("manager:tasks.table.assignee").toUpperCase()}
+              </p>
+              <p className={tableHeaderClass}>
+                {t("manager:tasks.table.status").toUpperCase()}
+              </p>
+              <p className={tableHeaderClass}>
+                {t("manager:tasks.table.progress").toUpperCase()}
+              </p>
+              <p className={tableHeaderClass}>
+                {t("manager:tasks.table.createdAt").toUpperCase()}
+              </p>
+              <p className={`${tableHeaderClass} text-right`}>
+                {t("manager:tasks.table.action").toUpperCase()}
+              </p>
             </div>
 
-            {/* View Task Modal */}
-            {viewTask && (
-                <div style={{
-                    position: "fixed",
-                    inset: 0,
-                    background: "rgba(0,0,0,0.5)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    zIndex: 9999
-                }}>
-                    <div style={{
-                        background: T.surface,
-                        padding: "32px",
-                        borderRadius: "6px",
-                        maxWidth: "500px",
-                        width: "90%",
-                        boxShadow: "0 8px 24px rgba(9,30,66,.25)"
-                    }}>
-                        <h2 style={{
-                            fontSize: "20px",
-                            fontWeight: 700,
-                            color: T.textPrimary,
-                            marginBottom: "24px"
-                        }}>
-                            {t("manager:tasks.detailTitle")}
-                        </h2>
-
-                        <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "13px" }}>
-                            <div>
-                                <span style={{ fontWeight: 600, color: T.textPrimary }}>{t("manager:tasks.detail.name")}:</span>{" "}
-                                <span style={{ color: T.textMuted }}>{viewTask.taskName}</span>
-                            </div>
-                            <div>
-                                <span style={{ fontWeight: 600, color: T.textPrimary }}>{t("manager:tasks.detail.project")}:</span>{" "}
-                                <span style={{ color: T.textMuted }}>{viewTask.project}</span>
-                            </div>
-                            <div>
-                                <span style={{ fontWeight: 600, color: T.textPrimary }}>{t("manager:tasks.detail.assignee")}:</span>{" "}
-                                <span style={{ color: T.textMuted }}>{viewTask.assignee}</span>
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                <span style={{ fontWeight: 600, color: T.textPrimary }}>{t("manager:tasks.detail.status")}:</span>
-                                <span style={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    padding: "4px 10px",
-                                    borderRadius: "4px",
-                                    fontSize: "10px",
-                                    fontWeight: 700,
-                                    textTransform: "uppercase",
-                                    letterSpacing: "0.06em",
-                                    background: STATUS_STYLES[viewTask.status]?.bg || T.surfaceHover,
-                                    color: STATUS_STYLES[viewTask.status]?.text || T.textMuted
-                                }}>
-                                    {getStatusLabel(viewTask.status)}
-                                </span>
-                            </div>
-                            <div>
-                                <span style={{ fontWeight: 600, color: T.textPrimary }}>{t("manager:tasks.detail.progress")}:</span>{" "}
-                                <span style={{ color: T.textMuted }}>{viewTask.progress}%</span>
-                            </div>
-                            <div>
-                                <span style={{ fontWeight: 600, color: T.textPrimary }}>{t("manager:tasks.detail.createdAt")}:</span>{" "}
-                                <span style={{ color: T.textMuted }}>{new Date(viewTask.createdAt).toLocaleString(i18n.language === "en" ? "en-US" : "vi-VN")}</span>
-                            </div>
-                        </div>
-
-                        <div style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end" }}>
-                            <button
-                                onClick={() => setViewTask(null)}
-                                style={{
-                                    padding: "10px 20px",
-                                    fontSize: "14px",
-                                    fontWeight: 600,
-                                    color: T.textPrimary,
-                                    background: T.surface,
-                                    border: `1px solid ${T.border}`,
-                                    borderRadius: "4px",
-                                    cursor: "pointer",
-                                    transition: "all .15s",
-                                    fontFamily: "inherit"
-                                }}
-                                onMouseEnter={(e) => e.currentTarget.style.background = T.surfaceHover}
-                                onMouseLeave={(e) => e.currentTarget.style.background = T.surface}
-                            >
-                                {t("manager:tasks.close")}
-                            </button>
-                        </div>
+            <div>
+              {filtered.map((task, idx) => {
+                const statusClass =
+                  STATUS_STYLES[task.status] || "bg-slate-100 text-slate-500";
+                return (
+                  <div
+                    key={task.id}
+                    onMouseEnter={() => setHoveredRow(idx)}
+                    onMouseLeave={() => setHoveredRow(null)}
+                    className={`grid grid-cols-[2fr_1.5fr_1.2fr_1fr_1fr_1.2fr_100px] items-center gap-4 border-b border-slate-300 px-6 py-4 transition ${
+                      hoveredRow === idx
+                        ? "bg-blue-50"
+                        : idx % 2 === 0
+                          ? "bg-white"
+                          : "bg-slate-50"
+                    }`}
+                  >
+                    <span className="text-sm font-bold text-slate-900">
+                      {task.taskName}
+                    </span>
+                    <span className="text-sm text-slate-500">
+                      {task.project}
+                    </span>
+                    <span className="text-sm text-slate-900">
+                      {task.assignee}
+                    </span>
+                    <span
+                      className={`inline-flex w-fit items-center rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.06em] ${statusClass}`}
+                    >
+                      {getStatusLabel(task.status)}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-300">
+                        <div
+                          className="h-full rounded-full bg-blue-600 transition-all duration-500"
+                          style={{ width: `${task.progress}%` }}
+                        />
+                      </div>
+                      <span className="w-8 text-[11px] font-bold text-slate-500">
+                        {task.progress}%
+                      </span>
                     </div>
-                </div>
-            )}
+                    <span className="text-[11px] text-slate-500">
+                      {new Date(task.createdAt).toLocaleDateString(
+                        i18n.language === "en" ? "en-US" : "vi-VN",
+                      )}
+                    </span>
+                    <div className="text-right">
+                      <button
+                        onClick={() => setViewTask(task)}
+                        className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-transparent px-3 py-1.5 text-xs font-semibold text-blue-600 transition hover:border-blue-200 hover:bg-blue-50"
+                      >
+                        <span className="material-symbols-outlined text-base">
+                          visibility
+                        </span>
+                        {t("manager:tasks.view")}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {viewTask && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+          <div className="w-[90%] max-w-[500px] rounded-md bg-white p-8 shadow-2xl">
+            <h2 className="mb-6 text-xl font-bold text-slate-900">
+              {t("manager:tasks.detailTitle")}
+            </h2>
+
+            <div className="flex flex-col gap-3 text-sm">
+              <div>
+                <span className="font-semibold text-slate-900">
+                  {t("manager:tasks.detail.name")}:
+                </span>{" "}
+                <span className="text-slate-500">{viewTask.taskName}</span>
+              </div>
+              <div>
+                <span className="font-semibold text-slate-900">
+                  {t("manager:tasks.detail.project")}:
+                </span>{" "}
+                <span className="text-slate-500">{viewTask.project}</span>
+              </div>
+              <div>
+                <span className="font-semibold text-slate-900">
+                  {t("manager:tasks.detail.assignee")}:
+                </span>{" "}
+                <span className="text-slate-500">{viewTask.assignee}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-slate-900">
+                  {t("manager:tasks.detail.status")}:
+                </span>
+                <span
+                  className={`inline-flex items-center rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.06em] ${
+                    STATUS_STYLES[viewTask.status] || "bg-slate-100 text-slate-500"
+                  }`}
+                >
+                  {getStatusLabel(viewTask.status)}
+                </span>
+              </div>
+              <div>
+                <span className="font-semibold text-slate-900">
+                  {t("manager:tasks.detail.progress")}:
+                </span>{" "}
+                <span className="text-slate-500">{viewTask.progress}%</span>
+              </div>
+              <div>
+                <span className="font-semibold text-slate-900">
+                  {t("manager:tasks.detail.createdAt")}:
+                </span>{" "}
+                <span className="text-slate-500">
+                  {new Date(viewTask.createdAt).toLocaleString(
+                    i18n.language === "en" ? "en-US" : "vi-VN",
+                  )}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setViewTask(null)}
+                className="rounded-md border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+              >
+                {t("manager:tasks.close")}
+              </button>
+            </div>
+          </div>
         </div>
-    );
+      )}
+    </div>
+  );
 }
