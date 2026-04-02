@@ -100,6 +100,9 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
   /* ── Filtering ── */
   const filteredAssignments = useMemo(() => {
     return assignments.filter((a) => {
+      if ((a.projectStatus || "").toUpperCase() === "PAUSED") {
+        return false;
+      }
       const matchesTab =
         activeTab === "ALL" || (a.status || "").toUpperCase() === activeTab;
       const q = search.toLowerCase();
@@ -112,6 +115,15 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
     });
   }, [activeTab, search, assignments]);
 
+  const visibleAssignments = useMemo(
+    () =>
+      assignments.filter(
+        (assignment) =>
+          (assignment.projectStatus || "").toUpperCase() !== "PAUSED",
+      ),
+    [assignments],
+  );
+
   const handleOpen = (assignment: any) => {
     // Navigate using assignmentId (BE concept)
     navigate(`/annotator/task/${assignment.assignmentId}`);
@@ -119,7 +131,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
 
   /* ── Active count ── */
   const activeStatuses = ["PENDING", "IN_PROGRESS", "REJECTED", "RE_SUBMITTED"];
-  const activeCount = assignments.filter((a) =>
+  const activeCount = visibleAssignments.filter((a) =>
     activeStatuses.includes((a.status || "").toUpperCase()),
   ).length;
   const getStatusLabel = (status: string) =>
@@ -158,15 +170,11 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
               marginBottom: "4px",
             }}
           >
-            {t("annotator:tasks.welcomeBack", {
-              name:
-                user?.full_name || user?.username || user?.name || "User",
-            })}
+            {t("annotator:dashboard.title")}
           </h1>
           <p style={{ fontSize: "13px", color: T.textMuted, marginTop: "4px" }}>
-            {!loading && (
-              t("annotator:tasks.activeTasks", { count: activeCount })
-            )}
+            {t("annotator:dashboard.subtitle")}
+            {!loading && ` ${t("annotator:tasks.activeTasks", { count: activeCount })}`}
           </p>
         </div>
 
@@ -182,17 +190,17 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
           {[
             {
               label: t("annotator:dashboard.completed"),
-              value: assignments.filter(
-                (t) => (t.status || "").toUpperCase() === "COMPLETED",
+              value: visibleAssignments.filter(
+                (task) => ["APPROVED", "COMPLETED"].includes((task.status || "").toUpperCase()),
               ).length,
               icon: "check_circle",
               color: T.green,
             },
             {
               label: t("annotator:dashboard.inProgress"),
-              value: assignments.filter((t) =>
+              value: visibleAssignments.filter((task) =>
                 ["IN_PROGRESS", "REJECTED"].includes(
-                  (t.status || "").toUpperCase(),
+                  (task.status || "").toUpperCase(),
                 ),
               ).length,
               icon: "pending",
@@ -200,16 +208,19 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = ({ user }) => {
             },
             {
               label: t("annotator:dashboard.pending"),
-              value: assignments.filter(
-                (t) => (t.status || "").toUpperCase() === "PENDING",
+              value: visibleAssignments.filter(
+                (task) => (task.status || "").toUpperCase() === "PENDING",
               ).length,
               icon: "schedule",
               color: T.amber,
             },
             {
               label: t("annotator:dashboard.resubmitted"),
-              value: assignments.filter(
-                (t) => (t.status || "").toUpperCase() === "RE_SUBMITTED",
+              value: visibleAssignments.filter(
+                (task) =>
+                  ["SUBMITTED", "RE_SUBMITTED"].includes(
+                    (task.status || "").toUpperCase(),
+                  ),
               ).length,
               icon: "restart_alt",
               color: "#BF5700",

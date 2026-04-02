@@ -110,10 +110,22 @@ export async function fetchProjectDetail(projectId) {
 }
 
 export async function fetchProjectOverview(projectId) {
-  const [summaryData, contributionData, memberScoreData] = await Promise.all([
+  const [
+    summaryData,
+    progressData,
+    qualityData,
+    contributionData,
+    memberScoreData,
+    assignmentData,
+    datasetData,
+  ] = await Promise.all([
     analyticsApi.getProjectSummary(projectId),
+    analyticsApi.getProjectProgress(projectId).catch(() => null),
+    analyticsApi.getQualityMetrics(projectId).catch(() => null),
     analyticsApi.getTeamContributions(projectId).catch(() => []),
     analyticsApi.getMemberScores(projectId).catch(() => []),
+    assignmentApi.getAssignmentsByProject(Number(projectId)).catch(() => []),
+    datasetApi.getDatasetsByProject(Number(projectId)).catch(() => []),
   ]);
 
   const contributionRows = Array.isArray(contributionData) ? contributionData : [];
@@ -166,8 +178,14 @@ export async function fetchProjectOverview(projectId) {
     );
 
   return {
-    summary: summaryData,
+    summary: {
+      ...summaryData,
+      progress: progressData ?? summaryData?.progress,
+      qualityMetrics: qualityData ?? summaryData?.qualityMetrics,
+    },
     contributors,
+    assignments: normalizeAssignments(assignmentData),
+    datasets: (Array.isArray(datasetData) ? datasetData : datasetData?.content || datasetData?.data || []).map(normalizeDatasetSummary),
     teamAverageScore:
       memberScores.length > 0
         ? averageScore(memberScores)

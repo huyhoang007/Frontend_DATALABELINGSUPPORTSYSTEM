@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOutletContext } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -82,6 +82,8 @@ export default function ProjectOverview() {
 
     const summary = overviewData?.summary;
     const contributors = overviewData?.contributors || [];
+    const assignments = overviewData?.assignments || [];
+    const datasets = overviewData?.datasets || [];
     const teamAverageScore = overviewData?.teamAverageScore || 0;
     const progress = summary?.progress;
     const quality = summary?.qualityMetrics;
@@ -109,19 +111,40 @@ export default function ProjectOverview() {
 
     // Safe values with defaults
     const totalItems = progress?.totalItems ?? 0;
-    const labeledItems = progress?.labeledItems ?? 0;
-    const reviewedItems = progress?.reviewedItems ?? 0;
-    const approvedItems = progress?.approvedItems ?? 0;
+    const datasetItemsById = new Map(
+        datasets.map((dataset: any) => [
+            Number(dataset?.datasetId ?? dataset?.id),
+            toNumber(dataset?.totalItems),
+        ]),
+    );
+    const sumItemsForStatuses = (statuses: Set<string>) =>
+        assignments.reduce((sum: number, assignment: any) => {
+            const status = String(assignment?.status || "").toUpperCase();
+            if (!statuses.has(status)) return sum;
+            return sum + toNumber(datasetItemsById.get(Number(assignment?.datasetId)));
+        }, 0);
+    const derivedLabeledItems = sumItemsForStatuses(new Set(["SUBMITTED", "RE_SUBMITTED", "APPROVED", "REJECTED", "COMPLETED"]));
+    const derivedReviewedItems = sumItemsForStatuses(new Set(["APPROVED", "REJECTED", "COMPLETED"]));
+    const derivedApprovedItems = sumItemsForStatuses(new Set(["APPROVED", "COMPLETED"]));
+    const labeledItems = Math.min(totalItems, Math.max(progress?.labeledItems ?? 0, derivedLabeledItems));
+    const approvedItems = Math.min(totalItems, Math.max(progress?.approvedItems ?? 0, derivedApprovedItems));
     const overallProgress = progress?.overallProgress ?? 0;
 
     const overallQualityScore = quality?.overallQualityScore ?? 0;
     const qualityLevel = quality?.qualityLevel ?? "N/A";
     const totalAnnotations = quality?.totalAnnotations ?? 0;
     const acceptedAnnotations = quality?.acceptedAnnotations ?? 0;
-    const rejectedAnnotations = quality?.rejectedAnnotations ?? 0;
+    const totalPolicyViolations = quality?.totalPolicyViolations ?? 0;
+    const rawRejectedAnnotations = quality?.rejectedAnnotations ?? 0;
+    const rejectedAnnotations = rawRejectedAnnotations;
+    const reviewedAnnotations = acceptedAnnotations + rejectedAnnotations;
+    const pendingAnnotations = Math.max(totalAnnotations - reviewedAnnotations, 0);
+    const hasActualReviewActivity = acceptedAnnotations > 0 || rejectedAnnotations > 0;
+    const reviewedItems = hasActualReviewActivity
+        ? Math.min(labeledItems, Math.max(progress?.reviewedItems ?? 0, derivedReviewedItems))
+        : 0;
     const annotationAccuracy = quality?.annotationAccuracy ?? 0;
     const policyComplianceRate = quality?.policyComplianceRate ?? 0;
-    const totalPolicyViolations = quality?.totalPolicyViolations ?? 0;
     const labelDistributionBalance = quality?.labelDistributionBalance ?? 0;
 
     const totalTeamMembers = summary?.totalTeamMembers ?? 0;
@@ -167,8 +190,8 @@ export default function ProjectOverview() {
                             <div className="text-[10px] text-muted-foreground">{t("manager:overview.accepted")}</div>
                         </div>
                         <div>
-                            <span className="text-sm font-bold text-amber-500">{totalAnnotations - acceptedAnnotations - rejectedAnnotations}</span>
-                            <div className="text-[10px] text-muted-foreground">{t("manager:overview.pending")}</div>
+                            <span className="text-sm font-bold text-amber-500">{pendingAnnotations}</span>
+                            <div className="text-[10px] text-muted-foreground">Chờ duyệt</div>
                         </div>
                         <div>
                             <span className="text-sm font-bold text-red-400">{rejectedAnnotations}</span>
@@ -187,9 +210,9 @@ export default function ProjectOverview() {
                     </div>
                 </Card>
                 <Card className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
-                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("manager:overview.policy")}</div>
+                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Vi phạm</div>
                     <div className="text-3xl font-bold text-foreground">{policyComplianceRate.toFixed(0)}%</div>
-                    <div className="text-xs text-red-400 font-medium mt-1">{t("manager:overview.violations", { count: totalPolicyViolations })}</div>
+                    <div className="text-xs text-red-400 font-medium mt-1">{t("manager:overview.violationsLabel")}</div>
                 </Card>
             </div>
 
@@ -204,9 +227,9 @@ export default function ProjectOverview() {
                     </div>
                     <div className="space-y-5">
                         {[
-                            { label: t("manager:overview.labelingDone"), value: labeledItems, pct: progress?.labelingProgress ?? 0, color: "bg-blue-500" },
-                            { label: t("manager:overview.reviewingDone"), value: reviewedItems, pct: progress?.reviewingProgress ?? 0, color: "bg-emerald-500" },
-                            { label: t("manager:overview.approvalDone"), value: approvedItems, pct: progress?.approvalProgress ?? 0, color: "bg-amber-500" },
+                            { label: t("manager:overview.labelingDone"), value: labeledItems, pct: totalItems > 0 ? (labeledItems / totalItems) * 100 : 0, color: "bg-blue-500" },
+                            { label: t("manager:overview.reviewingDone"), value: reviewedItems, pct: totalItems > 0 ? (reviewedItems / totalItems) * 100 : 0, color: "bg-emerald-500" },
+                            { label: t("manager:overview.approvalDone"), value: approvedItems, pct: totalItems > 0 ? (approvedItems / totalItems) * 100 : 0, color: "bg-amber-500" },
                         ].map((bar) => (
                             <div key={bar.label}>
                                 <div className="flex justify-between items-center mb-2">
@@ -390,3 +413,6 @@ export default function ProjectOverview() {
         </>
     );
 }
+
+
+
