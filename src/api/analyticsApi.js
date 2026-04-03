@@ -59,6 +59,34 @@ export const analyticsApi = {
      */
     getMemberScores: (projectId) =>
         apiClient.get(`/api/analytics/projects/${projectId}/member-scores`),
+
+    /**
+     * Get violations for a project
+     * GET /api/analytics/projects/{projectId}/violations
+     * @param {number} projectId
+     * @returns {Promise<Object[]>} ViolationResponse[]
+     */
+    getProjectViolations: (projectId) =>
+        apiClient.get(`/api/analytics/projects/${projectId}/violations`),
+
+    /**
+     * Get violation details
+     * GET /api/analytics/projects/{projectId}/violations/{violationId}
+     * @param {number} projectId
+     * @param {number} violationId
+     * @returns {Promise<Object>} ViolationResponse
+     */
+    getViolationDetails: (projectId, violationId) =>
+        apiClient.get(`/api/analytics/projects/${projectId}/violations/${violationId}`),
+
+    /**
+     * Get violation summary for a project
+     * GET /api/analytics/projects/{projectId}/violations/summary
+     * @param {number} projectId
+     * @returns {Promise<Object>} ViolationSummaryResponse
+     */
+    getViolationSummary: (projectId) =>
+        apiClient.get(`/api/analytics/projects/${projectId}/violations/summary`),
 };
 
 export default analyticsApi;

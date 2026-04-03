@@ -30,6 +30,9 @@ export const projectQueryKeys = {
   overview: (projectId) => ["projects", "overview", Number(projectId)],
   datasets: (projectId) => ["projects", "datasets", Number(projectId)],
   assignments: (projectId) => ["projects", "assignments", Number(projectId)],
+  violations: (projectId) => ["projects", "violations", Number(projectId)],
+  violationDetails: (projectId, violationId) => ["projects", "violations", Number(projectId), Number(violationId)],
+  violationSummary: (projectId) => ["projects", "violations", "summary", Number(projectId)],
 };
 
 export const getHotspotQueryBehavior = (staleTime, gcTime) => {
@@ -184,6 +187,18 @@ export async function fetchProjectDatasets(projectId) {
 export async function fetchProjectAssignments(projectId) {
   const raw = await assignmentApi.getAssignmentsByProject(Number(projectId));
   return normalizeAssignments(raw);
+}
+
+export async function fetchProjectViolations(projectId) {
+  return await analyticsApi.getProjectViolations(projectId);
+}
+
+export async function fetchViolationDetails(projectId, violationId) {
+  return await analyticsApi.getViolationDetails(projectId, violationId);
+}
+
+export async function fetchViolationSummary(projectId) {
+  return await analyticsApi.getViolationSummary(projectId);
 }
 
 export async function invalidateProjectSummaryData(queryClient, projectId) {

@@ -10,6 +10,8 @@ import {
     getHotspotQueryBehavior,
     invalidateProjectSummaryData,
     projectQueryKeys,
+    fetchProjectViolations,
+    fetchViolationSummary,
 } from "../../query/projectQueries";
 import { translateRole } from "../../i18n/helpers";
 
@@ -58,6 +60,28 @@ export default function ProjectOverview() {
         placeholderData: (previousData) => previousData,
         ...getHotspotQueryBehavior(30_000, 300_000),
     });
+    const {
+        data: violationsData,
+        isLoading: violationsLoading,
+    } = useQuery({
+        queryKey: projectQueryKeys.violations(projectId),
+        queryFn: () => fetchProjectViolations(projectId),
+        enabled: Boolean(projectId),
+        placeholderData: [],
+        ...getHotspotQueryBehavior(30_000, 300_000),
+    });
+
+    const {
+        data: violationSummaryData,
+        isLoading: violationSummaryLoading,
+    } = useQuery({
+        queryKey: projectQueryKeys.violationSummary(projectId),
+        queryFn: () => fetchViolationSummary(projectId),
+        enabled: Boolean(projectId),
+        placeholderData: {},
+        ...getHotspotQueryBehavior(30_000, 300_000),
+    });
+
     const errorMessage = error ? (error as any)?.message || String(error) : null;
 
     if (loading) {
@@ -308,6 +332,89 @@ export default function ProjectOverview() {
                     </div>
                 </Card>
             )}
+
+            {/* Violations Section */}
+            <Card className="p-6 bg-card/80 backdrop-blur border-border/60">
+                <h3 className="text-base font-bold text-foreground mb-6">{t("manager:overview.violations")}</h3>
+                {violationsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                        <span className="ml-3 text-muted-foreground">{t("common:states.loadingData")}</span>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {violationSummaryData && (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold text-red-500">{violationSummaryData.totalViolations || 0}</div>
+                                    <div className="text-xs text-muted-foreground">{t("manager:overview.totalViolations")}</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold text-orange-500">{violationSummaryData.highSeverityCount || 0}</div>
+                                    <div className="text-xs text-muted-foreground">{t("manager:overview.highSeverity")}</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold text-yellow-500">{violationSummaryData.mediumSeverityCount || 0}</div>
+                                    <div className="text-xs text-muted-foreground">{t("manager:overview.mediumSeverity")}</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold text-blue-500">{violationSummaryData.lowSeverityCount || 0}</div>
+                                    <div className="text-xs text-muted-foreground">{t("manager:overview.lowSeverity")}</div>
+                                </div>
+                            </div>
+                        )}
+                        {violationsData && violationsData.length > 0 ? (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="border-b border-border/20">
+                                            <th className="text-left py-2 text-muted-foreground font-medium">{t("manager:overview.annotator")}</th>
+                                            <th className="text-left py-2 text-muted-foreground font-medium">{t("manager:overview.policy")}</th>
+                                            <th className="text-left py-2 text-muted-foreground font-medium">{t("manager:overview.violationType")}</th>
+                                            <th className="text-center py-2 text-muted-foreground font-medium">{t("manager:overview.severity")}</th>
+                                            <th className="text-left py-2 text-muted-foreground font-medium">{t("manager:overview.createdAt")}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {violationsData.slice(0, 10).map((violation: any) => (
+                                            <tr key={violation.violationId} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
+                                                <td className="py-2 text-foreground">{violation.annotatorName || violation.annotator?.fullName || "N/A"}</td>
+                                                <td className="py-2 text-foreground">{violation.policyName || violation.policy?.name || "N/A"}</td>
+                                                <td className="py-2 text-foreground">{violation.violationType || "N/A"}</td>
+                                                <td className="py-2 text-center">
+                                                    <span className={cn(
+                                                        "text-xs px-2 py-0.5 rounded-full font-medium",
+                                                        violation.severity === 4 ? "bg-red-500/10 text-red-500" :
+                                                        violation.severity === 3 ? "bg-orange-500/10 text-orange-500" :
+                                                        violation.severity === 2 ? "bg-yellow-500/10 text-yellow-500" :
+                                                        "bg-blue-500/10 text-blue-500"
+                                                    )}>
+                                                        {violation.severity === 4 ? "CRITICAL" :
+                                                         violation.severity === 3 ? "HIGH" :
+                                                         violation.severity === 2 ? "MEDIUM" : "LOW"}
+                                                    </span>
+                                                </td>
+                                                <td className="py-2 text-muted-foreground">{new Date(violation.createdAt).toLocaleDateString()}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                {violationsData.length > 10 && (
+                                    <div className="text-center mt-4">
+                                        <span className="text-sm text-muted-foreground">
+                                            {t("manager:overview.showingFirst10", { total: violationsData.length })}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8 text-muted-foreground">
+                                {t("manager:overview.noViolations")}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </Card>
 
             {/* Alerts */}
             {alerts.length > 0 && (
