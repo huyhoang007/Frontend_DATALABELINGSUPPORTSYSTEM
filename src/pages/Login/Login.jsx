@@ -4,10 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
-/* ─── Inline keyframes injected once ─── */
-const STYLES = `
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
+/* ─── Custom animations (không thể thay bằng Tailwind built-in) ─── */
+const CUSTOM_STYLES = `
 @keyframes scanLine {
   0%   { top: -4px; opacity: 0; }
   5%   { opacity: 1; }
@@ -35,6 +33,12 @@ const STYLES = `
   from { opacity: 0; transform: translateX(-32px); }
   to   { opacity: 1; transform: translateX(0); }
 }
+.anim-scan     { animation: scanLine 6s linear infinite; }
+.anim-bbox     { animation: bboxPulse 2.4s ease-in-out infinite; }
+.anim-grid     { animation: gridFade 4s ease-in-out infinite; }
+.anim-float    { animation: floatUp 6s ease-in-out infinite; }
+.anim-slide-r  { animation: slideInRight 0.3s ease; }
+.anim-slide-l  { animation: slideInLeft 0.3s ease; }
 
 .login-input:focus {
   outline: none;
@@ -48,14 +52,12 @@ const STYLES = `
   transform: translateY(-1px);
 }
 .login-btn:active:not(:disabled) { transform: translateY(0); }
-
 .register-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%) !important;
   box-shadow: 0 8px 32px rgba(109,40,217,0.65) !important;
   transform: translateY(-1px);
 }
 .register-btn:active:not(:disabled) { transform: translateY(0); }
-
 .switch-link {
   color: #93c5fd; font-weight: 700; text-decoration: none; cursor: pointer;
   background: none; border: none; font-family: inherit; font-size: 13px;
@@ -63,74 +65,50 @@ const STYLES = `
 .switch-link:hover { text-decoration: underline; }
 `;
 
-/* ─── AI Bounding Box component ─── */
+/* ─── AI Bounding Box ─── */
 function BBox({ style, label, confidence }) {
   return (
-    <div style={{
-      position: 'absolute',
-      border: '1.5px solid #22c55e',
-      borderRadius: '3px',
-      animation: 'bboxPulse 2.4s ease-in-out infinite',
-      pointerEvents: 'none',
-      ...style,
-    }}>
-      {[
-        { top: -1, left: -1, borderTop: '2px solid #22c55e', borderLeft: '2px solid #22c55e', width: 8, height: 8 },
-        { top: -1, right: -1, borderTop: '2px solid #22c55e', borderRight: '2px solid #22c55e', width: 8, height: 8 },
-        { bottom: -1, left: -1, borderBottom: '2px solid #22c55e', borderLeft: '2px solid #22c55e', width: 8, height: 8 },
-        { bottom: -1, right: -1, borderBottom: '2px solid #22c55e', borderRight: '2px solid #22c55e', width: 8, height: 8 },
-      ].map((s, i) => (
-        <div key={i} style={{ position: 'absolute', ...s }} />
-      ))}
-      <div style={{
-        position: 'absolute', top: -18, left: -1,
-        background: '#22c55e', color: '#000',
-        fontSize: '9px', fontWeight: 700,
-        padding: '1px 5px', borderRadius: '2px',
-        whiteSpace: 'nowrap', letterSpacing: '0.05em',
-        fontFamily: 'monospace',
-      }}>
+    <div
+      className="anim-bbox absolute border-[1.5px] border-green-500 rounded-[3px] pointer-events-none"
+      style={style}
+    >
+      {/* Corner markers */}
+      <div className="absolute -top-px -left-px w-2 h-2 border-t-2 border-l-2 border-green-500" />
+      <div className="absolute -top-px -right-px w-2 h-2 border-t-2 border-r-2 border-green-500" />
+      <div className="absolute -bottom-px -left-px w-2 h-2 border-b-2 border-l-2 border-green-500" />
+      <div className="absolute -bottom-px -right-px w-2 h-2 border-b-2 border-r-2 border-green-500" />
+      {/* Label */}
+      <div className="absolute -top-[18px] -left-px bg-green-500 text-black text-[9px] font-bold px-[5px] py-px rounded-[2px] whitespace-nowrap tracking-[0.05em] font-mono">
         {label} {confidence}
       </div>
     </div>
   );
 }
 
-/* ─── Input field helper ─── */
+/* ─── Input field ─── */
 function Field({ label, type = 'text', placeholder, value, onChange, error }) {
   const [show, setShow] = useState(false);
   const isPassword = type === 'password';
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-      <label style={{
-        fontSize: '10px', fontWeight: 700,
-        letterSpacing: '0.15em', textTransform: 'uppercase',
-        color: 'rgba(255,255,255,0.5)',
-      }}>{label}</label>
-      <div style={{ position: 'relative' }}>
+    <div className="flex flex-col gap-[7px]">
+      <label className="text-[10px] font-bold tracking-[0.15em] uppercase text-white/50">
+        {label}
+      </label>
+      <div className="relative">
         <input
-          className="login-input"
+          className={`login-input w-full h-[46px] bg-white/[0.08] rounded-[10px] text-white text-sm font-medium transition-all duration-200 ${isPassword ? 'pr-11 pl-4' : 'px-4'}`}
           type={isPassword && show ? 'text' : type}
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          style={{
-            height: '46px', padding: isPassword ? '0 44px 0 16px' : '0 16px',
-            background: 'rgba(255,255,255,0.08)',
-            border: `1px solid ${error ? 'rgba(248,113,113,0.7)' : 'rgba(150,190,255,0.2)'}`,
-            borderRadius: '10px',
-            color: '#fff', fontSize: '14px',
-            fontFamily: 'inherit', fontWeight: 500,
-            transition: 'all 0.2s', width: '100%',
-            boxSizing: 'border-box',
-          }}
+          style={{ border: `1px solid ${error ? 'rgba(248,113,113,0.7)' : 'rgba(150,190,255,0.2)'}` }}
         />
         {isPassword && (
-          <button type="button" onClick={() => setShow(s => !s)} style={{
-            position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-            background: 'none', border: 'none', cursor: 'pointer',
-            color: 'rgba(255,255,255,0.4)', padding: 0, display: 'flex',
-          }}>
+          <button
+            type="button"
+            onClick={() => setShow(s => !s)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-white/40 p-0 flex"
+          >
             {show
               ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22" /></svg>
               : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -138,7 +116,7 @@ function Field({ label, type = 'text', placeholder, value, onChange, error }) {
           </button>
         )}
       </div>
-      {error && <span style={{ fontSize: '11px', color: 'rgba(248,113,113,0.9)' }}>{error}</span>}
+      {error && <span className="text-[11px] text-red-400/90">{error}</span>}
     </div>
   );
 }
@@ -155,20 +133,12 @@ function LoginForm({ onSwitch }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!username || !password) {
-      addToast(t('auth:login.required'), 'error');
-      return;
-    }
+    if (!username || !password) { addToast(t('auth:login.required'), 'error'); return; }
     setIsLoading(true);
     try {
       const user = await login({ username, password });
       addToast(t('auth:login.success', { username: user.username }), 'success');
-      const roleRoutes = {
-        ANNOTATOR: '/annotator/tasks',
-        REVIEWER: '/reviewer/queue',
-        MANAGER: '/manager/dashboard',
-        ADMIN: '/admin/dashboard',
-      };
+      const roleRoutes = { ANNOTATOR: '/annotator/tasks', REVIEWER: '/reviewer/queue', MANAGER: '/manager/dashboard', ADMIN: '/admin/dashboard' };
       navigate(roleRoutes[user.role] || '/');
     } catch (error) {
       addToast(error.message || t('auth:login.failed'), 'error');
@@ -178,29 +148,25 @@ function LoginForm({ onSwitch }) {
   };
 
   return (
-    <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <form onSubmit={handleLogin} className="flex flex-col gap-4">
       <Field label={t('auth:login.fields.username.label')} placeholder={t('auth:login.fields.username.placeholder')} value={username} onChange={e => setUsername(e.target.value)} />
       <Field label={t('auth:login.fields.password.label')} type="password" placeholder={t('auth:login.fields.password.placeholder')} value={password} onChange={e => setPassword(e.target.value)} />
 
       <button
-        className="login-btn"
+        className="login-btn mt-1.5 h-[50px] w-full border-none rounded-[10px] text-white font-extrabold text-xs tracking-[0.14em] cursor-pointer transition-all duration-200 font-[inherit] disabled:cursor-not-allowed"
         type="submit"
         disabled={isLoading}
         style={{
-          marginTop: '6px', height: '50px', width: '100%',
           background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-          color: '#fff', fontWeight: 800, fontSize: '12px',
-          letterSpacing: '0.14em', border: 'none', borderRadius: '10px',
-          cursor: isLoading ? 'not-allowed' : 'pointer',
-          opacity: isLoading ? 0.7 : 1, transition: 'all 0.2s',
-          fontFamily: 'inherit', boxShadow: '0 4px 24px rgba(37,99,235,0.5)',
+          boxShadow: '0 4px 24px rgba(37,99,235,0.5)',
+          opacity: isLoading ? 0.7 : 1,
         }}
       >
         {isLoading ? t('auth:login.authenticating') : t('auth:login.submit')}
       </button>
 
-      <div style={{ textAlign: 'center' }}>
-        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>
+      <div className="text-center">
+        <p className="text-[13px] text-white/45 m-0">
           {t('auth:login.newAccount')}{' '}
           <button type="button" className="switch-link" onClick={onSwitch}>{t('auth:login.switchToRegister')}</button>
         </p>
@@ -250,36 +216,32 @@ function RegisterForm({ onSwitch }) {
   };
 
   return (
-    <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '13px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+    <form onSubmit={handleRegister} className="flex flex-col gap-[13px]">
+      <div className="grid grid-cols-2 gap-3">
         <Field label={t('auth:register.fields.username.label')} placeholder={t('auth:register.fields.username.placeholder')} value={form.username} onChange={set('username')} error={errors.username} />
         <Field label={t('auth:register.fields.fullName.label')} placeholder={t('auth:register.fields.fullName.placeholder')} value={form.fullName} onChange={set('fullName')} error={errors.fullName} />
       </div>
       <Field label={t('auth:register.fields.email.label')} type="email" placeholder={t('auth:register.fields.email.placeholder')} value={form.email} onChange={set('email')} error={errors.email} />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+      <div className="grid grid-cols-2 gap-3">
         <Field label={t('auth:register.fields.password.label')} type="password" placeholder={t('auth:register.fields.password.placeholder')} value={form.password} onChange={set('password')} error={errors.password} />
         <Field label={t('auth:register.fields.confirmPassword.label')} type="password" placeholder={t('auth:register.fields.confirmPassword.placeholder')} value={form.confirmPassword} onChange={set('confirmPassword')} error={errors.confirmPassword} />
       </div>
 
       <button
-        className="register-btn"
+        className="register-btn mt-1 h-[50px] w-full border-none rounded-[10px] text-white font-extrabold text-xs tracking-[0.14em] cursor-pointer transition-all duration-200 font-[inherit] disabled:cursor-not-allowed"
         type="submit"
         disabled={isLoading}
         style={{
-          marginTop: '4px', height: '50px', width: '100%',
           background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
-          color: '#fff', fontWeight: 800, fontSize: '12px',
-          letterSpacing: '0.14em', border: 'none', borderRadius: '10px',
-          cursor: isLoading ? 'not-allowed' : 'pointer',
-          opacity: isLoading ? 0.7 : 1, transition: 'all 0.2s',
-          fontFamily: 'inherit', boxShadow: '0 4px 24px rgba(109,40,217,0.5)',
+          boxShadow: '0 4px 24px rgba(109,40,217,0.5)',
+          opacity: isLoading ? 0.7 : 1,
         }}
       >
         {isLoading ? t('auth:register.creating') : t('auth:register.submit')}
       </button>
 
-      <div style={{ textAlign: 'center' }}>
-        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>
+      <div className="text-center">
+        <p className="text-[13px] text-white/45 m-0">
           {t('auth:register.hasAccount')}{' '}
           <button type="button" className="switch-link" onClick={onSwitch}>{t('auth:register.switchToLogin')}</button>
         </p>
@@ -290,152 +252,119 @@ function RegisterForm({ onSwitch }) {
 
 /* ─── Main Page ─── */
 export default function Login() {
-  const [mode, setMode] = useState('login'); // 'login' | 'register'
+  const [mode, setMode] = useState('login');
   const { t } = useTranslation(["auth"]);
-
   const isRegister = mode === 'register';
 
   return (
     <>
-      <style>{STYLES}</style>
+      <style>{CUSTOM_STYLES}</style>
 
-      <div style={{
-        position: 'relative', minHeight: '100vh', width: '100%',
-        display: 'flex', alignItems: 'center',
-        fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
-        overflow: 'hidden',
-      }}>
+      <div className="relative min-h-screen w-full flex items-center font-[Inter,'Segoe_UI',system-ui,sans-serif] overflow-hidden">
 
         {/* Background image */}
-        <img src="/login-bg.jpg" alt="" style={{
-          position: 'absolute', inset: 0,
-          width: '100%', height: '100%',
-          objectFit: 'cover', objectPosition: 'center 40%',
-        }} />
+        <img src="/login-bg.jpg" alt="" className="absolute inset-0 w-full h-full object-cover object-[center_40%]" />
 
         {/* Dark overlay */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'linear-gradient(110deg, rgba(3,10,40,0.68) 0%, rgba(5,18,65,0.58) 45%, rgba(8,22,75,0.45) 100%)',
-        }} />
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(110deg, rgba(3,10,40,0.68) 0%, rgba(5,18,65,0.58) 45%, rgba(8,22,75,0.45) 100%)' }}
+        />
 
         {/* Scanning line */}
-        <div style={{
-          position: 'absolute', left: 0, right: 0, height: '2px',
-          background: 'linear-gradient(90deg, transparent 0%, rgba(96,165,250,0.0) 20%, rgba(96,165,250,0.6) 50%, rgba(96,165,250,0.0) 80%, transparent 100%)',
-          animation: 'scanLine 6s linear infinite',
-          zIndex: 2, pointerEvents: 'none',
-        }} />
+        <div
+          className="anim-scan absolute left-0 right-0 h-[2px] z-[2] pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(96,165,250,0.0) 20%, rgba(96,165,250,0.6) 50%, rgba(96,165,250,0.0) 80%, transparent 100%)' }}
+        />
 
         {/* AI Bounding Boxes */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 3, pointerEvents: 'none' }}>
-          <BBox label="CAR" confidence="0.97" style={{ left: '22%', top: '52%', width: 80, height: 48, animationDelay: '0s' }} />
-          <BBox label="CAR" confidence="0.94" style={{ left: '30%', top: '58%', width: 64, height: 40, animationDelay: '0.6s' }} />
-          <BBox label="VEHICLE" confidence="0.89" style={{ left: '14%', top: '62%', width: 96, height: 52, animationDelay: '1.2s' }} />
-          <BBox label="CAR" confidence="0.96" style={{ left: '38%', top: '55%', width: 56, height: 36, animationDelay: '0.3s' }} />
-          <BBox label="TRUCK" confidence="0.91" style={{ left: '8%', top: '68%', width: 110, height: 58, animationDelay: '1.8s' }} />
+        <div className="absolute inset-0 z-[3] pointer-events-none">
+          <BBox label="CAR"     confidence="0.97" style={{ left: '22%', top: '52%', width: 80,  height: 48, animationDelay: '0s'   }} />
+          <BBox label="CAR"     confidence="0.94" style={{ left: '30%', top: '58%', width: 64,  height: 40, animationDelay: '0.6s' }} />
+          <BBox label="VEHICLE" confidence="0.89" style={{ left: '14%', top: '62%', width: 96,  height: 52, animationDelay: '1.2s' }} />
+          <BBox label="CAR"     confidence="0.96" style={{ left: '38%', top: '55%', width: 56,  height: 36, animationDelay: '0.3s' }} />
+          <BBox label="TRUCK"   confidence="0.91" style={{ left: '8%',  top: '68%', width: 110, height: 58, animationDelay: '1.8s' }} />
         </div>
 
         {/* Grid dots */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0,
-          width: '320px', height: '220px',
-          backgroundImage: 'radial-gradient(rgba(96,165,250,0.35) 1.5px, transparent 1.5px)',
-          backgroundSize: '22px 22px',
-          animation: 'gridFade 4s ease-in-out infinite',
-          zIndex: 2, pointerEvents: 'none',
-          maskImage: 'linear-gradient(135deg, rgba(0,0,0,0.8) 0%, transparent 70%)',
-          WebkitMaskImage: 'linear-gradient(135deg, rgba(0,0,0,0.8) 0%, transparent 70%)',
-        }} />
+        <div
+          className="anim-grid absolute bottom-0 left-0 w-[320px] h-[220px] z-[2] pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(rgba(96,165,250,0.35) 1.5px, transparent 1.5px)',
+            backgroundSize: '22px 22px',
+            maskImage: 'linear-gradient(135deg, rgba(0,0,0,0.8) 0%, transparent 70%)',
+            WebkitMaskImage: 'linear-gradient(135deg, rgba(0,0,0,0.8) 0%, transparent 70%)',
+          }}
+        />
 
         {/* Main content */}
-        <div style={{
-          position: 'relative', zIndex: 10,
-          width: '100%', maxWidth: '1280px',
-          margin: '0 auto', padding: '0 5%',
-          display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between', gap: '40px',
-        }}>
+        <div className="relative z-10 w-full max-w-[1280px] mx-auto px-[5%] flex items-center justify-between gap-10">
 
-          {/* LEFT: Marketing text */}
-          <div style={{ flex: '0 0 40%', color: '#fff', maxWidth: '480px' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-              <div style={{ width: '20px', height: '1.5px', background: 'rgba(96,165,250,0.7)' }} />
-              <span style={{
-                fontSize: '10px', fontWeight: 700,
-                letterSpacing: '0.22em', textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.55)',
-              }}>
+          {/* LEFT: Marketing */}
+          <div className="flex-[0_0_40%] text-white max-w-[480px]">
+            <div className="inline-flex items-center gap-2 mb-5">
+              <div className="w-5 h-[1.5px] bg-blue-400/70" />
+              <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-white/55">
                 {t('auth:marketing.eyebrow')}
               </span>
             </div>
-            <h1 style={{
-              fontSize: 'clamp(44px, 5vw, 68px)', fontWeight: 900,
-              lineHeight: 1.06, letterSpacing: '-0.02em',
-              margin: '0 0 24px 0', color: '#fff',
-            }}>
-              {t('auth:marketing.titleLine1')}<br />{t('auth:marketing.titleLine2')}<br />
+            <h1
+              className="font-black leading-[1.06] tracking-[-0.02em] mb-6 text-white m-0"
+              style={{ fontSize: 'clamp(44px, 5vw, 68px)' }}
+            >
+              {t('auth:marketing.titleLine1')}<br />
+              {t('auth:marketing.titleLine2')}<br />
               <span style={{
                 background: 'linear-gradient(90deg, #60a5fa 0%, #93c5fd 60%, #bfdbfe 100%)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
               }}>
                 {t('auth:marketing.titleAccent')}
               </span>
             </h1>
-            <p style={{
-              fontSize: '14px', color: 'rgba(255,255,255,0.55)',
-              lineHeight: 1.85, margin: '0 0 36px 0', maxWidth: '380px',
-            }}>
+            <p className="text-sm text-white/55 leading-[1.85] mb-9 max-w-[380px]">
               {t('auth:marketing.description')}
             </p>
           </div>
 
           {/* RIGHT: Card */}
-          <div style={{
-            flex: '0 0 auto',
-            width: '100%',
-            maxWidth: isRegister ? '520px' : '420px',
-            animation: 'floatUp 6s ease-in-out infinite',
-            transition: 'max-width 0.4s ease',
-          }}>
-            <div style={{
-              background: 'rgba(8,20,70,0.70)',
-              backdropFilter: 'blur(28px)',
-              WebkitBackdropFilter: 'blur(28px)',
-              border: `1px solid ${isRegister ? 'rgba(167,139,250,0.25)' : 'rgba(96,165,250,0.22)'}`,
-              borderRadius: '20px',
-              padding: '40px 40px 32px',
-              boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04) inset, 0 1px 0 rgba(255,255,255,0.08) inset',
-              position: 'relative', overflow: 'hidden',
-              transition: 'border-color 0.4s ease',
-            }}>
-
+          <div
+            className="anim-float flex-none w-full transition-[max-width] duration-[400ms] ease-in-out"
+            style={{ maxWidth: isRegister ? 520 : 420 }}
+          >
+            <div
+              className="relative overflow-hidden rounded-[20px] px-10 pt-10 pb-8 transition-[border-color] duration-[400ms] ease-in-out"
+              style={{
+                background: 'rgba(8,20,70,0.70)',
+                backdropFilter: 'blur(28px)',
+                WebkitBackdropFilter: 'blur(28px)',
+                border: `1px solid ${isRegister ? 'rgba(167,139,250,0.25)' : 'rgba(96,165,250,0.22)'}`,
+                boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04) inset, 0 1px 0 rgba(255,255,255,0.08) inset',
+              }}
+            >
               {/* Card shimmer */}
-              <div style={{
-                position: 'absolute', top: 0, left: '10%', right: '10%', height: '1px',
-                background: isRegister
-                  ? 'linear-gradient(90deg, transparent, rgba(167,139,250,0.5), transparent)'
-                  : 'linear-gradient(90deg, transparent, rgba(96,165,250,0.5), transparent)',
-                transition: 'background 0.4s ease',
-              }} />
+              <div
+                className="absolute top-0 left-[10%] right-[10%] h-px transition-all duration-[400ms] ease-in-out"
+                style={{
+                  background: isRegister
+                    ? 'linear-gradient(90deg, transparent, rgba(167,139,250,0.5), transparent)'
+                    : 'linear-gradient(90deg, transparent, rgba(96,165,250,0.5), transparent)',
+                }}
+              />
 
               {/* Title */}
-              <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-                <h2 style={{
-                  fontSize: '28px', fontWeight: 900,
-                  color: '#fff', letterSpacing: '-0.02em', margin: '0 0 6px 0',
-                }}>{t('common:appName')}</h2>
-                <p style={{
-                  fontSize: '9.5px', fontWeight: 700,
-                  letterSpacing: '0.22em', textTransform: 'uppercase',
-                  color: 'rgba(255,255,255,0.38)', margin: 0,
-                }}>
+              <div className="text-center mb-7">
+                <h2 className="text-[28px] font-black text-white tracking-[-0.02em] m-0 mb-1.5">
+                  {t('common:appName')}
+                </h2>
+                <p className="text-[9.5px] font-bold tracking-[0.22em] uppercase text-white/38 m-0">
                   {isRegister ? t('auth:register.title') : t('auth:login.subtitle')}
                 </p>
               </div>
 
-              {/* Animated form area */}
-              <div key={mode} style={{ animation: isRegister ? 'slideInRight 0.3s ease' : 'slideInLeft 0.3s ease' }}>
+              {/* Animated form */}
+              <div key={mode} className={isRegister ? 'anim-slide-r' : 'anim-slide-l'}>
                 {isRegister
                   ? <RegisterForm onSwitch={() => setMode('login')} />
                   : <LoginForm onSwitch={() => setMode('register')} />
@@ -443,21 +372,11 @@ export default function Login() {
               </div>
 
               {/* Footer */}
-              <div style={{
-                marginTop: '20px', paddingTop: '16px',
-                borderTop: '1px solid rgba(255,255,255,0.08)',
-                textAlign: 'center',
-              }}>
-                <p style={{
-                  fontSize: '9px', fontWeight: 700,
-                  color: 'rgba(255,255,255,0.3)',
-                  textTransform: 'uppercase', letterSpacing: '0.2em',
-                  display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', gap: '8px', margin: 0,
-                }}>
-                  <span style={{ width: '3px', height: '3px', background: '#60a5fa', borderRadius: '50%', display: 'inline-block' }} />
+              <div className="mt-5 pt-4 border-t border-white/[0.08] text-center">
+                <p className="text-[9px] font-bold text-white/30 uppercase tracking-[0.2em] flex items-center justify-center gap-2 m-0">
+                  <span className="w-[3px] h-[3px] bg-blue-400 rounded-full inline-block" />
                   {t('auth:marketing.restricted')}
-                  <span style={{ width: '3px', height: '3px', background: '#60a5fa', borderRadius: '50%', display: 'inline-block' }} />
+                  <span className="w-[3px] h-[3px] bg-blue-400 rounded-full inline-block" />
                   {t('auth:marketing.internalOnly')}
                 </p>
               </div>

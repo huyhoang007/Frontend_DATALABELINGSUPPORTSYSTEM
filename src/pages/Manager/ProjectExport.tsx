@@ -180,7 +180,7 @@ export default function ProjectExport() {
     setExporting(true);
 
     const datasetId = Number(selectedDatasetId);
-    const statusParam = "APPROVED";
+    const statusParam = "APPROVED" as any;
     const selectedDataset = datasets.find(
       (d) => String(d.datasetId ?? d.dataset_id) === selectedDatasetId,
     );

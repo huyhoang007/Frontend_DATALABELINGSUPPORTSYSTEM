@@ -223,7 +223,7 @@ const manager = {
       low: "Lỗi nhẹ",
     },
     card: {
-      code: "Lỗi",
+      code: "Lỗi #{{id}}",
       appliedProjects: "Áp dụng cho {{count}} dự án:",
       moreProjects: "+{{count}} khác",
       projectCount: "{{count}} dự án",

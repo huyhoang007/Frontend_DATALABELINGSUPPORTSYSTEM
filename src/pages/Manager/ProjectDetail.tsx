@@ -43,6 +43,10 @@ const ProjectDetail: React.FC = () => {
     const basePath = `/manager/projects/${projectId}`;
     const currentSuffix = location.pathname.replace(basePath, "").replace(/^\//, "").split("/")[0] || "";
     const activeTab = TABS.find((t) => t.key === currentSuffix) ? currentSuffix : "";
+    const hotspot = getHotspotQueryBehavior(60_000, 600_000) as {
+        staleTime: number; gcTime: number; refetchOnMount: boolean | "always";
+    };
+
     const {
         data: project,
         isLoading,
@@ -51,8 +55,8 @@ const ProjectDetail: React.FC = () => {
         queryKey: projectQueryKeys.detail(projectId),
         queryFn: () => fetchProjectDetail(projectId),
         enabled: Boolean(projectId),
-        placeholderData: (previousData) => previousData,
-        ...getHotspotQueryBehavior(60_000, 600_000),
+        placeholderData: (previousData: ProjectData | undefined) => previousData,
+        ...hotspot,
     });
 
     const getStatusDot = (status: string) => {

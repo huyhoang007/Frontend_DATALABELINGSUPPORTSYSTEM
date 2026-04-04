@@ -71,16 +71,22 @@ export default function ProjectData() {
     setTimeout(() => setToast(""), 3000);
   }, []);
 
+  const hotspot = getHotspotQueryBehavior(30_000, 300_000) as {
+    staleTime: number;
+    gcTime: number;
+    refetchOnMount: boolean | "always";
+  };
+
   const {
     data: datasets = [],
     isLoading: loadingDatasets,
     refetch: refetchDatasets,
-  } = useQuery({
+  } = useQuery<any[]>({
     queryKey: projectQueryKeys.datasets(numericProjectId),
     queryFn: () => fetchProjectDatasets(numericProjectId),
     enabled: Boolean(numericProjectId),
-    placeholderData: (previousData) => previousData,
-    ...getHotspotQueryBehavior(30_000, 300_000),
+    placeholderData: (previousData: any) => previousData,
+    ...hotspot,
     refetchInterval: 10_000,
   });
 
@@ -553,10 +559,10 @@ export default function ProjectData() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {datasets.map((ds: any) => {
+              {(datasets as any[]).map((ds: any) => {
                 const s = ds.computedStatus || "PENDING";
                 const badgeClass =
-                  BATCH_STATUS_MAP[s] ?? BATCH_STATUS_MAP["PENDING"];
+                  BATCH_STATUS_MAP[s as keyof typeof BATCH_STATUS_MAP] ?? BATCH_STATUS_MAP["PENDING"];
                 return (
                   <TableRow key={ds.datasetId}>
                     <TableCell>{ds.name}</TableCell>

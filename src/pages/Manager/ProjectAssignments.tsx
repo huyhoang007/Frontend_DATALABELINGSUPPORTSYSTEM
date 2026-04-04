@@ -165,12 +165,19 @@ export default function ProjectAssignments() {
     }
   }, []);
 
-  const { data: datasets = [], isLoading: loadingDatasets } = useQuery({
+  const hotspot30 = getHotspotQueryBehavior(30_000, 300_000) as {
+    staleTime: number; gcTime: number; refetchOnMount: boolean | "always";
+  };
+  const hotspot300 = getHotspotQueryBehavior(300_000, 600_000) as {
+    staleTime: number; gcTime: number; refetchOnMount: boolean | "always";
+  };
+
+  const { data: datasets = [], isLoading: loadingDatasets } = useQuery<any[]>({
     queryKey: projectQueryKeys.datasets(pid),
     queryFn: () => fetchProjectDatasets(Number(pid)),
     enabled: Boolean(pid),
-    placeholderData: (previousData) => previousData,
-    ...getHotspotQueryBehavior(30_000, 300_000),
+    placeholderData: (previousData: any) => previousData,
+    ...hotspot30,
   });
 
   const {
@@ -182,18 +189,18 @@ export default function ProjectAssignments() {
     queryKey: projectQueryKeys.assignments(pid),
     queryFn: () => fetchProjectAssignments(Number(pid)),
     enabled: Boolean(pid),
-    placeholderData: (previousData) => previousData,
-    ...getHotspotQueryBehavior(30_000, 300_000),
+    placeholderData: (previousData: Assignment[] | undefined) => previousData,
+    ...hotspot30,
   });
   const {
     data: usersResult,
     isLoading: loadingUsers,
     refetch: refetchUsers,
-  } = useQuery({
+  } = useQuery<{ users: any[]; usersError: string | null }>({
     queryKey: ["assignment-users"],
     queryFn: fetchUsers,
-    placeholderData: (previousData) => previousData,
-    ...getHotspotQueryBehavior(300_000, 600_000),
+    placeholderData: (previousData: any) => previousData,
+    ...hotspot300,
   });
 
   const mappedUsers = usersResult?.users || [];

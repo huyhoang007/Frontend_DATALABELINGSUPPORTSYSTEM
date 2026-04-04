@@ -2,111 +2,33 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-// Modern Enterprise UI Color Palette
-const T = {
-    bg: "#F7F8F9",
-    surface: "#FFFFFF",
-    surfaceHover: "#F1F2F4",
-    border: "#DCDFE4",
-    borderStrong: "#B3B9C4",
-    textPrimary: "#172B4D",
-    textSecondary: "#44546F",
-    textMuted: "#626F86",
-    brand: "#0C66E4",
-    brandHover: "#0055CC",
-    brandLight: "#E9F2FF",
-    green: "#1F845A",
-    greenBg: "#DCFFF1",
-    amber: "#A54800",
-    amberBg: "#FFF7D6",
-    purple: "#5E4DB2",
-    purpleBg: "#F3F0FF",
-    red: "#DE350B",
-    redBg: "#FFEBE6",
-};
-
 export default function Unauthorized() {
   const navigate = useNavigate();
   const { t } = useTranslation(["common"]);
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      background: T.bg,
-      fontFamily: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif"
-    }}>
-      <div style={{
-        maxWidth: "400px",
-        width: "100%",
-        background: T.surface,
-        border: `1px solid ${T.border}`,
-        borderRadius: "6px",
-        padding: "32px",
-        textAlign: "center",
-        boxShadow: "0 1px 3px rgba(9,30,66,.08)"
-      }}>
-        <div style={{ fontSize: "48px", marginBottom: "16px" }}>🚫</div>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-full max-w-sm bg-card border border-border rounded-lg p-8 text-center shadow-sm">
+        <div className="text-5xl mb-4">🚫</div>
 
-        <h1 style={{
-          fontSize: "24px",
-          fontWeight: 800,
-          color: T.red,
-          marginBottom: "8px",
-          letterSpacing: "-0.02em"
-        }}>
+        <h1 className="text-2xl font-extrabold text-destructive mb-2 tracking-tight">
           {t("common:unauthorized.title")}
         </h1>
 
-        <p style={{
-          fontSize: "13px",
-          color: T.textMuted,
-          marginBottom: "24px",
-          lineHeight: "1.5"
-        }}>
+        <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
           {t("common:unauthorized.description")}
         </p>
 
-        <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
+        <div className="flex gap-3 justify-center">
           <button
             onClick={() => navigate('/')}
-            onMouseEnter={(e) => e.currentTarget.style.background = T.brandHover}
-            onMouseLeave={(e) => e.currentTarget.style.background = T.brand}
-            style={{
-              height: "32px",
-              padding: "0 16px",
-              fontSize: "12px",
-              fontWeight: 700,
-              color: "#FFFFFF",
-              background: T.brand,
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontFamily: "inherit",
-              transition: "all .15s"
-            }}
+            className="h-8 px-4 text-xs font-bold text-white bg-primary hover:bg-primary/90 rounded transition-colors"
           >
             {t("common:actions.backToHome")}
           </button>
           <button
             onClick={() => navigate(-1)}
-            onMouseEnter={(e) => e.currentTarget.style.background = T.surfaceHover}
-            onMouseLeave={(e) => e.currentTarget.style.background = T.surface}
-            style={{
-              height: "32px",
-              padding: "0 16px",
-              fontSize: "12px",
-              fontWeight: 600,
-              color: T.textPrimary,
-              background: T.surface,
-              border: `1px solid ${T.border}`,
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontFamily: "inherit",
-              transition: "all .15s"
-            }}
+            className="h-8 px-4 text-xs font-semibold text-foreground bg-background hover:bg-accent border border-border rounded transition-colors"
           >
             {t("common:actions.back")}
           </button>
