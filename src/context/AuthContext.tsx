@@ -1,18 +1,42 @@
 import * as React from "react";
 import { authApi } from "../api/authApi";
 
-const AuthContext = React.createContext(null);
+interface UserInfo {
+    username: string;
+    role: string;
+}
 
-const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 phút không thao tác
+interface LoginCredentials {
+    username: string;
+    password: string;
+}
+
+interface RegisterPayload {
+    username: string;
+    email: string;
+    password: string;
+    [key: string]: unknown;
+}
+
+interface AuthContextValue {
+    user: UserInfo | null;
+    isLoading: boolean;
+    login: (credentials: LoginCredentials) => Promise<UserInfo>;
+    register: (payload: RegisterPayload) => Promise<unknown>;
+    logout: () => void;
+    isAuthenticated: boolean;
+}
+
+const AuthContext = React.createContext<AuthContextValue | null>(null);
+
+const IDLE_TIMEOUT = 30 * 60 * 1000;
 const SESSION_KEY = "sessionExpiry";
-
 const ACTIVITY_EVENTS = ["mousemove", "mousedown", "keydown", "touchstart", "scroll", "click"];
 
-export function AuthProvider({ children }) {
-    const [user, setUser] = React.useState(null);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+    const [user, setUser] = React.useState<UserInfo | null>(null);
     const [isLoading, setIsLoading] = React.useState(true);
 
-    // Khởi tạo: kiểm tra session còn hạn không
     React.useEffect(() => {
         const storedUser = localStorage.getItem("user");
         const storedToken = localStorage.getItem("accessToken");
@@ -29,7 +53,6 @@ export function AuthProvider({ children }) {
         setIsLoading(false);
     }, []);
 
-    // Idle timeout: reset expiry mỗi khi user thao tác
     React.useEffect(() => {
         if (!user) return;
 
@@ -39,7 +62,6 @@ export function AuthProvider({ children }) {
 
         ACTIVITY_EVENTS.forEach((ev) => window.addEventListener(ev, resetExpiry, { passive: true }));
 
-        // Kiểm tra mỗi 30 giây xem session có hết hạn chưa
         const interval = setInterval(() => {
             const expiry = localStorage.getItem(SESSION_KEY);
             if (!expiry || Date.now() >= Number(expiry)) {
@@ -59,30 +81,19 @@ export function AuthProvider({ children }) {
         };
     }, [user]);
 
-    const login = async (credentials) => {
-        try {
-            const response = await authApi.login(credentials);
-            const { accessToken, username, role } = response;
-
-            localStorage.setItem("accessToken", accessToken);
-            localStorage.setItem(SESSION_KEY, String(Date.now() + IDLE_TIMEOUT));
-
-            const userInfo = { username, role };
-            localStorage.setItem("user", JSON.stringify(userInfo));
-            setUser(userInfo);
-
-            return userInfo;
-        } catch (error) {
-            throw error;
-        }
+    const login = async (credentials: LoginCredentials): Promise<UserInfo> => {
+        const response = await authApi.login(credentials) as { accessToken: string; username: string; role: string };
+        const { accessToken, username, role } = response;
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem(SESSION_KEY, String(Date.now() + IDLE_TIMEOUT));
+        const userInfo: UserInfo = { username, role };
+        localStorage.setItem("user", JSON.stringify(userInfo));
+        setUser(userInfo);
+        return userInfo;
     };
 
-    const register = async (payload) => {
-        try {
-            return await authApi.register(payload);
-        } catch (error) {
-            throw error;
-        }
+    const register = async (payload: RegisterPayload): Promise<unknown> => {
+        return await authApi.register(payload);
     };
 
     const logout = () => {
@@ -94,13 +105,13 @@ export function AuthProvider({ children }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, isLoading, isAuthenticated: !!user }}>
             {children}
         </AuthContext.Provider>
     );
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextValue {
     const context = React.useContext(AuthContext);
     if (!context) {
         throw new Error("useAuth must be used within an AuthProvider");

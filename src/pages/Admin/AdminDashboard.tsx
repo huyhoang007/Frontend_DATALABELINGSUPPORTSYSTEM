@@ -9,26 +9,6 @@ import {
   translateRole,
 } from '../../i18n/helpers';
 
-// Bảng màu Modern Enterprise UI
-const T = {
-  bg: "#F7F8F9",
-  surface: "#FFFFFF",
-  surfaceHover: "#F1F2F4",
-  border: "#DCDFE4",
-  textPrimary: "#172B4D",
-  textSecondary: "#44546F",
-  textMuted: "#626F86",
-  brand: "#0C66E4",
-  brandHover: "#0055CC",
-  brandLight: "#E9F2FF",
-  green: "#1F845A",
-  greenBg: "#DCFFF1",
-  amber: "#A54800",
-  amberBg: "#FFF7D6",
-  purple: "#5E4DB2",
-  purpleBg: "#F3F0FF",
-};
-
 interface AdminDashboardProps {
   user?: any;
   onLogout?: () => void;
@@ -41,27 +21,25 @@ interface RoleStats {
   admins: number;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
+const ROLE_BARS = [
+  { key: 'annotators' as const, gradient: 'from-violet-500 to-purple-600' },
+  { key: 'reviewers'  as const, gradient: 'from-cyan-500 to-sky-600' },
+  { key: 'managers'   as const, gradient: 'from-blue-500 to-blue-700' },
+  { key: 'admins'     as const, gradient: 'from-red-500 to-red-700' },
+];
+
+const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation(["admin", "common"]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [hoveredKpi, setHoveredKpi] = useState<number | null>(null);
-  const [hoveredButton, setHoveredButton] = useState<string | null>(null);
-  const [roleStats, setRoleStats] = useState<RoleStats>({
-    annotators: 0,
-    reviewers: 0,
-    managers: 0,
-    admins: 0
-  });
+  const [roleStats, setRoleStats] = useState<RoleStats>({ annotators: 0, reviewers: 0, managers: 0, admins: 0 });
   const [recentActivityLogs, setRecentActivityLogs] = useState<any[]>([]);
 
-  // Helper function to format time ago
   const formatTimeAgo = (dateString: string) => {
     if (!dateString) return t("admin:dashboard.unknownTime");
     const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
+    const diffMs = Date.now() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
@@ -73,419 +51,139 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
     return date.toLocaleDateString(i18n.language === "en" ? "en-US" : "vi-VN");
   };
 
-  // Fetch real data from backend
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    (async () => {
       try {
         setIsLoading(true);
-        
-        // Fetch all users to calculate role distribution
         const usersResponse = await userApi.getAllUsers({ page: 0, size: 1000 }) as any;
         const users = usersResponse.content || [];
-        
         setTotalUsers(usersResponse.totalElements || users.length);
-        
-        // Calculate role distribution from real data
-        const stats = {
+        setRoleStats({
           annotators: users.filter((u: any) => u.roleName === 'ANNOTATOR').length,
-          reviewers: users.filter((u: any) => u.roleName === 'REVIEWER').length,
-          managers: users.filter((u: any) => u.roleName === 'MANAGER').length,
-          admins: users.filter((u: any) => u.roleName === 'ADMIN').length
-        };
-        setRoleStats(stats);
-        
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
-        setTotalUsers(0);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+          reviewers:  users.filter((u: any) => u.roleName === 'REVIEWER').length,
+          managers:   users.filter((u: any) => u.roleName === 'MANAGER').length,
+          admins:     users.filter((u: any) => u.roleName === 'ADMIN').length,
+        });
+      } catch { setTotalUsers(0); }
+      finally { setIsLoading(false); }
+    })();
 
-    const fetchRecentActivities = async () => {
+    (async () => {
       try {
-        // Fetch recent activity logs
-        const logsResponse = await activityLogApi.getAllLogs({ page: 0, size: 5 }) as any;
-        const logs = logsResponse.content || logsResponse || [];
-        
-        setRecentActivityLogs(logs);
-      } catch (error) {
-        console.error('Failed to fetch recent activities:', error);
-        setRecentActivityLogs([]);
-      }
-    };
-
-    fetchDashboardData();
-    fetchRecentActivities();
+        const res = await activityLogApi.getAllLogs({ page: 0, size: 5 }) as any;
+        setRecentActivityLogs(res.content || res || []);
+      } catch { setRecentActivityLogs([]); }
+    })();
   }, []);
 
-  const recentActivities = useMemo(
-    () =>
-      recentActivityLogs.map((log: any, index: number) => {
-        const username =
-          log.username ||
-          t("admin:dashboard.activityMessages.userFallback", {
-            id: log.userId,
-          });
-        const target =
-          translateAdminLogTargetNoun(log.target || log.targetType) ||
-          t("admin:dashboard.activityMessages.targetFallback");
-
-        let message = "";
-        if (log.action?.toLowerCase().includes("login")) {
-          message = t("admin:dashboard.activityMessages.login", {
-            user: username,
-          });
-        } else if (log.action?.toLowerCase().includes("create")) {
-          message = t("admin:dashboard.activityMessages.create", {
-            user: username,
-            target,
-          });
-        } else if (log.action?.toLowerCase().includes("update")) {
-          message = t("admin:dashboard.activityMessages.update", {
-            user: username,
-            target,
-          });
-        } else if (log.action?.toLowerCase().includes("delete")) {
-          message = t("admin:dashboard.activityMessages.delete", {
-            user: username,
-            target,
-          });
-        } else {
-          message = t("admin:dashboard.activityMessages.generic", {
-            user: username,
-            action: translateAdminLogAction(log.action),
-          });
-        }
-
-        return {
-          id: log.logId || log.id || index,
-          message,
-          timestamp: formatTimeAgo(log.timestamp || log.createdAt),
-          type: log.action?.toLowerCase() || "unknown",
-        };
-      }),
-    [recentActivityLogs, t, i18n.language],
-  );
+  const recentActivities = useMemo(() =>
+    recentActivityLogs.map((log: any, index: number) => {
+      const username = log.username || t("admin:dashboard.activityMessages.userFallback", { id: log.userId });
+      const target = translateAdminLogTargetNoun(log.target || log.targetType) || t("admin:dashboard.activityMessages.targetFallback");
+      let message = "";
+      const action = log.action?.toLowerCase() || "";
+      if (action.includes("login"))  message = t("admin:dashboard.activityMessages.login",   { user: username });
+      else if (action.includes("create")) message = t("admin:dashboard.activityMessages.create", { user: username, target });
+      else if (action.includes("update")) message = t("admin:dashboard.activityMessages.update", { user: username, target });
+      else if (action.includes("delete")) message = t("admin:dashboard.activityMessages.delete", { user: username, target });
+      else message = t("admin:dashboard.activityMessages.generic", { user: username, action: translateAdminLogAction(log.action) });
+      return { id: log.logId || log.id || index, message, timestamp: formatTimeAgo(log.timestamp || log.createdAt) };
+    }),
+  [recentActivityLogs, t, i18n.language]);
 
   return (
-    <div style={{
-      padding: "32px 40px",
-      minHeight: "100%",
-      background: T.bg,
-      fontFamily: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif"
-    }}>
-      {/* Welcome Header */}
-      <div style={{
-        padding: "32px",
-        background: T.surface,
-        border: `1px solid ${T.border}`,
-        borderRadius: "6px",
-        marginBottom: "32px",
-        boxShadow: "0 1px 3px rgba(9,30,66,.08)"
-      }}>
-        <div>
-          <p style={{
-            fontSize: "11px",
-            fontWeight: 700,
-            color: T.textMuted,
-            textTransform: "uppercase",
-            letterSpacing: "0.1em",
-            marginBottom: "4px"
-          }}>
-            {t("admin:dashboard.systemAdmin")}
-          </p>
-          <h1 style={{
-            fontSize: "28px",
-            fontWeight: 800,
-            color: T.textPrimary,
-            marginBottom: "8px",
-            letterSpacing: "-0.02em"
-          }}>
-            {t("admin:dashboard.title")}
-          </h1>
-          <p style={{
-            fontSize: "14px",
-            color: T.textMuted
-          }}>
-            {t("admin:dashboard.subtitle")}
-          </p>
-        </div>
+    <div className="p-8 min-h-full bg-background space-y-6">
+
+      {/* Header */}
+      <div className="bg-card border border-border rounded-lg p-8 shadow-sm">
+        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+          {t("admin:dashboard.systemAdmin")}
+        </p>
+        <h1 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">
+          {t("admin:dashboard.title")}
+        </h1>
+        <p className="text-sm text-muted-foreground">{t("admin:dashboard.subtitle")}</p>
       </div>
 
-      {/* Hành động quản trị */}
-      <div style={{
-        padding: "32px",
-        background: T.surface,
-        border: `1px solid ${T.border}`,
-        borderRadius: "6px",
-        marginBottom: "32px",
-        boxShadow: "0 1px 3px rgba(9,30,66,.08)"
-      }}>
-        <h3 style={{
-          marginBottom: "24px",
-          fontSize: "11px",
-          fontWeight: 700,
-          color: T.textMuted,
-          textTransform: "uppercase",
-          letterSpacing: "0.1em"
-        }}>
+      {/* Quick Actions */}
+      <div className="bg-card border border-border rounded-lg p-8 shadow-sm">
+        <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-6">
           {t("admin:dashboard.adminActions")}
         </h3>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
-          {/* Quản lý người dùng */}
+        <div className="flex flex-wrap gap-4">
           <button
             onClick={() => navigate('/admin/users')}
-            onMouseEnter={() => setHoveredButton('users')}
-            onMouseLeave={() => setHoveredButton(null)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              height: "48px",
-              padding: "0 24px",
-              fontSize: "13px",
-              fontWeight: 700,
-              color: "#FFFFFF",
-              background: hoveredButton === 'users' ? T.brandHover : T.brand,
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontFamily: "inherit",
-              transition: "all .15s",
-              boxShadow: "0 2px 4px rgba(9,30,66,.15)"
-            }}
+            className="flex items-center gap-2 h-12 px-6 text-sm font-bold text-white bg-primary hover:bg-primary/90 rounded transition-colors shadow-sm"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>group</span>
+            <span className="material-symbols-outlined text-[20px]">group</span>
             {t("common:nav.users")}
           </button>
-
-          {/* Theo dõi nhật ký */}
           <button
             onClick={() => navigate('/admin/logs')}
-            onMouseEnter={() => setHoveredButton('logs')}
-            onMouseLeave={() => setHoveredButton(null)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              height: "48px",
-              padding: "0 24px",
-              fontSize: "13px",
-              fontWeight: 700,
-              color: T.textPrimary,
-              background: hoveredButton === 'logs' ? T.surfaceHover : T.surface,
-              border: `1px solid ${T.border}`,
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontFamily: "inherit",
-              transition: "all .15s"
-            }}
+            className="flex items-center gap-2 h-12 px-6 text-sm font-bold text-foreground bg-card hover:bg-accent border border-border rounded transition-colors"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>bar_chart</span>
+            <span className="material-symbols-outlined text-[20px]">bar_chart</span>
             {t("common:nav.activityLogs")}
           </button>
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-        gap: "16px",
-        marginBottom: "32px"
-      }}>
-        <div
-          onMouseEnter={() => setHoveredKpi(0)}
-          onMouseLeave={() => setHoveredKpi(null)}
-          style={{
-            padding: "24px",
-            background: T.surface,
-            border: `1px solid ${T.border}`,
-            borderRadius: "6px",
-            borderTop: `3px solid ${T.brand}`,
-            boxShadow: hoveredKpi === 0 ? "0 4px 12px rgba(9,30,66,.12)" : "0 1px 3px rgba(9,30,66,.08)",
-            transition: "all .2s"
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
-            <p style={{
-              fontSize: "11px",
-              fontWeight: 700,
-              color: T.textMuted,
-              textTransform: "uppercase",
-              letterSpacing: "0.08em"
-            }}>
-              {t("admin:dashboard.totalUsers")}
-            </p>
-            <span className="material-symbols-outlined" style={{ fontSize: "20px", color: T.brand }}>
-              group
-            </span>
-          </div>
-          <div style={{
-            fontSize: "32px",
-            fontWeight: 800,
-            color: T.textPrimary,
-            lineHeight: 1
-          }}>
-            {isLoading ? '...' : totalUsers.toLocaleString()}
-          </div>
+      {/* KPI */}
+      <div className="bg-card border border-t-4 border-t-primary border-border rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+        <div className="flex items-start justify-between mb-3">
+          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+            {t("admin:dashboard.totalUsers")}
+          </p>
+          <span className="material-symbols-outlined text-[20px] text-primary">group</span>
+        </div>
+        <div className="text-4xl font-extrabold text-foreground leading-none">
+          {isLoading ? '...' : totalUsers.toLocaleString()}
         </div>
       </div>
 
-      {/* Role Distribution & Recent Activity */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "24px"
-      }}>
+      {/* Role Distribution + Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
         {/* Role Distribution */}
-        <div style={{
-          padding: "32px",
-          background: T.surface,
-          border: `1px solid ${T.border}`,
-          borderRadius: "6px",
-          boxShadow: "0 1px 3px rgba(9,30,66,.08)"
-        }}>
-          <h3 style={{
-            marginBottom: "24px",
-            fontSize: "16px",
-            fontWeight: 700,
-            color: T.textPrimary
-          }}>
-            {t("admin:dashboard.roleDistribution")}
-          </h3>
-          
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            {/* Annotators */}
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "14px", color: T.textSecondary }}>{translateRole("ANNOTATOR")}</span>
-                <span style={{ fontSize: "16px", fontWeight: 700, color: T.textPrimary }}>{roleStats.annotators}</span>
-              </div>
-              <div style={{ 
-                height: "8px", 
-                background: T.border, 
-                borderRadius: "4px",
-                overflow: "hidden"
-              }}>
-                <div style={{
-                  height: "100%",
-                  width: `${totalUsers > 0 ? (roleStats.annotators / totalUsers) * 100 : 0}%`,
-                  background: "linear-gradient(90deg, #667eea 0%, #764ba2 100%)",
-                  borderRadius: "4px",
-                  transition: "width 0.3s ease"
-                }} />
-              </div>
-            </div>
-
-            {/* Reviewers */}
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "14px", color: T.textSecondary }}>{translateRole("REVIEWER")}</span>
-                <span style={{ fontSize: "16px", fontWeight: 700, color: T.textPrimary }}>{roleStats.reviewers}</span>
-              </div>
-              <div style={{ 
-                height: "8px", 
-                background: T.border, 
-                borderRadius: "4px",
-                overflow: "hidden"
-              }}>
-                <div style={{
-                  height: "100%",
-                  width: `${totalUsers > 0 ? (roleStats.reviewers / totalUsers) * 100 : 0}%`,
-                  background: "linear-gradient(90deg, #06b6d4 0%, #0891b2 100%)",
-                  borderRadius: "4px",
-                  transition: "width 0.3s ease"
-                }} />
-              </div>
-            </div>
-
-            {/* Managers */}
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "14px", color: T.textSecondary }}>{translateRole("MANAGER")}</span>
-                <span style={{ fontSize: "16px", fontWeight: 700, color: T.textPrimary }}>{roleStats.managers}</span>
-              </div>
-              <div style={{ 
-                height: "8px", 
-                background: T.border, 
-                borderRadius: "4px",
-                overflow: "hidden"
-              }}>
-                <div style={{
-                  height: "100%",
-                  width: `${totalUsers > 0 ? (roleStats.managers / totalUsers) * 100 : 0}%`,
-                  background: "linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)",
-                  borderRadius: "4px",
-                  transition: "width 0.3s ease"
-                }} />
-              </div>
-            </div>
-
-            {/* Admins */}
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "14px", color: T.textSecondary }}>{translateRole("ADMIN")}</span>
-                <span style={{ fontSize: "16px", fontWeight: 700, color: T.textPrimary }}>{roleStats.admins}</span>
-              </div>
-              <div style={{ 
-                height: "8px", 
-                background: T.border, 
-                borderRadius: "4px",
-                overflow: "hidden"
-              }}>
-                <div style={{
-                  height: "100%",
-                  width: `${totalUsers > 0 ? (roleStats.admins / totalUsers) * 100 : 0}%`,
-                  background: "linear-gradient(90deg, #ef4444 0%, #dc2626 100%)",
-                  borderRadius: "4px",
-                  transition: "width 0.3s ease"
-                }} />
-              </div>
-            </div>
+        <div className="bg-card border border-border rounded-lg p-8 shadow-sm">
+          <h3 className="text-base font-bold text-foreground mb-6">{t("admin:dashboard.roleDistribution")}</h3>
+          <div className="space-y-5">
+            {ROLE_BARS.map(({ key, gradient }) => {
+              const count = roleStats[key];
+              const pct = totalUsers > 0 ? (count / totalUsers) * 100 : 0;
+              return (
+                <div key={key}>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-muted-foreground">{translateRole(key.slice(0, -1).toUpperCase())}</span>
+                    <span className="text-base font-bold text-foreground">{count}</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full bg-gradient-to-r ${gradient} rounded-full transition-all duration-500`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
         {/* Recent Activity */}
-        <div style={{
-          padding: "32px",
-          background: T.surface,
-          border: `1px solid ${T.border}`,
-          borderRadius: "6px",
-          boxShadow: "0 1px 3px rgba(9,30,66,.08)"
-        }}>
-          <h3 style={{
-            marginBottom: "24px",
-            fontSize: "16px",
-            fontWeight: 700,
-            color: T.textPrimary
-          }}>
-            {t("admin:dashboard.recentActivity")}
-          </h3>
-          
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {recentActivities.map((activity) => (
-              <div key={activity.id} style={{
-                paddingBottom: "16px",
-                borderBottom: `1px solid ${T.border}`
-              }}>
-                <p style={{
-                  fontSize: "14px",
-                  color: T.textPrimary,
-                  marginBottom: "4px"
-                }}>
-                  {activity.message}
-                </p>
-                <p style={{
-                  fontSize: "12px",
-                  color: T.textMuted
-                }}>
-                  {activity.timestamp}
-                </p>
-              </div>
-            ))}
-          </div>
+        <div className="bg-card border border-border rounded-lg p-8 shadow-sm">
+          <h3 className="text-base font-bold text-foreground mb-6">{t("admin:dashboard.recentActivity")}</h3>
+          {recentActivities.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("admin:dashboard.noActivity")}</p>
+          ) : (
+            <div className="space-y-4">
+              {recentActivities.map((activity) => (
+                <div key={activity.id} className="pb-4 border-b border-border last:border-0 last:pb-0">
+                  <p className="text-sm text-foreground mb-1">{activity.message}</p>
+                  <p className="text-xs text-muted-foreground">{activity.timestamp}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

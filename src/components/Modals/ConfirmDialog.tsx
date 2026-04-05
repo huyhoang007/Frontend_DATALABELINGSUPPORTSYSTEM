@@ -12,156 +12,49 @@ interface ConfirmDialogProps {
   loading?: boolean;
 }
 
+const typeConfig = {
+  danger:  { iconColor: 'text-red-500',    confirmBtn: 'bg-red-500 hover:bg-red-600',    icon: '!' },
+  warning: { iconColor: 'text-orange-500', confirmBtn: 'bg-orange-500 hover:bg-orange-600', icon: '!' },
+  info:    { iconColor: 'text-blue-500',   confirmBtn: 'bg-blue-500 hover:bg-blue-600',  icon: 'i' },
+};
+
 const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
-  isOpen,
-  onClose,
-  onConfirm,
-  title,
-  message,
-  confirmText = 'Xác nhận',
-  cancelText = 'Hủy',
-  type = 'danger',
-  loading = false
+  isOpen, onClose, onConfirm, title, message,
+  confirmText = 'Xác nhận', cancelText = 'Hủy',
+  type = 'danger', loading = false,
 }) => {
   if (!isOpen) return null;
 
-  const getTypeStyles = () => {
-    switch (type) {
-      case 'danger':
-        return {
-          iconColor: '#f44336',
-          confirmBg: '#f44336',
-          icon: '!'
-        };
-      case 'warning':
-        return {
-          iconColor: '#ff9800',
-          confirmBg: '#ff9800',
-          icon: '!'
-        };
-      case 'info':
-        return {
-          iconColor: '#2196f3',
-          confirmBg: '#2196f3',
-          icon: 'i'
-        };
-      default:
-        return {
-          iconColor: '#f44336',
-          confirmBg: '#f44336',
-          icon: '!'
-        };
-    }
-  };
-
-  const typeStyles = getTypeStyles();
+  const { iconColor, confirmBtn, icon } = typeConfig[type];
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 1100
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '8px',
-        padding: '24px',
-        width: '90%',
-        maxWidth: '400px',
-        textAlign: 'center'
-      }}>
-        <div style={{
-          fontSize: '48px',
-          marginBottom: '16px',
-          color: typeStyles.iconColor
-        }}>
-          {typeStyles.icon}
-        </div>
+    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[1100]">
+      <div className="bg-white rounded-lg p-6 w-[90%] max-w-sm text-center">
+        <div className={`text-5xl mb-4 ${iconColor}`}>{icon}</div>
+        <h3 className="m-0 mb-4 text-gray-800 text-xl font-semibold">{title}</h3>
+        <p className="m-0 mb-6 text-gray-500 leading-relaxed">{message}</p>
 
-        <h3 style={{
-          margin: '0 0 16px 0',
-          color: '#333',
-          fontSize: '20px'
-        }}>
-          {title}
-        </h3>
-
-        <p style={{
-          margin: '0 0 24px 0',
-          color: '#666',
-          lineHeight: '1.5'
-        }}>
-          {message}
-        </p>
-
-        <div style={{
-          display: 'flex',
-          gap: '12px',
-          justifyContent: 'center'
-        }}>
+        <div className="flex gap-3 justify-center">
           <button
             onClick={onClose}
             disabled={loading}
-            style={{
-              padding: '12px 24px',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              backgroundColor: 'white',
-              color: '#666',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: '16px',
-              opacity: loading ? 0.6 : 1
-            }}
+            className="px-6 py-3 border border-gray-300 rounded bg-white text-gray-500 cursor-pointer text-base disabled:opacity-60 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
           >
             {cancelText}
           </button>
-          
           <button
             onClick={onConfirm}
             disabled={loading}
-            style={{
-              padding: '12px 24px',
-              border: 'none',
-              borderRadius: '4px',
-              backgroundColor: loading ? '#ccc' : typeStyles.confirmBg,
-              color: 'white',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
+            className={`px-6 py-3 border-none rounded text-white text-base flex items-center gap-2 transition-colors
+              ${loading ? 'bg-gray-300 cursor-not-allowed' : `${confirmBtn} cursor-pointer`}`}
           >
             {loading && (
-              <div style={{
-                width: '16px',
-                height: '16px',
-                border: '2px solid #fff',
-                borderTop: '2px solid transparent',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite'
-              }} />
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
             )}
             {loading ? 'Đang xử lý...' : confirmText}
           </button>
         </div>
       </div>
-
-      <style>
-        {`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}
-      </style>
     </div>
   );
 };

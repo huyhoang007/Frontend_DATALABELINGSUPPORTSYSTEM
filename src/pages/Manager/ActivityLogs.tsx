@@ -2,14 +2,31 @@ import { useEffect, useState } from "react";
 import { activityLogApi } from "../../api/activityLogApi";
 import { useToast } from "../../context/ToastContext";
 
-const roleBadgeClasses = {
+interface ActivityLog {
+  logId: number;
+  createdAt: string;
+  actorName: string;
+  actorRole: string;
+  actorId: string | number;
+  action: string;
+  message: string;
+}
+
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+const roleBadgeClasses: Record<string, string> = {
   admin: "border-red-200 bg-red-50 text-red-600",
   manager: "border-violet-200 bg-violet-50 text-violet-600",
   annotator: "border-blue-200 bg-blue-50 text-blue-600",
   reviewer: "border-amber-200 bg-amber-50 text-amber-700",
 };
 
-function getActionBadgeClass(action) {
+function getActionBadgeClass(action: string): string {
   if (action.includes("CREATE")) return "border-emerald-200 bg-emerald-50 text-emerald-700";
   if (action.includes("REJECT")) return "border-red-200 bg-red-50 text-red-600";
   if (action.includes("APPROVE")) return "border-blue-200 bg-blue-50 text-blue-600";
@@ -22,14 +39,14 @@ const tableHeaderClass =
 
 export default function ActivityLogs() {
   const { addToast } = useToast();
-  const [hoveredRow, setHoveredRow] = useState(null);
-  const [logs, setLogs] = useState([]);
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({
     q: "",
     action: "ALL",
   });
-  const [pagination, setPagination] = useState({
+  const [pagination, setPagination] = useState<Pagination>({
     page: 1,
     limit: 10,
     total: 0,
@@ -39,17 +56,17 @@ export default function ActivityLogs() {
   const loadLogs = async () => {
     setIsLoading(true);
     try {
-      const result = await activityLogApi.list({
+      const result = await (activityLogApi as any).list({
         page: pagination.page,
         limit: pagination.limit,
         q: filters.q,
         action: filters.action,
       });
 
-      setLogs(result.data);
+      setLogs((result as any).data);
       setPagination((prev) => ({
         ...prev,
-        ...result.meta,
+        ...(result as any).meta,
       }));
     } catch (error) {
       console.error(error);
@@ -64,23 +81,23 @@ export default function ActivityLogs() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.page, filters]);
 
-  const handleSearchChange = (e) => {
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilters((prev) => ({ ...prev, q: e.target.value }));
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
-  const handleActionChange = (e) => {
+  const handleActionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFilters((prev) => ({ ...prev, action: e.target.value }));
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
-  const handlePageChange = (newPage) => {
+  const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
       setPagination((prev) => ({ ...prev, page: newPage }));
     }
   };
 
-  const getRoleBadge = (role) => {
+  const getRoleBadge = (role: string) => {
     const badgeClass =
       roleBadgeClasses[role] || "border-slate-300 bg-slate-100 text-slate-500";
     return (
@@ -92,7 +109,7 @@ export default function ActivityLogs() {
     );
   };
 
-  const getActionBadge = (action) => (
+  const getActionBadge = (action: string) => (
     <span
       className={`rounded-md border px-2 py-1 font-mono text-[10px] font-bold ${getActionBadgeClass(action)}`}
     >

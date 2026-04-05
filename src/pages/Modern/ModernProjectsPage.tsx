@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -26,29 +26,6 @@ function computeProjectStatus(assignments: any[]): string {
   if (statuses.some((s) => ["IN_PROGRESS", "SUBMITTED", "RE_SUBMITTED"].includes(s))) return "in_progress";
   return "draft";
 }
-
-// Bảng màu Modern Enterprise UI (Atlassian/Jira style)
-const T = {
-  bg: "#F7F8F9",
-  surface: "#FFFFFF",
-  surfaceHover: "#F1F2F4",
-  border: "#DCDFE4",
-  borderStrong: "#B3B9C4",
-  textPrimary: "#172B4D",
-  textSecondary: "#44546F",
-  textMuted: "#626F86",
-  brand: "#0C66E4",
-  brandHover: "#0055CC",
-  brandLight: "#E9F2FF",
-  green: "#1F845A",
-  greenBg: "#DCFFF1",
-  amber: "#A54800",
-  amberBg: "#FFF7D6",
-  purple: "#5E4DB2",
-  purpleBg: "#F3F0FF",
-  red: "#DE350B",
-  redBg: "#FFEBE6",
-};
 
 // Define local interfaces matching backend response if needed,
 // or mapped from 'types/cvat'.
@@ -126,7 +103,8 @@ const ModernProjectsPage: React.FC = () => {
   const [editStatus, setEditStatus] = useState("");
 
   const { addToast } = useToast() as { addToast: (message: string, type?: 'success' | 'error' | 'info') => void };
-  const { user } = useAuth();
+  const { user: rawUser } = useAuth();
+  const user = rawUser as any;
 
   const legacyViewerName = user?.fullName || user?.username || "Me";
 
@@ -177,15 +155,19 @@ const ModernProjectsPage: React.FC = () => {
     }
   }, [summaryModeEnabled, legacyViewerName]);
 
+  const hotspot = getHotspotQueryBehavior(60_000, 600_000) as {
+    staleTime: number; gcTime: number; refetchOnMount: boolean | "always";
+  };
+
   const {
     data: summaryProjects = [],
     isLoading: summaryLoading,
-  } = useQuery({
+  } = useQuery<Project[]>({
     queryKey: projectQueryKeys.summaryList(user?.userId ?? user?.id ?? "me"),
     queryFn: () => fetchProjectSummaryList(legacyViewerName),
     enabled: summaryModeEnabled,
-    placeholderData: cacheEnabled ? (previousData) => previousData : undefined,
-    ...getHotspotQueryBehavior(60_000, 600_000),
+    placeholderData: cacheEnabled ? (previousData: Project[] | undefined) => previousData : undefined,
+    ...hotspot,
   });
 
   const projects = summaryModeEnabled ? summaryProjects : legacyProjects;
@@ -277,7 +259,7 @@ const ModernProjectsPage: React.FC = () => {
       });
       
       // Use the response data from API which has the actual updated status
-      const updatedProject = response.data || response;
+      const updatedProject = (response as any).data || response;
       
       await invalidateProjectSummaryData(queryClient, editingProject.project_id);
       if (!summaryModeEnabled) {
@@ -465,32 +447,15 @@ const ModernProjectsPage: React.FC = () => {
   }), [projects, selectedStatus, showDeletedProjects]);
 
   return (
-    <div style={{
-      padding: '32px',
-      minHeight: '100vh',
-      backgroundColor: T.bg,
-    }}>
+    <div className="p-8 min-h-screen bg-[#F7F8F9]">
       {/* Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 0,
-        }}>
+        <div className="flex items-center justify-between">
           <div>
-            <h1 style={{
-              fontSize: '24px',
-              fontWeight: '600',
-              color: T.textPrimary,
-              marginBottom: '8px',
-            }}>
+            <h1 className="text-2xl font-semibold text-[#172B4D] mb-2">
               {t("manager:projects.title")}
             </h1>
-            <p style={{
-              fontSize: '15px',
-              color: T.textSecondary,
-            }}>
+            <p className="text-[15px] text-[#44546F]">
               {showDeletedProjects ? t("manager:projects.deletedSubtitle") : t("manager:projects.subtitle")}
             </p>
           </div>
@@ -603,7 +568,7 @@ const ModernProjectsPage: React.FC = () => {
       {filteredProjects.length === 0 ? (
         <Card className="p-16 text-center bg-card/80 backdrop-blur border-border/60">
           <div className="text-4xl mb-4">
-            {showDeletedProjects ? "📦" : "📋"}
+            {showDeletedProjects ? "📦" : "❌"}
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-2">
                   {showDeletedProjects ? t("manager:projects.noDeleted") : t("manager:projects.noProject")}

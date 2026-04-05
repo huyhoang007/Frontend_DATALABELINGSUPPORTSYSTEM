@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { datasetApi } from "../../api/datasetApi";
@@ -133,22 +133,15 @@ export default function ProjectExport() {
         const assignments = await assignmentApi.getAssignmentsByProject(
           Number(projectId),
         );
-        console.log("📊 All assignments:", assignments);
 
         const relevantAssignments = assignments.filter(
           (a: any) => String(a.datasetId ?? a.dataset_id) === selectedDatasetId,
         );
-        console.log(
-          `📊 Filtered assignments for dataset ${selectedDatasetId}:`,
-          relevantAssignments,
-        );
 
         const statusResult = computeBatchStatus(relevantAssignments);
-        console.log("📊 Computed batch status:", statusResult);
 
         setBatchStatus(statusResult);
       } catch (err) {
-        console.error("❌ Error loading batch status:", err);
         setBatchStatus("PENDING");
       }
     })();

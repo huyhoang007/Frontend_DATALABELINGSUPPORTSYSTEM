@@ -1,19 +1,6 @@
 import * as React from "react";
 import { cn } from "../../utils/cn";
 
-// designSystem.json:
-// "BadgeStatus": {
-//   "shape": "pill",
-//   "typography": { "size": "micro", "uppercase": true, "weight": 900, "tracking": "wide" },
-//   "content": { "allowDot": true }
-// }
-// "status": {
-//   "TODO": { "intent": "neutral_or_success", "style": "chip_with_dot" },
-//   "IN_PROGRESS": { "intent": "warning", "style": "chip_with_pulse_dot" },
-//   "SUBMITTED": { "intent": "info", "style": "chip" },
-//   "REJECTED": { "intent": "danger", "style": "chip_with_icon_or_left_border" },
-//   "APPROVED": { "intent": "success", "style": "chip_with_dot" }
-// }
 
 const statusConfig = {
     TODO: { color: "text-slate-600 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700", dot: "bg-slate-400" },

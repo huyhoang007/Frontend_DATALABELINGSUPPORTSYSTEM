@@ -66,7 +66,12 @@ const CUSTOM_STYLES = `
 `;
 
 /* ─── AI Bounding Box ─── */
-function BBox({ style, label, confidence }) {
+interface BBoxProps {
+  style: React.CSSProperties;
+  label: string;
+  confidence: string;
+}
+function BBox({ style, label, confidence }: BBoxProps) {
   return (
     <div
       className="anim-bbox absolute border-[1.5px] border-green-500 rounded-[3px] pointer-events-none"
@@ -86,7 +91,15 @@ function BBox({ style, label, confidence }) {
 }
 
 /* ─── Input field ─── */
-function Field({ label, type = 'text', placeholder, value, onChange, error }) {
+interface FieldProps {
+  label: string;
+  type?: string;
+  placeholder: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error?: string;
+}
+function Field({ label, type = 'text', placeholder, value, onChange, error }: FieldProps) {
   const [show, setShow] = useState(false);
   const isPassword = type === 'password';
   return (
@@ -122,7 +135,7 @@ function Field({ label, type = 'text', placeholder, value, onChange, error }) {
 }
 
 /* ─── Login Form ─── */
-function LoginForm({ onSwitch }) {
+function LoginForm({ onSwitch }: { onSwitch: () => void }) {
   const navigate = useNavigate();
   const { t } = useTranslation(["auth"]);
   const { login } = useAuth();
@@ -131,16 +144,17 @@ function LoginForm({ onSwitch }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) { addToast(t('auth:login.required'), 'error'); return; }
     setIsLoading(true);
     try {
       const user = await login({ username, password });
       addToast(t('auth:login.success', { username: user.username }), 'success');
-      const roleRoutes = { ANNOTATOR: '/annotator/tasks', REVIEWER: '/reviewer/queue', MANAGER: '/manager/dashboard', ADMIN: '/admin/dashboard' };
+      const roleRoutes: Record<string, string> = { ANNOTATOR: '/annotator/tasks', REVIEWER: '/reviewer/queue', MANAGER: '/manager/dashboard', ADMIN: '/admin/dashboard' };
       navigate(roleRoutes[user.role] || '/');
-    } catch (error) {
+    } catch (err: unknown) {
+      const error = err as { message?: string };
       addToast(error.message || t('auth:login.failed'), 'error');
     } finally {
       setIsLoading(false);
@@ -149,8 +163,8 @@ function LoginForm({ onSwitch }) {
 
   return (
     <form onSubmit={handleLogin} className="flex flex-col gap-4">
-      <Field label={t('auth:login.fields.username.label')} placeholder={t('auth:login.fields.username.placeholder')} value={username} onChange={e => setUsername(e.target.value)} />
-      <Field label={t('auth:login.fields.password.label')} type="password" placeholder={t('auth:login.fields.password.placeholder')} value={password} onChange={e => setPassword(e.target.value)} />
+      <Field label={t('auth:login.fields.username.label')} placeholder={t('auth:login.fields.username.placeholder')} value={username} onChange={e => setUsername(e.target.value)} error="" />
+      <Field label={t('auth:login.fields.password.label')} type="password" placeholder={t('auth:login.fields.password.placeholder')} value={password} onChange={e => setPassword(e.target.value)} error="" />
 
       <button
         className="login-btn mt-1.5 h-[50px] w-full border-none rounded-[10px] text-white font-extrabold text-xs tracking-[0.14em] cursor-pointer transition-all duration-200 font-[inherit] disabled:cursor-not-allowed"
@@ -176,21 +190,28 @@ function LoginForm({ onSwitch }) {
 }
 
 /* ─── Register Form ─── */
-function RegisterForm({ onSwitch }) {
+interface RegisterFormState {
+  username: string;
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
   const { t } = useTranslation(["auth"]);
   const { register } = useAuth();
   const { addToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [form, setForm] = useState({ username: '', fullName: '', email: '', password: '', confirmPassword: '' });
-  const [errors, setErrors] = useState({});
+  const [form, setForm] = useState<RegisterFormState>({ username: '', fullName: '', email: '', password: '', confirmPassword: '' });
+  const [errors, setErrors] = useState<Partial<RegisterFormState>>({});
 
-  const set = (field) => (e) => {
+  const set = (field: keyof RegisterFormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [field]: e.target.value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
   };
 
   const validate = () => {
-    const errs = {};
+    const errs: Partial<RegisterFormState> = {};
     if (!form.username.trim() || form.username.length < 3) errs.username = t('auth:register.validation.shortMin3');
     if (!form.fullName.trim()) errs.fullName = t('auth:register.validation.shortRequired');
     if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) errs.email = t('auth:register.validation.emailInvalid');
@@ -200,7 +221,7 @@ function RegisterForm({ onSwitch }) {
     return Object.keys(errs).length === 0;
   };
 
-  const handleRegister = async (e) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
     setIsLoading(true);
@@ -208,7 +229,8 @@ function RegisterForm({ onSwitch }) {
       await register({ username: form.username, email: form.email, password: form.password, fullName: form.fullName });
       addToast(t('auth:register.success'), 'success');
       onSwitch();
-    } catch (error) {
+    } catch (err: unknown) {
+      const error = err as { message?: string };
       addToast(error.message || t('auth:register.failed'), 'error');
     } finally {
       setIsLoading(false);

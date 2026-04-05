@@ -5,44 +5,24 @@ const NotFound: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div style={{
-      display: 'flex', justifyContent: 'center', alignItems: 'center',
-      minHeight: '80vh', backgroundColor: '#f5f5f5',
-    }}>
-      <div style={{
-        maxWidth: 400, width: '100%', margin: '0 16px',
-        background: '#fff', borderRadius: 12,
-        boxShadow: '0 4px 24px rgba(0,0,0,0.1)',
-        padding: '40px 32px', textAlign: 'center',
-      }}>
-        <div style={{ fontSize: 56, marginBottom: 16 }}>🔍</div>
-
-        <h1 style={{ fontSize: 48, fontWeight: 700, color: '#172B4D', marginBottom: 8 }}>404</h1>
-
-        <h2 style={{ fontSize: 18, fontWeight: 600, color: '#44546F', marginBottom: 12 }}>
-          Trang không tồn tại
-        </h2>
-
-        <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 28, lineHeight: 1.6 }}>
+    <div className="flex justify-center items-center min-h-[80vh] bg-gray-100">
+      <div className="max-w-sm w-full mx-4 bg-white rounded-xl shadow-lg p-10 text-center">
+        <div className="text-6xl mb-4">🔍</div>
+        <h1 className="text-5xl font-bold text-[#172B4D] mb-2">404</h1>
+        <h2 className="text-lg font-semibold text-[#44546F] mb-3">Trang không tồn tại</h2>
+        <p className="text-sm text-gray-500 mb-7 leading-relaxed">
           Trang bạn đang tìm kiếm không tồn tại hoặc đã được di chuyển.
         </p>
-
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+        <div className="flex gap-3 justify-center">
           <button
             onClick={() => navigate('/dashboard')}
-            style={{
-              padding: '10px 20px', background: '#2563eb', color: '#fff',
-              border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer',
-            }}
+            className="px-5 py-2.5 bg-blue-600 text-white border-none rounded-lg text-sm font-semibold cursor-pointer hover:bg-blue-700 transition-colors"
           >
             Về Dashboard
           </button>
           <button
             onClick={() => navigate(-1)}
-            style={{
-              padding: '10px 20px', background: '#fff', color: '#374151',
-              border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer',
-            }}
+            className="px-5 py-2.5 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm font-semibold cursor-pointer hover:bg-gray-50 transition-colors"
           >
             Quay lại
           </button>

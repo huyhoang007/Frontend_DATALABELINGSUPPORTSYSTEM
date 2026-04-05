@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { activityLogApi } from "../../api/activityLogApi";
 import { useToast } from "../../context/ToastContext";
@@ -8,9 +8,27 @@ import {
   translateAdminLogTarget,
 } from "../../i18n/helpers";
 
+interface AdminLog {
+  logId?: number;
+  id?: number;
+  timestamp?: string;
+  createdAt?: string;
+  username?: string;
+  userId?: string | number;
+  action?: string;
+  target?: string;
+  targetType?: string;
+  [key: string]: unknown;
+}
+
+interface LogResponse {
+  content?: AdminLog[];
+  [key: string]: unknown;
+}
+
 export default function AdminActivityLogs() {
   const { t, i18n } = useTranslation(["admin", "common"]);
-  const [logs, setLogs] = useState([]);
+  const [logs, setLogs] = useState<AdminLog[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { addToast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
@@ -28,8 +46,8 @@ export default function AdminActivityLogs() {
   const fetchLogs = async () => {
     setIsLoading(true);
     try {
-      const data = await activityLogApi.getAllLogs({ page: 0, size: 50 });
-      setLogs(data.content || data || []);
+      const data = await activityLogApi.getAllLogs({ page: 0, size: 50 }) as LogResponse;
+      setLogs((data.content || data || []) as AdminLog[]);
     } catch (error) {
       console.error("Failed to fetch activity logs:", error);
       addToast(t("admin:logs.loadFailed"), "error");
@@ -41,20 +59,20 @@ export default function AdminActivityLogs() {
   const handleSearch = async () => {
     setIsLoading(true);
     try {
-      let data;
+      let data: AdminLog[];
       if (filters.dateFrom && filters.dateTo) {
         data = await activityLogApi.getLogsByDateRange(
           filters.dateFrom + "T00:00:00",
           filters.dateTo + "T23:59:59",
-        );
+        ) as AdminLog[];
       } else if (filters.action) {
-        const result = await activityLogApi.getLogsByAction(filters.action);
-        data = result.content || result || [];
+        const result = await activityLogApi.getLogsByAction(filters.action) as LogResponse;
+        data = (result.content || result || []) as AdminLog[];
       } else {
-        const result = await activityLogApi.getAllLogs({ page: 0, size: 50 });
-        data = result.content || result || [];
+        const result = await activityLogApi.getAllLogs({ page: 0, size: 50 }) as LogResponse;
+        data = (result.content || result || []) as AdminLog[];
       }
-      setLogs(Array.isArray(data) ? data : data.content || []);
+      setLogs(Array.isArray(data) ? data : ((data as unknown as LogResponse).content || []));
       setCurrentPage(1);
     } catch (error) {
       console.error("Failed to search logs:", error);
@@ -64,20 +82,20 @@ export default function AdminActivityLogs() {
     }
   };
 
-  const getActionColor = (action) => {
-    const actionLower = action?.toLowerCase() || "";
-    if (actionLower.includes("login") || actionLower.includes("auth"))
-      return "#10b981";
-    if (actionLower.includes("create") || actionLower.includes("add"))
-      return "#3b82f6";
-    if (actionLower.includes("update") || actionLower.includes("edit"))
-      return "#f59e0b";
-    if (actionLower.includes("delete") || actionLower.includes("remove"))
-      return "#ef4444";
-    return "#6b7280";
+  const getActionClass = (action: string): string => {
+    const a = action?.toLowerCase() || "";
+    if (a.includes("login") || a.includes("auth"))
+      return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400";
+    if (a.includes("create") || a.includes("add"))
+      return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+    if (a.includes("update") || a.includes("edit"))
+      return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
+    if (a.includes("delete") || a.includes("remove"))
+      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+    return "bg-muted text-muted-foreground";
   };
 
-  const formatDateTime = (dateString) => {
+  const formatDateTime = (dateString: string | undefined): string => {
     if (!dateString) return "-";
     const date = new Date(dateString);
     return date.toLocaleString(i18n.language === "en" ? "en-US" : "vi-VN", {
@@ -213,24 +231,20 @@ export default function AdminActivityLogs() {
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
                             {log.username?.[0]?.toUpperCase() ||
-                              log.userId?.[0] ||
+                              String(log.userId ?? "?")?.[0] ||
                               "?"}
                           </div>
                           <span className="text-sm text-foreground">
                             {log.username ||
-                              t("admin:logs.userFallback", { id: log.userId })}
+                              t("admin:logs.userFallback", { id: log.userId ?? "" })}
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium"
-                          style={{
-                            backgroundColor: `${getActionColor(log.action)}20`,
-                            color: getActionColor(log.action),
-                          }}
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getActionClass(log.action ?? "")}`}
                         >
-                          {translateAdminLogAction(log.action)}
+                          {translateAdminLogAction(log.action ?? "")}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-foreground">

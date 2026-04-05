@@ -3,31 +3,47 @@ import { createPortal } from "react-dom";
 import { cn } from "../utils/cn";
 import { translate } from "../i18n/helpers";
 
-const ToastContext = React.createContext(null);
+type ToastType = "success" | "error" | "warning" | "info";
 
-export function ToastProvider({ children }) {
-    const [toasts, setToasts] = React.useState([]);
+interface Toast {
+    id: string;
+    message: string;
+    type: ToastType;
+}
 
-    const addToast = React.useCallback((messageOrObj, type = "info") => {
-        // Support both addToast("msg","type") and addToast({type, message})
-        let msg = messageOrObj;
-        let t = type;
+interface ToastObj {
+    message?: string;
+    type?: ToastType;
+}
+
+interface ToastContextValue {
+    addToast: (messageOrObj: string | ToastObj, type?: ToastType) => void;
+}
+
+const ToastContext = React.createContext<ToastContextValue | null>(null);
+
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+    const [toasts, setToasts] = React.useState<Toast[]>([]);
+
+    const addToast = React.useCallback((messageOrObj: string | ToastObj, type: ToastType = "info") => {
+        let msg: string;
+        let t: ToastType = type;
         if (messageOrObj && typeof messageOrObj === "object") {
             msg = messageOrObj.message || String(messageOrObj);
             t = messageOrObj.type || type;
+        } else {
+            msg = messageOrObj as string;
         }
-        const id = Math.random().toString(36).substr(2, 9);
+        const id = Math.random().toString(36).substring(2, 9);
         setToasts((prev) => [...prev, { id, message: msg, type: t }]);
 
-        // Auto dismiss ALL toasts after duration
-        // Success/Info: 3 seconds, Error/Warning: 5 seconds
-        const duration = (t === 'error' || t === 'warning') ? 5000 : 3000;
+        const duration = (t === "error" || t === "warning") ? 5000 : 3000;
         setTimeout(() => {
             setToasts((prev) => prev.filter((toast) => toast.id !== id));
         }, duration);
     }, []);
 
-    const removeToast = React.useCallback((id) => {
+    const removeToast = React.useCallback((id: string) => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
     }, []);
 
@@ -70,7 +86,7 @@ export function ToastProvider({ children }) {
     );
 }
 
-export function useToast() {
+export function useToast(): ToastContextValue {
     const context = React.useContext(ToastContext);
     if (!context) {
         throw new Error("useToast must be used within a ToastProvider");

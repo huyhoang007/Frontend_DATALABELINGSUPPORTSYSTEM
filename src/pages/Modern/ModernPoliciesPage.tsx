@@ -1,35 +1,11 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { policyApi } from "../../api/policyApi";
 import { projectApi } from "../../api/projectApi";
 import { useToast } from "../../context/ToastContext";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
-import { cn } from "../../utils/cn";
 import { translateDataType, translateProjectStatus } from "../../i18n/helpers";
-
-// Bảng màu Modern Enterprise UI (Atlassian/Jira style)
-const T = {
-  bg: "#F7F8F9",
-  surface: "#FFFFFF",
-  surfaceHover: "#F1F2F4",
-  border: "#DCDFE4",
-  borderStrong: "#B3B9C4",
-  textPrimary: "#172B4D",
-  textSecondary: "#44546F",
-  textMuted: "#626F86",
-  brand: "#0C66E4",
-  brandHover: "#0055CC",
-  brandLight: "#E9F2FF",
-  green: "#1F845A",
-  greenBg: "#DCFFF1",
-  amber: "#A54800",
-  amberBg: "#FFF7D6",
-  purple: "#5E4DB2",
-  purpleBg: "#F3F0FF",
-  red: "#DE350B",
-  redBg: "#FFEBE6",
-};
 
 // Type declaration for toast
 const useTypedToast = () =>
@@ -130,7 +106,14 @@ const ModernPoliciesPage: React.FC = () => {
             policyIds.forEach((pid) => {
               if (pid == null) return;
               if (!policyProjectMap[pid]) policyProjectMap[pid] = [];
-              policyProjectMap[pid].push(project);
+              // Normalize camelCase → snake_case để khớp interface Project
+              policyProjectMap[pid].push({
+                project_id: project.project_id ?? project.projectId,
+                name: project.name,
+                data_type: project.data_type ?? project.dataType,
+                status: project.status,
+                manager_id: project.manager_id ?? project.managerId,
+              });
             });
           });
           // Gắn projects vào từng policy
@@ -256,15 +239,6 @@ const ModernPoliciesPage: React.FC = () => {
   const getPolicyId = (policy: Policy) =>
     policy.policyId || policy.policy_id || 0;
 
-  const getPolicyIcon = (errorName: string) => {
-    if (errorName.includes("Quality")) return "Q";
-    if (errorName.includes("Consistency")) return "C";
-    if (errorName.includes("Completeness")) return "M";
-    if (errorName.includes("Boundary")) return "B";
-    if (errorName.includes("Review")) return "R";
-    return "P";
-  };
-
   const getPolicyColor = (errorName: string) => {
     if (errorName.includes("Quality")) return "#f59e0b";
     if (errorName.includes("Consistency")) return "#3b82f6";
@@ -275,40 +249,15 @@ const ModernPoliciesPage: React.FC = () => {
   };
 
   return (
-    <div
-      style={{
-        padding: "32px",
-        minHeight: "100vh",
-        backgroundColor: T.bg,
-      }}
-    >
+    <div className="p-8 min-h-screen bg-[#F7F8F9]">
       {/* Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "24px",
-          }}
-        >
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1
-              style={{
-                fontSize: "24px",
-                fontWeight: "600",
-                color: T.textPrimary,
-                marginBottom: "8px",
-              }}
-            >
+            <h1 className="text-2xl font-semibold text-[#172B4D] mb-2">
               {t("manager:policies.title")}
             </h1>
-            <p
-              style={{
-                fontSize: "15px",
-                color: T.textSecondary,
-              }}
-            >
+            <p className="text-[15px] text-[#44546F]">
               {t("manager:policies.subtitle")}
             </p>
           </div>
@@ -323,229 +272,39 @@ const ModernPoliciesPage: React.FC = () => {
         </div>
 
         {/* Stats */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: "16px",
-          }}
-        >
-          <div
-            style={{
-              padding: "16px",
-              borderRadius: "10px",
-              border: `1px solid ${T.border}`,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-              backgroundColor: T.brandLight,
-              color: T.brand,
-            }}
-          >
-            <div
-              style={{
-                fontSize: "24px",
-                fontWeight: "700",
-                marginBottom: "4px",
-              }}
-            >
-              {policies.length}
-            </div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: "500",
-                opacity: 0.8,
-              }}
-            >
-              {t("manager:policies.stats.total")}
-            </div>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
+          <div className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#E9F2FF] text-[#0C66E4]">
+            <div className="text-2xl font-bold mb-1">{policies.length}</div>
+            <div className="text-xs font-medium opacity-80">{t("manager:policies.stats.total")}</div>
           </div>
-          <div
-            style={{
-              padding: "16px",
-              borderRadius: "10px",
-              border: `1px solid ${T.border}`,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-              backgroundColor: T.greenBg,
-              color: T.green,
-            }}
-          >
-            <div
-              style={{
-                fontSize: "24px",
-                fontWeight: "700",
-                marginBottom: "4px",
-              }}
-            >
-              {policies.reduce(
-                (sum, policy) => sum + (policy.projects?.length || 0),
-                0,
-              )}
-            </div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: "500",
-                opacity: 0.8,
-              }}
-            >
-              {t("manager:policies.stats.appliedProjects")}
-            </div>
+          <div className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#DCFFF1] text-[#1F845A]">
+            <div className="text-2xl font-bold mb-1">{policies.reduce((sum, policy) => sum + (policy.projects?.length || 0), 0)}</div>
+            <div className="text-xs font-medium opacity-80">{t("manager:policies.stats.appliedProjects")}</div>
           </div>
-          <div
-            style={{
-              padding: "16px",
-              borderRadius: "10px",
-              border: `1px solid ${T.border}`,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-              backgroundColor: T.redBg,
-              color: T.red,
-            }}
-          >
-            <div
-              style={{
-                fontSize: "24px",
-                fontWeight: "700",
-                marginBottom: "4px",
-              }}
-            >
-              {policies.filter((p) => p.errorLevel === "CRITICAL").length}
-            </div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: "500",
-                opacity: 0.8,
-              }}
-            >
-              {t("manager:policies.stats.critical")}
-            </div>
+          <div className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#FFEBE6] text-[#DE350B]">
+            <div className="text-2xl font-bold mb-1">{policies.filter((p) => p.errorLevel === "CRITICAL").length}</div>
+            <div className="text-xs font-medium opacity-80">{t("manager:policies.stats.critical")}</div>
           </div>
-          <div
-            style={{
-              padding: "16px",
-              borderRadius: "10px",
-              border: `1px solid ${T.border}`,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-              backgroundColor: "#FFEBE6",
-              color: "#BF2600",
-            }}
-          >
-            <div
-              style={{
-                fontSize: "24px",
-                fontWeight: "700",
-                marginBottom: "4px",
-              }}
-            >
-              {policies.filter((p) => p.errorLevel === "HIGH").length}
-            </div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: "500",
-                opacity: 0.8,
-              }}
-            >
-              {t("manager:policies.stats.high")}
-            </div>
+          <div className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#FFEBE6] text-[#BF2600]">
+            <div className="text-2xl font-bold mb-1">{policies.filter((p) => p.errorLevel === "HIGH").length}</div>
+            <div className="text-xs font-medium opacity-80">{t("manager:policies.stats.high")}</div>
           </div>
-          <div
-            style={{
-              padding: "16px",
-              borderRadius: "10px",
-              border: `1px solid ${T.border}`,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-              backgroundColor: T.amberBg,
-              color: T.amber,
-            }}
-          >
-            <div
-              style={{
-                fontSize: "24px",
-                fontWeight: "700",
-                marginBottom: "4px",
-              }}
-            >
-              {policies.filter((p) => p.errorLevel === "MEDIUM").length}
-            </div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: "500",
-                opacity: 0.8,
-              }}
-            >
-              {t("manager:policies.stats.medium")}
-            </div>
+          <div className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#FFF7D6] text-[#A54800]">
+            <div className="text-2xl font-bold mb-1">{policies.filter((p) => p.errorLevel === "MEDIUM").length}</div>
+            <div className="text-xs font-medium opacity-80">{t("manager:policies.stats.medium")}</div>
           </div>
-          <div
-            style={{
-              padding: "16px",
-              borderRadius: "10px",
-              border: `1px solid ${T.border}`,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-              backgroundColor: T.greenBg,
-              color: T.green,
-            }}
-          >
-            <div
-              style={{
-                fontSize: "24px",
-                fontWeight: "700",
-                marginBottom: "4px",
-              }}
-            >
-              {policies.filter((p) => p.errorLevel === "LOW").length}
-            </div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: "500",
-                opacity: 0.8,
-              }}
-            >
-              {t("manager:policies.stats.low")}
-            </div>
+          <div className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#DCFFF1] text-[#1F845A]">
+            <div className="text-2xl font-bold mb-1">{policies.filter((p) => p.errorLevel === "LOW").length}</div>
+            <div className="text-xs font-medium opacity-80">{t("manager:policies.stats.low")}</div>
           </div>
         </div>
       </Card>
 
       {/* Policies Grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
-          gap: "24px",
-          marginTop: "32px",
-        }}
-      >
+      <div className="grid grid-cols-1 md:grid-cols-1 xl:grid-cols-3 gap-6 mt-8">
         {policies.map((policy) => (
           <Card
-            key={policy.policy_id}
+            key={policy.policyId ?? policy.policy_id ?? getPolicyName(policy)}
             className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-card/80 backdrop-blur border-border/60 hover:border-primary/30 group cursor-pointer"
             onClick={() => {
               setSelectedPolicy(policy);
@@ -584,7 +343,7 @@ const ModernPoliciesPage: React.FC = () => {
               <div className="flex flex-wrap gap-1.5">
                 {policy.projects?.slice(0, 2).map((project) => (
                   <div
-                    key={project.project_id}
+                    key={project.project_id ?? project.name}
                     className="px-2 py-1 bg-blue-500/10 text-blue-600 rounded-md text-[10px] font-medium"
                   >
                     {project.name}
@@ -772,7 +531,7 @@ const ModernPoliciesPage: React.FC = () => {
                 <div className="space-y-2">
                   {selectedPolicy.projects?.map((project) => (
                     <div
-                      key={project.project_id}
+                      key={project.project_id ?? project.name}
                       className="p-3 bg-card border border-border/60 rounded-lg flex items-center justify-between hover:border-primary/30 transition-colors"
                     >
                       <div>

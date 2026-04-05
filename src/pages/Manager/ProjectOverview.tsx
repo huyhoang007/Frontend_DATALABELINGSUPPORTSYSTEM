@@ -204,7 +204,7 @@ export default function ProjectOverview() {
                         </div>
                         <div>
                             <span className="text-sm font-bold text-amber-500">{pendingAnnotations}</span>
-                            <div className="text-[10px] text-muted-foreground">Chờ duyệt</div>
+                            <div className="text-[10px] text-muted-foreground">{t("manager:overview.pending")}</div>
                         </div>
                         <div>
                             <span className="text-sm font-bold text-red-400">{rejectedAnnotations}</span>
@@ -223,7 +223,7 @@ export default function ProjectOverview() {
                     </div>
                 </Card>
                 <Card className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
-                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Vi phạm</div>
+                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("manager:overview.violations")}</div>
                     <div className="text-3xl font-bold text-foreground">{policyComplianceRate.toFixed(0)}%</div>
                     <div className="text-xs text-red-400 font-medium mt-1">{t("manager:overview.violationsLabel")}</div>
                 </Card>

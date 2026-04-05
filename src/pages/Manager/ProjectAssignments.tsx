@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useOutletContext } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -119,7 +119,6 @@ export default function ProjectAssignments() {
       const arr = Array.isArray(data)
         ? data
         : data?.content || data?.data || [];
-      console.log("[ASSIGNMENTS_USERS] raw", arr.length, "users from API");
 
       const mapped = arr.map((u: any) => ({
         id: String(u.userId ?? u.id),
@@ -130,12 +129,10 @@ export default function ProjectAssignments() {
       cacheUsers(mapped);
       return { users: mapped, usersError: null as string | null };
     } catch (err: any) {
-      console.error("[ASSIGNMENTS_USERS] fetch error", err);
       const httpStatus = err?.status;
 
       const cached = loadCachedUsers();
       if (cached.length > 0) {
-        console.log("[ASSIGNMENTS_USERS] using cached users:", cached.length);
         return {
           users: cached,
           usersError:
@@ -237,7 +234,6 @@ export default function ProjectAssignments() {
         annotatorId: Number(selAnnotator),
         reviewerId: Number(selReviewer),
       });
-      console.log("[ASSIGNMENTS] created", response);
       showToast(
         t("manager:assignments.created", { id: response.assignmentId }),
       );

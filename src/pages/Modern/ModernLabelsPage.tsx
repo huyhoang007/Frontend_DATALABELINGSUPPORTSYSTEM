@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { labelApi } from "../../api/labelApi";
 import { labelRuleApi } from "../../api/labelRuleApi";
@@ -6,29 +6,6 @@ import { useToast } from "../../context/ToastContext";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { cn } from "../../utils/cn";
-
-// Bảng màu Modern Enterprise UI (Atlassian/Jira style)
-const T = {
-  bg: "#F7F8F9",
-  surface: "#FFFFFF",
-  surfaceHover: "#F1F2F4",
-  border: "#DCDFE4",
-  borderStrong: "#B3B9C4",
-  textPrimary: "#172B4D",
-  textSecondary: "#44546F",
-  textMuted: "#626F86",
-  brand: "#0C66E4",
-  brandHover: "#0055CC",
-  brandLight: "#E9F2FF",
-  green: "#1F845A",
-  greenBg: "#DCFFF1",
-  amber: "#A54800",
-  amberBg: "#FFF7D6",
-  purple: "#5E4DB2",
-  purpleBg: "#F3F0FF",
-  red: "#DE350B",
-  redBg: "#FFEBE6",
-};
 
 // Type declaration for toast
 const useTypedToast = () =>
@@ -44,6 +21,7 @@ interface Label {
   colorCode?: string;
   color_code?: string;
   labelType?: string;
+  label_type?: string;
   description?: string;
   shortcutKey?: string;
   isActive?: boolean;
@@ -128,7 +106,7 @@ const ModernLabelsPage: React.FC = () => {
 
   const toggleAttachLabelSelection = (id: number) => {
     // Check if this label already exists in the rule
-    const alreadyAttachedToRule = (attachingRule.labels as any[])?.some(
+    const alreadyAttachedToRule = (attachingRule?.labels as any[])?.some(
       (l: any) => (l.labelId ?? l.label_id) === id,
     );
 
@@ -526,44 +504,19 @@ const ModernLabelsPage: React.FC = () => {
   const activeLabels = labels.filter((label) => isLabelActive(label));
 
   return (
-    <div
-      style={{
-        padding: "32px",
-        minHeight: "100vh",
-        backgroundColor: T.bg,
-      }}
-    >
+    <div className="p-8 min-h-screen bg-[#F7F8F9]">
       {/* Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "24px",
-          }}
-        >
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1
-              style={{
-                fontSize: "24px",
-                fontWeight: "600",
-                color: T.textPrimary,
-                marginBottom: "8px",
-              }}
-            >
+            <h1 className="text-2xl font-semibold text-[#172B4D] mb-2">
               {t("manager:modernLabels.title")}
             </h1>
-            <p
-              style={{
-                fontSize: "15px",
-                color: T.textSecondary,
-              }}
-            >
+            <p className="text-[15px] text-[#44546F]">
               {t("manager:modernLabels.subtitle")}
             </p>
           </div>
-          <div style={{ display: "flex", gap: "12px" }}>
+          <div className="flex gap-3">
             <Button
               variant="primary"
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -660,7 +613,7 @@ const ModernLabelsPage: React.FC = () => {
             </div>
           </Card>
 
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
+          <div className="grid grid-cols-1 md:grid-clos-2 xl:grid-cols-5 gap-6">
             {visibleLabels.map((label) => (
               <Card
                 key={getLabelId(label)}
@@ -693,9 +646,9 @@ const ModernLabelsPage: React.FC = () => {
                       className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide"
                       style={{
                         backgroundColor: isLabelActive(label)
-                          ? `${T.green}20`
-                          : `${T.amber}20`,
-                        color: isLabelActive(label) ? T.green : T.amber,
+                          ? `#1F845A20`
+                          : `#A5480020`,
+                        color: isLabelActive(label) ? '#1F845A' : '#A54800',
                       }}
                     >
                       {isLabelActive(label)
@@ -1412,7 +1365,7 @@ const ModernLabelsPage: React.FC = () => {
                               </div>
                             </div>
                             <Button
-                              size="xs"
+                              size="sm"
                               variant="ghost"
                               onClick={() => handleRemoveLabelDirect(id)}
                               disabled={isAttachingLabels}

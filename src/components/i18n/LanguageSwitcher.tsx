@@ -28,7 +28,14 @@ export function LanguageSwitcher() {
   const [isDragging, setIsDragging] = React.useState(false);
   const [isDragReady, setIsDragReady] = React.useState(false);
   const hasCustomPositionRef = React.useRef(false);
-  const dragStateRef = React.useRef({
+  const dragStateRef = React.useRef<{
+    pointerId: number | null;
+    startX: number;
+    startY: number;
+    startTop: number;
+    startRight: number;
+    moved: boolean;
+  }>({
     pointerId: null,
     startX: 0,
     startY: 0,
@@ -45,7 +52,7 @@ export function LanguageSwitcher() {
     .toLowerCase()
     .split("-")[0];
 
-  const changeLanguage = (code) => {
+  const changeLanguage = (code: string) => {
     if (activeLanguage === code) return;
     i18nInstance.changeLanguage(code);
     if (typeof window !== "undefined") {
@@ -62,7 +69,7 @@ export function LanguageSwitcher() {
   }, [isWorkspaceRoute]);
 
   React.useEffect(() => {
-    const handleKeyUp = (event) => {
+    const handleKeyUp = (event: KeyboardEvent) => {
       if (event.key === "Control" && !isDragging) {
         setIsDragReady(false);
       }
@@ -86,7 +93,7 @@ export function LanguageSwitcher() {
   React.useEffect(() => {
     if (!isDragging) return undefined;
 
-    const handlePointerMove = (event) => {
+    const handlePointerMove = (event: PointerEvent) => {
       const dragState = dragStateRef.current;
       if (dragState.pointerId !== event.pointerId) return;
 
@@ -116,7 +123,7 @@ export function LanguageSwitcher() {
       });
     };
 
-    const stopDragging = (event) => {
+    const stopDragging = (event: PointerEvent) => {
       const dragState = dragStateRef.current;
       if (dragState.pointerId !== null && event.pointerId !== dragState.pointerId) {
         return;
@@ -143,7 +150,7 @@ export function LanguageSwitcher() {
     };
   }, [isDragging]);
 
-  const handlePointerDown = (event) => {
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!event.ctrlKey) {
       setIsDragReady(false);
       return;
@@ -165,7 +172,7 @@ export function LanguageSwitcher() {
     setIsDragging(true);
   };
 
-  const handleButtonClick = (code) => {
+  const handleButtonClick = (code: string) => {
     if (suppressClickRef.current) {
       suppressClickRef.current = false;
       return;
