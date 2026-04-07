@@ -141,7 +141,7 @@ export default function ProjectExport() {
         const statusResult = computeBatchStatus(relevantAssignments);
 
         setBatchStatus(statusResult);
-      } catch (err) {
+      } catch {
         setBatchStatus("PENDING");
       }
     })();

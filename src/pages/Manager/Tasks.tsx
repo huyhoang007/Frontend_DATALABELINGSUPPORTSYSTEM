@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getMockData } from "../../utils/mockStorage";
 
@@ -6,11 +6,11 @@ const STORAGE_KEY = "mock_tasks";
 
 function seedTasks() {
   return [
-    { id: crypto.randomUUID(), taskName: "Label Batch Human_v1", project: "Human Detection", assignee: "Nguyá»…n VÄƒn A", status: "IN_PROGRESS", progress: 65, createdAt: "2026-02-10T08:00:00" },
-    { id: crypto.randomUUID(), taskName: "Label Batch Car_v2", project: "Vehicle Detection", assignee: "Tráº§n Thá»‹ B", status: "COMPLETED", progress: 100, createdAt: "2026-02-08T10:30:00" },
-    { id: crypto.randomUUID(), taskName: "Review Batch Dog_v1", project: "Animal Classification", assignee: "LÃª VÄƒn C", status: "PENDING", progress: 0, createdAt: "2026-02-15T14:00:00" },
-    { id: crypto.randomUUID(), taskName: "Label Batch Sign_v1", project: "Traffic Sign", assignee: "Pháº¡m Thá»‹ D", status: "RETURNED", progress: 30, createdAt: "2026-02-12T09:00:00" },
-    { id: crypto.randomUUID(), taskName: "Label Batch Face_v3", project: "Face Recognition", assignee: "Nguyá»…n VÄƒn A", status: "IN_PROGRESS", progress: 45, createdAt: "2026-02-14T11:00:00" },
+    { id: crypto.randomUUID(), taskName: "Label Batch Human_v1", project: "Human Detection", assignee: "Nguyễn Văn A", status: "IN_PROGRESS", progress: 65, createdAt: "2026-02-10T08:00:00" },
+    { id: crypto.randomUUID(), taskName: "Label Batch Car_v2", project: "Vehicle Detection", assignee: "Trần Thị B", status: "COMPLETED", progress: 100, createdAt: "2026-02-08T10:30:00" },
+    { id: crypto.randomUUID(), taskName: "Review Batch Dog_v1", project: "Animal Classification", assignee: "Lê Văn C", status: "PENDING", progress: 0, createdAt: "2026-02-15T14:00:00" },
+    { id: crypto.randomUUID(), taskName: "Label Batch Sign_v1", project: "Traffic Sign", assignee: "Phạm Thị D", status: "RETURNED", progress: 30, createdAt: "2026-02-12T09:00:00" },
+    { id: crypto.randomUUID(), taskName: "Label Batch Face_v3", project: "Face Recognition", assignee: "Nguyễn Văn A", status: "IN_PROGRESS", progress: 45, createdAt: "2026-02-14T11:00:00" },
   ];
 }
 
@@ -28,17 +28,13 @@ const tableHeaderClass =
 
 export default function Tasks() {
   const { t, i18n } = useTranslation(["manager", "common"]);
-  const [tasks, setTasks] = useState<any[]>([]);
+  const [tasks] = useState<any[]>(() => getMockData(STORAGE_KEY, seedTasks));
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [viewTask, setViewTask] = useState<any>(null);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
   const getStatusLabel = (status: string) =>
     t(`manager:tasks.statuses.${status}`, { defaultValue: status });
-
-  useEffect(() => {
-    setTasks(getMockData(STORAGE_KEY, seedTasks));
-  }, []);
 
   const filtered = useMemo(
     () =>

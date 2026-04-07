@@ -173,8 +173,6 @@ export function translateAdminLogDetails(log, options) {
   if (!details) return "-";
 
   const rawTarget = log?.target || log?.targetType || "";
-  const targetNoun = translateAdminLogTargetNoun(rawTarget, options);
-
   let match =
     details.match(
       /^Tạo dự án '(.+?)' \(ID:\s*(\d+)\) có loại dữ liệu:\s*([A-Z_]+), trạng thái:\s*([A-Z_]+), mô tả:\s*'([\s\S]+)'$/i,

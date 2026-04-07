@@ -6,7 +6,18 @@ import reviewApi from "../../api/reviewApi";
 import { useAuth } from "../../context/AuthContext";
 import { translateAssignmentStatus } from "../../i18n/helpers";
 
-// Bảng màu Modern Enterprise UI
+interface ReviewAssignment {
+  assignmentId: number;
+  status: string;
+  projectStatus?: string;
+  projectName?: string;
+  annotatorName?: string;
+  datasetName?: string;
+  progress?: number;
+  [key: string]: unknown;
+}
+
+// Modern Enterprise UI palette
 const T = {
   bg: "#F7F8F9",
   surface: "#FFFFFF",
@@ -28,7 +39,7 @@ const T = {
   redBg: "#FFEBE6",
 };
 
-const STATUS_STYLES = {
+const STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> = {
   SUBMITTED: { bg: T.purpleBg, text: T.purple, dot: T.purple },
   RE_SUBMITTED: { bg: "#FFF0E6", text: "#BF5700", dot: "#E07000" },
   APPROVED: { bg: T.greenBg, text: T.green, dot: T.green },
@@ -39,22 +50,22 @@ const STATUS_STYLES = {
 export default function ReviewQueue() {
   const { t } = useTranslation(["reviewer", "common"]);
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  useAuth();
 
-  const [assignments, setAssignments] = React.useState([]);
+  const [assignments, setAssignments] = React.useState<ReviewAssignment[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [error, setError] = React.useState(null);
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [hoveredRow, setHoveredRow] = useState(null);
-  const [hoveredKpi, setHoveredKpi] = useState(null);
+  const [error, setError] = React.useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState<string>("");
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const [hoveredKpi, setHoveredKpi] = useState<number | null>(null);
   const [isMobile, setIsMobile] = React.useState(() => window.innerWidth < 768);
-  const [filterByStatus, setFilterByStatus] = React.useState("SUBMITTED"); // null | "SUBMITTED" | "RE_SUBMITTED" | "REVIEWED" | "APPROVED" | "REJECTED"
+  const [filterByStatus, setFilterByStatus] = React.useState<string | null>("SUBMITTED"); // null | "SUBMITTED" | "RE_SUBMITTED" | "REVIEWED" | "APPROVED" | "REJECTED"
 
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [t]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -64,11 +75,12 @@ export default function ReviewQueue() {
       try {
         const data = await reviewApi.getMyReviewAssignments();
         if (!cancelled) setAssignments(Array.isArray(data) ? data : []);
-      } catch (err) {
+      } catch (err: unknown) {
+        const error = err as { message?: string; response?: { data?: { message?: string } } };
         if (!cancelled)
           setError(
-            err?.response?.data?.message ||
-              err?.message ||
+            error?.response?.data?.message ||
+              error?.message ||
               t("reviewer:queue.loadFailed"),
           );
       } finally {
@@ -82,20 +94,11 @@ export default function ReviewQueue() {
   }, []);
 
   // Queue scope only includes assignments that still need reviewer attention.
-  const queueAssignments = React.useMemo(
-    () =>
-      assignments.filter(
-        (a) => (a.status === "SUBMITTED" || a.status === "RE_SUBMITTED") && 
-                (a.projectStatus || "").toUpperCase() !== "PAUSED"
-      ),
-    [assignments],
-  );
-
   // Filter visible queue rows by search without changing the queue totals.
   const reviewableAssignments = React.useMemo(() => {
     // Display all assignments (including IN_PROGRESS) except those with PAUSED projects
     let list = assignments.filter((a) => {
-      // Ẩn project có status PAUSED
+      // Hide assignments whose project is paused
       if ((a.projectStatus || "").toUpperCase() === "PAUSED") {
         return false;
       }
@@ -127,15 +130,15 @@ export default function ReviewQueue() {
     return list;
   }, [assignments, searchQuery, filterByStatus]);
 
-  const handleReview = (assignment) => {
+  const handleReview = (assignment: ReviewAssignment) => {
     navigate(`/reviewer/review/${assignment.assignmentId}`);
   };
 
-  const toggleStatusFilter = (status) => {
+  const toggleStatusFilter = (status: string) => {
     setFilterByStatus(filterByStatus === status ? null : status);
   };
 
-  const getStatusLabel = (status) => translateAssignmentStatus(status).toUpperCase();
+  const getStatusLabel = (status: string) => translateAssignmentStatus(status).toUpperCase();
 
   // Stats - count from all assignments except IN_PROGRESS, not just queue
   const pendingCount = assignments.filter(
@@ -153,8 +156,7 @@ export default function ReviewQueue() {
   const rejectedCount = assignments.filter(
     (a) => a.status === "REJECTED" && (a.projectStatus || "").toUpperCase() !== "PAUSED",
   ).length;
-  const reviewedCount = approvedCount + rejectedCount;
-  const displayValue = (value) => (isLoading ? "—" : value);
+  const displayValue = (value: number | string) => (isLoading ? "-" : value);
 
   return (
     <div

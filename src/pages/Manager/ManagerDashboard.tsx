@@ -22,7 +22,7 @@ const resolveProjectId = (project: any) => project?.projectId ?? project?.projec
 const normalizeAssignmentStatus = (status?: string) =>
   (status || "").toUpperCase();
 
-const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) => {
+const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
   const navigate = useNavigate();
   const { t } = useTranslation(["manager", "common"]);
   const [myProjects, setMyProjects] = useState<Project[]>([]);
@@ -150,11 +150,6 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user, onLogout }) =
       case 'pending': return 'text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-800';
       default: return 'text-slate-600 bg-slate-50 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700';
     }
-  };
-
-  const formatStatus = (status: string) => {
-    if (!status) return t("common:labels.unknown").toUpperCase();
-    return status.toUpperCase();
   };
 
   // Pagination logic

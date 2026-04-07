@@ -15,8 +15,8 @@ const ReviewerDashboard: React.FC<ReviewerDashboardProps> = ({
   const mockReviews = [
     {
       id: 1,
-      taskName: "GÃ¡n nhÃ£n hÃ¬nh áº£nh xe cá»™",
-      annotator: "Nguyá»…n VÄƒn A",
+      taskName: "Gán nhãn hình ảnh xe cộ",
+      annotator: "Nguyễn Văn A",
       project: "AI Vision Recognition",
       status: "pending",
       submittedAt: "2024-02-12T10:30:00Z",
@@ -26,8 +26,8 @@ const ReviewerDashboard: React.FC<ReviewerDashboardProps> = ({
     },
     {
       id: 2,
-      taskName: "PhÃ¢n loáº¡i vÄƒn báº£n",
-      annotator: "Tráº§n Thá»‹ B",
+      taskName: "Phân loại văn bản",
+      annotator: "Trần Thị B",
       project: "OCR Document Processing",
       status: "approved",
       submittedAt: "2024-02-11T14:20:00Z",
@@ -37,8 +37,8 @@ const ReviewerDashboard: React.FC<ReviewerDashboardProps> = ({
     },
     {
       id: 3,
-      taskName: "GÃ¡n nhÃ£n y táº¿",
-      annotator: "LÃª VÄƒn C",
+      taskName: "Gán nhãn y tế",
+      annotator: "Lê Văn C",
       project: "Medical Image Analysis",
       status: "rejected",
       submittedAt: "2024-02-10T09:15:00Z",
@@ -48,8 +48,8 @@ const ReviewerDashboard: React.FC<ReviewerDashboardProps> = ({
     },
     {
       id: 4,
-      taskName: "Nháº­n diá»‡n Ä‘á»‘i tÆ°á»£ng",
-      annotator: "HoÃ ng Thá»‹ D",
+      taskName: "Nhận diện đối tượng",
+      annotator: "Hoàng Thị D",
       project: "AI Vision Recognition",
       status: "in_review",
       submittedAt: "2024-02-12T16:45:00Z",
@@ -111,28 +111,28 @@ const ReviewerDashboard: React.FC<ReviewerDashboardProps> = ({
 
   const stats = [
     {
-      label: "Chá» review",
+      label: "Chờ review",
       value: mockReviews.filter((r) => r.status === "pending").length,
       icon: "schedule",
       border: "border-t-amber-500",
       iconColor: "text-amber-600",
     },
     {
-      label: "ÄÃ£ duyá»‡t",
+      label: "Đã duyệt",
       value: mockReviews.filter((r) => r.status === "approved").length,
       icon: "check_circle",
       border: "border-t-emerald-600",
       iconColor: "text-emerald-600",
     },
     {
-      label: "Tá»« chá»‘i",
+      label: "Từ chối",
       value: mockReviews.filter((r) => r.status === "rejected").length,
       icon: "cancel",
       border: "border-t-red-600",
       iconColor: "text-red-600",
     },
     {
-      label: "Äang review",
+      label: "Đang review",
       value: mockReviews.filter((r) => r.status === "in_review").length,
       icon: "rate_review",
       border: "border-t-violet-600",
@@ -146,17 +146,17 @@ const ReviewerDashboard: React.FC<ReviewerDashboardProps> = ({
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
-              Báº£ng Ä‘iá»u khiá»ƒn Reviewer
+              Bảng điều khiển Reviewer
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              ChÃ o má»«ng, {user.full_name}
+              Chào mừng, {user.full_name}
             </p>
           </div>
           <button
             onClick={onLogout}
             className="rounded-md border border-slate-300 bg-transparent px-4 py-2 text-sm font-semibold text-red-600 transition hover:border-red-200 hover:bg-red-50"
           >
-            ÄÄƒng xuáº¥t
+            Đăng xuất
           </button>
         </div>
       </div>
@@ -189,7 +189,7 @@ const ReviewerDashboard: React.FC<ReviewerDashboardProps> = ({
 
         <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
           <h2 className="mb-6 text-xl font-bold text-slate-900">
-            Nhiá»‡m vá»¥ Review
+            Nhiệm vụ review
           </h2>
 
           <div className="flex flex-col gap-4">
@@ -221,38 +221,38 @@ const ReviewerDashboard: React.FC<ReviewerDashboardProps> = ({
                       review.priority,
                     )}`}
                   >
-                    Æ¯u tiÃªn{" "}
+                    Ưu tiên{" "}
                     {review.priority === "high"
                       ? "cao"
                       : review.priority === "medium"
-                        ? "trung bÃ¬nh"
-                        : "tháº¥p"}
+                        ? "trung bình"
+                        : "thấp"}
                   </div>
                 </div>
 
                 <div className="mb-4 grid grid-cols-1 gap-4 text-sm md:grid-cols-2 xl:grid-cols-4">
                   <div>
                     <span className="mb-1 block text-slate-500">
-                      NgÆ°á»i gÃ¡n nhÃ£n
+                      Người gán nhãn
                     </span>
                     <span className="font-semibold text-slate-900">
                       {review.annotator}
                     </span>
                   </div>
                   <div>
-                    <span className="mb-1 block text-slate-500">Dá»± Ã¡n</span>
+                    <span className="mb-1 block text-slate-500">Dự án</span>
                     <span className="font-semibold text-slate-900">
                       {review.project}
                     </span>
                   </div>
                   <div>
-                    <span className="mb-1 block text-slate-500">Sá»‘ items</span>
+                    <span className="mb-1 block text-slate-500">Số lượng item</span>
                     <span className="font-semibold text-slate-900">
                       {review.itemsCount}
                     </span>
                   </div>
                   <div>
-                    <span className="mb-1 block text-slate-500">Gá»­i lÃºc</span>
+                    <span className="mb-1 block text-slate-500">Gửi lúc</span>
                     <span className="font-semibold text-slate-900">
                       {new Date(review.submittedAt).toLocaleDateString("vi-VN")}
                     </span>
@@ -262,7 +262,7 @@ const ReviewerDashboard: React.FC<ReviewerDashboardProps> = ({
                 {review.accuracy !== null && (
                   <div className="mb-4">
                     <div className="mb-1.5 flex justify-between text-xs">
-                      <span className="text-slate-500">Äá»™ chÃ­nh xÃ¡c</span>
+                      <span className="text-slate-500">Độ chính xác</span>
                       <span
                         className={`font-extrabold ${getAccuracyColor(
                           review.accuracy,
@@ -288,23 +288,23 @@ const ReviewerDashboard: React.FC<ReviewerDashboardProps> = ({
 
                 <div className="flex flex-wrap gap-2 pt-2">
                   <button className="h-9 rounded-md border border-slate-300 bg-slate-100 px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-200">
-                    Xem chi tiáº¿t
+                    Xem chi tiết
                   </button>
 
                   {review.status === "pending" && (
                     <>
                       <button className="h-9 rounded-md border border-emerald-200 bg-emerald-100 px-4 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-200">
-                        Duyá»‡t
+                        Duyệt
                       </button>
                       <button className="h-9 rounded-md border border-red-200 bg-red-100 px-4 text-sm font-semibold text-red-700 transition hover:bg-red-200">
-                        Tá»« chá»‘i
+                        Từ chối
                       </button>
                     </>
                   )}
 
                   {review.status === "in_review" && (
                     <button className="h-9 rounded-md border border-violet-200 bg-violet-100 px-4 text-sm font-semibold text-violet-700 transition hover:bg-violet-200">
-                      Tiáº¿p tá»¥c review
+                      Tiếp tục review
                     </button>
                   )}
                 </div>

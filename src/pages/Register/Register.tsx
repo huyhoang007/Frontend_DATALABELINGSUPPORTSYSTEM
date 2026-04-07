@@ -11,8 +11,6 @@ interface RegisterData {
     [key: string]: unknown;
 }
 
-const backendErrors: Record<string, string | undefined> = {};
-
 export default function Register() {
     const navigate = useNavigate();
     const { t } = useTranslation(["auth"]);

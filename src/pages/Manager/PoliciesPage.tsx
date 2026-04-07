@@ -39,7 +39,6 @@ const ModernPoliciesPage: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [policyToDelete, setPolicyToDelete] = useState<Policy | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { addToast } = useTypedToast();
@@ -60,7 +59,6 @@ const ModernPoliciesPage: React.FC = () => {
   }, []);
 
   const fetchPolicies = async () => {
-    setIsLoading(true);
     try {
       const response = (await policyApi.list()) as {
         data: Policy[];
@@ -131,7 +129,7 @@ const ModernPoliciesPage: React.FC = () => {
     } catch (error) {
       console.error("Failed to fetch policies:", error);
     } finally {
-      setIsLoading(false);
+      // no-op
     }
   };
 

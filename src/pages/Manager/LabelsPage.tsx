@@ -50,7 +50,6 @@ const ModernLabelsPage: React.FC = () => {
   const [showCreateRuleModal, setShowCreateRuleModal] = useState(false);
   const [showEditRuleModal, setShowEditRuleModal] = useState(false);
   const [showAttachLabelsModal, setShowAttachLabelsModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -132,7 +131,6 @@ const ModernLabelsPage: React.FC = () => {
   }, []);
 
   const fetchLabels = async () => {
-    setIsLoading(true);
     try {
       // Lấy tất cả labels để manager có thể kích hoạt lại label đã bị ngưng sử dụng
       const data = await labelApi.getAllLabels();
@@ -140,7 +138,7 @@ const ModernLabelsPage: React.FC = () => {
     } catch (error) {
       console.error("Failed to fetch labels:", error);
     } finally {
-      setIsLoading(false);
+      // no-op
     }
   };
 
@@ -417,49 +415,6 @@ const ModernLabelsPage: React.FC = () => {
     } catch (error: any) {
       addToast(
         error.message || t("manager:modernLabels.messages.labelsAttachFailed"),
-        "error",
-      );
-    } finally {
-      setIsAttachingLabels(false);
-    }
-  };
-
-  const handleRemoveLabels = async () => {
-    if (!attachingRule || attachLabelIds.length === 0) return;
-
-    setIsAttachingLabels(true);
-
-    // Close modal immediately
-    setShowAttachLabelsModal(false);
-    setAttachingRule(null);
-    setAttachLabelIds([]);
-
-    try {
-      // Get current labels in the rule and remove the selected ones
-      const currentLabelIds =
-        (attachingRule.labels as any[])?.map(
-          (l: any) => l.labelId ?? l.label_id,
-        ) || [];
-
-      const remainingLabelIds = currentLabelIds.filter(
-        (id: number) => !attachLabelIds.includes(id),
-      );
-
-      await labelRuleApi.replaceLabels(
-        (attachingRule.ruleId ?? attachingRule.rule_id) as number,
-        remainingLabelIds,
-      );
-      addToast(
-        t("manager:modernLabels.messages.labelsRemoved", {
-          count: attachLabelIds.length,
-        }),
-        "success",
-      );
-      // Refresh data in background (don't wait)
-      fetchLabelRules();
-    } catch (error: any) {
-      addToast(
-        error.message || t("manager:modernLabels.messages.labelsRemoveFailed"),
         "error",
       );
     } finally {

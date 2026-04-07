@@ -1,12 +1,46 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
+interface Annotation {
+  labelId: string | number;
+  labelName?: string;
+  colorCode?: string;
+  labelType?: string;
+}
+
+interface AnnotationGroup {
+  labelIds?: (string | number)[];
+  labelNames?: string[];
+  colorCodes?: string[];
+}
+
+interface WorkspaceItem {
+  itemId: string | number;
+  annotations?: Annotation[];
+}
+
+interface Workspace {
+  items?: WorkspaceItem[];
+}
+
+interface LabelMeta {
+  id: string | number;
+  type?: string;
+}
+
+interface LabelSummaryPanelProps {
+  workspace: Workspace | null;
+  currentItem?: WorkspaceItem | null;
+  liveAnnotations?: AnnotationGroup[];
+  allLabels?: LabelMeta[];
+}
+
 export default function LabelSummaryPanel({
   workspace,
   currentItem,
   liveAnnotations,
   allLabels,
-}) {
+}: LabelSummaryPanelProps) {
   const { t } = useTranslation(["annotator"]);
 
   const { summary, totalAnnotations, annotatedImageCount, totalImages } =
@@ -22,12 +56,12 @@ export default function LabelSummaryPanel({
 
       const map = new Map();
 
-      const addEntry = (labelId, labelName, colorCode, labelType, itemId) => {
+      const addEntry = (labelId: string | number, labelName: string, colorCode: string, labelType: string, itemId: string | number) => {
         if (!labelId) return;
         if (!map.has(labelId)) {
           map.set(labelId, {
             labelId,
-            labelName: labelName || "Unknown",
+            labelName: labelName || "Không rõ",
             colorCode: colorCode || "#6b7280",
             labelType: labelType || "",
             shapeCount: 0,
@@ -41,7 +75,7 @@ export default function LabelSummaryPanel({
 
       let annotatedCount = 0;
 
-      (workspace.items || []).forEach((item) => {
+      (workspace.items || []).forEach((item: WorkspaceItem) => {
         const isCurrentItem = item.itemId === currentItem?.itemId;
 
         if (isCurrentItem) {
@@ -54,12 +88,12 @@ export default function LabelSummaryPanel({
             annotatedCount++;
 
             if (liveAnnotations && liveAnnotations.length > 0) {
-              liveAnnotations.forEach((group) => {
-                group.labelIds?.forEach((labelId, index) => {
+              liveAnnotations.forEach((group: AnnotationGroup) => {
+                group.labelIds?.forEach((labelId: string | number, index: number) => {
                   const labelName = group.labelNames?.[index] || "";
                   const labelColor = group.colorCodes?.[index] || "#6b7280";
                   const labelMeta = allLabels?.find(
-                    (label) => String(label.id) === String(labelId),
+                    (label: LabelMeta) => String(label.id) === String(labelId),
                   );
                   addEntry(
                     labelId,
@@ -71,12 +105,12 @@ export default function LabelSummaryPanel({
                 });
               });
             } else {
-              (item.annotations || []).forEach((annotation) => {
+              (item.annotations || []).forEach((annotation: Annotation) => {
                 addEntry(
                   annotation.labelId,
-                  annotation.labelName,
-                  annotation.colorCode,
-                  annotation.labelType,
+                  annotation.labelName || "",
+                  annotation.colorCode || "#6b7280",
+                  annotation.labelType || "",
                   item.itemId,
                 );
               });
@@ -86,12 +120,12 @@ export default function LabelSummaryPanel({
           const backendAnnotations = item.annotations || [];
           if (backendAnnotations.length > 0) {
             annotatedCount++;
-            backendAnnotations.forEach((annotation) => {
+            backendAnnotations.forEach((annotation: Annotation) => {
               addEntry(
                 annotation.labelId,
-                annotation.labelName,
-                annotation.colorCode,
-                annotation.labelType,
+                annotation.labelName || "",
+                annotation.colorCode || "#6b7280",
+                annotation.labelType || "",
                 item.itemId,
               );
             });

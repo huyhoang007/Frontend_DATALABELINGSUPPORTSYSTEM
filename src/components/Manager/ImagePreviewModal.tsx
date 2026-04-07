@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { datasetApi } from "../../api/datasetApi";
-import { Card } from "../ui/Card";
+import { ApiResponse } from "../../types";
 
 interface ImageItem {
   itemId: number;
@@ -25,7 +25,7 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { t, i18n } = useTranslation(["manager", "common"]);
+  const { t } = useTranslation(["manager", "common"]);
   const [images, setImages] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,8 +57,8 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const response = await datasetApi.getDatasetItems(datasetId);
-      const items = Array.isArray(response) ? response : response?.data || [];
+      const response = await datasetApi.getDatasetItems(datasetId) as any;
+      const items = Array.isArray(response) ? response : response?.data || [];;
       setImages(items);
       setCurrentIndex(0);
     } catch (err: any) {

@@ -1,8 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import { fileURLToPath } from 'url'
 
-// https://vite.dev/config/
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 export default defineConfig({
   plugins: [react()],
   root: path.resolve(__dirname),
@@ -22,7 +24,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    // Chỉ scan trong thư mục src, tránh scan toàn bộ ổ đĩa
+    // Chi scan trong thu muc src de tranh quet toan bo o dia.
     entries: ['./src/main.jsx'],
   },
 })

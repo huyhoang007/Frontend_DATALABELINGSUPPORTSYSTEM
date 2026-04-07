@@ -3,9 +3,17 @@ import { createPortal } from "react-dom";
 import { cn } from "../../utils/cn";
 import { Button } from "./Button";
 
-export function ModalDialog({ isOpen, onClose, title, children, actions, variant = "default" }) {
+interface ModalDialogProps {
+    isOpen: boolean;
+    onClose: () => void;
+    title?: React.ReactNode;
+    children?: React.ReactNode;
+    actions?: React.ReactNode;
+}
+
+export function ModalDialog({ isOpen, onClose, title, children, actions }: ModalDialogProps) {
     React.useEffect(() => {
-        const handleKeyDown = (e) => {
+        const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape" && isOpen) {
                 onClose();
             }
@@ -18,21 +26,21 @@ export function ModalDialog({ isOpen, onClose, title, children, actions, variant
 
     return createPortal(
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm animate-in fade-in duration-200"
             onClick={onClose}
         >
             <div
                 className={cn(
-                    "w-full max-w-md rounded-lg bg-card border border-border shadow-xl transform transition-all",
+                    "w-full max-w-md rounded-lg border border-border bg-card shadow-xl transition-all",
                     "animate-in zoom-in-95 duration-200"
                 )}
                 role="dialog"
                 aria-modal="true"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+                <div className="flex items-center justify-between border-b border-border px-6 py-4">
                     <h3 className="text-h3 text-foreground">{title}</h3>
-                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+                    <button onClick={onClose} className="text-muted-foreground transition-colors hover:text-foreground">
                         <span className="material-symbols-outlined">close</span>
                     </button>
                 </div>
@@ -41,7 +49,7 @@ export function ModalDialog({ isOpen, onClose, title, children, actions, variant
                     {children}
                 </div>
 
-                <div className="px-6 py-4 border-t border-border flex justify-end space-x-3 bg-muted/50 rounded-b-lg">
+                <div className="flex justify-end space-x-3 rounded-b-lg border-t border-border bg-muted/50 px-6 py-4">
                     {actions}
                 </div>
             </div>
@@ -50,8 +58,27 @@ export function ModalDialog({ isOpen, onClose, title, children, actions, variant
     );
 }
 
-// Helper for Confirmation Dialog
-export function ConfirmDialog({ isOpen, onClose, onConfirm, title, message, confirmText = "Xác nhận", cancelText = "Hủy", isDestructive = false }) {
+interface ConfirmDialogProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+    title?: React.ReactNode;
+    message?: React.ReactNode;
+    confirmText?: string;
+    cancelText?: string;
+    isDestructive?: boolean;
+}
+
+export function ConfirmDialog({
+    isOpen,
+    onClose,
+    onConfirm,
+    title,
+    message,
+    confirmText = "Xác nhận",
+    cancelText = "Hủy",
+    isDestructive = false,
+}: ConfirmDialogProps) {
     return (
         <ModalDialog
             isOpen={isOpen}

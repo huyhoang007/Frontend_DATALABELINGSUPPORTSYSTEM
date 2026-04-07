@@ -90,7 +90,6 @@ const ModernProjectsPage: React.FC = () => {
 
   // Form State
   const [newName, setNewName] = useState("");
-  const [newDataType, setNewDataType] = useState("IMAGE");
   const [newDescription, setNewDescription] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -216,7 +215,6 @@ const ModernProjectsPage: React.FC = () => {
       addToast(t("manager:projects.messages.created"), "success");
       setShowCreateModal(false);
       setNewName("");
-      setNewDataType("IMAGE");
       setNewDescription("");
       await queryClient.invalidateQueries({ queryKey: ["projects", "summary-list"] });
       if (!summaryModeEnabled) {
@@ -376,10 +374,6 @@ const ModernProjectsPage: React.FC = () => {
       default:
         return [{ value: normalized, label: normalized }];
     }
-  };
-
-  const getStatusLabel = (status: string) => {
-    return translateProjectStatus(status);
   };
 
   const getStatusColor = (status: string) => {

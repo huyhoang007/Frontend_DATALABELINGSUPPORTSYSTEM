@@ -10,8 +10,91 @@ import AnnotationOverlay from "../Annotator/AnnotationOverlay";
 import { groupAnnotationsByKey } from "../Annotator/geometryUtils";
 import { translateAssignmentStatus } from "../../i18n/helpers";
 
+/* ── Domain interfaces ── */
+interface LabelInfo {
+  labelId?: number | string;
+  id?: number | string;
+  labelName?: string;
+  name?: string;
+  colorCode?: string;
+  color?: string;
+  labelType?: string;
+  type?: string;
+}
+
+interface LabelGroup {
+  labels?: LabelInfo[];
+}
+
+interface WorkspaceItem {
+  itemId: number;
+  fileUrl?: string;
+  fileName?: string;
+  width?: number;
+  height?: number;
+  status?: string;
+  annotations?: Annotation[];
+}
+
+interface WorkspaceData {
+  items?: WorkspaceItem[];
+  labelGroups?: LabelGroup[];
+  assignmentStatus?: string;
+  projectName?: string;
+  projectGuidelineContent?: string;
+  projectGuidelineFileUrl?: string;
+  projectId?: number;
+}
+
+interface Annotation {
+  reviewingId: number;
+  status?: string;
+  policyId?: number | null;
+  policyName?: string;
+  errorName?: string;
+  errorLevel?: string;
+  geometry?: unknown;
+  labels?: unknown[];
+  labelId?: number;
+  labelName?: string;
+  colorCode?: string;
+  labelType?: string;
+  note?: string;
+  isImproved?: boolean;
+}
+
+interface Policy {
+  policyId: number;
+  errorName: string;
+  errorLevel?: string;
+}
+
+interface ReviewStats {
+  total: number;
+  reviewed: number;
+  approved: number;
+  rejected: number;
+  pending: number;
+  allDone: boolean;
+  anyRejected: boolean;
+}
+
+interface ItemStats {
+  total: number;
+  approved: number;
+  rejected: number;
+  pending: number;
+}
+
+interface FlatLabel {
+  id: number;
+  name: string;
+  color: string;
+  type: string;
+}
+
 /* ── Resolve fileUrl → proxy path ── */
-function resolveImagePath(fileUrl) {
+function resolveImagePath(fileUrl: string | null | undefined): string | null {
   if (!fileUrl) return null;
   if (fileUrl.startsWith("http")) return fileUrl;
   let url = fileUrl;
@@ -21,11 +104,11 @@ function resolveImagePath(fileUrl) {
   return url;
 }
 
-function isAwaitingRereview(annotation) {
+function isAwaitingRereview(annotation: Annotation | null | undefined): boolean {
   return annotation?.status === "REJECTED" && annotation?.isImproved === true;
 }
 
-function getPendingReviewCount(annotations = []) {
+function getPendingReviewCount(annotations: Annotation[] = []): number {
   return annotations.filter(
     (annotation) =>
       !annotation?.status ||
@@ -34,7 +117,7 @@ function getPendingReviewCount(annotations = []) {
   ).length;
 }
 
-function getRejectedReviewCount(annotations = []) {
+function getRejectedReviewCount(annotations: Annotation[] = []): number {
   return annotations.filter(
     (annotation) =>
       annotation?.status === "REJECTED" && !isAwaitingRereview(annotation),
@@ -42,10 +125,10 @@ function getRejectedReviewCount(annotations = []) {
 }
 
 /* ── Authenticated thumbnail component ── */
-function ThumbnailImg({ fileUrl, alt }) {
-  const [src, setSrc] = React.useState(null);
+function ThumbnailImg({ fileUrl, alt }: { fileUrl?: string; alt: string }) {
+  const [src, setSrc] = React.useState<string | null>(null);
   const [isVisible, setIsVisible] = React.useState(false);
-  const containerRef = React.useRef(null);
+  const containerRef = React.useRef<HTMLDivElement & HTMLImageElement>(null);
   const workspaceCacheEnabled = isFeatureEnabled("perf_workspace_safe_cache");
   const imageLazyLoadEnabled = isFeatureEnabled("perf_image_lazyload");
 
@@ -71,7 +154,7 @@ function ThumbnailImg({ fileUrl, alt }) {
 
   React.useEffect(() => {
     let cancelled = false;
-    let blobUrl = null;
+    let blobUrl: string | null = null;
     if (!fileUrl || !isVisible) return;
     const path = resolveImagePath(fileUrl);
     if (!path) return;
@@ -81,9 +164,10 @@ function ThumbnailImg({ fileUrl, alt }) {
           ? await getCachedBlobUrl(path)
           : await apiClient.get(path, {
               responseType: "blob",
-              transformResponse: [(d) => d],
-            }).then((res) => {
-              const blob = res instanceof Blob ? res : new Blob([res]);
+              transformResponse: [(d: unknown) => d],
+            }).then((res: { data: unknown }) => {
+              const data = res.data ?? res;
+              const blob = data instanceof Blob ? data : new Blob([data as BlobPart]);
               blobUrl = URL.createObjectURL(blob);
               return blobUrl;
             });
@@ -157,7 +241,7 @@ export default function ReviewWorkspace() {
           className="px-4 py-2 rounded text-sm font-medium hover:opacity-80 transition"
           style={{ background: "#1e2f42", color: "#e2e8f0" }}
         >
-          ← {t("common:actions.backToList")}
+          {t("common:actions.backToList")}
         </button>
       </div>
     );
@@ -166,7 +250,7 @@ export default function ReviewWorkspace() {
 }
 
 /* ── Main workspace ── */
-function ReviewWorkspaceInner({ assignmentIdNum }) {
+function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) {
   const navigate = useNavigate();
   const { t } = useTranslation(["reviewer", "common"]);
   const { addToast } = useToast();
@@ -194,11 +278,21 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
     annoCache,
   } = useReviewWorkspace(assignmentIdNum);
 
+  /* Cast JS hook return values to typed interfaces */
+  const ws = workspace as WorkspaceData | null;
+  const typedItems = items as WorkspaceItem[];
+  const typedCurrentItem = currentItem as WorkspaceItem | null;
+  const typedCurrentAnnotations = currentAnnotations as Annotation[];
+  const typedPolicies = policies as Policy[];
+  const typedReviewStats = reviewStats as ReviewStats;
+  const typedAnnoCache = annoCache as Record<number, Annotation[]>;
+  const typedGetItemStats = getItemStats as (itemId: number) => ItemStats;
+
   /* ── UI local state ── */
-  const [selectedGroupKey, setSelectedGroupKey] = React.useState(null);
-  const [rejectingAnnoId, setRejectingAnnoId] = React.useState(null);
-  const [confirmingApproveId, setConfirmingApproveId] = React.useState(null);
-  const [selectedPolicyId, setSelectedPolicyId] = React.useState(null);
+  const [selectedGroupKey, setSelectedGroupKey] = React.useState<string | null>(null);
+  const [rejectingAnnoId, setRejectingAnnoId] = React.useState<number | null>(null);
+  const [confirmingApproveId, setConfirmingApproveId] = React.useState<number | null>(null);
+  const [selectedPolicyId, setSelectedPolicyId] = React.useState<number | null>(null);
   const [rejectNote, setRejectNote] = React.useState("");
   const [zoom, setZoom] = React.useState(100);
   const [rightTab, setRightTab] = React.useState("review"); // "review" | "summary"
@@ -229,13 +323,13 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
 
   /* ── Annotation groups for read-only canvas overlay ── */
   const annotationGroups = React.useMemo(
-    () => groupAnnotationsByKey(currentAnnotations),
-    [currentAnnotations],
+    () => groupAnnotationsByKey(typedCurrentAnnotations),
+    [typedCurrentAnnotations],
   );
 
   /* ── Navigation ── */
-  const handleNavigate = (dir) => {
-    const n = items.length;
+  const handleNavigate = (dir: string) => {
+    const n = typedItems.length;
     let newIdx = currentItemIndex;
     if (dir === "first") newIdx = 0;
     if (dir === "prev") newIdx = Math.max(0, currentItemIndex - 1);
@@ -245,7 +339,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
   };
 
   /* ── Review handlers ── */
-  const handleApprove = async (reviewingId) => {
+  const handleApprove = async (reviewingId: number) => {
     const result = await handleReviewAnnotation(reviewingId, false, null);
     if (result.success) {
       // Clear any inline reject UI tied to the annotation once it is approved.
@@ -263,7 +357,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
     }
   };
 
-  const handleReject = async (reviewingId) => {
+  const handleReject = async (reviewingId: number) => {
     if (!selectedPolicyId) {
       addToast({ type: "error", message: t("reviewer:workspace.reject.choosePolicy") });
       return;
@@ -317,12 +411,13 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
   };
 
   /* ── All labels (flat) from workspace.labelGroups ── */
-  const allLabels = React.useMemo(() => {
-    const groups = workspace?.labelGroups ?? [];
-    const labels = [];
-    const seen = new Set();
-    groups.forEach((g) => {
-      (g.labels || []).forEach((l) => {
+  const allLabels = React.useMemo((): FlatLabel[] => {
+    const ws = workspace as WorkspaceData | null;
+    const groups = ws?.labelGroups ?? [];
+    const labels: FlatLabel[] = [];
+    const seen = new Set<string>();
+    groups.forEach((g: LabelGroup) => {
+      (g.labels || []).forEach((l: LabelInfo) => {
         const id = l.labelId ?? l.id;
         if (id == null || seen.has(String(id))) return;
         seen.add(String(id));
@@ -377,20 +472,20 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
           className="px-4 py-2 rounded text-sm font-medium hover:opacity-80 transition"
           style={{ background: "#1e2f42", color: "#e2e8f0" }}
         >
-          ← {t("common:actions.backToList")}
+          {t("common:actions.backToList")}
         </button>
       </div>
     );
   }
 
-  const imgWidth = currentItem?.width || 800;
-  const imgHeight = currentItem?.height || 600;
-  const totalImages = items.length;
+  const imgWidth = typedCurrentItem?.width || 800;
+  const imgHeight = typedCurrentItem?.height || 600;
+  const totalImages = typedItems.length;
   const currentItemStats =
     currentItemId != null
-      ? getItemStats(currentItemId)
+      ? typedGetItemStats(currentItemId)
       : { total: 0, approved: 0, rejected: 0, pending: 0 };
-  const assignmentStatus = (workspace?.assignmentStatus || "").toUpperCase();
+  const assignmentStatus = (ws?.assignmentStatus || "").toUpperCase();
   const isFinalizedAssignment =
     assignmentStatus === "APPROVED" || assignmentStatus === "REJECTED";
   const hasImageLoadError = Boolean(imageError);
@@ -401,8 +496,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
     Boolean(imageBlobUrl);
   const canSubmit =
     !isFinalizedAssignment &&
-    reviewStats.pending === 0 &&
-    reviewStats.total > 0 &&
+    typedReviewStats.pending === 0 &&
+    typedReviewStats.total > 0 &&
     !hasImageLoadError;
 
   const hh = String(now.getHours()).padStart(2, "0");
@@ -454,8 +549,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
               className="h-full rounded-full transition-all duration-500"
               style={{
                 width:
-                  reviewStats.total > 0
-                    ? `${(reviewStats.reviewed / reviewStats.total) * 100}%`
+                  typedReviewStats.total > 0
+                    ? `${(typedReviewStats.reviewed / typedReviewStats.total) * 100}%`
                     : "0%",
                 background: "#00bfa5",
               }}
@@ -626,13 +721,13 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                 }}
               >
                 <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
-                  {workspace?.projectGuidelineContent ||
+                  {ws?.projectGuidelineContent ||
                     t("annotator:workspace.messages.noGuideline")}
                 </p>
               </div>
-              {workspace?.projectGuidelineFileUrl && (
+              {ws?.projectGuidelineFileUrl && (
                 <a
-                  href={workspace.projectGuidelineFileUrl}
+                  href={ws.projectGuidelineFileUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-2 inline-flex items-center gap-1.5 text-xs hover:text-white"
@@ -675,7 +770,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                 ? t("reviewer:workspace.messages.imageBlocked")
                 : !canSubmit
                   ? t("reviewer:workspace.messages.pendingRemaining", {
-                      count: reviewStats.pending,
+                      count: typedReviewStats.pending,
                     })
                   : t("reviewer:workspace.actions.submitReview")
           }
@@ -690,12 +785,12 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
             </span>
           )}
           <span>{t("reviewer:workspace.actions.submitReview")}</span>
-          {!isFinalizedAssignment && !canSubmit && reviewStats.pending > 0 && (
+          {!isFinalizedAssignment && !canSubmit && typedReviewStats.pending > 0 && (
             <span
               className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
               style={{ background: "#253347", color: "#94a3b8" }}
             >
-              {reviewStats.pending}
+              {typedReviewStats.pending}
             </span>
           )}
         </button>
@@ -733,9 +828,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
             >
               <span
                 className="block truncate"
-                title={workspace?.projectName || `#${assignmentIdNum}`}
+                title={ws?.projectName || `#${assignmentIdNum}`}
               >
-                {workspace?.projectName || `Assignment #${assignmentIdNum}`}
+                {ws?.projectName || `Assignment #${assignmentIdNum}`}
               </span>
             </div>
 
@@ -744,20 +839,20 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
               className="flex items-center justify-center px-2 py-1 rounded text-[10px] font-bold"
               style={{
                 background:
-                  workspace?.assignmentStatus === "APPROVED"
+                  ws?.assignmentStatus === "APPROVED"
                     ? "rgba(0,191,165,0.1)"
-                    : workspace?.assignmentStatus === "REJECTED"
+                    : ws?.assignmentStatus === "REJECTED"
                       ? "rgba(248,113,113,0.1)"
                       : "rgba(250,204,21,0.1)",
                 color:
-                  workspace?.assignmentStatus === "APPROVED"
+                  ws?.assignmentStatus === "APPROVED"
                     ? "#00bfa5"
-                    : workspace?.assignmentStatus === "REJECTED"
+                    : ws?.assignmentStatus === "REJECTED"
                       ? "#f87171"
                       : "#facc15",
               }}
             >
-              {translateAssignmentStatus(workspace?.assignmentStatus || "SUBMITTED")}
+              {translateAssignmentStatus(ws?.assignmentStatus || "SUBMITTED")}
             </div>
 
             {/* Nộp đánh giá */}
@@ -795,8 +890,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
               overflowX: isMobile ? "auto" : "hidden",
             }}
           >
-            {items.map((item, idx) => {
-              const stats = getItemStats(item.itemId);
+            {typedItems.map((item: WorkspaceItem, idx: number) => {
+              const stats = typedGetItemStats(item.itemId);
               const isActive = idx === currentItemIndex;
               const allReviewed = stats.total > 0 && stats.pending === 0;
               const hasRejected = stats.rejected > 0;
@@ -957,7 +1052,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                 <img
                   src={imageBlobUrl}
                   alt={
-                    currentItem?.fileName ||
+                    typedCurrentItem?.fileName ||
                     t("reviewer:workspace.imageLabel", {
                       index: currentItemIndex + 1,
                     })
@@ -987,7 +1082,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                       className="text-[10px] font-mono break-all"
                       style={{ color: "#64748b" }}
                     >
-                      {imageError.url}
+                      {(imageError as { url?: string })?.url}
                     </p>
                     <p className="text-xs mt-3" style={{ color: "#cbd5e1" }}>
                       {t("reviewer:workspace.messages.imageRetryLocked")}
@@ -1016,6 +1111,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                 onSelect={setSelectedGroupKey}
                 onUpdateGeometry={null}
                 drawingHandlers={null}
+                readOnly={true}
               />
             </div>
           </div>
@@ -1057,21 +1153,21 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
             >
               <span style={{ color: "#00bfa5" }}>
                 {
-                  currentAnnotations.filter((a) => a.status === "APPROVED")
+                  typedCurrentAnnotations.filter((a) => a.status === "APPROVED")
                     .length
                 }
                 A
               </span>{" "}
               <span style={{ color: "#f87171" }}>
                 {
-                  currentAnnotations.filter((a) => a.status === "REJECTED")
+                  typedCurrentAnnotations.filter((a) => a.status === "REJECTED")
                     .length
                 }
                 R
               </span>{" "}
               <span style={{ color: "#facc15" }}>
                 {
-                  currentAnnotations.filter(
+                  typedCurrentAnnotations.filter(
                     (a) => !a.status || a.status === "PENDING",
                   ).length
                 }
@@ -1100,7 +1196,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
               >
                 fact_check
               </span>
-              {t("reviewer:workspace.tabs.review")} ({currentAnnotations.length})
+              {t("reviewer:workspace.tabs.review")} ({typedCurrentAnnotations.length})
             </button>
             <button
               onClick={() => setRightTab("summary")}
@@ -1155,7 +1251,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                 )}
 
                 {!itemAnnoLoading &&
-                  currentAnnotations.map((anno) => {
+                  typedCurrentAnnotations.map((anno: Annotation) => {
                     const isRejecting = rejectingAnnoId === anno.reviewingId;
                     const group = annotationGroups.find((g) =>
                       g.beReviewingIds?.includes(anno.reviewingId),
@@ -1311,7 +1407,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                     }}
                                     disabled={
                                       reviewSubmitting ||
-                                      policies.length === 0 ||
+                                      typedPolicies.length === 0 ||
                                       !canReviewCurrentImage
                                     }
                                     title={
@@ -1319,7 +1415,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                                         ? t("reviewer:workspace.messages.finalized", { status: assignmentStatus })
                                         : !canReviewCurrentImage
                                           ? t("reviewer:workspace.reviewBlockedImage")
-                                          : policies.length === 0
+                                          : typedPolicies.length === 0
                                             ? t("reviewer:workspace.noPolicies")
                                             : t("reviewer:workspace.rejectCurrent")
                                     }
@@ -1386,7 +1482,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
                               {t("reviewer:workspace.reject.selectViolation")}
                             </p>
                             <div className="space-y-1 max-h-32 overflow-y-auto">
-                              {policies.map((p) => (
+                              {typedPolicies.map((p: Policy) => (
                                 <button
                                   key={p.policyId}
                                   onClick={() =>
@@ -1485,10 +1581,10 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
             ) : rightTab === "summary" ? (
               /* ─── Tổng kết tab ─── */
               <ReviewSummaryPanel
-                items={items}
-                annoCache={annoCache}
+                items={typedItems}
+                annoCache={typedAnnoCache}
                 allLabels={allLabels}
-                reviewStats={reviewStats}
+                reviewStats={typedReviewStats}
                 currentItemIndex={currentItemIndex}
                 setCurrentItemIndex={setCurrentItemIndex}
               />
@@ -1501,21 +1597,29 @@ function ReviewWorkspaceInner({ assignmentIdNum }) {
 }
 
 /* ── Review Summary Panel (Tổng kết tab) ── */
+interface ReviewSummaryPanelProps {
+  items: WorkspaceItem[];
+  annoCache: Record<number, Annotation[]>;
+  allLabels: FlatLabel[];
+  reviewStats: ReviewStats;
+  currentItemIndex: number;
+  setCurrentItemIndex: (idx: number) => void;
+}
+
 function ReviewSummaryPanel({
   items,
   annoCache,
-  allLabels,
   reviewStats,
   currentItemIndex,
   setCurrentItemIndex,
-}) {
+}: ReviewSummaryPanelProps) {
   const { t } = useTranslation(["reviewer"]);
   /* Build per-label stats across all cached annotations */
   const labelStats = React.useMemo(() => {
-    const map = new Map();
+    const map = new Map<number, { labelId: number; labelName: string; colorCode: string; total: number; approved: number; rejected: number; pending: number }>();
     Object.values(annoCache)
       .flat()
-      .forEach((ann) => {
+      .forEach((ann: Annotation) => {
         if (!ann.labelId) return;
         if (!map.has(ann.labelId)) {
           map.set(ann.labelId, {
@@ -1528,7 +1632,7 @@ function ReviewSummaryPanel({
             pending: 0,
           });
         }
-        const e = map.get(ann.labelId);
+        const e = map.get(ann.labelId)!;
         e.total++;
         if (ann.status === "APPROVED") e.approved++;
         else if (ann.status === "REJECTED" && !isAwaitingRereview(ann))
@@ -1538,7 +1642,7 @@ function ReviewSummaryPanel({
     return Array.from(map.values()).sort((a, b) => b.total - a.total);
   }, [annoCache]);
 
-  const statCard = (label, value, color) => (
+  const statCard = (label: string, value: number, color: string) => (
     <div
       className="flex flex-col items-center justify-center rounded-lg p-3"
       style={{ background: "#1e2f42", border: "1px solid #253347" }}
@@ -1601,10 +1705,10 @@ function ReviewSummaryPanel({
           {t("workspace.stats.byImage")} ({items.length})
         </p>
         <div className="space-y-1">
-          {items.map((item, idx) => {
-            const annos = annoCache[item.itemId] ?? [];
+          {items.map((item: WorkspaceItem, idx: number) => {
+            const annos: Annotation[] = annoCache[item.itemId] ?? [];
             const approved = annos.filter(
-              (a) => a.status === "APPROVED",
+              (a: Annotation) => a.status === "APPROVED",
             ).length;
             const rejected = getRejectedReviewCount(annos);
             const pending = getPendingReviewCount(annos);
@@ -1691,7 +1795,7 @@ function ReviewSummaryPanel({
                   )}
                   {ls.rejected > 0 && (
                     <span style={{ color: "#f87171" }}>
-                      ✕ {t("workspace.stats.rejectedShort", { count: ls.rejected })}
+                      {t("workspace.stats.rejectedShort", { count: ls.rejected })}
                     </span>
                   )}
                   {ls.pending > 0 && (

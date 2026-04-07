@@ -7,7 +7,7 @@ import { cn } from "../../utils/cn";
 // - row: body size, hover enabled (subtle_bg, optional_left_border_accent)
 // - dense: true
 
-export function Table({ children, className = '' }) {
+export function Table({ children, className = '' }: { children?: React.ReactNode; className?: string }) {
     return (
         <div className={cn("w-full overflow-auto", className)}>
             <table className="w-full caption-bottom text-sm text-left">
@@ -17,7 +17,7 @@ export function Table({ children, className = '' }) {
     );
 }
 
-export function TableHeader({ children }) {
+export function TableHeader({ children }: { children?: React.ReactNode }) {
     return (
         <thead className="border-b border-border bg-muted/50">
             {children}
@@ -25,7 +25,7 @@ export function TableHeader({ children }) {
     );
 }
 
-export function TableBody({ children }) {
+export function TableBody({ children }: { children?: React.ReactNode }) {
     return (
         <tbody className="divide-y divide-border">
             {children}
@@ -33,7 +33,7 @@ export function TableBody({ children }) {
     );
 }
 
-export function TableRow({ children, className = '', onClick = undefined }) {
+export function TableRow({ children, className = '', onClick = undefined }: { children?: React.ReactNode; className?: string; onClick?: React.MouseEventHandler<HTMLTableRowElement> }) {
     return (
         <tr
             className={cn(
@@ -48,7 +48,7 @@ export function TableRow({ children, className = '', onClick = undefined }) {
     );
 }
 
-export function TableHead({ children, className = '' }) {
+export function TableHead({ children, className = '' }: { children?: React.ReactNode; className?: string }) {
     return (
         <th className={cn(
             "h-10 px-4 text-left align-middle font-semibold text-[10px] uppercase tracking-wider text-muted-foreground select-none",
@@ -59,7 +59,7 @@ export function TableHead({ children, className = '' }) {
     );
 }
 
-export function TableCell({ children, className = '' }) {
+export function TableCell({ children, className = '' }: { children?: React.ReactNode; className?: string }) {
     return (
         <td className={cn(
             "px-4 py-3 align-middle text-sm text-foreground",
