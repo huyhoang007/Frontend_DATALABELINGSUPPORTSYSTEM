@@ -2,6 +2,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOutletContext } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useMemo } from "react";
 import { Card } from "../../components/ui/Card";
 import { cn } from "../../utils/cn";
 import { projectApi } from "../../api/projectApi";
@@ -20,7 +21,7 @@ const toNumber = (value: any) => {
 
 export default function ProjectOverview() {
     const { project } = useOutletContext<{ project: any }>();
-    const { t } = useTranslation(["manager", "common"]);
+    const { t, i18n } = useTranslation(["manager", "common"]);
     const queryClient = useQueryClient();
     const isProjectCompleted = project?.status?.toLowerCase() === "completed";
     const [guidelineContent, setGuidelineContent] = useState("");
@@ -29,6 +30,9 @@ export default function ProjectOverview() {
     const [savingGuideline, setSavingGuideline] = useState(false);
     const [guidelineMessage, setGuidelineMessage] = useState<string | null>(null);
     const [guidelineMessageType, setGuidelineMessageType] = useState<"success" | "error" | null>(null);
+    const [shiftPressed, setShiftPressed] = useState(false);
+    const [hoveredExplainKey, setHoveredExplainKey] = useState<string | null>(null);
+    const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
     useEffect(() => {
         setGuidelineContent(project?.guidelineContent || "");
@@ -45,6 +49,21 @@ export default function ProjectOverview() {
             return () => clearTimeout(timer);
         }
     }, [guidelineMessage]);
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Shift") setShiftPressed(true);
+        };
+        const handleKeyUp = (event: KeyboardEvent) => {
+            if (event.key === "Shift") setShiftPressed(false);
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("keyup", handleKeyUp);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("keyup", handleKeyUp);
+        };
+    }, []);
 
     const projectId = project?.projectId ?? project?.project_id;
     type OverviewData = {
@@ -163,9 +182,207 @@ export default function ProjectOverview() {
     const totalTeamMembers = summary?.totalTeamMembers ?? 0;
     const teamAvgScore = teamAverageScore || toNumber(summary?.teamAveragePerformanceScore);
     const alerts = summary?.alerts || [];
+    const isEnglish = i18n.language === "en";
+
+    const explainers = useMemo(() => ({
+        totalItems: {
+            title: isEnglish ? "Data / total items" : "Dữ liệu / tổng số item",
+            api: [
+                "GET /api/analytics/projects/:projectId/summary",
+                "GET /api/analytics/projects/:projectId/progress",
+            ],
+            fields: ["summary.progress.totalItems", "progress.totalItems"],
+            formula: isEnglish
+                ? `Displayed value = progress.totalItems ?? 0 = ${totalItems}`
+                : `Giá trị hiển thị = progress.totalItems ?? 0 = ${totalItems}`,
+        },
+        team: {
+            title: isEnglish ? "Team size and average score" : "Quy mô nhóm và điểm trung bình",
+            api: [
+                "GET /api/analytics/projects/:projectId/summary",
+                "GET /api/analytics/projects/:projectId/member-scores",
+                "GET /api/analytics/projects/:projectId/contributions",
+            ],
+            fields: [
+                "summary.totalTeamMembers",
+                "memberScores[].performanceScore",
+                "summary.teamAveragePerformanceScore",
+            ],
+            formula: isEnglish
+                ? `Team count = summary.totalTeamMembers = ${totalTeamMembers}. Average score = average(memberScores.performanceScore) or fallback summary.teamAveragePerformanceScore = ${teamAvgScore.toFixed(1)}`
+                : `Số thành viên = summary.totalTeamMembers = ${totalTeamMembers}. Điểm trung bình = average(memberScores.performanceScore) hoặc fallback summary.teamAveragePerformanceScore = ${teamAvgScore.toFixed(1)}`,
+        },
+        annotations: {
+            title: isEnglish ? "Annotation review counts" : "Số chú thích theo trạng thái review",
+            api: ["GET /api/analytics/projects/:projectId/quality"],
+            fields: [
+                "quality.totalAnnotations",
+                "quality.acceptedAnnotations",
+                "quality.rejectedAnnotations",
+            ],
+            formula: isEnglish
+                ? `Accepted = ${acceptedAnnotations}; Rejected = ${rejectedAnnotations}; Pending = max(totalAnnotations - (accepted + rejected), 0) = max(${totalAnnotations} - (${acceptedAnnotations} + ${rejectedAnnotations}), 0) = ${pendingAnnotations}`
+                : `Đã duyệt = ${acceptedAnnotations}; Từ chối = ${rejectedAnnotations}; Chờ duyệt = max(totalAnnotations - (accepted + rejected), 0) = max(${totalAnnotations} - (${acceptedAnnotations} + ${rejectedAnnotations}), 0) = ${pendingAnnotations}`,
+        },
+        qualityScore: {
+            title: isEnglish ? "Overall quality score" : "Điểm chất lượng tổng thể",
+            api: ["GET /api/analytics/projects/:projectId/quality"],
+            fields: ["quality.overallQualityScore", "quality.qualityLevel"],
+            formula: isEnglish
+                ? `Displayed score = quality.overallQualityScore = ${overallQualityScore.toFixed(1)}. Quality level = ${qualityLevel}`
+                : `Điểm hiển thị = quality.overallQualityScore = ${overallQualityScore.toFixed(1)}. Mức chất lượng = ${qualityLevel}`,
+        },
+        policyCompliance: {
+            title: isEnglish ? "Policy compliance and violations" : "Tỷ lệ tuân thủ policy và số vi phạm",
+            api: ["GET /api/analytics/projects/:projectId/quality"],
+            fields: ["quality.policyComplianceRate", "quality.totalPolicyViolations"],
+            formula: isEnglish
+                ? `Compliance = quality.policyComplianceRate = ${policyComplianceRate.toFixed(1)}%. Violation count = quality.totalPolicyViolations = ${totalPolicyViolations}`
+                : `Tỷ lệ tuân thủ = quality.policyComplianceRate = ${policyComplianceRate.toFixed(1)}%. Số vi phạm = quality.totalPolicyViolations = ${totalPolicyViolations}`,
+        },
+        labelingProgress: {
+            title: isEnglish ? "Labeled progress" : "Tiến độ đã gán nhãn",
+            api: [
+                "GET /api/analytics/projects/:projectId/progress",
+                "GET /api/assignments/project/:projectId",
+                "GET /api/datasets/project/:projectId",
+            ],
+            fields: ["progress.labeledItems", "assignments[].status", "datasets[].totalItems"],
+            formula: isEnglish
+                ? `Derived labeled items = sum(dataset.totalItems for assignment statuses SUBMITTED, RE_SUBMITTED, APPROVED, REJECTED, COMPLETED) = ${derivedLabeledItems}. Final displayed value = max(progress.labeledItems, derivedValue), capped by totalItems = ${labeledItems}/${totalItems}`
+                : `Số item đã gán nhãn suy ra = tổng dataset.totalItems của assignment có trạng thái SUBMITTED, RE_SUBMITTED, APPROVED, REJECTED, COMPLETED = ${derivedLabeledItems}. Giá trị cuối = max(progress.labeledItems, giá trị suy ra) và không vượt totalItems = ${labeledItems}/${totalItems}`,
+        },
+        reviewingProgress: {
+            title: isEnglish ? "Reviewer reviewed progress" : "Tiến độ reviewer đã đánh giá",
+            api: [
+                "GET /api/analytics/projects/:projectId/progress",
+                "GET /api/analytics/projects/:projectId/quality",
+                "GET /api/assignments/project/:projectId",
+                "GET /api/datasets/project/:projectId",
+            ],
+            fields: [
+                "progress.reviewedItems",
+                "quality.acceptedAnnotations",
+                "quality.rejectedAnnotations",
+                "assignments[].status",
+                "datasets[].totalItems",
+            ],
+            formula: isEnglish
+                ? `If accepted and rejected are both 0, displayed reviewed items = 0. Otherwise derived value = sum(dataset.totalItems for APPROVED, REJECTED, COMPLETED) = ${derivedReviewedItems}. Final value = max(progress.reviewedItems, derivedValue), capped by labeledItems = ${reviewedItems}/${totalItems}`
+                : `Nếu accepted và rejected đều bằng 0 thì hiển thị reviewedItems = 0. Ngược lại giá trị suy ra = tổng dataset.totalItems của assignment có trạng thái APPROVED, REJECTED, COMPLETED = ${derivedReviewedItems}. Giá trị cuối = max(progress.reviewedItems, giá trị suy ra) và không vượt labeledItems = ${reviewedItems}/${totalItems}`,
+        },
+        approvalProgress: {
+            title: isEnglish ? "Approved progress" : "Tiến độ đã duyệt",
+            api: [
+                "GET /api/analytics/projects/:projectId/progress",
+                "GET /api/assignments/project/:projectId",
+                "GET /api/datasets/project/:projectId",
+            ],
+            fields: ["progress.approvedItems", "assignments[].status", "datasets[].totalItems"],
+            formula: isEnglish
+                ? `Derived approved items = sum(dataset.totalItems for APPROVED, COMPLETED) = ${derivedApprovedItems}. Final displayed value = max(progress.approvedItems, derivedValue), capped by totalItems = ${approvedItems}/${totalItems}`
+                : `Số item đã duyệt suy ra = tổng dataset.totalItems của assignment có trạng thái APPROVED, COMPLETED = ${derivedApprovedItems}. Giá trị cuối = max(progress.approvedItems, giá trị suy ra) và không vượt totalItems = ${approvedItems}/${totalItems}`,
+        },
+        annotationAccuracy: {
+            title: isEnglish ? "Annotation accuracy" : "Độ chính xác gán nhãn",
+            api: ["GET /api/analytics/projects/:projectId/quality"],
+            fields: ["quality.annotationAccuracy"],
+            formula: isEnglish
+                ? `Displayed value = quality.annotationAccuracy = ${annotationAccuracy.toFixed(1)}%`
+                : `Giá trị hiển thị = quality.annotationAccuracy = ${annotationAccuracy.toFixed(1)}%`,
+        },
+        labelBalance: {
+            title: isEnglish ? "Label distribution balance" : "Cân bằng phân phối nhãn",
+            api: ["GET /api/analytics/projects/:projectId/quality"],
+            fields: ["quality.labelDistributionBalance"],
+            formula: isEnglish
+                ? `Displayed value = quality.labelDistributionBalance = ${labelDistributionBalance.toFixed(1)}%`
+                : `Giá trị hiển thị = quality.labelDistributionBalance = ${labelDistributionBalance.toFixed(1)}%`,
+        },
+        contributors: {
+            title: isEnglish ? "Top contributors table" : "Bảng đóng góp hàng đầu",
+            api: [
+                "GET /api/analytics/projects/:projectId/contributions",
+                "GET /api/analytics/projects/:projectId/member-scores",
+            ],
+            fields: [
+                "contributions[].totalAssignments",
+                "contributions[].completedAssignments",
+                "memberScores[].performanceScore",
+            ],
+            formula: isEnglish
+                ? "FE merges contribution rows and member-score rows by userId. Tasks = totalAssignments, Completed = completedAssignments, Score = performanceScore. Then FE sorts by score desc, completed desc, task count desc."
+                : "FE gộp dữ liệu contribution và member-scores theo userId. Nhiệm vụ = totalAssignments, Hoàn thành = completedAssignments, Điểm = performanceScore. Sau đó FE sắp xếp theo điểm giảm dần, rồi completed giảm dần, rồi tổng nhiệm vụ giảm dần.",
+        },
+    }), [
+        isEnglish,
+        totalItems,
+        totalTeamMembers,
+        teamAvgScore,
+        acceptedAnnotations,
+        rejectedAnnotations,
+        pendingAnnotations,
+        totalAnnotations,
+        overallQualityScore,
+        qualityLevel,
+        policyComplianceRate,
+        totalPolicyViolations,
+        derivedLabeledItems,
+        labeledItems,
+        derivedReviewedItems,
+        reviewedItems,
+        derivedApprovedItems,
+        approvedItems,
+        annotationAccuracy,
+        labelDistributionBalance,
+    ]);
+
+    const currentExplainer = hoveredExplainKey ? explainers[hoveredExplainKey as keyof typeof explainers] : null;
+    const attachExplainProps = (key: string) => ({
+        onMouseEnter: (event: any) => {
+            setHoveredExplainKey(key);
+            setTooltipPosition({ x: event.clientX, y: event.clientY });
+        },
+        onMouseMove: (event: any) => {
+            setHoveredExplainKey(key);
+            setTooltipPosition({ x: event.clientX, y: event.clientY });
+        },
+        onMouseLeave: () => setHoveredExplainKey((current) => (current === key ? null : current)),
+    });
 
     return (
         <>
+            {shiftPressed && currentExplainer && (
+                <div
+                    className="fixed z-[100] pointer-events-none max-w-md rounded-lg border border-sky-400/40 bg-slate-950/95 text-white shadow-2xl px-4 py-3"
+                    style={{
+                        left: Math.min(tooltipPosition.x + 16, window.innerWidth - 380),
+                        top: Math.min(tooltipPosition.y + 16, window.innerHeight - 260),
+                    }}
+                >
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-sky-300 mb-2">
+                        {isEnglish ? "Metric explanation" : "Giải thích chỉ số"}
+                    </div>
+                    <div className="text-sm font-semibold mb-2">{currentExplainer.title}</div>
+                    <div className="space-y-2 text-xs leading-5 text-slate-200">
+                        <div>
+                            <span className="font-semibold text-sky-200">{isEnglish ? "APIs: " : "API: "}</span>
+                            <span>{currentExplainer.api.join(", ")}</span>
+                        </div>
+                        <div>
+                            <span className="font-semibold text-sky-200">{isEnglish ? "Fields used: " : "Field dùng: "}</span>
+                            <span>{currentExplainer.fields.join(", ")}</span>
+                        </div>
+                        <div>
+                            <span className="font-semibold text-sky-200">{isEnglish ? "FE calculation: " : "Cách FE tính: "}</span>
+                            <span>{currentExplainer.formula}</span>
+                        </div>
+                        <div className="text-[11px] text-slate-400 pt-1 border-t border-white/10">
+                            {isEnglish ? "Hold Shift and hover another metric to inspect it." : "Giữ Shift và rê qua vùng khác để xem chỉ số khác."}
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* Toast Notification */}
             {guidelineMessage && (
                 <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg animate-in fade-in slide-in-from-top-4 duration-300 ${
@@ -185,17 +402,17 @@ export default function ProjectOverview() {
             )}
             {/* KPI Cards */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <Card className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
+                <Card {...attachExplainProps("totalItems")} className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
                     <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("manager:overview.data")}</div>
                     <div className="text-3xl font-bold text-foreground">{totalItems.toLocaleString()}</div>
                     <div className="text-xs text-muted-foreground mt-1">{t("manager:overview.totalItemsUnit")}</div>
                 </Card>
-                <Card className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
+                <Card {...attachExplainProps("team")} className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
                     <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("manager:overview.team")}</div>
                     <div className="text-3xl font-bold text-foreground">{totalTeamMembers}</div>
                     <div className="text-xs text-emerald-500 font-medium mt-1">{t("manager:overview.averageScore", { score: teamAvgScore.toFixed(1) })}</div>
                 </Card>
-                <Card className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
+                <Card {...attachExplainProps("annotations")} className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
                     <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("manager:overview.annotations")}</div>
                     <div className="flex items-center justify-center gap-3 mt-1">
                         <div>
@@ -212,7 +429,7 @@ export default function ProjectOverview() {
                         </div>
                     </div>
                 </Card>
-                <Card className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
+                <Card {...attachExplainProps("qualityScore")} className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
                     <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("manager:overview.quality")}</div>
                     <div className="text-3xl font-bold text-foreground">{overallQualityScore.toFixed(0)}%</div>
                     <div className={cn(
@@ -222,7 +439,7 @@ export default function ProjectOverview() {
                         {qualityLevel}
                     </div>
                 </Card>
-                <Card className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
+                <Card {...attachExplainProps("policyCompliance")} className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
                     <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
                         {t("manager:overview.violations", { count: totalPolicyViolations })}
                     </div>
@@ -242,11 +459,11 @@ export default function ProjectOverview() {
                     </div>
                     <div className="space-y-5">
                         {[
-                            { label: t("manager:overview.labelingDone"), value: labeledItems, pct: totalItems > 0 ? (labeledItems / totalItems) * 100 : 0, color: "bg-blue-500" },
-                            { label: t("manager:overview.reviewingDone"), value: reviewedItems, pct: totalItems > 0 ? (reviewedItems / totalItems) * 100 : 0, color: "bg-emerald-500" },
-                            { label: t("manager:overview.approvalDone"), value: approvedItems, pct: totalItems > 0 ? (approvedItems / totalItems) * 100 : 0, color: "bg-amber-500" },
+                            { key: "labelingProgress", label: t("manager:overview.labelingDone"), value: labeledItems, pct: totalItems > 0 ? (labeledItems / totalItems) * 100 : 0, color: "bg-blue-500" },
+                            { key: "reviewingProgress", label: t("manager:overview.reviewingDone"), value: reviewedItems, pct: totalItems > 0 ? (reviewedItems / totalItems) * 100 : 0, color: "bg-emerald-500" },
+                            { key: "approvalProgress", label: t("manager:overview.approvalDone"), value: approvedItems, pct: totalItems > 0 ? (approvedItems / totalItems) * 100 : 0, color: "bg-amber-500" },
                         ].map((bar) => (
-                            <div key={bar.label}>
+                            <div key={bar.label} {...attachExplainProps(bar.key)}>
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-sm text-foreground font-medium">{bar.label}</span>
                                     <span className="text-sm font-bold text-foreground">
@@ -265,11 +482,11 @@ export default function ProjectOverview() {
                 <Card className="p-6 bg-card/80 backdrop-blur border-border/60">
                     <h3 className="text-base font-bold text-foreground mb-6">{t("manager:overview.qualityMetrics")}</h3>
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between">
+                        <div {...attachExplainProps("annotationAccuracy")} className="flex items-center justify-between">
                             <span className="text-sm text-foreground font-medium">{t("manager:overview.annotationAccuracy")}</span>
                             <span className="text-sm font-bold text-emerald-500">{annotationAccuracy.toFixed(1)}%</span>
                         </div>
-                        <div className="flex items-center justify-between">
+                        <div {...attachExplainProps("labelBalance")} className="flex items-center justify-between">
                             <span className="text-sm text-foreground font-medium">{t("manager:overview.labelBalance")}</span>
                             <span className="text-sm font-bold text-blue-500">{labelDistributionBalance.toFixed(1)}%</span>
                         </div>
@@ -289,7 +506,7 @@ export default function ProjectOverview() {
                                 </span>
                             </div>
                         )}
-                        <div className="pt-4 border-t border-border/50 flex items-center justify-between">
+                        <div {...attachExplainProps("qualityScore")} className="pt-4 border-t border-border/50 flex items-center justify-between">
                             <span className="text-sm text-muted-foreground font-medium">{t("manager:overview.overallQuality")}</span>
                             <span className={cn(
                                 "text-xs font-bold px-2.5 py-1 rounded-md",
@@ -304,7 +521,7 @@ export default function ProjectOverview() {
 
             {/* Team Contributions */}
             {contributors.length > 0 && (
-                <Card className="p-6 bg-card/80 backdrop-blur border-border/60">
+                <Card {...attachExplainProps("contributors")} className="p-6 bg-card/80 backdrop-blur border-border/60">
                     <h3 className="text-base font-bold text-foreground mb-4">{t("manager:overview.topContributors")}</h3>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
