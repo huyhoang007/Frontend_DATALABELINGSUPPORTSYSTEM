@@ -23,7 +23,7 @@ export default function TaskList() {
   const { t } = useTranslation(["annotator", "common"]);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState("PENDING");
+  const [activeTab, setActiveTab] = useState("ALL");
   const [search, setSearch] = useState("");
   const [hoveredRow, setHoveredRow] = useState(null);
   const [assignments, setAssignments] = useState([]);

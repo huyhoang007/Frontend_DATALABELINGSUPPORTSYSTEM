@@ -89,12 +89,6 @@ export function useAnnotations({ assignmentId, assignmentStatus, addToast }) {
 
       try {
         const rows = flattenToBeRows(data);
-        if (rows.length === 0) {
-          if (import.meta.env.DEV) {
-            console.log("[ANNO] skip save — no annotations for item", itemId);
-          }
-          return;
-        }
         const isRejected = assignmentStatus?.toUpperCase() === "REJECTED";
         if (!isRejected) {
           await annotationApi.saveAnnotations(assignmentId, {

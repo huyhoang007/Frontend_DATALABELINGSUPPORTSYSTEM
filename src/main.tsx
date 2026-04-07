@@ -10,16 +10,14 @@ import { AuthProvider } from './context/AuthContext.js'
 import { queryClient } from './query/queryClient'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ToastProvider>
-          <>
-            <App />
-            {import.meta.env.DEV && <Agentation />}
-          </>
-        </ToastProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  </React.StrictMode>,
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <ToastProvider>
+        <>
+          <App />
+          {import.meta.env.DEV && <Agentation />}
+        </>
+      </ToastProvider>
+    </AuthProvider>
+  </QueryClientProvider>,
 )
