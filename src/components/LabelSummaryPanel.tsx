@@ -224,7 +224,7 @@ export default function LabelSummaryPanel({
               >
                 <div
                   className="h-2.5 w-2.5 shrink-0 rounded-full"
-                  style={{ background: entry.colorCode }}
+                  style={{ backgroundColor: entry.colorCode }}
                 />
                 <div className="min-w-0 flex-1">
                   <div

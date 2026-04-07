@@ -214,9 +214,6 @@ export function LanguageSwitcher() {
           >
             <span
               className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_2px_8px_rgba(15,23,42,0.12)]"
-              style={{
-                background: "#fff",
-              }}
             >
               <img
                 src={language.icon}

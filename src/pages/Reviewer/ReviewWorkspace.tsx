@@ -187,13 +187,9 @@ function ThumbnailImg({ fileUrl, alt }: { fileUrl?: string; alt: string }) {
     return (
       <div
         ref={containerRef}
-        className="w-full h-full flex items-center justify-center"
-        style={{ background: "#0e1621" }}
+        className="flex h-full w-full items-center justify-center bg-[#0e1621]"
       >
-        <span
-          className="material-symbols-outlined"
-          style={{ fontSize: 24, color: "#3a5068" }}
-        >
+        <span className="material-symbols-outlined text-[24px] text-[#3a5068]">
           image
         </span>
       </div>
@@ -218,28 +214,21 @@ export default function ReviewWorkspace() {
   const assignmentIdNum = Number(assignmentId);
   if (!assignmentId || isNaN(assignmentIdNum)) {
     return (
-      <div
-        className="flex flex-col items-center justify-center h-screen gap-4"
-        style={{ background: "#131c2e", color: "#e2e8f0" }}
-      >
-        <span
-          className="material-symbols-outlined text-5xl"
-          style={{ color: "#f87171" }}
-        >
+      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-[#131c2e] text-slate-200">
+        <span className="material-symbols-outlined text-5xl text-red-400">
           error
         </span>
         <h2 className="text-xl font-bold">
           {t("reviewer:workspace.invalidAssignment")}
         </h2>
-        <p style={{ color: "#64748b" }}>
+        <p className="text-slate-500">
           {t("reviewer:workspace.invalidAssignmentDescription", {
             id: assignmentId,
           })}
         </p>
         <button
           onClick={() => navigate("/reviewer/queue")}
-          className="px-4 py-2 rounded text-sm font-medium hover:opacity-80 transition"
-          style={{ background: "#1e2f42", color: "#e2e8f0" }}
+          className="rounded bg-[#1e2f42] px-4 py-2 text-sm font-medium text-slate-200 transition hover:opacity-80"
         >
           {t("common:actions.backToList")}
         </button>
@@ -435,17 +424,11 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
   /* ── Loading ── */
   if (workspaceLoading) {
     return (
-      <div
-        className="flex items-center justify-center h-screen"
-        style={{ background: "#131c2e", color: "#e2e8f0" }}
-      >
-        <span
-          className="material-symbols-outlined animate-spin mr-2"
-          style={{ fontSize: 28, color: "#3a5068" }}
-        >
+      <div className="flex h-screen items-center justify-center bg-[#131c2e] text-slate-200">
+        <span className="material-symbols-outlined mr-2 animate-spin text-[28px] text-[#3a5068]">
           progress_activity
         </span>
-        <span style={{ color: "#64748b" }}>
+        <span className="text-slate-500">
           {t("reviewer:workspace.loadingWorkspace")}
         </span>
       </div>
@@ -455,22 +438,15 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
   /* ── Error ── */
   if (workspaceError) {
     return (
-      <div
-        className="flex flex-col items-center justify-center h-screen gap-4"
-        style={{ background: "#131c2e", color: "#e2e8f0" }}
-      >
-        <span
-          className="material-symbols-outlined text-5xl"
-          style={{ color: "#f87171" }}
-        >
+      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-[#131c2e] text-slate-200">
+        <span className="material-symbols-outlined text-5xl text-red-400">
           error
         </span>
         <h2 className="text-xl font-bold">{t("reviewer:workspace.loadFailed")}</h2>
-        <p style={{ color: "#64748b" }}>{workspaceError}</p>
+        <p className="text-slate-500">{workspaceError}</p>
         <button
           onClick={() => navigate("/reviewer/queue")}
-          className="px-4 py-2 rounded text-sm font-medium hover:opacity-80 transition"
-          style={{ background: "#1e2f42", color: "#e2e8f0" }}
+          className="rounded bg-[#1e2f42] px-4 py-2 text-sm font-medium text-slate-200 transition hover:opacity-80"
         >
           {t("common:actions.backToList")}
         </button>
@@ -505,21 +481,12 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
   const ss = String(now.getSeconds()).padStart(2, "0");
 
   return (
-    <div
-      className="flex flex-col h-screen overflow-hidden"
-      style={{ background: "#131c2e", color: "#e2e8f0" }}
-    >
+    <div className="flex h-screen flex-col overflow-hidden bg-[#131c2e] text-slate-200">
       {/* ══ TOP BAR ══ */}
       <div
-        className="flex items-center gap-2 px-3 shrink-0 border-b"
-        style={{
-          minHeight: 48,
-          background: "#182233",
-          borderColor: "#253347",
-          flexWrap: isMobile ? "wrap" : "nowrap",
-          paddingTop: isMobile ? 8 : undefined,
-          paddingBottom: isMobile ? 8 : undefined,
-        }}
+        className={`flex min-h-12 shrink-0 items-center gap-2 border-b border-[#253347] bg-[#182233] px-3 ${
+          isMobile ? "flex-wrap py-2" : "flex-nowrap"
+        }`}
       >
         {/* Logo / Back */}
         <button
@@ -537,29 +504,19 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
         </button>
 
         {/* Review progress bar */}
-        <div
-          className="flex items-center gap-2 mx-3"
-          style={{ order: isMobile ? 3 : 0 }}
-        >
-          <div
-            className="w-28 h-1.5 rounded-full overflow-hidden"
-            style={{ background: "#253347" }}
-          >
+        <div className={`mx-3 flex items-center gap-2 ${isMobile ? "order-3" : ""}`}>
+          <div className="h-1.5 w-28 overflow-hidden rounded-full bg-[#253347]">
             <div
-              className="h-full rounded-full transition-all duration-500"
+              className="h-full rounded-full bg-[#00bfa5] transition-all duration-500"
               style={{
                 width:
                   typedReviewStats.total > 0
                     ? `${(typedReviewStats.reviewed / typedReviewStats.total) * 100}%`
                     : "0%",
-                background: "#00bfa5",
               }}
             />
           </div>
-          <span
-            className="text-xs font-medium whitespace-nowrap"
-            style={{ color: "#64748b" }}
-          >
+          <span className="whitespace-nowrap text-xs font-medium text-slate-500">
             {t("reviewer:workspace.currentImageProgress", {
               current: currentItemIndex + 1,
               total: totalImages,
@@ -569,8 +526,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
 
         {/* Image navigation */}
         <div
-          className="flex items-center rounded overflow-hidden"
-          style={{ background: "#1e2f42", order: isMobile ? 4 : 0 }}
+          className={`flex items-center overflow-hidden rounded bg-[#1e2f42] ${
+            isMobile ? "order-4" : ""
+          }`}
         >
           {[
             { icon: "first_page", dir: "first" },
@@ -579,21 +537,14 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
             <button
               key={dir}
               onClick={() => handleNavigate(dir)}
-              className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-white/10"
-              style={{ color: "#64748b" }}
+              className="flex h-7 w-7 items-center justify-center text-slate-500 transition-colors hover:bg-white/10"
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 16 }}
-              >
+              <span className="material-symbols-outlined text-[16px]">
                 {icon}
               </span>
             </button>
           ))}
-          <span
-            className="px-2 text-xs font-bold tabular-nums"
-            style={{ color: "#e2e8f0" }}
-          >
+          <span className="px-2 text-xs font-bold tabular-nums text-slate-200">
             {currentItemIndex + 1}
           </span>
           {[
@@ -603,13 +554,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
             <button
               key={dir}
               onClick={() => handleNavigate(dir)}
-              className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-white/10"
-              style={{ color: "#64748b" }}
+              className="flex h-7 w-7 items-center justify-center text-slate-500 transition-colors hover:bg-white/10"
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 16 }}
-              >
+              <span className="material-symbols-outlined text-[16px]">
                 {icon}
               </span>
             </button>
@@ -619,19 +566,11 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
         <div className="flex-1" />
 
         {/* Clock */}
-        <div
-          className="flex items-center gap-1 mr-3"
-          style={{ order: isMobile ? 2 : 0 }}
-        >
+        <div className={`mr-3 flex items-center gap-1 ${isMobile ? "order-2" : ""}`}>
           {[hh, mm, ss].map((unit, i) => (
             <span
               key={i}
-              className="text-xs font-mono font-bold tabular-nums px-1.5 py-0.5 rounded"
-              style={{
-                background: "#1e2f42",
-                color: "#94a3b8",
-                letterSpacing: "0.05em",
-              }}
+              className="rounded bg-[#1e2f42] px-1.5 py-0.5 font-mono text-xs font-bold tabular-nums tracking-[0.05em] text-slate-400"
             >
               {unit}
             </span>
@@ -639,88 +578,60 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
         </div>
 
         {/* Zoom */}
-        <div
-          className="flex items-center gap-1 mr-2"
-          style={{ order: isMobile ? 2 : 0 }}
-        >
+        <div className={`mr-2 flex items-center gap-1 ${isMobile ? "order-2" : ""}`}>
           <button
             onClick={() => setZoom((z) => Math.max(10, z - 10))}
-            className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
-            style={{ color: "#64748b" }}
+            className="flex h-6 w-6 items-center justify-center rounded text-slate-500 transition-colors hover:bg-white/10"
           >
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: 14 }}
-            >
+            <span className="material-symbols-outlined text-[14px]">
               remove
             </span>
           </button>
-          <span
-            className="text-[11px] font-mono font-bold w-10 text-center tabular-nums"
-            style={{ color: "#94a3b8" }}
-          >
+          <span className="w-10 text-center font-mono text-[11px] font-bold tabular-nums text-slate-400">
             {zoom}%
           </span>
           <button
             onClick={() => setZoom((z) => Math.min(400, z + 10))}
-            className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
-            style={{ color: "#64748b" }}
+            className="flex h-6 w-6 items-center justify-center rounded text-slate-500 transition-colors hover:bg-white/10"
           >
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: 14 }}
-            >
+            <span className="material-symbols-outlined text-[14px]">
               add
             </span>
           </button>
         </div>
 
         {/* Guideline quick access */}
-        <div className="relative mr-2" style={{ order: isMobile ? 2 : 0 }}>
+        <div className={`relative mr-2 ${isMobile ? "order-2" : ""}`}>
           <button
             onClick={() => setShowGuidelinePopover((v) => !v)}
             title={t("reviewer:workspace.guideline")}
-            className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
-            style={{ color: "#7dd3fc" }}
+            className="flex h-7 w-7 items-center justify-center rounded text-sky-300 transition-colors hover:bg-white/10"
           >
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: 16 }}
-            >
+            <span className="material-symbols-outlined text-[16px]">
               menu_book
             </span>
           </button>
           {showGuidelinePopover && (
             <div
-              className="absolute right-0 top-9 z-50 w-80 rounded-lg border p-3 shadow-2xl"
-              style={{ background: "#111d2c", borderColor: "#253347" }}
+              className="absolute right-0 top-9 z-50 w-80 rounded-lg border border-[#253347] bg-[#111d2c] p-3 shadow-2xl"
             >
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-bold" style={{ color: "#cbd5e1" }}>
+                  <p className="text-xs font-bold text-slate-300">
                     {t("reviewer:workspace.guideline")}
                   </p>
                 <button
                   onClick={() => setShowGuidelinePopover(false)}
-                  className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10"
-                  style={{ color: "#64748b" }}
+                  className="flex h-5 w-5 items-center justify-center rounded text-slate-500 hover:bg-white/10"
                 >
-                  <span
-                    className="material-symbols-outlined"
-                    style={{ fontSize: 14 }}
-                  >
+                  <span className="material-symbols-outlined text-[14px]">
                     close
                   </span>
                 </button>
               </div>
               <div
-                className="text-xs rounded border p-2 max-h-40 overflow-y-auto"
-                style={{
-                  borderColor: "#253347",
-                  color: "#94a3b8",
-                  background: "#0f1823",
-                }}
+                className="max-h-40 overflow-y-auto rounded border border-[#253347] bg-[#0f1823] p-2 text-xs text-slate-400"
               >
-                <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                <p className="whitespace-pre-wrap leading-[1.5]">
                   {ws?.projectGuidelineContent ||
                     t("annotator:workspace.messages.noGuideline")}
                 </p>
@@ -730,13 +641,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                   href={ws.projectGuidelineFileUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-2 inline-flex items-center gap-1.5 text-xs hover:text-white"
-                  style={{ color: "#7dd3fc", textDecoration: "underline" }}
+                  className="mt-2 inline-flex items-center gap-1.5 text-xs text-sky-300 underline hover:text-white"
                 >
-                  <span
-                    className="material-symbols-outlined"
-                    style={{ fontSize: 12 }}
-                  >
+                  <span className="material-symbols-outlined text-[12px]">
                     download
                   </span>
                   {t("annotator:workspace.actions.downloadGuideline")}
@@ -750,17 +657,11 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
         <button
           onClick={handleSubmit}
           disabled={!canSubmit || reviewSubmitting}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold transition-opacity shadow-md"
-          style={{
-            background: canSubmit ? "#00bfa5" : "#1e2f42",
-            color: canSubmit ? "#fff" : "#4a6788",
-            border: canSubmit ? "none" : "1px solid #253347",
-            cursor: canSubmit && !reviewSubmitting ? "pointer" : "not-allowed",
-            opacity: reviewSubmitting ? 0.6 : 1,
-            order: isMobile ? 5 : 0,
-            width: isMobile ? "100%" : undefined,
-            justifyContent: "center",
-          }}
+          className={`flex items-center justify-center gap-1.5 rounded px-3 py-1.5 text-xs font-bold transition-opacity shadow-md ${
+            canSubmit
+              ? "bg-[#00bfa5] text-white"
+              : "cursor-not-allowed border border-[#253347] bg-[#1e2f42] text-[#4a6788]"
+          } ${reviewSubmitting ? "opacity-60" : ""} ${isMobile ? "order-5 w-full" : ""}`}
           title={
             isFinalizedAssignment
               ? t("reviewer:workspace.messages.finalized", {
@@ -786,10 +687,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
           )}
           <span>{t("reviewer:workspace.actions.submitReview")}</span>
           {!isFinalizedAssignment && !canSubmit && typedReviewStats.pending > 0 && (
-            <span
-              className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
-              style={{ background: "#253347", color: "#94a3b8" }}
-            >
+            <span className="ml-1 rounded-full bg-[#253347] px-1.5 py-0.5 text-[10px] font-bold text-slate-400">
               {typedReviewStats.pending}
             </span>
           )}
@@ -797,35 +695,19 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
       </div>
 
       {/* ══ BODY ══ */}
-      <div
-        className="flex flex-1 overflow-hidden"
-        style={{ flexDirection: isMobile ? "column" : "row" }}
-      >
+      <div className={`flex flex-1 overflow-hidden ${isMobile ? "flex-col" : "flex-row"}`}>
         {/* ── LEFT: Thumbnails + Project info ── */}
         <div
-          className="flex flex-col shrink-0 border-r"
-          style={{
-            width: isMobile ? "100%" : 148,
-            background: "#182233",
-            borderColor: "#253347",
-            borderRightWidth: isMobile ? 0 : 1,
-            borderBottomWidth: isMobile ? 1 : 0,
-          }}
+          className={`flex shrink-0 flex-col bg-[#182233] ${
+            isMobile
+              ? "w-full border-b border-[#253347]"
+              : "w-[148px] border-r border-[#253347]"
+          }`}
         >
           {/* Project & submit */}
-          <div
-            className="p-3 border-b shrink-0 flex flex-col gap-2"
-            style={{ borderColor: "#253347" }}
-          >
+          <div className="flex shrink-0 flex-col gap-2 border-b border-[#253347] p-3">
             {/* Project name */}
-            <div
-              className="px-2 py-1.5 rounded text-xs font-medium"
-              style={{
-                background: "#1e2f42",
-                color: "#cbd5e1",
-                border: "1px solid #2a3f55",
-              }}
-            >
+            <div className="rounded border border-[#2a3f55] bg-[#1e2f42] px-2 py-1.5 text-xs font-medium text-slate-300">
               <span
                 className="block truncate"
                 title={ws?.projectName || `#${assignmentIdNum}`}
@@ -836,21 +718,13 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
 
             {/* Assignment status */}
             <div
-              className="flex items-center justify-center px-2 py-1 rounded text-[10px] font-bold"
-              style={{
-                background:
-                  ws?.assignmentStatus === "APPROVED"
-                    ? "rgba(0,191,165,0.1)"
-                    : ws?.assignmentStatus === "REJECTED"
-                      ? "rgba(248,113,113,0.1)"
-                      : "rgba(250,204,21,0.1)",
-                color:
-                  ws?.assignmentStatus === "APPROVED"
-                    ? "#00bfa5"
-                    : ws?.assignmentStatus === "REJECTED"
-                      ? "#f87171"
-                      : "#facc15",
-              }}
+              className={`flex items-center justify-center px-2 py-1 text-[10px] font-bold ${
+                ws?.assignmentStatus === "APPROVED"
+                  ? "bg-[rgba(0,191,165,0.1)] text-[#00bfa5]"
+                  : ws?.assignmentStatus === "REJECTED"
+                    ? "bg-[rgba(248,113,113,0.1)] text-[#f87171]"
+                    : "bg-[rgba(250,204,21,0.1)] text-[#facc15]"
+              }`}
             >
               {translateAssignmentStatus(ws?.assignmentStatus || "SUBMITTED")}
             </div>
@@ -859,19 +733,14 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
             <button
               onClick={handleSubmit}
               disabled={!canSubmit || reviewSubmitting}
-              className="w-full py-2 rounded text-xs font-bold flex items-center justify-center gap-1.5 transition-opacity"
+              className={`flex w-full items-center justify-center gap-1.5 rounded py-2 text-xs font-bold transition-opacity ${
+                canSubmit ? "bg-[#00bfa5] text-white" : "cursor-not-allowed bg-[#253347] text-[#4a6788]"
+              } ${reviewSubmitting ? "opacity-60" : ""}`}
               title={
                 hasImageLoadError
                   ? t("reviewer:workspace.messages.imageBlocked")
                   : undefined
               }
-              style={{
-                background: canSubmit ? "#00bfa5" : "#253347",
-                color: canSubmit ? "#fff" : "#4a6788",
-                cursor:
-                  canSubmit && !reviewSubmitting ? "pointer" : "not-allowed",
-                opacity: reviewSubmitting ? 0.6 : 1,
-              }}
             >
               <span className="material-symbols-outlined text-[14px]">
                 send
@@ -882,13 +751,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
 
           {/* Image list */}
           <div
-            className="flex-1 p-2 overflow-y-auto"
-            style={{
-              display: "flex",
-              flexDirection: isMobile ? "row" : "column",
-              gap: 8,
-              overflowX: isMobile ? "auto" : "hidden",
-            }}
+            className={`flex-1 gap-2 overflow-y-auto p-2 ${
+              isMobile ? "flex overflow-x-auto" : "flex flex-col overflow-x-hidden"
+            }`}
           >
             {typedItems.map((item: WorkspaceItem, idx: number) => {
               const stats = typedGetItemStats(item.itemId);
@@ -902,53 +767,35 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                     setCurrentItemIndex(idx);
                     setSelectedGroupKey(null);
                   }}
-                  className="relative cursor-pointer rounded overflow-hidden transition-all"
-                  style={{
-                    border: isActive
-                      ? "2px solid #00bfa5"
-                      : "2px solid transparent",
-                    background: "#1e2f42",
-                    minWidth: isMobile ? 96 : undefined,
-                  }}
+                  className={`relative cursor-pointer overflow-hidden rounded bg-[#1e2f42] transition-all ${
+                    isActive ? "border-2 border-[#00bfa5]" : "border-2 border-transparent"
+                  } ${isMobile ? "min-w-24" : ""}`}
                 >
                   {/* Number badge */}
                   <div
-                    className="absolute top-1 left-1 z-10 w-5 h-5 rounded text-[10px] font-bold flex items-center justify-center bg-black/40 backdrop-blur-sm"
-                    style={{
-                      border: isActive
-                        ? "1px solid #00bfa5"
-                        : "1px solid rgba(255,255,255,0.1)",
-                      color: isActive ? "#00bfa5" : "#fff",
-                    }}
+                    className={`absolute left-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded border bg-black/40 text-[10px] font-bold backdrop-blur-sm ${
+                      isActive ? "border-[#00bfa5] text-[#00bfa5]" : "border-white/10 text-white"
+                    }`}
                   >
                     {idx + 1}
                   </div>
                   {/* Status icon */}
                   {allReviewed && (
                     <div className="absolute top-1 right-1 z-10">
-                      <span
-                        className="material-symbols-outlined text-[16px] drop-shadow-md"
-                        style={{ color: hasRejected ? "#f87171" : "#00bfa5" }}
-                      >
+                      <span className={`material-symbols-outlined text-[16px] drop-shadow-md ${hasRejected ? "text-red-400" : "text-[#00bfa5]"}`}>
                         {hasRejected ? "cancel" : "check_circle"}
                       </span>
                     </div>
                   )}
                   {!allReviewed && stats.total > 0 && (
                     <div className="absolute top-1 right-1 z-10">
-                      <span
-                        className="material-symbols-outlined text-[16px] drop-shadow-md"
-                        style={{ color: "#facc15" }}
-                      >
+                      <span className="material-symbols-outlined text-[16px] text-yellow-400 drop-shadow-md">
                         pending
                       </span>
                     </div>
                   )}
                   {/* Thumbnail */}
-                  <div
-                    className="w-full overflow-hidden"
-                    style={{ height: 80, width: isMobile ? 92 : undefined }}
-                  >
+                  <div className={`h-20 overflow-hidden ${isMobile ? "w-[92px]" : "w-full"}`}>
                     <ThumbnailImg
                       fileUrl={item.fileUrl}
                       alt={
@@ -967,17 +814,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
           </div>
 
           {/* Progress summary */}
-          <div
-            className="p-3 border-t shrink-0"
-            style={{
-              borderColor: "#253347",
-              display: isMobile ? "none" : "block",
-            }}
-          >
-            <div
-              className="flex items-center justify-between text-[10px] mb-1.5"
-              style={{ color: "#4a6788" }}
-            >
+          <div className={`shrink-0 border-t border-[#253347] p-3 ${isMobile ? "hidden" : "block"}`}>
+            <div className="mb-1.5 flex items-center justify-between text-[10px] text-[#4a6788]">
               <span>{t("reviewer:workspace.stats.progress")}</span>
               <span className="font-mono">
                 {currentItemStats.total > 0
@@ -985,29 +823,25 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                   : "0/0"}
               </span>
             </div>
-            <div
-              className="w-full h-1 rounded-full overflow-hidden"
-              style={{ background: "#253347" }}
-            >
+            <div className="h-1 w-full overflow-hidden rounded-full bg-[#253347]">
               <div
-                className="h-full rounded-full transition-all"
+                className="h-full rounded-full bg-[#00bfa5] transition-all"
                 style={{
                   width:
                     currentItemStats.total > 0
                       ? `${((currentItemStats.approved + currentItemStats.rejected) / currentItemStats.total) * 100}%`
                       : "0%",
-                  background: "#00bfa5",
                 }}
               />
             </div>
             <div className="flex justify-between text-[10px] mt-1.5">
-              <span style={{ color: "#00bfa5" }}>
+              <span className="text-[#00bfa5]">
                 A {currentItemStats.approved}
               </span>
-              <span style={{ color: "#f87171" }}>
+              <span className="text-red-400">
                 R {currentItemStats.rejected}
               </span>
-              <span style={{ color: "#facc15" }}>
+              <span className="text-yellow-400">
                 P {currentItemStats.pending}
               </span>
             </div>
@@ -1016,35 +850,25 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
 
         {/* ── CENTER: Read-only canvas ── */}
         <div
-          className="flex-1 overflow-auto relative"
-          style={{ background: "#0e1621", minHeight: isMobile ? 0 : undefined }}
+          className={`relative flex-1 overflow-auto bg-[#0e1621] ${
+            isMobile ? "min-h-0" : ""
+          }`}
         >
           <div
-            style={{
-              minHeight: "100%",
-              minWidth: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: isMobile ? 12 : 32,
-              boxSizing: "border-box",
-            }}
+            className={`box-border flex min-h-full min-w-full items-center justify-center ${
+              isMobile ? "p-3" : "p-8"
+            }`}
           >
             <div
-              className="relative shadow-2xl shrink-0"
+              className="relative shrink-0 border border-white/10 bg-black shadow-2xl"
               style={{
                 width: imgWidth * (zoom / 100),
                 height: imgHeight * (zoom / 100),
-                background: "#000",
-                border: "1px solid rgba(255,255,255,0.08)",
               }}
             >
               {imageLoading ? (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span
-                    className="material-symbols-outlined animate-spin"
-                    style={{ fontSize: 32, color: "#3a5068" }}
-                  >
+                  <span className="material-symbols-outlined animate-spin text-[32px] text-[#3a5068]">
                     progress_activity
                   </span>
                 </div>
@@ -1061,40 +885,25 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                   draggable={false}
                 />
               ) : imageError ? (
-                <div
-                  className="absolute inset-0 flex items-center justify-center"
-                  style={{ background: "rgba(0,0,0,0.8)" }}
-                >
+                <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                   <div className="text-center p-6 max-w-sm">
-                    <span
-                      className="material-symbols-outlined mb-3 block"
-                      style={{ fontSize: 48, color: "#f87171" }}
-                    >
+                    <span className="material-symbols-outlined mb-3 block text-[48px] text-red-400">
                       broken_image
                     </span>
-                    <p
-                      className="text-sm font-medium mb-1"
-                      style={{ color: "#f87171" }}
-                    >
+                    <p className="mb-1 text-sm font-medium text-red-400">
                       {t("reviewer:workspace.brokenImage")}
                     </p>
-                    <p
-                      className="text-[10px] font-mono break-all"
-                      style={{ color: "#64748b" }}
-                    >
+                    <p className="break-all font-mono text-[10px] text-slate-500">
                       {(imageError as { url?: string })?.url}
                     </p>
-                    <p className="text-xs mt-3" style={{ color: "#cbd5e1" }}>
+                    <p className="mt-3 text-xs text-slate-300">
                       {t("reviewer:workspace.messages.imageRetryLocked")}
                     </p>
                   </div>
                 </div>
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center select-none opacity-20">
-                  <span
-                    className="material-symbols-outlined"
-                    style={{ fontSize: 64, color: "#3a5068" }}
-                  >
+                  <span className="material-symbols-outlined text-[64px] text-[#3a5068]">
                     image
                   </span>
                 </div>
@@ -1119,53 +928,37 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
 
         {/* ── RIGHT: Review/Summary panel ── */}
         <div
-          className="flex flex-col shrink-0 border-l overflow-hidden"
-          style={{
-            width: isMobile ? "100%" : 280,
-            maxHeight: isMobile ? "42vh" : undefined,
-            background: "#182233",
-            borderColor: "#253347",
-            borderLeftWidth: isMobile ? 0 : 1,
-            borderTopWidth: isMobile ? 1 : 0,
-          }}
+          className={`flex shrink-0 flex-col overflow-hidden bg-[#182233] ${
+            isMobile
+              ? "max-h-[42vh] w-full border-t border-[#253347]"
+              : "w-[280px] border-l border-[#253347]"
+          }`}
         >
           {/* Header line */}
-          <div
-            className="flex items-center gap-2 px-3 py-2 border-b shrink-0"
-            style={{ borderColor: "#253347" }}
-          >
-            <span
-              className="material-symbols-outlined text-[16px]"
-              style={{ color: "#00bfa5" }}
-            >
+          <div className="flex shrink-0 items-center gap-2 border-b border-[#253347] px-3 py-2">
+            <span className="material-symbols-outlined text-[16px] text-[#00bfa5]">
               rate_review
             </span>
-            <span
-              className="text-xs font-semibold"
-              style={{ color: "#94a3b8" }}
-            >
+            <span className="text-xs font-semibold text-slate-400">
               Ảnh {currentItemIndex + 1} / {totalImages}
             </span>
             <div className="flex-1" />
-            <span
-              className="text-[10px] font-mono"
-              style={{ color: "#4a6788" }}
-            >
-              <span style={{ color: "#00bfa5" }}>
+            <span className="text-[10px] font-mono text-[#4a6788]">
+              <span className="text-[#00bfa5]">
                 {
                   typedCurrentAnnotations.filter((a) => a.status === "APPROVED")
                     .length
                 }
                 A
               </span>{" "}
-              <span style={{ color: "#f87171" }}>
+              <span className="text-red-400">
                 {
                   typedCurrentAnnotations.filter((a) => a.status === "REJECTED")
                     .length
                 }
                 R
               </span>{" "}
-              <span style={{ color: "#facc15" }}>
+              <span className="text-yellow-400">
                 {
                   typedCurrentAnnotations.filter(
                     (a) => !a.status || a.status === "PENDING",
@@ -1177,40 +970,29 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
           </div>
 
           {/* Tab bar */}
-          <div
-            className="flex shrink-0 border-b"
-            style={{ borderColor: "#253347" }}
-          >
+          <div className="flex shrink-0 border-b border-[#253347]">
             <button
               onClick={() => setRightTab("review")}
-              className="flex-1 py-2 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
-              style={
+              className={`flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2 text-[11px] font-semibold transition-colors ${
                 rightTab === "review"
-                  ? { color: "#00bfa5", borderBottom: "2px solid #00bfa5" }
-                  : { color: "#4a6788", borderBottom: "2px solid transparent" }
-              }
+                  ? "border-[#00bfa5] text-[#00bfa5]"
+                  : "border-transparent text-[#4a6788]"
+              }`}
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 14 }}
-              >
+              <span className="material-symbols-outlined text-[14px]">
                 fact_check
               </span>
               {t("reviewer:workspace.tabs.review")} ({typedCurrentAnnotations.length})
             </button>
             <button
               onClick={() => setRightTab("summary")}
-              className="flex-1 py-2 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
-              style={
+              className={`flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2 text-[11px] font-semibold transition-colors ${
                 rightTab === "summary"
-                  ? { color: "#00bfa5", borderBottom: "2px solid #00bfa5" }
-                  : { color: "#4a6788", borderBottom: "2px solid transparent" }
-              }
+                  ? "border-[#00bfa5] text-[#00bfa5]"
+                  : "border-transparent text-[#4a6788]"
+              }`}
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 14 }}
-              >
+              <span className="material-symbols-outlined text-[14px]">
                 analytics
               </span>
               {t("reviewer:workspace.tabs.summary")}
@@ -1224,13 +1006,10 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
               <div className="p-3 space-y-2">
                 {itemAnnoLoading && (
                   <div className="flex items-center justify-center py-8 gap-2 opacity-50">
-                    <span
-                      className="material-symbols-outlined animate-spin"
-                      style={{ fontSize: 20, color: "#3a5068" }}
-                    >
+                    <span className="material-symbols-outlined animate-spin text-[20px] text-[#3a5068]">
                       progress_activity
                     </span>
-                    <span className="text-xs" style={{ color: "#3a5068" }}>
+                    <span className="text-xs text-[#3a5068]">
                       {t("common:states.loading")}
                     </span>
                   </div>
@@ -1238,13 +1017,10 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
 
                 {!itemAnnoLoading && currentAnnotations.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 gap-2 opacity-30">
-                    <span
-                      className="material-symbols-outlined"
-                      style={{ fontSize: 32, color: "#3a5068" }}
-                    >
+                    <span className="material-symbols-outlined text-[32px] text-[#3a5068]">
                       label_off
                     </span>
-                    <p className="text-xs" style={{ color: "#3a5068" }}>
+                    <p className="text-xs text-[#3a5068]">
                       {t("annotator:workspace.messages.annotationsEmpty")}
                     </p>
                   </div>
@@ -1270,14 +1046,11 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                     return (
                       <div
                         key={anno.reviewingId}
-                        className="rounded-lg border transition-all cursor-pointer"
-                        style={{
-                          background: isHighlighted
-                            ? "linear-gradient(135deg, rgba(0,191,165,0.15) 0%, rgba(59,130,246,0.1) 100%)"
-                            : "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)",
-                          borderColor: isHighlighted ? "#00bfa5" : "#374151",
-                          padding: "10px 12px",
-                        }}
+                        className={`cursor-pointer rounded-lg border px-3 py-2.5 transition-all ${
+                          isHighlighted
+                            ? "border-[#00bfa5] bg-[linear-gradient(135deg,rgba(0,191,165,0.15)_0%,rgba(59,130,246,0.1)_100%)]"
+                            : "border-[#374151] bg-[linear-gradient(135deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.04)_100%)]"
+                        }`}
                         onClick={() =>
                           setSelectedGroupKey(isHighlighted ? null : gKey)
                         }
@@ -1286,50 +1059,38 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2 min-w-0">
                             <span
-                              className="w-2.5 h-2.5 rounded-full shrink-0"
-                              style={{
-                                background: anno.colorCode || "#6b7280",
-                              }}
+                              className="h-2.5 w-2.5 shrink-0 rounded-full"
+                              style={{ backgroundColor: anno.colorCode || "#6b7280" }}
                             />
-                            <span
-                              className="text-base font-bold truncate"
-                              style={{ color: "#ffffff" }}
-                            >
+                            <span className="truncate text-base font-bold text-white">
                               {anno.labelName || `Label #${anno.labelId}`}
                             </span>
                           </div>
                           <span
-                            className="text-[10px] font-medium shrink-0 ml-1"
-                            style={{
-                              color: isApproved
-                                ? "#00bfa5"
+                            className={`ml-1 shrink-0 text-[10px] font-medium ${
+                              isApproved
+                                ? "text-[#00bfa5]"
                                 : statusLabel === "REJECTED"
-                                  ? "#f87171"
-                                  : "#facc15",
-                            }}
+                                  ? "text-red-400"
+                                  : "text-yellow-400"
+                            }`}
                           >
                             {statusLabel}
                           </span>
                         </div>
 
                         {/* Meta info */}
-                        <div
-                          className="flex items-center gap-2 text-[10px] mb-2"
-                          style={{ color: "#4a6788" }}
-                        >
+                        <div className="mb-2 flex items-center gap-2 text-[10px] text-[#4a6788]">
                           <span className="uppercase">
                             {anno.labelType || "BBOX"}
                           </span>
                           {anno.policyName && (
-                            <span
-                              style={{ color: "#f87171" }}
-                              className="truncate"
-                            >
+                            <span className="truncate text-red-400">
                               ● {anno.policyName}
                             </span>
                           )}
                           {anno.isImproved && anno.status !== "APPROVED" && (
-                            <span style={{ color: "#60a5fa" }}>
+                            <span className="text-blue-400">
                               {t("reviewer:workspace.improved")}
                             </span>
                           )}
@@ -1345,24 +1106,22 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                             >
                               {/* Confirm approve inline */}
                               {confirmingApproveId === anno.reviewingId ? (
-                                <div className="flex flex-col gap-1.5 p-2 rounded" style={{ background: "rgba(0,191,165,0.08)", border: "1px solid rgba(0,191,165,0.25)" }}>
-                                  <span className="text-[11px] font-semibold" style={{ color: "#00bfa5" }}>
+                                <div className="flex flex-col gap-1.5 rounded border border-[rgba(0,191,165,0.25)] bg-[rgba(0,191,165,0.08)] p-2">
+                                  <span className="text-[11px] font-semibold text-[#00bfa5]">
                                     Xác nhận chấp nhận nhãn này?
                                   </span>
                                   <div className="flex gap-1.5">
                                     <button
                                       onClick={() => { setConfirmingApproveId(null); handleApprove(anno.reviewingId); }}
                                       disabled={reviewSubmitting}
-                                      className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-bold transition"
-                                      style={{ background: "rgba(0,191,165,0.2)", color: "#00bfa5", border: "1px solid rgba(0,191,165,0.4)" }}
+                                      className="flex flex-1 items-center justify-center gap-1 rounded border border-[rgba(0,191,165,0.4)] bg-[rgba(0,191,165,0.2)] py-1.5 text-xs font-bold text-[#00bfa5] transition"
                                     >
                                       <span className="material-symbols-outlined text-sm">check_circle</span>
                                       Xác nhận
                                     </button>
                                     <button
                                       onClick={() => setConfirmingApproveId(null)}
-                                      className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-bold transition"
-                                      style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(148,163,184,0.2)" }}
+                                      className="flex flex-1 items-center justify-center gap-1 rounded border border-[rgba(148,163,184,0.2)] bg-white/5 py-1.5 text-xs font-bold text-slate-400 transition"
                                     >
                                       <span className="material-symbols-outlined text-sm">close</span>
                                       Huỷ
@@ -1385,12 +1144,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                           ? t("reviewer:workspace.reviewBlockedImage")
                                           : undefined
                                     }
-                                    className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-bold transition"
-                                    style={{
-                                      background: "rgba(0,191,165,0.1)",
-                                      color: "#00bfa5",
-                                      border: "1px solid rgba(0,191,165,0.2)",
-                                    }}
+                                    className="flex flex-1 items-center justify-center gap-1 rounded border border-[rgba(0,191,165,0.2)] bg-[rgba(0,191,165,0.1)] py-1.5 text-xs font-bold text-[#00bfa5] transition"
                                   >
                                     {reviewSubmitting ? (
                                       <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
@@ -1419,12 +1173,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                             ? t("reviewer:workspace.noPolicies")
                                             : t("reviewer:workspace.rejectCurrent")
                                     }
-                                    className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-xs font-bold transition disabled:opacity-40"
-                                    style={{
-                                      background: "rgba(248,113,113,0.1)",
-                                      color: "#f87171",
-                                      border: "1px solid rgba(248,113,113,0.2)",
-                                    }}
+                                    className="flex flex-1 items-center justify-center gap-1 rounded border border-[rgba(248,113,113,0.2)] bg-[rgba(248,113,113,0.1)] py-1.5 text-xs font-bold text-red-400 transition disabled:opacity-40"
                                   >
                                     <span className="material-symbols-outlined text-sm">close</span>
                                     {t("reviewer:workspace.actions.reject")}
@@ -1436,14 +1185,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
 
                         {/* Show reject message if already rejected */}
                         {anno.policyName && (
-                          <div
-                            className="p-2 rounded-lg text-xs font-medium space-y-1"
-                            style={{
-                              background: "rgba(248,113,113,0.1)",
-                              border: "1px solid rgba(248,113,113,0.2)",
-                              color: "#f87171",
-                            }}
-                          >
+                          <div className="space-y-1 rounded-lg border border-[rgba(248,113,113,0.2)] bg-[rgba(248,113,113,0.1)] p-2 text-xs font-medium text-red-400">
                             <div>
                               ✓{" "}
                               {t("reviewer:workspace.rejectedBy", {
@@ -1451,14 +1193,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                               })}
                             </div>
                             {anno.note && (
-                              <div
-                                className="mt-1 p-1.5 rounded text-xs"
-                                style={{
-                                  background: "rgba(248,113,113,0.2)",
-                                  color: "#fca5a5",
-                                  fontStyle: "italic",
-                                }}
-                              >
+                              <div className="mt-1 rounded bg-[rgba(248,113,113,0.2)] p-1.5 text-xs italic text-rose-300">
                                 💬 {anno.note}
                               </div>
                             )}
@@ -1468,17 +1203,10 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                         {/* Inline reject form */}
                         {isRejecting && !anno.policyName && (
                           <div
-                            className="mt-2 p-2 rounded-lg space-y-2"
-                            style={{
-                              background: "rgba(248,113,113,0.05)",
-                              border: "1px solid rgba(248,113,113,0.2)",
-                            }}
+                            className="mt-2 space-y-2 rounded-lg border border-[rgba(248,113,113,0.2)] bg-[rgba(248,113,113,0.05)] p-2"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <p
-                              className="text-[10px] font-bold uppercase"
-                              style={{ color: "#f87171" }}
-                            >
+                            <p className="text-[10px] font-bold uppercase text-red-400">
                               {t("reviewer:workspace.reject.selectViolation")}
                             </p>
                             <div className="space-y-1 max-h-32 overflow-y-auto">
@@ -1488,21 +1216,11 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                   onClick={() =>
                                     setSelectedPolicyId(p.policyId)
                                   }
-                                  className="w-full text-left px-2 py-1.5 rounded text-xs border transition"
-                                  style={{
-                                    background:
-                                      selectedPolicyId === p.policyId
-                                        ? "rgba(248,113,113,0.1)"
-                                        : "transparent",
-                                    color:
-                                      selectedPolicyId === p.policyId
-                                        ? "#f87171"
-                                        : "#64748b",
-                                    borderColor:
-                                      selectedPolicyId === p.policyId
-                                        ? "#f87171"
-                                        : "#253347",
-                                  }}
+                                  className={`w-full rounded border px-2 py-1.5 text-left text-xs transition ${
+                                    selectedPolicyId === p.policyId
+                                      ? "border-red-400 bg-[rgba(248,113,113,0.1)] text-red-400"
+                                      : "border-[#253347] bg-transparent text-slate-500"
+                                  }`}
                                 >
                                   <span className="font-medium">
                                     {p.errorName}
@@ -1516,10 +1234,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                               ))}
                             </div>
                             <div>
-                              <p
-                                className="text-[10px] font-bold uppercase mb-1"
-                                style={{ color: "#f87171" }}
-                              >
+                              <p className="mb-1 text-[10px] font-bold uppercase text-red-400">
                                 {t("reviewer:workspace.reject.reason")}
                               </p>
                               <textarea
@@ -1527,12 +1242,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                 onChange={(e) => setRejectNote(e.target.value)}
                                 placeholder={t("reviewer:workspace.reject.optionalNote")}
                                 rows={2}
-                                className="w-full px-2 py-1.5 rounded text-xs resize-none focus:outline-none"
-                                style={{
-                                  background: "#131c2e",
-                                  border: "1px solid #253347",
-                                  color: "#e2e8f0",
-                                }}
+                                className="w-full resize-none rounded border border-[#253347] bg-[#131c2e] px-2 py-1.5 text-xs text-slate-200 focus:outline-none"
                               />
                             </div>
                             <div className="flex gap-2">
@@ -1541,11 +1251,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                   setRejectingAnnoId(null);
                                   setRejectNote("");
                                 }}
-                                className="flex-1 px-2 py-1 rounded text-xs transition hover:bg-white/5"
-                                style={{
-                                  color: "#64748b",
-                                  border: "1px solid #253347",
-                                }}
+                                className="flex-1 rounded border border-[#253347] px-2 py-1 text-xs text-slate-500 transition hover:bg-white/5"
                               >
                                 {t("common:actions.cancel")}
                               </button>
@@ -1556,16 +1262,11 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                   reviewSubmitting ||
                                   isFinalizedAssignment
                                 }
-                                className="flex-1 px-2 py-1 rounded text-xs font-bold transition disabled:opacity-40"
-                                style={{
-                                  background: selectedPolicyId
-                                    ? "#f87171"
-                                    : "#253347",
-                                  color: selectedPolicyId ? "#fff" : "#4a6788",
-                                  cursor: selectedPolicyId
-                                    ? "pointer"
-                                    : "not-allowed",
-                                }}
+                                className={`flex-1 rounded px-2 py-1 text-xs font-bold transition disabled:opacity-40 ${
+                                  selectedPolicyId
+                                    ? "bg-red-400 text-white"
+                                    : "cursor-not-allowed bg-[#253347] text-[#4a6788]"
+                                }`}
                               >
                                 {reviewSubmitting
                                   ? t("common:states.processing")
@@ -1643,14 +1344,11 @@ function ReviewSummaryPanel({
   }, [annoCache]);
 
   const statCard = (label: string, value: number, color: string) => (
-    <div
-      className="flex flex-col items-center justify-center rounded-lg p-3"
-      style={{ background: "#1e2f42", border: "1px solid #253347" }}
-    >
+    <div className="flex flex-col items-center justify-center rounded-lg border border-[#253347] bg-[#1e2f42] p-3">
       <span className="text-xl font-bold tabular-nums" style={{ color }}>
         {value}
       </span>
-      <span className="text-[10px] mt-0.5" style={{ color: "#4a6788" }}>
+      <span className="mt-0.5 text-[10px] text-[#4a6788]">
         {label}
       </span>
     </div>
@@ -1660,10 +1358,7 @@ function ReviewSummaryPanel({
     <div className="p-3 space-y-4">
       {/* Overall stats */}
       <div>
-        <p
-          className="text-[10px] font-bold uppercase mb-2"
-          style={{ color: "#4a6788" }}
-        >
+        <p className="mb-2 text-[10px] font-bold uppercase text-[#4a6788]">
           {t("workspace.stats.overview")}
         </p>
         <div className="grid grid-cols-3 gap-2">
@@ -1672,25 +1367,18 @@ function ReviewSummaryPanel({
           {statCard(t("workspace.stats.pending"), reviewStats.pending, "#facc15")}
         </div>
         <div className="mt-2 flex items-center gap-2">
-          <div
-            className="flex-1 h-1.5 rounded-full overflow-hidden"
-            style={{ background: "#253347" }}
-          >
+          <div className="flex-1 h-1.5 overflow-hidden rounded-full bg-[#253347]">
             <div
-              className="h-full rounded-full transition-all"
+              className="h-full rounded-full bg-[#00bfa5] transition-all"
               style={{
                 width:
                   reviewStats.total > 0
                     ? `${(reviewStats.reviewed / reviewStats.total) * 100}%`
                     : "0%",
-                background: "#00bfa5",
               }}
             />
           </div>
-          <span
-            className="text-[10px] font-mono shrink-0"
-            style={{ color: "#64748b" }}
-          >
+          <span className="shrink-0 font-mono text-[10px] text-slate-500">
             {reviewStats.reviewed}/{reviewStats.total}
           </span>
         </div>
@@ -1698,10 +1386,7 @@ function ReviewSummaryPanel({
 
       {/* Per-item breakdown */}
       <div>
-        <p
-          className="text-[10px] font-bold uppercase mb-2"
-          style={{ color: "#4a6788" }}
-        >
+        <p className="mb-2 text-[10px] font-bold uppercase text-[#4a6788]">
           {t("workspace.stats.byImage")} ({items.length})
         </p>
         <div className="space-y-1">
@@ -1717,37 +1402,38 @@ function ReviewSummaryPanel({
               <button
                 key={item.itemId}
                 onClick={() => setCurrentItemIndex(idx)}
-                className="w-full text-left px-2 py-1.5 rounded transition-colors"
-                style={{
-                  background: isActive ? "rgba(0,191,165,0.1)" : "transparent",
-                  border: `1px solid ${isActive ? "#00bfa5" : "#253347"}`,
-                }}
+                className={`w-full rounded px-2 py-1.5 text-left transition-colors ${
+                  isActive
+                    ? "border border-[#00bfa5] bg-[rgba(0,191,165,0.1)]"
+                    : "border border-[#253347] bg-transparent"
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <span
-                    className="text-xs font-medium"
-                    style={{ color: isActive ? "#00bfa5" : "#94a3b8" }}
+                    className={`text-xs font-medium ${
+                      isActive ? "text-[#00bfa5]" : "text-slate-400"
+                    }`}
                   >
                     {t("workspace.imageLabel", { index: idx + 1 })}
                   </span>
                   <div className="flex items-center gap-2 text-[10px] font-mono">
                     {approved > 0 && (
-                      <span style={{ color: "#00bfa5" }}>
+                      <span className="text-[#00bfa5]">
                         {t("workspace.stats.approvedShort", { count: approved })}
                       </span>
                     )}
                     {rejected > 0 && (
-                      <span style={{ color: "#f87171" }}>
+                      <span className="text-red-400">
                         {t("workspace.stats.rejectedShort", { count: rejected })}
                       </span>
                     )}
                     {pending > 0 && (
-                      <span style={{ color: "#facc15" }}>
+                      <span className="text-yellow-400">
                         {t("workspace.stats.pendingShort", { count: pending })}
                       </span>
                     )}
                     {annos.length === 0 && (
-                      <span style={{ color: "#3a5068" }}>—</span>
+                      <span className="text-[#3a5068]">—</span>
                     )}
                   </div>
                 </div>
@@ -1760,46 +1446,36 @@ function ReviewSummaryPanel({
       {/* Per-label breakdown */}
       {labelStats.length > 0 && (
         <div>
-          <p
-            className="text-[10px] font-bold uppercase mb-2"
-            style={{ color: "#4a6788" }}
-          >
+          <p className="mb-2 text-[10px] font-bold uppercase text-[#4a6788]">
             {t("workspace.stats.byLabel")} ({labelStats.length})
           </p>
           <div className="space-y-1.5">
             {labelStats.map((ls) => (
               <div
                 key={ls.labelId}
-                className="px-2 py-1.5 rounded"
-                style={{ background: "#1e2f42", border: "1px solid #253347" }}
+                className="rounded border border-[#253347] bg-[#1e2f42] px-2 py-1.5"
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <span
-                    className="text-sm font-bold flex-1"
-                    style={{ color: "#e2e8f0" }}
-                  >
+                  <span className="flex-1 text-sm font-bold text-slate-200">
                     {ls.labelName}
                   </span>
-                  <span
-                    className="text-[10px] font-mono"
-                    style={{ color: "#64748b" }}
-                  >
+                  <span className="font-mono text-[10px] text-slate-500">
                     {ls.total}
                   </span>
                 </div>
                 <div className="flex gap-2 text-[10px] pl-0">
                   {ls.approved > 0 && (
-                    <span style={{ color: "#00bfa5" }}>
+                    <span className="text-[#00bfa5]">
                       ✓ {t("workspace.stats.approvedShort", { count: ls.approved })}
                     </span>
                   )}
                   {ls.rejected > 0 && (
-                    <span style={{ color: "#f87171" }}>
+                    <span className="text-red-400">
                       {t("workspace.stats.rejectedShort", { count: ls.rejected })}
                     </span>
                   )}
                   {ls.pending > 0 && (
-                    <span style={{ color: "#facc15" }}>
+                    <span className="text-yellow-400">
                       ⏳ {t("workspace.stats.pendingShort", { count: ls.pending })}
                     </span>
                   )}

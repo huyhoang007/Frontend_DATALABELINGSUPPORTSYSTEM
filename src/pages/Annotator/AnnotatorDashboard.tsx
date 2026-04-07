@@ -156,15 +156,14 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
           </p>
         </div>
 
-        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mb-8 grid grid-cols-2 gap-4 ">
           {kpis.map((kpi, idx) => (
             <div
               key={kpi.label}
               onMouseEnter={() => setHoveredKpi(idx)}
               onMouseLeave={() => setHoveredKpi(null)}
-              className={`rounded-lg border border-slate-200 border-t-[3px] bg-white p-5 transition ${
-                hoveredKpi === idx ? "shadow-lg shadow-slate-200/80" : "shadow-sm"
-              } ${kpi.border}`}
+              className={`rounded-lg border border-slate-200 border-t-[3px] bg-white p-5 transition ${hoveredKpi === idx ? "shadow-lg shadow-slate-200/80" : "shadow-sm"
+                } ${kpi.border}`}
             >
               <div className="mb-3 flex items-start justify-between">
                 <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">
@@ -189,11 +188,10 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] transition ${
-                    active
+                  className={`rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] transition ${active
                       ? "border border-blue-100 bg-white text-blue-700 shadow-sm"
                       : "border border-transparent text-slate-500 hover:bg-white/70 hover:text-slate-900"
-                  }`}
+                    }`}
                 >
                   {getStatusLabel(tab)}
                 </button>
@@ -295,26 +293,23 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
                     onMouseEnter={() => setHoveredRow(idx)}
                     onMouseLeave={() => setHoveredRow(null)}
                     onClick={() => handleOpen(a)}
-                    className={`grid cursor-pointer grid-cols-[60px_2fr_1.5fr_1.2fr_1.5fr_1fr_100px] items-center gap-4 border-b border-slate-200 px-6 py-4 transition ${
-                      hoveredRow === idx
+                    className={`grid cursor-pointer grid-cols-[60px_2fr_1.5fr_1.2fr_1.5fr_1fr_100px] items-center gap-4 border-b border-slate-200 px-6 py-4 transition ${hoveredRow === idx
                         ? "bg-blue-50"
                         : idx % 2 === 0
                           ? "bg-white"
                           : "bg-slate-50/60"
-                    }`}
+                      }`}
                   >
                     <span
-                      className={`font-mono text-xs transition ${
-                        hoveredRow === idx ? "text-slate-900" : "text-slate-500"
-                      }`}
+                      className={`font-mono text-xs transition ${hoveredRow === idx ? "text-slate-900" : "text-slate-500"
+                        }`}
                     >
                       #{a.assignmentId}
                     </span>
 
                     <span
-                      className={`truncate text-sm font-bold transition ${
-                        hoveredRow === idx ? "text-blue-700" : "text-slate-900"
-                      }`}
+                      className={`truncate text-sm font-bold transition ${hoveredRow === idx ? "text-blue-700" : "text-slate-900"
+                        }`}
                     >
                       {a.projectName || "—"}
                     </span>

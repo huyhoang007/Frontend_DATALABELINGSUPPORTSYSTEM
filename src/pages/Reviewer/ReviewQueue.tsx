@@ -17,34 +17,43 @@ interface ReviewAssignment {
   [key: string]: unknown;
 }
 
-// Modern Enterprise UI palette
-const T = {
-  bg: "#F7F8F9",
-  surface: "#FFFFFF",
-  surfaceHover: "#F1F2F4",
-  border: "#DCDFE4",
-  textPrimary: "#172B4D",
-  textSecondary: "#44546F",
-  textMuted: "#626F86",
-  brand: "#0C66E4",
-  brandHover: "#0055CC",
-  brandLight: "#E9F2FF",
-  green: "#1F845A",
-  greenBg: "#DCFFF1",
-  amber: "#A54800",
-  amberBg: "#FFF7D6",
-  purple: "#5E4DB2",
-  purpleBg: "#F3F0FF",
-  red: "#DE350B",
-  redBg: "#FFEBE6",
+const STATUS_STYLES: Record<string, string> = {
+  SUBMITTED: "bg-violet-100 text-violet-700",
+  RE_SUBMITTED: "bg-orange-100 text-orange-700",
+  APPROVED: "bg-emerald-100 text-emerald-700",
+  REJECTED: "bg-red-100 text-red-700",
+  PENDING: "bg-amber-100 text-amber-700",
 };
 
-const STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> = {
-  SUBMITTED: { bg: T.purpleBg, text: T.purple, dot: T.purple },
-  RE_SUBMITTED: { bg: "#FFF0E6", text: "#BF5700", dot: "#E07000" },
-  APPROVED: { bg: T.greenBg, text: T.green, dot: T.green },
-  REJECTED: { bg: T.redBg, text: T.red, dot: T.red },
-  PENDING: { bg: T.amberBg, text: T.amber, dot: "#FF8B00" },
+const STATUS_DOT_STYLES: Record<string, string> = {
+  SUBMITTED: "bg-violet-600",
+  RE_SUBMITTED: "bg-orange-500",
+  APPROVED: "bg-emerald-600",
+  REJECTED: "bg-red-600",
+  PENDING: "bg-amber-500",
+};
+
+const KPI_STYLES: Record<string, { active: string; idle: string; value: string }> = {
+  SUBMITTED: {
+    active: "border-violet-600 bg-violet-100",
+    idle: "border-slate-200 bg-white",
+    value: "text-violet-700",
+  },
+  RE_SUBMITTED: {
+    active: "border-orange-600 bg-orange-100",
+    idle: "border-slate-200 bg-white",
+    value: "text-orange-700",
+  },
+  APPROVED: {
+    active: "border-emerald-600 bg-emerald-100",
+    idle: "border-slate-200 bg-white",
+    value: "text-emerald-700",
+  },
+  REJECTED: {
+    active: "border-red-600 bg-red-100",
+    idle: "border-slate-200 bg-white",
+    value: "text-red-700",
+  },
 };
 
 export default function ReviewQueue() {
@@ -59,13 +68,13 @@ export default function ReviewQueue() {
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [hoveredKpi, setHoveredKpi] = useState<number | null>(null);
   const [isMobile, setIsMobile] = React.useState(() => window.innerWidth < 768);
-  const [filterByStatus, setFilterByStatus] = React.useState<string | null>("SUBMITTED"); // null | "SUBMITTED" | "RE_SUBMITTED" | "REVIEWED" | "APPROVED" | "REJECTED"
+  const [filterByStatus, setFilterByStatus] = React.useState<string | null>("SUBMITTED");
 
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [t]);
+  }, []);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -76,13 +85,17 @@ export default function ReviewQueue() {
         const data = await reviewApi.getMyReviewAssignments();
         if (!cancelled) setAssignments(Array.isArray(data) ? data : []);
       } catch (err: unknown) {
-        const error = err as { message?: string; response?: { data?: { message?: string } } };
-        if (!cancelled)
+        const apiError = err as {
+          message?: string;
+          response?: { data?: { message?: string } };
+        };
+        if (!cancelled) {
           setError(
-            error?.response?.data?.message ||
-              error?.message ||
+            apiError?.response?.data?.message ||
+              apiError?.message ||
               t("reviewer:queue.loadFailed"),
           );
+        }
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -91,42 +104,35 @@ export default function ReviewQueue() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
-  // Queue scope only includes assignments that still need reviewer attention.
-  // Filter visible queue rows by search without changing the queue totals.
   const reviewableAssignments = React.useMemo(() => {
-    // Display all assignments (including IN_PROGRESS) except those with PAUSED projects
-    let list = assignments.filter((a) => {
-      // Hide assignments whose project is paused
-      if ((a.projectStatus || "").toUpperCase() === "PAUSED") {
-        return false;
-      }
-      return true;
-    });
+    let list = assignments.filter(
+      (assignment) => (assignment.projectStatus || "").toUpperCase() !== "PAUSED",
+    );
 
-    // Filter by status if active
     if (filterByStatus === "SUBMITTED" || filterByStatus === "RE_SUBMITTED") {
-      list = list.filter((a) => a.status === filterByStatus);
+      list = list.filter((assignment) => assignment.status === filterByStatus);
     } else if (filterByStatus === "APPROVED") {
-      list = list.filter((a) => a.status === "APPROVED");
+      list = list.filter((assignment) => assignment.status === "APPROVED");
     } else if (filterByStatus === "REJECTED") {
-      list = list.filter((a) => a.status === "REJECTED");
+      list = list.filter((assignment) => assignment.status === "REJECTED");
     } else if (filterByStatus === "REVIEWED") {
       list = list.filter(
-        (a) => a.status === "APPROVED" || a.status === "REJECTED",
+        (assignment) =>
+          assignment.status === "APPROVED" || assignment.status === "REJECTED",
       );
     }
 
-    // Filter by search query
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase();
       list = list.filter(
-        (a) =>
-          (a.projectName || "").toLowerCase().includes(q) ||
-          (a.annotatorName || "").toLowerCase().includes(q),
+        (assignment) =>
+          (assignment.projectName || "").toLowerCase().includes(query) ||
+          (assignment.annotatorName || "").toLowerCase().includes(query),
       );
     }
+
     return list;
   }, [assignments, searchQuery, filterByStatus]);
 
@@ -138,75 +144,72 @@ export default function ReviewQueue() {
     setFilterByStatus(filterByStatus === status ? null : status);
   };
 
-  const getStatusLabel = (status: string) => translateAssignmentStatus(status).toUpperCase();
+  const getStatusLabel = (status: string) =>
+    translateAssignmentStatus(status).toUpperCase();
 
-  // Stats - count from all assignments except IN_PROGRESS, not just queue
   const pendingCount = assignments.filter(
-    (a) => a.status === "SUBMITTED" && (a.projectStatus || "").toUpperCase() !== "PAUSED",
+    (assignment) =>
+      assignment.status === "SUBMITTED" &&
+      (assignment.projectStatus || "").toUpperCase() !== "PAUSED",
   ).length;
   const resubmittedCount = assignments.filter(
-    (a) => a.status === "RE_SUBMITTED" && (a.projectStatus || "").toUpperCase() !== "PAUSED",
+    (assignment) =>
+      assignment.status === "RE_SUBMITTED" &&
+      (assignment.projectStatus || "").toUpperCase() !== "PAUSED",
   ).length;
   const queueTotalCount = assignments.filter(
-    (a) => a.status !== "IN_PROGRESS" && (a.projectStatus || "").toUpperCase() !== "PAUSED",
+    (assignment) =>
+      assignment.status !== "IN_PROGRESS" &&
+      (assignment.projectStatus || "").toUpperCase() !== "PAUSED",
   ).length;
   const approvedCount = assignments.filter(
-    (a) => a.status === "APPROVED" && (a.projectStatus || "").toUpperCase() !== "PAUSED",
+    (assignment) =>
+      assignment.status === "APPROVED" &&
+      (assignment.projectStatus || "").toUpperCase() !== "PAUSED",
   ).length;
   const rejectedCount = assignments.filter(
-    (a) => a.status === "REJECTED" && (a.projectStatus || "").toUpperCase() !== "PAUSED",
+    (assignment) =>
+      assignment.status === "REJECTED" &&
+      (assignment.projectStatus || "").toUpperCase() !== "PAUSED",
   ).length;
+
   const displayValue = (value: number | string) => (isLoading ? "-" : value);
 
+  const kpis = [
+    {
+      label: t("reviewer:queue.kpi.submitted"),
+      value: pendingCount,
+      status: "SUBMITTED",
+    },
+    {
+      label: t("reviewer:queue.kpi.resubmitted"),
+      value: resubmittedCount,
+      status: "RE_SUBMITTED",
+    },
+    {
+      label: t("reviewer:queue.kpi.approved"),
+      value: approvedCount,
+      status: "APPROVED",
+    },
+    {
+      label: t("reviewer:queue.kpi.rejected"),
+      value: rejectedCount,
+      status: "REJECTED",
+    },
+  ];
+
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: T.bg,
-        fontFamily: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif",
-        color: T.textPrimary,
-      }}
-    >
-      <div style={{ padding: "32px 40px", width: "100%" }}>
-        {/* Header */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-            marginBottom: "32px",
-            paddingBottom: "24px",
-            borderBottom: `2px solid ${T.border}`,
-            gap: "16px",
-            flexWrap: "wrap",
-          }}
-        >
+    <div className="min-h-screen bg-slate-50 font-['IBM_Plex_Sans','Segoe_UI',system-ui,sans-serif] text-slate-900">
+      <div className="w-full px-6 py-8 md:px-10">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b-2 border-slate-200 pb-6">
           <div>
-            <p
-              style={{
-                fontSize: "11px",
-                fontWeight: 700,
-                color: T.textMuted,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                marginBottom: "4px",
-              }}
-            >
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">
               {t("reviewer:queue.title")}
             </p>
-            <h1
-              style={{
-                fontSize: "28px",
-                fontWeight: 800,
-                color: T.textPrimary,
-                letterSpacing: "-0.02em",
-                marginBottom: "8px",
-              }}
-            >
+            <h1 className="mb-2 text-[28px] font-extrabold tracking-[-0.02em] text-slate-900">
               {t("reviewer:queue.title")}
             </h1>
-            <p style={{ fontSize: "14px", color: T.textMuted }}>
+            <p className="text-sm text-slate-500">
               {t("reviewer:queue.subtitle", {
                 count: displayValue(queueTotalCount),
               })}
@@ -214,573 +217,187 @@ export default function ReviewQueue() {
           </div>
         </div>
 
-        {/* KPI Summary */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: "16px",
-            marginBottom: "32px",
-          }}
-        >
-          {[
-            {
-              label: t("reviewer:queue.kpi.submitted"),
-              value: pendingCount,
-              color: T.purple,
-              bg: T.purpleBg,
-              status: "SUBMITTED",
-            },
-            {
-              label: t("reviewer:queue.kpi.resubmitted"),
-              value: resubmittedCount,
-              color: "#BF5700",
-              bg: "#FFF0E6",
-              status: "RE_SUBMITTED",
-            },
-            {
-              label: t("reviewer:queue.kpi.approved"),
-              value: approvedCount,
-              color: T.green,
-              bg: T.greenBg,
-              status: "APPROVED",
-            },
-            {
-              label: t("reviewer:queue.kpi.rejected"),
-              value: rejectedCount,
-              color: T.red,
-              bg: T.redBg,
-              status: "REJECTED",
-            },
-          ].map((kpi, idx) => (
-            <div
-              key={kpi.label}
-              onMouseEnter={() => setHoveredKpi(idx)}
-              onMouseLeave={() => setHoveredKpi(null)}
-              onClick={() => {
-                if (kpi.status === "QUEUE") {
-                  setFilterByStatus(
-                    filterByStatus === "QUEUE" ? null : "QUEUE",
-                  );
-                } else {
-                  toggleStatusFilter(kpi.status);
-                }
-              }}
-              style={{
-                padding: "20px 24px",
-                background:
-                  filterByStatus === kpi.status ||
-                  (filterByStatus === "QUEUE" && kpi.status === "QUEUE")
-                    ? kpi.bg
-                    : T.surface,
-                border:
-                  filterByStatus === kpi.status ||
-                  (filterByStatus === "QUEUE" && kpi.status === "QUEUE")
-                    ? `2px solid ${kpi.color}`
-                    : `1px solid ${T.border}`,
-                borderRadius: "6px",
-                cursor: "pointer",
-                transition: "all .15s",
-                boxShadow:
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {kpis.map((kpi, idx) => {
+            const state = KPI_STYLES[kpi.status];
+            const isActive = filterByStatus === kpi.status;
+            return (
+              <button
+                key={kpi.label}
+                type="button"
+                onMouseEnter={() => setHoveredKpi(idx)}
+                onMouseLeave={() => setHoveredKpi(null)}
+                onClick={() => toggleStatusFilter(kpi.status)}
+                className={`rounded-lg border p-5 text-left transition ${
+                  isActive ? state.active : state.idle
+                } ${
                   hoveredKpi === idx
-                    ? "0 4px 12px rgba(9,30,66,.12)"
-                    : "0 1px 3px rgba(9,30,66,.08)",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: T.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  marginBottom: "8px",
-                }}
+                    ? "shadow-lg shadow-slate-200/80"
+                    : "shadow-sm"
+                }`}
               >
-                {kpi.label}
-              </p>
-              <p
-                style={{
-                  fontSize: "32px",
-                  fontWeight: 800,
-                  color: kpi.color,
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                {displayValue(kpi.value)}
-              </p>
-            </div>
-          ))}
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
+                  {kpi.label}
+                </p>
+                <p className={`text-[32px] font-extrabold tracking-[-0.02em] ${state.value}`}>
+                  {displayValue(kpi.value)}
+                </p>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Search */}
-        <div
-          style={{
-            marginBottom: "24px",
-            display: "flex",
-            justifyContent: "flex-end",
-          }}
-        >
-          <div
-            style={{ width: "100%", maxWidth: "320px", position: "relative" }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "12px",
-                transform: "translateY(-50%)",
-                pointerEvents: "none",
-              }}
-            >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "18px", color: T.textMuted }}
-              >
-                search
-              </span>
-            </div>
+        <div className="mb-6 flex justify-end">
+          <div className="relative w-full max-w-xs">
+            <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg text-slate-500">
+              search
+            </span>
             <input
               type="text"
-              style={{
-                width: "100%",
-                paddingLeft: "40px",
-                paddingRight: "12px",
-                paddingTop: "8px",
-                paddingBottom: "8px",
-                background: T.surface,
-                border: `1px solid ${T.border}`,
-                borderRadius: "6px",
-                fontSize: "13px",
-                color: T.textPrimary,
-                fontFamily: "inherit",
-                outline: "none",
-                transition: "all .15s",
-              }}
+              className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               placeholder={t("reviewer:queue.searchPlaceholder")}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = T.brand;
-                e.currentTarget.style.boxShadow = `0 0 0 3px ${T.brand}20`;
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = T.border;
-                e.currentTarget.style.boxShadow = "none";
-              }}
+              onChange={(event) => setSearchQuery(event.target.value)}
             />
           </div>
         </div>
 
-        {/* Loading */}
         {isLoading && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "64px 0",
-            }}
-          >
-            <span
-              className="material-symbols-outlined"
-              style={{
-                fontSize: "32px",
-                color: T.textMuted,
-                animation: "spin 1s linear infinite",
-              }}
-            >
+          <div className="flex items-center justify-center py-16 text-slate-500">
+            <span className="material-symbols-outlined animate-spin text-3xl">
               progress_activity
             </span>
-            <span
-              style={{
-                marginLeft: "8px",
-                color: T.textMuted,
-                fontSize: "13px",
-              }}
-            >
-              {t("common:states.loading")}
-            </span>
+            <span className="ml-2 text-sm">{t("common:states.loading")}</span>
           </div>
         )}
 
-        {/* Error */}
         {error && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "12px 16px",
-              borderRadius: "6px",
-              background: T.redBg,
-              border: `1px solid ${T.red}40`,
-              marginBottom: "16px",
-            }}
-          >
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: "18px", color: T.red }}
-            >
+          <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+            <span className="material-symbols-outlined text-lg text-red-600">
               error
             </span>
-            <p style={{ fontSize: "13px", color: T.red, flex: 1 }}>{error}</p>
+            <p className="flex-1 text-sm text-red-700">{error}</p>
           </div>
         )}
 
-        {/* Empty State */}
         {!isLoading && !error && reviewableAssignments.length === 0 && (
-          <div
-            style={{
-              borderRadius: "6px",
-              border: `1px solid ${T.border}`,
-              background: T.surface,
-              overflow: "hidden",
-              boxShadow: "0 1px 3px rgba(9,30,66,.08)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "400px",
-                width: "100%",
-              }}
-            >
-              <span
-                className="material-symbols-outlined"
-                style={{
-                  fontSize: "64px",
-                  color: T.green + "40",
-                  marginBottom: "16px",
-                }}
-              >
+          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <div className="flex h-[400px] w-full flex-col items-center justify-center">
+              <span className="material-symbols-outlined mb-4 text-6xl text-emerald-300/60">
                 check_circle
               </span>
-              <h4
-                style={{
-                  fontSize: "20px",
-                  fontWeight: 700,
-                  color: T.textPrimary,
-                  marginBottom: "8px",
-                }}
-              >
+              <h4 className="mb-2 text-xl font-bold text-slate-900">
                 {t("reviewer:queue.noReviewTitle")}
               </h4>
-              <p
-                style={{
-                  fontSize: "14px",
-                  color: T.textMuted,
-                  textAlign: "center",
-                }}
-              >
+              <p className="text-center text-sm text-slate-500">
                 {t("reviewer:queue.noReviewHint")}
               </p>
             </div>
           </div>
         )}
 
-        {/* Review Table */}
         {!isLoading && !error && reviewableAssignments.length > 0 && (
-          <div
-            style={{
-              borderRadius: "6px",
-              border: `1px solid ${T.border}`,
-              background: T.surface,
-              overflow: "hidden",
-              boxShadow: "0 1px 3px rgba(9,30,66,.08)",
-            }}
-          >
+          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
             {!isMobile && (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "60px 2fr 1.2fr 1.5fr 1fr 0.8fr 100px",
-                  padding: "12px 24px",
-                  borderBottom: `1px solid ${T.border}`,
-                  background: "#FAFBFC",
-                  gap: "16px",
-                  alignItems: "center",
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: 700,
-                    color: T.textMuted,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                  }}
-                >
+              <div className="grid grid-cols-[60px_2fr_1.2fr_1.5fr_1fr_0.8fr_100px] items-center gap-4 border-b border-slate-200 bg-slate-50 px-6 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
                   ID
                 </p>
-                <p
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: 700,
-                    color: T.textMuted,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                  }}
-                >
+                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
                   {t("reviewer:queue.table.project")}
                 </p>
-                <p
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: 700,
-                    color: T.textMuted,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                  }}
-                >
+                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
                   {t("reviewer:queue.table.annotator")}
                 </p>
-                <p
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: 700,
-                    color: T.textMuted,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                  }}
-                >
+                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
                   {t("reviewer:queue.table.dataset")}
                 </p>
-                <p
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: 700,
-                    color: T.textMuted,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                  }}
-                >
+                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
                   {t("reviewer:queue.table.status")}
                 </p>
-                <p
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: 700,
-                    color: T.textMuted,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                  }}
-                >
+                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
                   {t("reviewer:queue.table.progress")}
                 </p>
-                <p
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: 700,
-                    color: T.textMuted,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    textAlign: "right",
-                  }}
-                >
+                <p className="text-right text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
                   {t("reviewer:queue.table.action")}
                 </p>
               </div>
             )}
 
-            {/* Table rows */}
             <div>
-              {reviewableAssignments.map((a, idx) => {
-                const status = (a.status || "PENDING").toUpperCase();
-                const statusStyle = STATUS_STYLES[status] || {
-                  bg: T.surfaceHover,
-                  text: T.textMuted,
-                  dot: T.textMuted,
-                };
-                const rowBg =
+              {reviewableAssignments.map((assignment, idx) => {
+                const status = (assignment.status || "PENDING").toUpperCase();
+                const statusClass =
+                  STATUS_STYLES[status] || "bg-slate-100 text-slate-500";
+                const dotClass = STATUS_DOT_STYLES[status] || "bg-slate-500";
+                const rowClass =
                   hoveredRow === idx
-                    ? T.brandLight
+                    ? "bg-blue-50"
                     : idx % 2 === 0
-                      ? T.surface
-                      : "#FAFBFC";
+                      ? "bg-white"
+                      : "bg-slate-50";
 
                 if (isMobile) {
                   return (
                     <div
-                      key={a.assignmentId}
-                      onClick={() => handleReview(a)}
-                      style={{
-                        padding: "16px",
-                        borderBottom: `1px solid ${T.border}`,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "12px",
-                        background: rowBg,
-                        cursor: "pointer",
-                      }}
+                      key={assignment.assignmentId}
+                      onClick={() => handleReview(assignment)}
+                      className={`cursor-pointer border-b border-slate-200 p-4 ${rowClass}`}
                     >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          gap: "12px",
-                          alignItems: "flex-start",
-                        }}
-                      >
-                        <div
-                          style={{
-                            minWidth: 0,
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "4px",
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontFamily: "monospace",
-                              fontSize: "12px",
-                              color: T.textMuted,
-                            }}
-                          >
-                            #{a.assignmentId}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <span className="font-mono text-xs text-slate-500">
+                            #{assignment.assignmentId}
                           </span>
-                          <span
-                            style={{
-                              fontSize: "14px",
-                              fontWeight: 700,
-                              color: T.textPrimary,
-                            }}
-                          >
-                            {a.projectName || "—"}
+                          <span className="text-sm font-bold text-slate-900">
+                            {assignment.projectName || "—"}
                           </span>
-                          <span
-                            style={{ fontSize: "12px", color: T.textMuted }}
-                          >
-                            {a.datasetName || "—"}
+                          <span className="text-xs text-slate-500">
+                            {assignment.datasetName || "—"}
                           </span>
                         </div>
                         <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "4px",
-                            padding: "4px 10px",
-                            borderRadius: "999px",
-                            fontSize: "10px",
-                            fontWeight: 700,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.06em",
-                            background: statusStyle.bg,
-                            color: statusStyle.text,
-                            flexShrink: 0,
-                          }}
+                          className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.06em] ${statusClass}`}
                         >
-                          <span
-                            style={{
-                              width: "6px",
-                              height: "6px",
-                              borderRadius: "50%",
-                              display: "inline-block",
-                              background: statusStyle.dot,
-                            }}
-                          />
+                          <span className={`inline-block h-1.5 w-1.5 rounded-full ${dotClass}`} />
                           {getStatusLabel(status)}
                         </span>
                       </div>
 
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "1fr 1fr",
-                          gap: "12px",
-                        }}
-                      >
+                      <div className="mt-3 grid grid-cols-2 gap-3">
                         <div>
-                          <p
-                            style={{
-                              fontSize: "10px",
-                              fontWeight: 700,
-                              color: T.textMuted,
-                              textTransform: "uppercase",
-                              letterSpacing: "0.08em",
-                              marginBottom: "4px",
-                            }}
-                          >
+                          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
                             {t("reviewer:queue.table.annotator")}
                           </p>
-                          <p
-                            style={{ fontSize: "12px", color: T.textSecondary }}
-                          >
-                            {a.annotatorName || "—"}
+                          <p className="text-xs text-slate-600">
+                            {assignment.annotatorName || "—"}
                           </p>
                         </div>
                         <div>
-                          <p
-                            style={{
-                              fontSize: "10px",
-                              fontWeight: 700,
-                              color: T.textMuted,
-                              textTransform: "uppercase",
-                              letterSpacing: "0.08em",
-                              marginBottom: "4px",
-                            }}
-                          >
+                          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
                             {t("reviewer:queue.table.progress")}
                           </p>
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                            }}
-                          >
-                            <div
-                              style={{
-                                flex: 1,
-                                height: "6px",
-                                background: T.border,
-                                borderRadius: "99px",
-                                overflow: "hidden",
-                              }}
-                            >
+                          <div className="flex items-center gap-2">
+                            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">
                               <div
-                                style={{
-                                  height: "100%",
-                                  background: `linear-gradient(to right, ${T.brand}, ${T.brandHover})`,
-                                  borderRadius: "99px",
-                                  width: `${a.progress ?? 0}%`,
-                                }}
+                                className="h-full rounded-full bg-gradient-to-r from-blue-600 to-blue-700"
+                                style={{ width: `${assignment.progress ?? 0}%` }}
                               />
                             </div>
-                            <span
-                              style={{
-                                fontSize: "12px",
-                                fontWeight: 800,
-                                color: T.textPrimary,
-                              }}
-                            >
-                              {a.progress ?? 0}%
+                            <span className="text-xs font-extrabold text-slate-900">
+                              {assignment.progress ?? 0}%
                             </span>
                           </div>
                         </div>
                       </div>
 
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleReview(a);
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleReview(assignment);
                         }}
-                        style={{
-                          height: "36px",
-                          width: "100%",
-                          padding: "0 16px",
-                          fontSize: "12px",
-                          fontWeight: 700,
-                          color: "#FFFFFF",
-                          background: T.brand,
-                          border: "none",
-                          borderRadius: "6px",
-                          cursor: "pointer",
-                          fontFamily: "inherit",
-                        }}
+                        className="mt-3 h-9 w-full rounded-md bg-blue-600 px-4 text-xs font-bold text-white transition hover:bg-blue-700"
                       >
                         {status === "APPROVED"
                           ? t("reviewer:queue.actions.view")
@@ -792,158 +409,60 @@ export default function ReviewQueue() {
 
                 return (
                   <div
-                    key={a.assignmentId}
+                    key={assignment.assignmentId}
                     onMouseEnter={() => setHoveredRow(idx)}
                     onMouseLeave={() => setHoveredRow(null)}
-                    onClick={() => handleReview(a)}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns:
-                        "60px 2fr 1.2fr 1.5fr 1fr 0.8fr 100px",
-                      alignItems: "center",
-                      padding: "16px 24px",
-                      background: rowBg,
-                      borderBottom: `1px solid ${T.border}`,
-                      cursor: "pointer",
-                      transition: "all .15s",
-                      gap: "16px",
-                    }}
+                    onClick={() => handleReview(assignment)}
+                    className={`grid cursor-pointer grid-cols-[60px_2fr_1.2fr_1.5fr_1fr_0.8fr_100px] items-center gap-4 border-b border-slate-200 px-6 py-4 transition ${rowClass}`}
                   >
                     <span
-                      style={{
-                        fontFamily: "monospace",
-                        fontSize: "12px",
-                        color: hoveredRow === idx ? T.textPrimary : T.textMuted,
-                        transition: "color .15s",
-                      }}
+                      className={`font-mono text-xs transition ${
+                        hoveredRow === idx ? "text-slate-900" : "text-slate-500"
+                      }`}
                     >
-                      #{a.assignmentId}
+                      #{assignment.assignmentId}
                     </span>
 
                     <span
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        color: hoveredRow === idx ? T.brand : T.textPrimary,
-                        transition: "color .15s",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
+                      className={`truncate text-sm font-bold transition ${
+                        hoveredRow === idx ? "text-blue-700" : "text-slate-900"
+                      }`}
                     >
-                      {a.projectName || "—"}
+                      {assignment.projectName || "—"}
+                    </span>
+
+                    <span className="truncate text-sm text-slate-500">
+                      {assignment.annotatorName || "—"}
+                    </span>
+
+                    <span className="truncate text-sm text-slate-500">
+                      {assignment.datasetName || "—"}
                     </span>
 
                     <span
-                      style={{
-                        fontSize: "13px",
-                        color: T.textMuted,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
+                      className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.06em] ${statusClass}`}
                     >
-                      {a.annotatorName || "—"}
-                    </span>
-
-                    <span
-                      style={{
-                        fontSize: "13px",
-                        color: T.textMuted,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {a.datasetName || "—"}
-                    </span>
-
-                    <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "4px",
-                        padding: "4px 10px",
-                        borderRadius: "4px",
-                        fontSize: "10px",
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.06em",
-                        background: statusStyle.bg,
-                        color: statusStyle.text,
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: "6px",
-                          height: "6px",
-                          borderRadius: "50%",
-                          display: "inline-block",
-                          background: statusStyle.dot,
-                        }}
-                      />
+                      <span className={`inline-block h-1.5 w-1.5 rounded-full ${dotClass}`} />
                       {getStatusLabel(status)}
                     </span>
 
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "2px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: "12px",
-                          fontWeight: 700,
-                          color: T.textPrimary,
-                        }}
-                      >
-                        {a.progress ?? 0}%
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-bold text-slate-900">
+                        {assignment.progress ?? 0}%
                       </span>
-                      <span
-                        style={{
-                          fontSize: "10px",
-                          color: T.textMuted,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.06em",
-                        }}
-                      >
+                      <span className="text-[10px] uppercase tracking-[0.06em] text-slate-500">
                         {t("common:labels.label")}
                       </span>
                     </div>
 
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        gap: "8px",
-                      }}
-                    >
+                    <div className="flex justify-end">
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleReview(a);
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleReview(assignment);
                         }}
-                        style={{
-                          height: "32px",
-                          padding: "0 16px",
-                          fontSize: "12px",
-                          fontWeight: 700,
-                          color: "#FFFFFF",
-                          background: T.brand,
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontFamily: "inherit",
-                          transition: "all .15s",
-                        }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.background = T.brandHover)
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.background = T.brand)
-                        }
+                        className="h-8 rounded-md bg-blue-600 px-4 text-xs font-bold text-white transition hover:bg-blue-700"
                       >
                         {status === "APPROVED"
                           ? t("reviewer:queue.actions.view")
@@ -957,16 +476,8 @@ export default function ReviewQueue() {
           </div>
         )}
 
-        {/* Count */}
         {!isLoading && assignments.length > 0 && (
-          <p
-            style={{
-              fontSize: "13px",
-              color: T.textMuted,
-              marginTop: "16px",
-              fontWeight: 500,
-            }}
-          >
+          <p className="mt-4 text-sm font-medium text-slate-500">
             {t("reviewer:queue.showingCount", {
               shown: reviewableAssignments.length,
               total:

@@ -189,8 +189,7 @@ export default function TaskList() {
 
             {/* Table Header - desktop only */}
             {!isMobile && (
-              <div className="grid gap-4 px-6 py-3 border-b border-[#DCDFE4] bg-[#FAFBFC]"
-                style={{ gridTemplateColumns: "60px 2fr 1.5fr 1.2fr 1.5fr 1fr 100px" }}>
+              <div className="grid grid-cols-[60px_2fr_1.5fr_1.2fr_1.5fr_1fr_100px] gap-4 border-b border-[#DCDFE4] bg-[#FAFBFC] px-6 py-3">
                 {["ID", t("annotator:tasks.table.project"), t("annotator:tasks.table.dataset"),
                   t("annotator:tasks.table.reviewer"), t("annotator:tasks.table.progress"),
                   t("annotator:tasks.table.status"), t("annotator:tasks.table.action")].map((h, i) => (
@@ -260,9 +259,8 @@ export default function TaskList() {
                     onMouseEnter={() => setHoveredRow(idx)}
                     onMouseLeave={() => setHoveredRow(null)}
                     onClick={() => handleOpen(a)}
-                    className={`grid gap-4 items-center px-6 py-4 border-b border-[#DCDFE4] cursor-pointer transition-all
+                    className={`grid grid-cols-[60px_2fr_1.5fr_1.2fr_1.5fr_1fr_100px] gap-4 items-center px-6 py-4 border-b border-[#DCDFE4] cursor-pointer transition-all
                       ${hoveredRow === idx ? "bg-blue-50" : idx % 2 === 0 ? "bg-white" : "bg-[#FAFBFC]"}`}
-                    style={{ gridTemplateColumns: "60px 2fr 1.5fr 1.2fr 1.5fr 1fr 100px" }}
                   >
                     <span className={`font-mono text-[12px] transition-colors ${hoveredRow === idx ? "text-[#172B4D]" : "text-[#626F86]"}`}>
                       #{a.assignmentId}

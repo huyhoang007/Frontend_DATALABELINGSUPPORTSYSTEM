@@ -25,11 +25,7 @@ export function Workspace3Column({
       {/* Center Column */}
       <main className="relative flex flex-1 flex-col overflow-hidden bg-muted/20 group">
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.05]"
-          style={{
-            backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
-          }}
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,currentColor_1px,transparent_1px)] bg-[length:24px_24px] opacity-[0.05]"
         />
         <div className="relative z-10 flex-1 flex flex-col">{center}</div>
       </main>

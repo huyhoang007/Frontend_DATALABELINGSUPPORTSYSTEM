@@ -109,13 +109,9 @@ function ThumbnailImg({ fileUrl, alt }) {
     return (
       <div
         ref={containerRef}
-        className="w-full h-full flex items-center justify-center"
-        style={{ background: "#0e1621" }}
+        className="flex h-full w-full items-center justify-center bg-[#0e1621]"
       >
-        <span
-          className="material-symbols-outlined"
-          style={{ fontSize: 24, color: "#3a5068" }}
-        >
+        <span className="material-symbols-outlined text-[24px] text-[#3a5068]">
           image
         </span>
       </div>
@@ -930,21 +926,12 @@ export default function Workspace() {
   // â”€â”€ FULL REDESIGN â”€â”€
   return (
     <>
-      <div
-        className="flex flex-col h-screen overflow-hidden"
-        style={{ background: "#131c2e", color: "#e2e8f0" }}
-      >
+      <div className="flex h-screen flex-col overflow-hidden bg-[#131c2e] text-slate-200">
         {/* â•â•â•â•â•â•â•â•â•â• TOP BAR â•â•â•â•â•â•â•â•â•â• */}
         <div
-          className="flex items-center gap-2 px-3 shrink-0 border-b"
-          style={{
-            minHeight: 48,
-            background: "#182233",
-            borderColor: "#253347",
-            flexWrap: isMobile ? "wrap" : "nowrap",
-            paddingTop: isMobile ? 8 : undefined,
-            paddingBottom: isMobile ? 8 : undefined,
-          }}
+          className={`flex min-h-12 shrink-0 items-center gap-2 border-b border-[#253347] bg-[#182233] px-3 ${
+            isMobile ? "flex-wrap py-2" : "flex-nowrap"
+          }`}
         >
           {/* Dashboard Logo Link */}
           <button
@@ -963,22 +950,15 @@ export default function Workspace() {
 
           {/* Progress bar + count */}
           <div
-            className="flex items-center gap-2 mx-3"
-            style={{ order: isMobile ? 3 : 0 }}
+            className={`mx-3 flex items-center gap-2 ${isMobile ? "order-3" : ""}`}
           >
-            <div
-              className="w-28 h-1.5 rounded-full overflow-hidden"
-              style={{ background: "#253347" }}
-            >
+            <div className="h-1.5 w-28 overflow-hidden rounded-full bg-[#253347]">
               <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${progressPercent}%`, background: "#00bfa5" }}
+                className="h-full rounded-full bg-[#00bfa5] transition-all duration-500"
+                style={{ width: `${progressPercent}%` }}
               />
             </div>
-            <span
-              className="text-xs font-medium whitespace-nowrap"
-              style={{ color: "#64748b" }}
-            >
+            <span className="whitespace-nowrap text-xs font-medium text-slate-500">
               {t("annotator:workspace.header.currentImage", {
                 current: currentImageIndex + 1,
                 total: totalImages,
@@ -988,8 +968,9 @@ export default function Workspace() {
 
           {/* Navigation */}
           <div
-            className="flex items-center rounded overflow-hidden"
-            style={{ background: "#1e2f42", order: isMobile ? 4 : 0 }}
+            className={`flex items-center overflow-hidden rounded bg-[#1e2f42] ${
+              isMobile ? "order-4" : ""
+            }`}
           >
             {[
               { icon: "first_page", dir: "first" },
@@ -998,21 +979,14 @@ export default function Workspace() {
               <button
                 key={dir}
                 onClick={() => handleNavigate(dir)}
-                className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-white/10"
-                style={{ color: "#64748b" }}
+                className="flex h-7 w-7 items-center justify-center text-slate-500 transition-colors hover:bg-white/10"
               >
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: 16 }}
-                >
+                <span className="material-symbols-outlined text-[16px]">
                   {icon}
                 </span>
               </button>
             ))}
-            <span
-              className="px-2 text-xs font-bold tabular-nums"
-              style={{ color: "#e2e8f0" }}
-            >
+            <span className="px-2 text-xs font-bold tabular-nums text-slate-200">
               {currentImageIndex + 1}
             </span>
             {[
@@ -1022,13 +996,9 @@ export default function Workspace() {
               <button
                 key={dir}
                 onClick={() => handleNavigate(dir)}
-                className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-white/10"
-                style={{ color: "#64748b" }}
+                className="flex h-7 w-7 items-center justify-center text-slate-500 transition-colors hover:bg-white/10"
               >
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: 16 }}
-                >
+                <span className="material-symbols-outlined text-[16px]">
                   {icon}
                 </span>
               </button>
@@ -1039,19 +1009,11 @@ export default function Workspace() {
           <div className="flex-1" />
 
           {/* Clock */}
-          <div
-            className="flex items-center gap-1 mr-3"
-            style={{ order: isMobile ? 2 : 0 }}
-          >
+          <div className={`mr-3 flex items-center gap-1 ${isMobile ? "order-2" : ""}`}>
             {[hh, mm, ss].map((unit, i) => (
               <span
                 key={i}
-                className="text-xs font-mono font-bold tabular-nums px-1.5 py-0.5 rounded"
-                style={{
-                  background: "#1e2f42",
-                  color: "#94a3b8",
-                  letterSpacing: "0.05em",
-                }}
+                className="rounded bg-[#1e2f42] px-1.5 py-0.5 font-mono text-xs font-bold tabular-nums tracking-[0.05em] text-slate-400"
               >
                 {unit}
               </span>
@@ -1059,88 +1021,60 @@ export default function Workspace() {
           </div>
 
           {/* Zoom */}
-          <div
-            className="flex items-center gap-1 mr-2"
-            style={{ order: isMobile ? 2 : 0 }}
-          >
+          <div className={`mr-2 flex items-center gap-1 ${isMobile ? "order-2" : ""}`}>
             <button
               onClick={() => setZoom((z) => Math.max(10, z - 10))}
-              className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
-              style={{ color: "#64748b" }}
+              className="flex h-6 w-6 items-center justify-center rounded text-slate-500 transition-colors hover:bg-white/10"
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 14 }}
-              >
+              <span className="material-symbols-outlined text-[14px]">
                 remove
               </span>
             </button>
-            <span
-              className="text-[11px] font-mono font-bold w-10 text-center tabular-nums"
-              style={{ color: "#94a3b8" }}
-            >
+            <span className="w-10 text-center font-mono text-[11px] font-bold tabular-nums text-slate-400">
               {zoom}%
             </span>
             <button
               onClick={() => setZoom((z) => Math.min(400, z + 10))}
-              className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
-              style={{ color: "#64748b" }}
+              className="flex h-6 w-6 items-center justify-center rounded text-slate-500 transition-colors hover:bg-white/10"
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 14 }}
-              >
+              <span className="material-symbols-outlined text-[14px]">
                 add
               </span>
             </button>
           </div>
 
           {/* Guideline quick access */}
-          <div className="relative mr-1" style={{ order: isMobile ? 2 : 0 }}>
+          <div className={`relative mr-1 ${isMobile ? "order-2" : ""}`}>
             <button
               onClick={() => setShowGuidelinePopover((v) => !v)}
               title={t("annotator:workspace.header.guideline")}
-              className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 transition-colors"
-              style={{ color: "#7dd3fc" }}
+              className="flex h-7 w-7 items-center justify-center rounded text-sky-300 transition-colors hover:bg-white/10"
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 16 }}
-              >
+              <span className="material-symbols-outlined text-[16px]">
                 menu_book
               </span>
             </button>
             {showGuidelinePopover && (
               <div
-                className="absolute right-0 top-9 z-50 w-80 rounded-lg border p-3 shadow-2xl"
-                style={{ background: "#111d2c", borderColor: "#253347" }}
+                className="absolute right-0 top-9 z-50 w-80 rounded-lg border border-[#253347] bg-[#111d2c] p-3 shadow-2xl"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-bold" style={{ color: "#cbd5e1" }}>
+                  <p className="text-xs font-bold text-slate-300">
                     {t("annotator:workspace.header.guideline")}
                   </p>
                   <button
                     onClick={() => setShowGuidelinePopover(false)}
-                    className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10"
-                    style={{ color: "#64748b" }}
+                    className="flex h-5 w-5 items-center justify-center rounded text-slate-500 hover:bg-white/10"
                   >
-                    <span
-                      className="material-symbols-outlined"
-                      style={{ fontSize: 14 }}
-                    >
+                    <span className="material-symbols-outlined text-[14px]">
                       close
                     </span>
                   </button>
                 </div>
                 <div
-                  className="text-xs rounded border p-2 max-h-40 overflow-y-auto"
-                  style={{
-                    borderColor: "#253347",
-                    color: "#94a3b8",
-                    background: "#0f1823",
-                  }}
+                  className="max-h-40 overflow-y-auto rounded border border-[#253347] bg-[#0f1823] p-2 text-xs text-slate-400"
                 >
-                  <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                  <p className="whitespace-pre-wrap leading-[1.5]">
                     {workspace?.projectGuidelineContent ||
                       t("annotator:workspace.messages.noGuideline")}
                   </p>
@@ -1150,13 +1084,9 @@ export default function Workspace() {
                     href={workspace.projectGuidelineFileUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-2 inline-flex items-center gap-1.5 text-xs hover:text-white"
-                    style={{ color: "#7dd3fc", textDecoration: "underline" }}
+                    className="mt-2 inline-flex items-center gap-1.5 text-xs text-sky-300 underline hover:text-white"
                   >
-                    <span
-                      className="material-symbols-outlined"
-                      style={{ fontSize: 12 }}
-                    >
+                    <span className="material-symbols-outlined text-[12px]">
                       download
                     </span>
                     {t("annotator:workspace.actions.downloadGuideline")}
@@ -1170,37 +1100,27 @@ export default function Workspace() {
           <button
             onClick={() => setShowShortcuts(true)}
             title={t("annotator:workspace.actions.shortcuts")}
-            className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition-colors mr-1"
-            style={{ color: "#64748b", fontSize: 13, fontWeight: 700 }}
+            className="mr-1 flex h-6 w-6 items-center justify-center rounded text-[13px] font-bold text-slate-500 transition-colors hover:bg-white/10"
           >
             ?
           </button>
 
           {/* Action buttons */}
           <div
-            className="flex items-center gap-2"
-            style={{
-              order: isMobile ? 5 : 0,
-              width: isMobile ? "100%" : undefined,
-              justifyContent: isMobile ? "flex-end" : undefined,
-            }}
+            className={`flex items-center gap-2 ${
+              isMobile ? "order-5 w-full justify-end" : ""
+            }`}
           >
             {/* Save button */}
             <button
               onClick={handleSave}
               disabled={isReadOnly}
               title={t("annotator:workspace.actions.saveDraft")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${isReadOnly ? "opacity-40 cursor-not-allowed" : "hover:brightness-110 active:scale-95"}`}
-              style={{
-                background: "#1e3a5f",
-                color: "#7dd3fc",
-                border: "1px solid #2563eb44",
-              }}
+              className={`flex items-center gap-1.5 rounded-lg border border-[#2563eb44] bg-[#1e3a5f] px-3 py-1.5 text-xs font-semibold text-sky-300 transition-all ${
+                isReadOnly ? "cursor-not-allowed opacity-40" : "active:scale-95 hover:brightness-110"
+              }`}
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 15 }}
-              >
+              <span className="material-symbols-outlined text-[15px]">
                 save
               </span>
               <span>{t("common:actions.save")}</span>
@@ -1220,25 +1140,19 @@ export default function Workspace() {
                     currentItemHasRejectedFeedback)) ||
                 isReadOnly
               }
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${(!currentIsDone && (anno.annotations.length === 0 || currentItemHasRejectedFeedback)) || isReadOnly ? "opacity-40 cursor-not-allowed" : "hover:brightness-110 active:scale-95"}`}
-              style={
+              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${
+                (!currentIsDone &&
+                  (anno.annotations.length === 0 || currentItemHasRejectedFeedback)) ||
+                isReadOnly
+                  ? "cursor-not-allowed opacity-40"
+                  : "active:scale-95 hover:brightness-110"
+              } ${
                 currentIsDone
-                  ? {
-                      background: "#064e3b",
-                      color: "#34d399",
-                      border: "1px solid #10b98144",
-                    }
-                  : {
-                      background: "#1e2f42",
-                      color: "#94a3b8",
-                      border: "1px solid #3a506844",
-                    }
-              }
+                  ? "border-[#10b98144] bg-emerald-950 text-emerald-400"
+                  : "border-[#3a506844] bg-[#1e2f42] text-slate-400"
+              }`}
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 15 }}
-              >
+              <span className="material-symbols-outlined text-[15px]">
                 {currentIsDone ? "check_circle" : "task_alt"}
               </span>
               <span>
@@ -1249,19 +1163,15 @@ export default function Workspace() {
             </button>
 
             {/* Divider */}
-            <div style={{ width: 1, height: 24, background: "#253347" }} />
+            <div className="h-6 w-px bg-[#253347]" />
 
             {/* Back to tasks */}
             <button
               onClick={() => navigate("/annotator/tasks")}
               title={t("common:actions.backToList")}
-              className="w-8 h-8 flex items-center justify-center rounded-lg transition-all hover:bg-white/10 active:scale-95"
-              style={{ color: "#64748b" }}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-all hover:bg-white/10 active:scale-95"
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 18 }}
-              >
+              <span className="material-symbols-outlined text-[18px]">
                 arrow_back
               </span>
             </button>
@@ -1269,26 +1179,17 @@ export default function Workspace() {
         </div>
 
         {/* â•â•â•â•â•â•â•â•â•â• BODY â•â•â•â•â•â•â•â•â•â• */}
-        <div
-          className="flex flex-1 overflow-hidden"
-          style={{ flexDirection: isMobile ? "column" : "row" }}
-        >
+        <div className={`flex flex-1 overflow-hidden ${isMobile ? "flex-col" : "flex-row"}`}>
           {/* ── LEFT: Image thumbnails ── */}
           <div
-            className="flex flex-col shrink-0 overflow-y-auto border-r"
-            style={{
-              width: isMobile ? "100%" : 148,
-              background: "#182233",
-              borderColor: "#253347",
-              borderRightWidth: isMobile ? 0 : 1,
-              borderBottomWidth: isMobile ? 1 : 0,
-            }}
+            className={`flex shrink-0 flex-col overflow-y-auto bg-[#182233] ${
+              isMobile
+                ? "w-full border-b border-[#253347]"
+                : "w-[148px] border-r border-[#253347]"
+            }`}
           >
             {/* Project Info & Submit Action */}
-            <div
-              className="p-3 border-b shrink-0 flex flex-col gap-2"
-              style={{ borderColor: "#253347" }}
-            >
+            <div className="flex shrink-0 flex-col gap-2 border-b border-[#253347] p-3">
               {/* Task name badge */}
               <div className="flex items-center justify-between px-2 py-1.5 rounded text-xs font-medium bg-[#1e2f42] text-[#cbd5e1] border border-[#2a3f55]">
                 <span
@@ -1311,29 +1212,16 @@ export default function Workspace() {
                     ? t("annotator:workspace.messages.submitBlockedImage")
                     : undefined
                 }
-                className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all shadow-lg flex items-center justify-center gap-1.5 ${isSubmitBlocked || isSubmitting ? "opacity-60 cursor-not-allowed" : "hover:brightness-110 active:scale-95"}`}
-                style={
+                className={`flex w-full items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-bold transition-all shadow-lg ${
                   isSubmitBlocked || isSubmitting
-                    ? {
-                        background: "#1e3a5f",
-                        color: "#7dd3fc",
-                        border: "1px solid #2563eb55",
-                      }
-                    : {
-                        background: "linear-gradient(135deg, #00bfa5, #0097a7)",
-                        color: "#fff",
-                        boxShadow: "0 4px 12px rgba(0,191,165,0.35)",
-                      }
-                }
+                    ? "cursor-not-allowed border border-[#2563eb55] bg-[#1e3a5f] text-sky-300 opacity-60"
+                    : "bg-gradient-to-br from-[#00bfa5] to-[#0097a7] text-white shadow-[0_4px_12px_rgba(0,191,165,0.35)] hover:brightness-110 active:scale-95"
+                }`}
               >
                 <span
-                  className="material-symbols-outlined"
-                  style={{
-                    fontSize: 15,
-                    animation: isSubmitting
-                      ? "spin 1s linear infinite"
-                      : "none",
-                  }}
+                  className={`material-symbols-outlined text-[15px] ${
+                    isSubmitting ? "animate-spin" : ""
+                  }`}
                 >
                   {isSubmitting
                     ? "progress_activity"
@@ -1359,13 +1247,9 @@ export default function Workspace() {
 
             {/* Image List */}
             <div
-              className="flex-1 p-2 overflow-y-auto"
-              style={{
-                display: "flex",
-                flexDirection: isMobile ? "row" : "column",
-                gap: 8,
-                overflowX: isMobile ? "auto" : "hidden",
-              }}
+              className={`flex-1 gap-2 overflow-y-auto p-2 ${
+                isMobile ? "flex overflow-x-auto" : "flex flex-col overflow-x-hidden"
+              }`}
             >
               {items.map((item, idx) => {
                 const isActive = idx === currentImageIndex;
@@ -1378,52 +1262,39 @@ export default function Workspace() {
                       setSelectedGroupKey(null);
                       setActiveLabelFilterId(null);
                     }}
-                    className="relative cursor-pointer rounded overflow-hidden transition-all"
-                    style={{
-                      border: isActive
-                        ? "2px solid #00bfa5"
-                        : "2px solid transparent",
-                      background: "#1e2f42",
-                      minWidth: isMobile ? 96 : undefined,
-                    }}
+                    className={`relative cursor-pointer overflow-hidden rounded bg-[#1e2f42] transition-all ${
+                      isActive ? "border-2 border-[#00bfa5]" : "border-2 border-transparent"
+                    } ${isMobile ? "min-w-24" : ""}`}
                   >
                     {/* Number badge */}
                     <div
-                      className="absolute top-1 left-1 z-10 w-5 h-5 rounded text-[10px] font-bold flex items-center justify-center shadow-md bg-black/40 backdrop-blur-sm"
-                      style={{
-                        border: isActive
-                          ? "1px solid #00bfa5"
-                          : "1px solid rgba(255,255,255,0.1)",
-                        color: isActive ? "#00bfa5" : "#fff",
-                      }}
+                      className={`absolute left-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded border text-[10px] font-bold shadow-md backdrop-blur-sm ${
+                        isActive
+                          ? "border-[#00bfa5] bg-black/40 text-[#00bfa5]"
+                          : "border-white/10 bg-black/40 text-white"
+                      }`}
                     >
                       {idx + 1}
                     </div>
                     {/* Done badge */}
                     {isDone && (
                       <div className="absolute top-1 right-1 z-10 drop-shadow-md">
-                        <span
-                          className="material-symbols-outlined text-[16px]"
-                          style={{ color: "#00bfa5" }}
-                        >
+                        <span className="material-symbols-outlined text-[16px] text-[#00bfa5]">
                           check_circle
                         </span>
                       </div>
                     )}
                     {/* Thumbnail */}
-                    <div
-                      className="w-full overflow-hidden"
-                      style={{ height: 80, width: isMobile ? 92 : undefined }}
-                    >
-                    <ThumbnailImg
-                      fileUrl={item.fileUrl}
-                      alt={
-                        item.fileName ||
-                        t("annotator:workspace.header.imageAlt", {
-                          index: idx + 1,
-                        })
-                      }
-                    />
+                    <div className={`h-20 overflow-hidden ${isMobile ? "w-[92px]" : "w-full"}`}>
+                      <ThumbnailImg
+                        fileUrl={item.fileUrl}
+                        alt={
+                          item.fileName ||
+                          t("annotator:workspace.header.imageAlt", {
+                            index: idx + 1,
+                          })
+                        }
+                      />
                     </div>
                     {/* Selection Glow */}
                     {isActive && (
@@ -1434,24 +1305,15 @@ export default function Workspace() {
               })}
             </div>
 
-            <div
-              className="p-3 border-t shrink-0"
-              style={{ borderColor: "#253347" }}
-            >
+            <div className="shrink-0 border-t border-[#253347] p-3">
               <button
                 onClick={handleSave}
                 disabled={isReadOnly}
-                className={`w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${isReadOnly ? "opacity-40 cursor-not-allowed" : "hover:bg-[#1e3a5f] active:scale-95"}`}
-                style={{
-                  background: "#1a2a3a",
-                  border: "1px solid #2a4060",
-                  color: "#7dd3fc",
-                }}
+                className={`flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#2a4060] bg-[#1a2a3a] py-2 text-xs font-semibold text-sky-300 transition-all ${
+                  isReadOnly ? "cursor-not-allowed opacity-40" : "active:scale-95 hover:bg-[#1e3a5f]"
+                }`}
               >
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: 15 }}
-                >
+                <span className="material-symbols-outlined text-[15px]">
                   save
                 </span>
                 <span>{t("common:actions.saveDraft")}</span>
@@ -1461,23 +1323,15 @@ export default function Workspace() {
 
           {/* ── CENTER: Canvas ── */}
           <div
-            className="flex-1 overflow-auto relative"
-            style={{
-              background: "#0e1621",
-              minHeight: isMobile ? 0 : undefined,
-            }}
+            className={`relative flex-1 overflow-auto bg-[#0e1621] ${
+              isMobile ? "min-h-0" : ""
+            }`}
           >
             {/* centering wrapper — expands to at least full viewport so canvas stays centered at small zoom */}
             <div
-              style={{
-                minHeight: "100%",
-                minWidth: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: isMobile ? 12 : 32,
-                boxSizing: "border-box",
-              }}
+              className={`box-border flex min-h-full min-w-full items-center justify-center ${
+                isMobile ? "p-3" : "p-8"
+              }`}
             >
               <div
                 className="relative shadow-2xl shrink-0"
@@ -1490,10 +1344,7 @@ export default function Workspace() {
               >
                 {imageLoading ? (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span
-                      className="material-symbols-outlined animate-spin"
-                      style={{ fontSize: 32, color: "#3a5068" }}
-                    >
+                    <span className="material-symbols-outlined animate-spin text-[32px] text-[#3a5068]">
                       progress_activity
                     </span>
                   </div>
@@ -1510,30 +1361,18 @@ export default function Workspace() {
                     draggable={false}
                   />
                 ) : imageError ? (
-                  <div
-                    className="absolute inset-0 flex items-center justify-center"
-                    style={{ background: "rgba(0,0,0,0.8)" }}
-                  >
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                     <div className="text-center p-6 max-w-sm">
-                      <span
-                        className="material-symbols-outlined mb-3 block"
-                        style={{ fontSize: 48, color: "#f87171" }}
-                      >
+                      <span className="material-symbols-outlined mb-3 block text-[48px] text-red-400">
                         broken_image
                       </span>
-                      <p
-                        className="text-sm font-medium mb-1"
-                        style={{ color: "#f87171" }}
-                      >
+                      <p className="mb-1 text-sm font-medium text-red-400">
                         {t("annotator:workspace.messages.imageLoadFailed")}
                       </p>
-                      <p
-                        className="text-[10px] font-mono break-all mb-3"
-                        style={{ color: "#64748b" }}
-                      >
+                      <p className="mb-3 break-all font-mono text-[10px] text-slate-500">
                         {imageError.url}
                       </p>
-                      <p className="text-xs mb-4" style={{ color: "#fca5a5" }}>
+                      <p className="mb-4 text-xs text-rose-300">
                         {t("annotator:workspace.messages.submitBlockedImageRetry")}
                       </p>
                       <button
@@ -1541,11 +1380,7 @@ export default function Workspace() {
                           setImageError(null);
                           setImageBlobUrl(null);
                         }}
-                        className="px-4 py-1.5 text-xs font-medium rounded"
-                        style={{
-                          background: "rgba(255,255,255,0.1)",
-                          color: "#fff",
-                        }}
+                        className="rounded bg-white/10 px-4 py-1.5 text-xs font-medium text-white"
                       >
                         {t("annotator:workspace.actions.retry")}
                       </button>
@@ -1553,10 +1388,7 @@ export default function Workspace() {
                   </div>
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center select-none opacity-20">
-                    <span
-                      className="material-symbols-outlined"
-                      style={{ fontSize: 64, color: "#3a5068" }}
-                    >
+                    <span className="material-symbols-outlined text-[64px] text-[#3a5068]">
                       image
                     </span>
                   </div>
@@ -1604,21 +1436,14 @@ export default function Workspace() {
 
           {/* RIGHT: Tools + Annotations */}
           <div
-            className="flex flex-col shrink-0 border-l overflow-hidden"
-            style={{
-              width: isMobile ? "100%" : 260,
-              maxHeight: isMobile ? "42vh" : undefined,
-              background: "#182233",
-              borderColor: "#253347",
-              borderLeftWidth: isMobile ? 0 : 1,
-              borderTopWidth: isMobile ? 1 : 0,
-            }}
+            className={`flex shrink-0 flex-col overflow-hidden bg-[#182233] ${
+              isMobile
+                ? "max-h-[42vh] w-full border-t border-[#253347]"
+                : "w-[260px] border-l border-[#253347]"
+            }`}
           >
             {/* Tool icons */}
-            <div
-              className="flex items-center justify-center gap-1.5 px-3 py-2.5 border-b shrink-0"
-              style={{ borderColor: "#253347", background: "#111d2c" }}
-            >
+            <div className="flex shrink-0 items-center justify-center gap-1.5 border-b border-[#253347] bg-[#111d2c] px-3 py-2.5">
               {(isReadOnly
                 ? tools.filter((tool) => tool.id === "select")
                 : tools
@@ -1633,38 +1458,20 @@ export default function Workspace() {
                   }}
                   title={tool.label}
                   disabled={isReadOnly && tool.id !== "select"}
-                  className={`flex flex-col items-center justify-center gap-0.5 rounded-lg transition-all ${isReadOnly && tool.id !== "select" ? "opacity-30 cursor-not-allowed hidden" : "hover:brightness-110 active:scale-95"}`}
-                  style={{
-                    width: 44,
-                    height: 44,
-                    padding: "4px 2px",
-                    ...(activeTool === tool.id
-                      ? {
-                          background: "#00bfa5",
-                          color: "#fff",
-                          boxShadow: "0 2px 8px rgba(0,191,165,0.4)",
-                        }
-                      : {
-                          background: "#1e2f42",
-                          color: "#7a9ab8",
-                          border: "1px solid #2a3f55",
-                        }),
-                  }}
+                  className={`flex h-11 w-11 flex-col items-center justify-center gap-0.5 rounded-lg px-[2px] py-1 transition-all ${
+                    isReadOnly && tool.id !== "select"
+                      ? "hidden cursor-not-allowed opacity-30"
+                      : "active:scale-95 hover:brightness-110"
+                  } ${
+                    activeTool === tool.id
+                      ? "bg-[#00bfa5] text-white shadow-[0_2px_8px_rgba(0,191,165,0.4)]"
+                      : "border border-[#2a3f55] bg-[#1e2f42] text-[#7a9ab8]"
+                  }`}
                 >
-                  <span
-                    className="material-symbols-outlined"
-                    style={{ fontSize: 18 }}
-                  >
+                  <span className="material-symbols-outlined text-[18px]">
                     {tool.icon}
                   </span>
-                  <span
-                    style={{
-                      fontSize: 8,
-                      fontWeight: 600,
-                      letterSpacing: "0.02em",
-                      lineHeight: 1,
-                    }}
-                  >
+                  <span className="text-[8px] font-semibold leading-none tracking-[0.02em]">
                     {tool.label?.split(" ")[0]?.substring(0, 5)}
                   </span>
                 </button>
@@ -1672,46 +1479,29 @@ export default function Workspace() {
             </div>
 
             {/* Tabs */}
-            <div
-              className="flex shrink-0 border-b"
-              style={{ borderColor: "#253347" }}
-            >
+            <div className="flex shrink-0 border-b border-[#253347]">
               <button
                 onClick={() => setRightTab("annotations")}
-                className="flex-1 py-2 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                style={
+                className={`flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2 text-[11px] font-semibold transition-colors ${
                   rightTab === "annotations"
-                    ? { color: "#00bfa5", borderBottom: "2px solid #00bfa5" }
-                    : {
-                        color: "#4a6788",
-                        borderBottom: "2px solid transparent",
-                      }
-                }
+                    ? "border-[#00bfa5] text-[#00bfa5]"
+                    : "border-transparent text-[#4a6788]"
+                }`}
               >
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: 14 }}
-                >
+                <span className="material-symbols-outlined text-[14px]">
                   layers
                 </span>
                 {t("annotator:workspace.tabs.annotations")} ({anno.annotations.length})
               </button>
               <button
                 onClick={() => setRightTab("summary")}
-                className="flex-1 py-2 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                style={
+                className={`flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2 text-[11px] font-semibold transition-colors ${
                   rightTab === "summary"
-                    ? { color: "#00bfa5", borderBottom: "2px solid #00bfa5" }
-                    : {
-                        color: "#4a6788",
-                        borderBottom: "2px solid transparent",
-                      }
-                }
+                    ? "border-[#00bfa5] text-[#00bfa5]"
+                    : "border-transparent text-[#4a6788]"
+                }`}
               >
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: 14 }}
-                >
+                <span className="material-symbols-outlined text-[14px]">
                   analytics
                 </span>
                 {t("annotator:workspace.tabs.summary")}
@@ -1723,25 +1513,19 @@ export default function Workspace() {
               {rightTab === "annotations" ? (
                 labelsLoading && allLabels.length === 0 ? (
                   <div className="flex items-center justify-center h-24 gap-2 opacity-50">
-                    <span
-                      className="material-symbols-outlined animate-spin"
-                      style={{ fontSize: 18, color: "#3a5068" }}
-                    >
+                    <span className="material-symbols-outlined animate-spin text-[18px] text-[#3a5068]">
                       progress_activity
                     </span>
-                    <p className="text-xs" style={{ color: "#3a5068" }}>
+                    <p className="text-xs text-[#3a5068]">
                       {t("annotator:workspace.messages.labelsLoading")}
                     </p>
                   </div>
                 ) : anno.annotations.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-32 gap-2 opacity-30">
-                    <span
-                      className="material-symbols-outlined"
-                      style={{ fontSize: 32, color: "#3a5068" }}
-                    >
+                    <span className="material-symbols-outlined text-[32px] text-[#3a5068]">
                       layers
                     </span>
-                    <p className="text-xs" style={{ color: "#3a5068" }}>
+                    <p className="text-xs text-[#3a5068]">
                       {t("annotator:workspace.messages.annotationsEmpty")}
                     </p>
                   </div>

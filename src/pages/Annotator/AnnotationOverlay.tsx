@@ -180,7 +180,11 @@ export default function AnnotationOverlay({
             strokeWidth: strokeW,
             fill: `${displayColor}${Math.round(fillOpacity * 255).toString(16).padStart(2, "0")}`,
             strokeDasharray: dashArray,
-            style: { cursor: isLocked ? "not-allowed" : activeTool === "select" ? "pointer" : "crosshair" },
+            className: isLocked
+                ? "cursor-not-allowed"
+                : activeTool === "select"
+                    ? "cursor-pointer"
+                    : "cursor-crosshair",
         };
 
         // ── BBOX ──
@@ -204,7 +208,7 @@ export default function AnnotationOverlay({
                             {[[geom.x, geom.y], [geom.x + geom.w, geom.y], [geom.x, geom.y + geom.h], [geom.x + geom.w, geom.y + geom.h]].map(([cx, cy], i) => (
                                 <circle key={i} cx={px(cx, "x")} cy={px(cy, "y")} r={5}
                                     fill="white" stroke={color} strokeWidth={2}
-                                    style={{ cursor: "move" }}
+                                    className="cursor-move"
                                     pointerEvents="all"
                                 />
                             ))}
@@ -229,7 +233,7 @@ export default function AnnotationOverlay({
                     {isSelected && activeTool === "select" && !readOnly && !isLocked && geom.points.map((p, i) => (
                         <circle key={i} cx={px(p.x, "x")} cy={px(p.y, "y")} r={5}
                             fill="white" stroke={color} strokeWidth={2}
-                            style={{ cursor: "move" }}
+                            className="cursor-move"
                             pointerEvents="all"
                             onMouseDown={(e) => handleVertexMouseDown(e, group, i)}
                         />
@@ -259,7 +263,7 @@ export default function AnnotationOverlay({
                     {!readOnly && !isLocked && geom.points.map((p, i) => (
                         <circle key={i} cx={px(p.x, "x")} cy={px(p.y, "y")} r={isSelected ? 6 : 4}
                             fill={color} stroke="white" strokeWidth={1.5}
-                            style={{ cursor: activeTool === "select" ? "move" : "crosshair" }}
+                            className={activeTool === "select" ? "cursor-move" : "cursor-crosshair"}
                             pointerEvents={activeTool === "select" ? "all" : "none"}
                             onMouseDown={(e) => {
                                 if (activeTool === "select") handleVertexMouseDown(e, group, i);
@@ -287,7 +291,7 @@ export default function AnnotationOverlay({
                         <circle key={i} cx={px(p.x, "x")} cy={px(p.y, "y")}
                             r={isSelected ? 6 : 4}
                             fill={color} stroke="white" strokeWidth={1.5}
-                            style={{ cursor: (activeTool === "select" && !readOnly) ? "move" : "crosshair" }}
+                            className={(activeTool === "select" && !readOnly) ? "cursor-move" : "cursor-crosshair"}
                             pointerEvents={(activeTool === "select" && !readOnly) ? "all" : "none"}
                             onMouseDown={(e) => {
                                 if (readOnly) return;
@@ -378,8 +382,13 @@ export default function AnnotationOverlay({
     return (
         <svg
             ref={svgRef}
-            className="absolute inset-0 w-full h-full"
-            style={{ cursor: cursorStyle, zIndex: 10, overflow: "visible" }}
+            className={`absolute inset-0 z-10 h-full w-full overflow-visible ${
+                cursorStyle === "default"
+                    ? "cursor-default"
+                    : cursorStyle === "crosshair"
+                        ? "cursor-crosshair"
+                        : "cursor-default"
+            }`}
             onMouseDown={onMouseDown}
             onMouseMove={onMouseMove}
             onMouseUp={onMouseUp}

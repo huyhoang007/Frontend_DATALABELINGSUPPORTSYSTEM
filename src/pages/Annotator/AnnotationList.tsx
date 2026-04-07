@@ -88,18 +88,11 @@ export default function AnnotationList({
                 {group.labelIds.map((lid, j) => (
                   <span
                     key={lid}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[12px] font-bold shadow-sm"
-                    style={{
-                      backgroundColor: "rgba(255, 255, 255, 0.12)",
-                      color: "#ffffff",
-                      border: "1px solid rgba(255, 255, 255, 0.25)",
-                    }}
+                    className="inline-flex items-center gap-1.5 rounded border border-white/25 bg-white/10 px-2.5 py-1.5 text-[12px] font-bold text-white shadow-sm"
                   >
                     <span
                       className="w-2.5 h-2.5 rounded-full"
-                      style={{
-                        backgroundColor: group.colorCodes?.[j] || "#6b7280",
-                      }}
+                      style={{ backgroundColor: group.colorCodes?.[j] || "#6b7280" }}
                     />
                     {group.labelNames?.[j] || "Unknown"}
                   </span>
