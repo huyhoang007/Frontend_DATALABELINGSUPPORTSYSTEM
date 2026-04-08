@@ -8,36 +8,45 @@ type InspectState = {
   y: number;
 } | null;
 
+function getSourceRegion(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return null;
+  const region = target.closest<HTMLElement>("[data-source-file]");
+  const file = region?.dataset.sourceFile;
+  if (!file) return null;
+  return {
+    file,
+    label: region.dataset.sourceLabel,
+  };
+}
+
 export function SourceInspector() {
   const location = useLocation();
   const [inspectState, setInspectState] = React.useState<InspectState>(null);
   const [isShiftPressed, setIsShiftPressed] = React.useState(false);
+  const [didCopy, setDidCopy] = React.useState(false);
   const lastPointerRef = React.useRef<{ x: number; y: number } | null>(null);
+  const copyTimeoutRef = React.useRef<number | null>(null);
+  const currentFileRef = React.useRef<string | null>(null);
 
   React.useEffect(() => {
     const handleMove = (event: MouseEvent) => {
       lastPointerRef.current = { x: event.clientX, y: event.clientY };
+      const sourceRegion = getSourceRegion(event.target);
+      currentFileRef.current = sourceRegion?.file ?? null;
+
       if (!isShiftPressed) {
         setInspectState(null);
         return;
       }
 
-      const target = event.target;
-      if (!(target instanceof HTMLElement)) {
-        setInspectState(null);
-        return;
-      }
-
-      const region = target.closest<HTMLElement>("[data-source-file]");
-      const file = region?.dataset.sourceFile;
-      if (!file) {
+      if (!sourceRegion) {
         setInspectState(null);
         return;
       }
 
       setInspectState({
-        file,
-        label: region.dataset.sourceLabel,
+        file: sourceRegion.file,
+        label: sourceRegion.label,
         x: event.clientX,
         y: event.clientY,
       });
@@ -50,19 +59,32 @@ export function SourceInspector() {
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Control") {
+        const fileToCopy = currentFileRef.current;
+        if (!fileToCopy || event.repeat) return;
+        navigator.clipboard?.writeText(fileToCopy).catch(() => {});
+        setDidCopy(true);
+        if (copyTimeoutRef.current) {
+          window.clearTimeout(copyTimeoutRef.current);
+        }
+        copyTimeoutRef.current = window.setTimeout(() => {
+          setDidCopy(false);
+        }, 1200);
+        return;
+      }
+
       if (event.key !== "Shift") return;
       setIsShiftPressed(true);
+      setDidCopy(false);
 
       const point = lastPointerRef.current;
       if (!point) return;
-      const target = document.elementFromPoint(point.x, point.y);
-      if (!(target instanceof HTMLElement)) return;
-      const region = target.closest<HTMLElement>("[data-source-file]");
-      const file = region?.dataset.sourceFile;
-      if (!file) return;
+      const sourceRegion = getSourceRegion(document.elementFromPoint(point.x, point.y));
+      if (!sourceRegion) return;
+      currentFileRef.current = sourceRegion.file;
       setInspectState({
-        file,
-        label: region.dataset.sourceLabel,
+        file: sourceRegion.file,
+        label: sourceRegion.label,
         x: point.x,
         y: point.y,
       });
@@ -71,11 +93,14 @@ export function SourceInspector() {
     const handleKeyUp = (event: KeyboardEvent) => {
       if (event.key !== "Shift") return;
       setIsShiftPressed(false);
+      setDidCopy(false);
       setInspectState(null);
     };
 
     const handleWindowBlur = () => {
       setIsShiftPressed(false);
+      setDidCopy(false);
+      currentFileRef.current = null;
       setInspectState(null);
     };
 
@@ -86,6 +111,9 @@ export function SourceInspector() {
     window.addEventListener("blur", handleWindowBlur);
 
     return () => {
+      if (copyTimeoutRef.current) {
+        window.clearTimeout(copyTimeoutRef.current);
+      }
       window.removeEventListener("mousemove", handleMove);
       window.removeEventListener("mouseout", handlePointerOut);
       window.removeEventListener("keydown", handleKeyDown);
@@ -110,6 +138,11 @@ export function SourceInspector() {
       <div className="font-mono text-[11px] leading-5">{inspectState.file}</div>
       {inspectState.label && (
         <div className="mt-1 text-[11px] text-slate-300">{inspectState.label}</div>
+      )}
+      {didCopy && (
+        <div className="mt-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-300">
+          Copied
+        </div>
       )}
     </div>
   );
