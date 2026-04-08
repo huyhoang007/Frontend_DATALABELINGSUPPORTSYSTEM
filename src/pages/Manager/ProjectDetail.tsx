@@ -12,6 +12,7 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { cn } from "../../utils/cn";
 import { translateDataType, translateProjectStatus } from "../../i18n/helpers";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 interface ProjectData {
     project_id: number;
@@ -75,7 +76,11 @@ const ProjectDetail: React.FC = () => {
 
     if (isLoading) {
         return (
-            <div className="p-8 min-h-full bg-transparent flex items-center justify-center">
+            <div
+                className="p-8 min-h-full bg-transparent flex items-center justify-center"
+                data-source-file={SOURCE_FILES.managerProjectDetail}
+                data-source-label="Manager project detail page"
+            >
                 <div className="text-muted-foreground text-sm">{t("common:states.loadingData")}</div>
             </div>
         );
@@ -83,7 +88,11 @@ const ProjectDetail: React.FC = () => {
 
     if (error || !project) {
         return (
-            <div className="p-8 min-h-full bg-transparent">
+            <div
+                className="p-8 min-h-full bg-transparent"
+                data-source-file={SOURCE_FILES.managerProjectDetail}
+                data-source-label="Manager project detail page"
+            >
                 <Card className="p-12 bg-card/80 backdrop-blur border-border/60 text-center max-w-lg mx-auto">
                     <div className="text-4xl mb-4">P</div>
                     <h2 className="text-xl font-bold text-foreground mb-2">{t("manager:projectDetail.notFoundTitle")}</h2>
@@ -99,7 +108,11 @@ const ProjectDetail: React.FC = () => {
     }
 
     return (
-        <div className="p-8 min-h-full bg-transparent space-y-6">
+        <div
+            className="p-8 min-h-full bg-transparent space-y-6"
+            data-source-file={SOURCE_FILES.managerProjectDetail}
+            data-source-label="Manager project detail page"
+        >
             {/* Header */}
             <Card className="p-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
                 <div className="flex items-start justify-between">

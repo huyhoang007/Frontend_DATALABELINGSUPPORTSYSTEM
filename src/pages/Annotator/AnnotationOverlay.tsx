@@ -382,6 +382,8 @@ export default function AnnotationOverlay({
     return (
         <svg
             ref={svgRef}
+            data-source-file="src/pages/Annotator/AnnotationOverlay.tsx"
+            data-source-label="Annotator drawing overlay"
             className={`absolute inset-0 z-10 h-full w-full overflow-visible ${
                 cursorStyle === "default"
                     ? "cursor-default"

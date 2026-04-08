@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { SOURCE_FILES } from '../utils/sourceMeta';
 
 const DevHealthCheck = () => {
     const [state, setState] = useState({
@@ -54,7 +55,11 @@ const DevHealthCheck = () => {
 
     if (state.loading) {
         return (
-            <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+            <div
+                className="min-h-screen bg-gray-100 flex items-center justify-center p-4"
+                data-source-file={SOURCE_FILES.devHealthCheck}
+                data-source-label="Developer health check page"
+            >
                 <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full">
                     <h2 className="text-2xl font-bold mb-4">Dev Health Check</h2>
                     <p className="text-gray-600">Checking backend connectivity...</p>
@@ -64,7 +69,11 @@ const DevHealthCheck = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <div
+            className="min-h-screen bg-gray-100 flex items-center justify-center p-4"
+            data-source-file={SOURCE_FILES.devHealthCheck}
+            data-source-label="Developer health check page"
+        >
             <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full">
                 <h2 className="text-2xl font-bold mb-6">Dev Health Check</h2>
 

@@ -13,6 +13,7 @@ import {
   TableHead,
   TableCell,
 } from "../../components/ui/Table";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 const FORMATS = ["COCO JSON", "YOLO", "Pascal VOC", "CSV"];
 
@@ -239,7 +240,11 @@ export default function ProjectExport() {
   };
 
   return (
-    <div className="space-y-6">
+    <div
+      className="space-y-6"
+      data-source-file={SOURCE_FILES.managerProjectExport}
+      data-source-label="Manager project export tab"
+    >
       <Card className="p-6 space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
           {/* Dataset selector */}

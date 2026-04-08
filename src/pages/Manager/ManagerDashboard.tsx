@@ -11,6 +11,7 @@ import {
   translateDataType,
   translateProjectStatus,
 } from '../../i18n/helpers';
+import { SOURCE_FILES } from '../../utils/sourceMeta';
 
 interface ManagerDashboardProps {
   user?: any;
@@ -159,7 +160,11 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
   const totalPages = Math.ceil(myProjects.length / projectsPerPage);
 
   return (
-    <div className="p-8 min-h-full bg-transparent space-y-8">
+    <div
+      className="p-8 min-h-full bg-transparent space-y-8"
+      data-source-file={SOURCE_FILES.managerDashboard}
+      data-source-label="Manager dashboard page"
+    >
       {/* Welcome Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
         <div>

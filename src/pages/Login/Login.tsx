@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { SOURCE_FILES } from '../../utils/sourceMeta';
 
 /* ─── Custom animations (không thể thay bằng Tailwind built-in) ─── */
 const CUSTOM_STYLES = `
@@ -282,7 +283,11 @@ export default function Login() {
     <>
       <style>{CUSTOM_STYLES}</style>
 
-      <div className="relative min-h-screen w-full flex items-center font-[Inter,'Segoe_UI',system-ui,sans-serif] overflow-hidden">
+      <div
+        className="relative min-h-screen w-full flex items-center font-[Inter,'Segoe_UI',system-ui,sans-serif] overflow-hidden"
+        data-source-file={SOURCE_FILES.loginPage}
+        data-source-label="Login page"
+      >
 
         {/* Background image */}
         <img src="/login-bg.jpg" alt="" className="absolute inset-0 w-full h-full object-cover object-[center_40%]" />

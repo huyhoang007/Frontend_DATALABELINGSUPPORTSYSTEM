@@ -17,6 +17,7 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { cn } from "../../utils/cn";
 import { translateDataType, translateProjectStatus } from "../../i18n/helpers";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 function computeProjectStatus(assignments: any[]): string {
   if (!assignments || assignments.length === 0) return "draft";
@@ -441,7 +442,11 @@ const ModernProjectsPage: React.FC = () => {
   }), [projects, selectedStatus, showDeletedProjects]);
 
   return (
-    <div className="p-8 min-h-screen bg-[#F7F8F9]">
+    <div
+      className="p-8 min-h-screen bg-[#F7F8F9]"
+      data-source-file={SOURCE_FILES.managerProjects}
+      data-source-label="Manager projects page"
+    >
       {/* Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
         <div className="flex items-center justify-between">

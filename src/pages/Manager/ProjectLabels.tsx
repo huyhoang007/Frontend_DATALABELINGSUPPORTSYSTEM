@@ -15,6 +15,7 @@ import {
   TableHead,
   TableCell,
 } from "../../components/ui/Table";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 const rulesKey = (pid: string) => `dlss_project_label_rules::${pid}`;
 
@@ -156,7 +157,11 @@ export default function ProjectLabels() {
   );
 
   return (
-    <div className="space-y-4">
+    <div
+      className="space-y-4"
+      data-source-file={SOURCE_FILES.managerProjectLabels}
+      data-source-label="Manager project labels tab"
+    >
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-base font-bold text-foreground">
           {t("manager:labelRules.title")}

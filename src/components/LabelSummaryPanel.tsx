@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { SOURCE_FILES } from "../utils/sourceMeta";
 
 interface Annotation {
   labelId: string | number;
@@ -155,7 +156,11 @@ export default function LabelSummaryPanel({
       : 0;
 
   return (
-    <div className="space-y-3 overflow-y-auto p-3">
+    <div
+      className="space-y-3 overflow-y-auto p-3"
+      data-source-file={SOURCE_FILES.labelSummaryPanel}
+      data-source-label="Annotation summary panel"
+    >
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-lg border border-slate-800 bg-slate-950 p-2.5 text-center">
           <div className="text-xl font-bold tabular-nums text-emerald-400">

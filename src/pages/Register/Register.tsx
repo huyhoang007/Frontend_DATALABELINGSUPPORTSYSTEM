@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import ModernRegisterForm from '../../components/Auth/ModernRegisterForm';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { SOURCE_FILES } from '../../utils/sourceMeta';
 
 interface RegisterData {
     username: string;
@@ -38,9 +39,14 @@ export default function Register() {
     };
 
     return (
-        <ModernRegisterForm
-            onRegister={handleRegister}
-            onSwitchToLogin={() => navigate('/login')}
-        />
+        <div
+            data-source-file={SOURCE_FILES.registerPage}
+            data-source-label="Register page"
+        >
+            <ModernRegisterForm
+                onRegister={handleRegister}
+                onSwitchToLogin={() => navigate('/login')}
+            />
+        </div>
     );
 }

@@ -6,6 +6,7 @@ import { useToast } from "../../context/ToastContext";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { translateDataType, translateProjectStatus } from "../../i18n/helpers";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 // Type declaration for toast
 const useTypedToast = () =>
@@ -247,7 +248,11 @@ const ModernPoliciesPage: React.FC = () => {
   };
 
   return (
-    <div className="p-8 min-h-screen bg-[#F7F8F9]">
+    <div
+      className="p-8 min-h-screen bg-[#F7F8F9]"
+      data-source-file={SOURCE_FILES.managerPolicies}
+      data-source-label="Manager policies page"
+    >
       {/* Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
         <div className="flex items-center justify-between mb-6">

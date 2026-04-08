@@ -13,6 +13,7 @@ import {
   TableHead,
   TableCell,
 } from "../../components/ui/Table";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 /**
  * ProjectErrors — Error Types tab inside Project Detail.
@@ -202,7 +203,11 @@ export default function ProjectErrors() {
   );
 
   return (
-    <div className="space-y-6">
+    <div
+      className="space-y-6"
+      data-source-file={SOURCE_FILES.managerProjectErrors}
+      data-source-label="Manager project errors tab"
+    >
       {/* Toast */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-200">

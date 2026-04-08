@@ -8,6 +8,7 @@ import {
   translateAdminLogTargetNoun,
   translateRole,
 } from '../../i18n/helpers';
+import { SOURCE_FILES } from '../../utils/sourceMeta';
 
 interface AdminDashboardProps {
   user?: any;
@@ -92,7 +93,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   [recentActivityLogs, t, i18n.language]);
 
   return (
-    <div className="p-8 min-h-full bg-background space-y-6">
+    <div
+      className="p-8 min-h-full bg-background space-y-6"
+      data-source-file={SOURCE_FILES.adminDashboard}
+      data-source-label="Admin dashboard page"
+    >
 
       {/* Header */}
       <div className="bg-card border border-border rounded-lg p-8 shadow-sm">

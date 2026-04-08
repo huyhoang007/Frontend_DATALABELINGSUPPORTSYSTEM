@@ -5,6 +5,7 @@ import { labelApi } from "../../api/labelApi";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 const LABEL_TYPES = ["CLASSIFICATION", "DETECTION", "SEGMENTATION"];
 const PRESET_COLORS = [
@@ -77,7 +78,11 @@ export default function CreateLabel() {
   };
 
   return (
-    <div className="p-8 space-y-6 max-w-2xl">
+    <div
+      className="p-8 space-y-6 max-w-2xl"
+      data-source-file={SOURCE_FILES.managerCreateLabel}
+      data-source-label="Manager create label page"
+    >
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate("/manager/labels")}

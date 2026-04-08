@@ -22,6 +22,7 @@ import {
   TableHead,
   TableCell,
 } from "../../components/ui/Table";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 import { cn } from "../../utils/cn";
 import { translateAssignmentStatus } from "../../i18n/helpers";
 
@@ -287,7 +288,11 @@ export default function ProjectAssignments() {
 
   /* ═══════════ RENDER ═══════════ */
   return (
-    <div className="space-y-6">
+    <div
+      className="space-y-6"
+      data-source-file={SOURCE_FILES.managerProjectAssignments}
+      data-source-label="Manager project assignments tab"
+    >
       {/* Toast */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-200">

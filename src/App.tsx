@@ -38,6 +38,7 @@ import { AdminLayout } from "./layouts/AdminLayout";
 import { AnnotatorLayout } from "./layouts/AnnotatorLayout";
 import { ReviewerLayout } from "./layouts/ReviewerLayout";
 import { LanguageSwitcher } from "./components/i18n/LanguageSwitcher";
+import { SourceInspector } from "./components/dev/SourceInspector";
 
 function getRoleBasedRedirectWrapper() {
   const userStr = localStorage.getItem("user");
@@ -56,6 +57,7 @@ function App() {
       <div className="min-h-screen bg-background text-foreground">
         <BrowserRouter>
           <LanguageSwitcher />
+          <SourceInspector />
           <Routes>
             <Route path="/" element={<Navigate to={getRoleBasedRedirectWrapper()} replace />} />
             <Route path="/login" element={<Login />} />

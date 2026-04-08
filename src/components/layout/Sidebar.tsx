@@ -4,6 +4,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { translateRole } from "../../i18n/helpers";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 export function Sidebar() {
     const { user, logout } = useAuth();
@@ -65,7 +66,11 @@ export function Sidebar() {
     };
 
     return (
-        <aside className="w-64 border-r border-border bg-card text-card-foreground flex flex-col h-screen fixed left-0 top-0 transition-colors duration-200">
+        <aside
+            className="w-64 border-r border-border bg-card text-card-foreground flex flex-col h-screen fixed left-0 top-0 transition-colors duration-200"
+            data-source-file={SOURCE_FILES.sidebar}
+            data-source-label="Shared sidebar navigation"
+        >
             <div className="h-16 flex items-center justify-center px-4 border-b border-border">
                 <div
                     className="cursor-pointer hover:opacity-80 transition-opacity select-none flex items-center gap-3"

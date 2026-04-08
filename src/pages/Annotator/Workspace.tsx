@@ -10,6 +10,7 @@ import { labelRuleApi } from "../../api/labelRuleApi";
 import { useToast } from "../../context/ToastContext";
 import { getCachedBlobUrl, preloadBlobUrl } from "../../utils/blobAssetCache";
 import { translate } from "../../i18n/helpers";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 /* â”€â”€ New modules â”€â”€ */
 import { useAnnotations } from "./useAnnotations";
@@ -926,12 +927,18 @@ export default function Workspace() {
   // â”€â”€ FULL REDESIGN â”€â”€
   return (
     <>
-      <div className="flex h-screen flex-col overflow-hidden bg-[#131c2e] text-slate-200">
+      <div
+        className="flex h-screen flex-col overflow-hidden bg-[#131c2e] text-slate-200"
+        data-source-file={SOURCE_FILES.annotatorWorkspace}
+        data-source-label="Annotator workspace page"
+      >
         {/* â•â•â•â•â•â•â•â•â•â• TOP BAR â•â•â•â•â•â•â•â•â•â• */}
         <div
           className={`flex min-h-12 shrink-0 items-center gap-2 border-b border-[#253347] bg-[#182233] px-3 ${
             isMobile ? "flex-wrap py-2" : "flex-nowrap"
           }`}
+          data-source-file={SOURCE_FILES.annotatorWorkspace}
+          data-source-label="Annotator workspace top bar"
         >
           {/* Dashboard Logo Link */}
           <button
@@ -1179,7 +1186,11 @@ export default function Workspace() {
         </div>
 
         {/* â•â•â•â•â•â•â•â•â•â• BODY â•â•â•â•â•â•â•â•â•â• */}
-        <div className={`flex flex-1 overflow-hidden ${isMobile ? "flex-col" : "flex-row"}`}>
+        <div
+          className={`flex flex-1 overflow-hidden ${isMobile ? "flex-col" : "flex-row"}`}
+          data-source-file={SOURCE_FILES.workspaceLayout}
+          data-source-label="Annotator workspace 3-column layout"
+        >
           {/* ── LEFT: Image thumbnails ── */}
           <div
             className={`flex shrink-0 flex-col overflow-y-auto bg-[#182233] ${
@@ -1187,6 +1198,8 @@ export default function Workspace() {
                 ? "w-full border-b border-[#253347]"
                 : "w-[148px] border-r border-[#253347]"
             }`}
+            data-source-file={SOURCE_FILES.annotatorWorkspace}
+            data-source-label="Annotator left panel"
           >
             {/* Project Info & Submit Action */}
             <div className="flex shrink-0 flex-col gap-2 border-b border-[#253347] p-3">
@@ -1326,6 +1339,8 @@ export default function Workspace() {
             className={`relative flex-1 overflow-auto bg-[#0e1621] ${
               isMobile ? "min-h-0" : ""
             }`}
+            data-source-file={SOURCE_FILES.annotatorWorkspace}
+            data-source-label="Annotator center canvas area"
           >
             {/* centering wrapper — expands to at least full viewport so canvas stays centered at small zoom */}
             <div
@@ -1441,6 +1456,8 @@ export default function Workspace() {
                 ? "max-h-[42vh] w-full border-t border-[#253347]"
                 : "w-[260px] border-l border-[#253347]"
             }`}
+            data-source-file={SOURCE_FILES.annotatorWorkspace}
+            data-source-label="Annotator right panel"
           >
             {/* Tool icons */}
             <div className="flex shrink-0 items-center justify-center gap-1.5 border-b border-[#253347] bg-[#111d2c] px-3 py-2.5">

@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "../../utils/cn";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 const SHAPE_ICONS = {
   bbox: "crop_free",
@@ -30,7 +31,11 @@ export default function AnnotationList({
   }, [annotations, activeLabelFilterId]);
 
   return (
-    <div className="space-y-2">
+    <div
+      className="space-y-2"
+      data-source-file={SOURCE_FILES.annotatorList}
+      data-source-label="Annotator annotation list"
+    >
       {visibleAnnotations.map((group, i) => {
         const isSelected = group.groupKey === selectedGroupKey;
         const icon = SHAPE_ICONS[group.shapeType] || "shape_line";

@@ -6,6 +6,7 @@ import { useToast } from "../../context/ToastContext";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { cn } from "../../utils/cn";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 // Type declaration for toast
 const useTypedToast = () =>
@@ -459,7 +460,11 @@ const ModernLabelsPage: React.FC = () => {
   const activeLabels = labels.filter((label) => isLabelActive(label));
 
   return (
-    <div className="p-8 min-h-screen bg-[#F7F8F9]">
+    <div
+      className="p-8 min-h-screen bg-[#F7F8F9]"
+      data-source-file={SOURCE_FILES.managerLabels}
+      data-source-label="Manager labels page"
+    >
       {/* Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
         <div className="flex items-center justify-between mb-6">

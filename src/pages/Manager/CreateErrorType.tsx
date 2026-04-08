@@ -5,6 +5,7 @@ import { policiesAPI } from "../../services/api";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 const SEVERITIES = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
 
@@ -57,7 +58,11 @@ export default function CreateErrorType() {
     };
 
     return (
-        <div className="p-8 space-y-6 max-w-2xl">
+        <div
+            className="p-8 space-y-6 max-w-2xl"
+            data-source-file={SOURCE_FILES.managerCreateErrorType}
+            data-source-label="Manager create error type page"
+        >
             <div className="flex items-center gap-3">
                 <button onClick={() => navigate("/manager/error-types")} className="text-muted-foreground hover:text-foreground transition-colors">
                     <span className="material-symbols-outlined">arrow_back</span>

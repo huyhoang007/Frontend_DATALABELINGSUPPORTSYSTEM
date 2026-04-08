@@ -21,6 +21,7 @@ import {
   TableHead,
   TableCell,
 } from "../../components/ui/Table";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 const BATCH_STATUS_MAP = {
   PENDING:
@@ -282,7 +283,11 @@ export default function ProjectData() {
   };
 
   return (
-    <div className="space-y-6">
+    <div
+      className="space-y-6"
+      data-source-file={SOURCE_FILES.managerProjectData}
+      data-source-label="Manager project data tab"
+    >
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm shadow-lg">
           {toast}

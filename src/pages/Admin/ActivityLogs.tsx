@@ -7,6 +7,7 @@ import {
   translateAdminLogDetails,
   translateAdminLogTarget,
 } from "../../i18n/helpers";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 interface AdminLog {
   logId?: number;
@@ -113,7 +114,11 @@ export default function AdminActivityLogs() {
   const totalPages = Math.ceil(logs.length / logsPerPage);
 
   return (
-    <div className="flex h-screen bg-background">
+    <div
+      className="flex h-screen bg-background"
+      data-source-file={SOURCE_FILES.adminLogs}
+      data-source-label="Admin activity logs page"
+    >
       <main className="flex-1 p-8 overflow-auto">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">

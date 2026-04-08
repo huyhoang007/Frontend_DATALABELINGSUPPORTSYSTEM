@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "../components/layout/Sidebar";
+import { SOURCE_FILES } from "../utils/sourceMeta";
 
 /**
  * AdminLayout - Persistent layout for all Admin routes
@@ -10,12 +11,20 @@ import { Sidebar } from "../components/layout/Sidebar";
  */
 export function AdminLayout() {
     return (
-        <div className="flex min-h-screen bg-background text-foreground">
+        <div
+            className="flex min-h-screen bg-background text-foreground"
+            data-source-file={SOURCE_FILES.adminLayout}
+            data-source-label="Admin layout shell"
+        >
             {/* Fixed Left Sidebar - role-aware, shows admin navigation */}
             <Sidebar />
 
             {/* Right Content Area - changes based on route */}
-            <main className="flex-1 ml-64 bg-background">
+            <main
+                className="flex-1 ml-64 bg-background"
+                data-source-file={SOURCE_FILES.adminLayout}
+                data-source-label="Admin layout content area"
+            >
                 <Outlet />
             </main>
         </div>

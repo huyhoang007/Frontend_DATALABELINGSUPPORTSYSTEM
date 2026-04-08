@@ -9,6 +9,7 @@ import useReviewWorkspace from "./useReviewWorkspace";
 import AnnotationOverlay from "../Annotator/AnnotationOverlay";
 import { groupAnnotationsByKey } from "../Annotator/geometryUtils";
 import { translateAssignmentStatus } from "../../i18n/helpers";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 /* ── Domain interfaces ── */
 interface LabelInfo {
@@ -481,12 +482,18 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
   const ss = String(now.getSeconds()).padStart(2, "0");
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-[#131c2e] text-slate-200">
+    <div
+      className="flex h-screen flex-col overflow-hidden bg-[#131c2e] text-slate-200"
+      data-source-file={SOURCE_FILES.reviewerWorkspace}
+      data-source-label="Reviewer workspace page"
+    >
       {/* ══ TOP BAR ══ */}
       <div
         className={`flex min-h-12 shrink-0 items-center gap-2 border-b border-[#253347] bg-[#182233] px-3 ${
           isMobile ? "flex-wrap py-2" : "flex-nowrap"
         }`}
+        data-source-file={SOURCE_FILES.reviewerWorkspace}
+        data-source-label="Reviewer workspace top bar"
       >
         {/* Logo / Back */}
         <button
@@ -695,7 +702,11 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
       </div>
 
       {/* ══ BODY ══ */}
-      <div className={`flex flex-1 overflow-hidden ${isMobile ? "flex-col" : "flex-row"}`}>
+      <div
+        className={`flex flex-1 overflow-hidden ${isMobile ? "flex-col" : "flex-row"}`}
+        data-source-file={SOURCE_FILES.reviewerWorkspace}
+        data-source-label="Reviewer workspace main layout"
+      >
         {/* ── LEFT: Thumbnails + Project info ── */}
         <div
           className={`flex shrink-0 flex-col bg-[#182233] ${
@@ -703,6 +714,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
               ? "w-full border-b border-[#253347]"
               : "w-[148px] border-r border-[#253347]"
           }`}
+          data-source-file={SOURCE_FILES.reviewerWorkspace}
+          data-source-label="Reviewer left panel"
         >
           {/* Project & submit */}
           <div className="flex shrink-0 flex-col gap-2 border-b border-[#253347] p-3">
@@ -853,6 +866,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
           className={`relative flex-1 overflow-auto bg-[#0e1621] ${
             isMobile ? "min-h-0" : ""
           }`}
+          data-source-file={SOURCE_FILES.reviewerWorkspace}
+          data-source-label="Reviewer center canvas area"
         >
           <div
             className={`box-border flex min-h-full min-w-full items-center justify-center ${
@@ -933,6 +948,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
               ? "max-h-[42vh] w-full border-t border-[#253347]"
               : "w-[280px] border-l border-[#253347]"
           }`}
+          data-source-file={SOURCE_FILES.reviewerWorkspace}
+          data-source-label="Reviewer right review panel"
         >
           {/* Header line */}
           <div className="flex shrink-0 items-center gap-2 border-b border-[#253347] px-3 py-2">

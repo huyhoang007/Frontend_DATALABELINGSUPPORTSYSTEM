@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { annotationApi } from "../../api/annotationApi";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 const TABS = [
   "ALL",
@@ -141,9 +142,17 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 font-['IBM_Plex_Sans','Segoe_UI',system-ui,sans-serif] text-slate-900">
+    <div
+      className="min-h-screen bg-slate-50 font-['IBM_Plex_Sans','Segoe_UI',system-ui,sans-serif] text-slate-900"
+      data-source-file={SOURCE_FILES.annotatorDashboard}
+      data-source-label="Annotator dashboard page"
+    >
       <div className="w-full px-6 py-8 md:px-10">
-        <div className="mb-8">
+        <div
+          className="mb-8"
+          data-source-file={SOURCE_FILES.annotatorDashboard}
+          data-source-label="Annotator dashboard header"
+        >
           <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">
             {t("annotator:dashboard.title")}
           </p>
@@ -156,12 +165,18 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
           </p>
         </div>
 
-        <div className="mb-8 grid grid-cols-2 gap-4 ">
+        <div
+          className="mb-8 grid grid-cols-2 gap-4 "
+          data-source-file={SOURCE_FILES.annotatorDashboard}
+          data-source-label="Annotator dashboard KPI cards"
+        >
           {kpis.map((kpi, idx) => (
             <div
               key={kpi.label}
               onMouseEnter={() => setHoveredKpi(idx)}
               onMouseLeave={() => setHoveredKpi(null)}
+              data-source-file={SOURCE_FILES.annotatorDashboard}
+              data-source-label={`Annotator KPI card: ${kpi.label}`}
               className={`rounded-lg border border-slate-200 border-t-[3px] bg-white p-5 transition ${hoveredKpi === idx ? "shadow-lg shadow-slate-200/80" : "shadow-sm"
                 } ${kpi.border}`}
             >
@@ -180,7 +195,11 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
           ))}
         </div>
 
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div
+          className="mb-6 flex flex-wrap items-center justify-between gap-4"
+          data-source-file={SOURCE_FILES.annotatorDashboard}
+          data-source-label="Annotator dashboard filters"
+        >
           <div className="inline-flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1">
             {TABS.map((tab) => {
               const active = activeTab === tab;
@@ -238,7 +257,11 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
         )}
 
         {!loading && filteredAssignments.length === 0 && (
-          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          <div
+            className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+            data-source-file={SOURCE_FILES.annotatorDashboard}
+            data-source-label="Annotator dashboard assignment table"
+          >
             <div className="flex h-[600px] w-full flex-col items-center justify-center px-4 text-center">
               <span className="material-symbols-outlined mb-4 text-6xl text-slate-300">
                 assignment

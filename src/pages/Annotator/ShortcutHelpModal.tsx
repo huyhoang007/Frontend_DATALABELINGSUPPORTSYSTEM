@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 function Kbd({ children }) {
     return (
@@ -24,6 +25,8 @@ export default function ShortcutHelpModal({ onClose }) {
         <div
             onClick={onClose}
             className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center backdrop-blur-sm"
+            data-source-file={SOURCE_FILES.annotatorShortcutModal}
+            data-source-label="Annotator shortcut help modal"
         >
             <div
                 onClick={(e) => e.stopPropagation()}

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "../../context/ToastContext";
 import { userApi } from "../../api/userApi";
 import { translateRole } from "../../i18n/helpers";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -234,7 +235,11 @@ export default function AdminUsers() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className="min-h-screen bg-background"
+      data-source-file={SOURCE_FILES.adminUsers}
+      data-source-label="Admin users page"
+    >
       <main className="p-8 w-full">
         <div className="max-w-7xl mx-auto space-y-6">
 
