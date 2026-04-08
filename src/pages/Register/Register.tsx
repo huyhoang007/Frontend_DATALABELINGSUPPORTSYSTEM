@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import ModernRegisterForm from '../../components/Auth/ModernRegisterForm';
+import RegisterForm from '../../components/Auth/RegisterForm';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SOURCE_FILES } from '../../utils/sourceMeta';
@@ -43,7 +43,7 @@ export default function Register() {
             data-source-file={SOURCE_FILES.registerPage}
       data-source-label="section:register-page"
         >
-            <ModernRegisterForm
+            <RegisterForm
                 onRegister={handleRegister}
                 onSwitchToLogin={() => navigate('/login')}
             />

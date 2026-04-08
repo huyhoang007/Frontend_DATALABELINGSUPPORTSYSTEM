@@ -3,6 +3,9 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import LoadingSpinner from './LoadingSpinner';
 
+// LEGACY: The app currently uses RoleGuard in App.tsx for route protection.
+// Keep this file only as a reference until all old references are fully removed.
+
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: string[];

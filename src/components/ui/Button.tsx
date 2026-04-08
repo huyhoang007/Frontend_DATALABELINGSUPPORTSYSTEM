@@ -35,7 +35,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 {...props}
             >
                 {isLoading && (
-                    <span className="material-symbols-outlined animate-spin mr-2 text-[18px]">progress_activity</span>
+                    <span
+                        className="mr-2 inline-block h-[18px] w-[18px] animate-spin rounded-full border-2 border-current border-t-transparent"
+                        aria-hidden="true"
+                    />
                 )}
                 {!isLoading && leftIcon && (
                     <span className="material-symbols-outlined mr-2 text-[18px]">{leftIcon}</span>

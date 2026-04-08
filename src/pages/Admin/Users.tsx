@@ -39,18 +39,18 @@ interface ApiError {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const ROLE_BADGE: Record<string, string> = {
-  ADMIN:     "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  MANAGER:   "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-  ANNOTATOR: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  REVIEWER:  "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  ADMIN:     "bg-red-100 text-red-700",
+  MANAGER:   "bg-emerald-100 text-emerald-700",
+  ANNOTATOR: "bg-blue-100 text-blue-700",
+  REVIEWER:  "bg-amber-100 text-amber-700",
 };
 
 const STATUS_BADGE: Record<string, string> = {
-  active:    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-  pending:   "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  banned:    "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  suspended: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  inactive:  "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
+  active:    "bg-emerald-100 text-emerald-700",
+  pending:   "bg-amber-100 text-amber-700",
+  banned:    "bg-red-100 text-red-700",
+  suspended: "bg-red-100 text-red-700",
+  inactive:  "bg-slate-100 text-slate-600",
 };
 
 const inputCls = "w-full px-3 py-2.5 bg-background border border-border rounded text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors";

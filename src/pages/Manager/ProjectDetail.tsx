@@ -114,7 +114,7 @@ const ProjectDetail: React.FC = () => {
         data-source-label="section:manager-project-detail-page"
         >
             {/* Header */}
-            <Card className="p-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
+      <Card className="p-6 bg-white/60 backdrop-blur-xl border-border/50">
                 <div className="flex items-start justify-between">
                     <div>
                         <div className="flex items-center gap-2 mb-3">

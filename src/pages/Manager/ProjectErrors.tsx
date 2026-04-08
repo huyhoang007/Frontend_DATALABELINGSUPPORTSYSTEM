@@ -35,11 +35,11 @@ interface PolicyItem {
 }
 
 const SEVERITY_STYLES: Record<string, string> = {
-  CRITICAL: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-  HIGH: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+  CRITICAL: "bg-red-100 text-red-800",
+  HIGH: "bg-orange-100 text-orange-800",
   MEDIUM:
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-  LOW: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+    "bg-yellow-100 text-yellow-800",
+  LOW: "bg-green-100 text-green-800",
 };
 
 export default function ProjectErrors() {
@@ -223,15 +223,15 @@ export default function ProjectErrors() {
       </div>
 
       {isProjectCompleted && (
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-start gap-3 dark:bg-orange-900/20 dark:border-orange-800/50">
-          <span className="material-symbols-outlined text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5">
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-start gap-3">
+          <span className="material-symbols-outlined text-orange-600 flex-shrink-0 mt-0.5">
             lock
           </span>
-          <div className="text-sm text-orange-900 dark:text-orange-200">
+          <div className="text-sm text-orange-900">
             <p className="font-semibold">
               {t("manager:assignments.completedLockedTitle")}
             </p>
-            <p className="mt-1 text-orange-800 dark:text-orange-300">
+            <p className="mt-1 text-orange-800">
               {t("manager:assignments.completedLockedDescription")}
             </p>
           </div>

@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
  * 2. If authenticated but role not in allowedRoles => redirect to /unauthorized
  * 3. Otherwise, render children
  */
-export function RoleGuard({ allowedRoles, children }) {
+export function RoleGuard({ allowedRoles, children }: { allowedRoles: string[]; children: React.ReactNode }) {
     const { user, isLoading } = useAuth();
     const location = useLocation();
     const { t } = useTranslation(["common"]);

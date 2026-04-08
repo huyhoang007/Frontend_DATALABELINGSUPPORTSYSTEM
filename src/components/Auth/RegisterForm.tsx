@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 
-interface ModernRegisterFormProps {
+interface RegisterFormProps {
   onRegister: (userData: {
     username: string;
     email: string;
@@ -13,7 +13,7 @@ interface ModernRegisterFormProps {
   onSwitchToLogin?: () => void;
 }
 
-const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
+const RegisterForm: React.FC<RegisterFormProps> = ({
   onRegister,
   onSwitchToLogin,
 }) => {
@@ -77,7 +77,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         fullName: formData.fullName,
       });
     } catch (error) {
-      // Error handling is done in parent component
+      
       console.error("Registration error:", error);
     } finally {
       setIsLoading(false);
@@ -245,4 +245,4 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
   );
 };
 
-export default ModernRegisterForm;
+export default RegisterForm;

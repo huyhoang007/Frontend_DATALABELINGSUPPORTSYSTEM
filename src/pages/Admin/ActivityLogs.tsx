@@ -86,13 +86,13 @@ export default function AdminActivityLogs() {
   const getActionClass = (action: string): string => {
     const a = action?.toLowerCase() || "";
     if (a.includes("login") || a.includes("auth"))
-      return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400";
+      return "bg-emerald-100 text-emerald-700";
     if (a.includes("create") || a.includes("add"))
-      return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+      return "bg-blue-100 text-blue-700";
     if (a.includes("update") || a.includes("edit"))
-      return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
+      return "bg-amber-100 text-amber-700";
     if (a.includes("delete") || a.includes("remove"))
-      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+      return "bg-red-100 text-red-700";
     return "bg-muted text-muted-foreground";
   };
 

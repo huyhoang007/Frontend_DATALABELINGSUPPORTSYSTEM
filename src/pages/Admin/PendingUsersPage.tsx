@@ -3,6 +3,9 @@ import { useTranslation } from "react-i18next";
 import { userApi } from "../../api/userApi";
 import { useToast } from "../../context/ToastContext";
 
+// LEGACY/UNROUTED: This page is not currently wired in App.tsx.
+// Keep it only as a reference until the admin approval flow is finalized.
+
 interface User {
   userId: number;
   username: string;
@@ -124,7 +127,7 @@ const PendingUsersPage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-foreground">{t("admin:users.table.role")}:</span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-purple-100 text-purple-700">
                         {user.roleName}
                       </span>
                     </div>
@@ -136,7 +139,7 @@ const PendingUsersPage: React.FC = () => {
                 </div>
 
                 {/* Status Badge */}
-                <span className="px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                <span className="px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200">
                   {t("common:status.pending")}
                 </span>
 

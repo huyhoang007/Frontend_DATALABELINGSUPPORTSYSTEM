@@ -381,7 +381,7 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
           <div className="bg-background rounded-lg shadow-lg max-w-sm w-full mx-4">
             <div className="p-6 space-y-4">
               <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-2xl text-red-600 dark:text-red-400 mt-0.5">
+                    <span className="material-symbols-outlined text-2xl text-red-600 mt-0.5">
                   warning
                 </span>
                 <div>

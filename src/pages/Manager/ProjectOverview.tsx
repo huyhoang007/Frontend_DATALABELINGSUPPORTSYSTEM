@@ -569,9 +569,9 @@ export default function ProjectOverview() {
                 </div>
                 
                 {isProjectCompleted && (
-                    <div className="px-3 py-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded mb-3 flex items-start gap-2">
-                        <span className="material-symbols-outlined text-orange-600 dark:text-orange-400 text-sm mt-0.5">lock</span>
-                        <p className="text-xs text-orange-900 dark:text-orange-200">{t("manager:overview.guidelineLocked")}</p>
+                  <div className="px-3 py-2 bg-orange-50 border border-orange-200 rounded mb-3 flex items-start gap-2">
+                    <span className="material-symbols-outlined text-orange-600 text-sm mt-0.5">lock</span>
+                    <p className="text-xs text-orange-900">{t("manager:overview.guidelineLocked")}</p>
                     </div>
                 )}
                 

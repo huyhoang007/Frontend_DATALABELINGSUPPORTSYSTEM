@@ -314,10 +314,10 @@ export default function ProjectExport() {
             <span
               className={`ml-2 inline-flex items-center px-2 py-1 rounded text-xs font-semibold ${
                 batchStatus === "COMPLETED"
-                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+              ? "bg-green-100 text-green-800"
                   : batchStatus === "IN_PROGRESS"
-                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                    : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+              ? "bg-blue-100 text-blue-800"
+              : "bg-yellow-100 text-yellow-800"
               }`}
             >
               {batchStatus === "COMPLETED"
@@ -328,7 +328,7 @@ export default function ProjectExport() {
             </span>
           </p>
           {batchStatus !== "COMPLETED" && (
-            <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                <p className="text-xs text-amber-600 mt-2">
               {t("manager:export.completedOnly")}
             </p>
           )}
@@ -393,11 +393,11 @@ export default function ProjectExport() {
                   </TableCell>
                   <TableCell>
                     {item.status === "COMPLETED" ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
                         {t("manager:export.statusCompleted")}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
                         {t("manager:export.statusFailed")}
                       </span>
                     )}

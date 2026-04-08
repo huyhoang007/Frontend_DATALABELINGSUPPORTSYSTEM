@@ -56,17 +56,17 @@ export default function ActivityLogs() {
   const loadLogs = async () => {
     setIsLoading(true);
     try {
-      const result = await (activityLogApi as any).list({
-        page: pagination.page,
-        limit: pagination.limit,
-        q: filters.q,
-        action: filters.action,
-      });
+      const result = await activityLogApi.getAllLogs({
+        page: pagination.page - 1,
+        size: pagination.limit,
+      }) as any;
 
-      setLogs((result as any).data);
+      const logList = result?.content || result || [];
+      setLogs(logList);
       setPagination((prev) => ({
         ...prev,
-        ...(result as any).meta,
+        total: result?.totalElements ?? logList.length,
+        totalPages: result?.totalPages ?? Math.ceil((result?.totalElements ?? logList.length) / prev.limit),
       }));
     } catch (error) {
       console.error(error);

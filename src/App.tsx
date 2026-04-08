@@ -1,8 +1,6 @@
 ﻿import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ThemeProvider } from "./context/ThemeContext";
 import { getRoleBasedRedirect } from "./utils/roleUtils";
 
-// Pages
 import Register from "./pages/Register/Register";
 import Login from "./pages/Login/Login";
 import TaskList from "./pages/Annotator/TaskList";
@@ -19,13 +17,11 @@ import ProjectLabels from "./pages/Manager/ProjectLabels";
 import ProjectCreateLabel from "./pages/Manager/ProjectCreateLabel";
 import ProjectAssignments from "./pages/Manager/ProjectAssignments";
 import ProjectExport from "./pages/Manager/ProjectExport";
+import ProjectErrors from "./pages/Manager/ProjectErrors";
 import ManagerLabels from "./pages/Manager/LabelsPage";
 import CreateLabel from "./pages/Manager/CreateLabel";
 import ManagerPolicies from "./pages/Manager/PoliciesPage";
 import UploadData from "./pages/Manager/UploadData";
-import ErrorTypes from "./pages/Manager/ErrorTypes";
-import ProjectErrors from "./pages/Manager/ProjectErrors";
-import CreateErrorType from "./pages/Manager/CreateErrorType";
 import ManagerTasks from "./pages/Manager/Tasks";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AdminUsers from "./pages/Admin/Users";
@@ -38,7 +34,6 @@ import { AdminLayout } from "./layouts/AdminLayout";
 import { AnnotatorLayout } from "./layouts/AnnotatorLayout";
 import { ReviewerLayout } from "./layouts/ReviewerLayout";
 import { LanguageSwitcher } from "./components/i18n/LanguageSwitcher";
-import { SourceInspector } from "./components/dev/SourceInspector";
 
 function getRoleBasedRedirectWrapper() {
   const userStr = localStorage.getItem("user");
@@ -53,12 +48,10 @@ function getRoleBasedRedirectWrapper() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <div className="min-h-screen bg-background text-foreground">
-        <BrowserRouter>
-          <LanguageSwitcher />
-          <SourceInspector />
-          <Routes>
+    <div className="min-h-screen bg-background text-foreground">
+      <BrowserRouter>
+        <LanguageSwitcher />
+        <Routes>
             <Route path="/" element={<Navigate to={getRoleBasedRedirectWrapper()} replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -95,10 +88,10 @@ function App() {
               <Route path="upload-data" element={<UploadData />} />
               <Route path="labels" element={<ManagerLabels />} />
               <Route path="labels/new" element={<CreateLabel />} />
-              <Route path="error-types" element={<ErrorTypes />} />
-              <Route path="error-types/new" element={<CreateErrorType />} />
               <Route path="tasks" element={<ManagerTasks />} />
               <Route path="policies" element={<ManagerPolicies />} />
+              <Route path="error-types" element={<Navigate to="/manager/policies" replace />} />
+              <Route path="error-types/new" element={<Navigate to="/manager/policies" replace />} />
             </Route>
 
             {/* Admin */}
@@ -111,10 +104,9 @@ function App() {
 
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="/dev-check" element={<DevHealthCheck />} />
-          </Routes>
-        </BrowserRouter>
-      </div>
-    </ThemeProvider>
+        </Routes>
+      </BrowserRouter>
+    </div>
   );
 }
 

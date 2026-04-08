@@ -145,11 +145,11 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
-      case 'active': return 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800';
-      case 'completed': return 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200 dark:border-blue-800';
-      case 'in_progress': return 'text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 border-amber-200 dark:border-amber-800';
-      case 'pending': return 'text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-800';
-      default: return 'text-slate-600 bg-slate-50 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700';
+      case 'active': return 'text-emerald-600 bg-emerald-50 border-emerald-200';
+      case 'completed': return 'text-blue-600 bg-blue-50 border-blue-200';
+      case 'in_progress': return 'text-amber-600 bg-amber-50 border-amber-200';
+      case 'pending': return 'text-red-600 bg-red-50 border-red-200';
+      default: return 'text-slate-600 bg-slate-50 border-slate-200';
     }
   };
 
@@ -166,7 +166,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
       data-source-label="section:manager-dashboard-page"
     >
       {/* Welcome Header */}
-      <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
+      <Card className="p-8 bg-white/60 backdrop-blur-xl border-border/50">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
             {t("manager:dashboard.title")}
@@ -178,7 +178,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
       </Card>
 
       {/* Hành động nhanh */}
-      <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
+      <Card className="p-8 bg-white/60 backdrop-blur-xl border-border/50">
         <h3 className="mb-6 text-sm font-bold text-muted-foreground uppercase tracking-widest">
           {t("manager:dashboard.quickActions")}
         </h3>
@@ -214,21 +214,21 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-6">
-        <Card className="p-6 transition-all hover:shadow-md bg-white/80 dark:bg-slate-800/80">
+        <Card className="p-6 transition-all hover:shadow-md bg-white/80">
           <div className="text-3xl font-bold text-foreground mb-1">
             {myProjects.length}
           </div>
           <div className="text-xs font-medium text-muted-foreground">{t("manager:dashboard.myProjects")}</div>
         </Card>
 
-        <Card className="p-6 transition-all hover:shadow-md bg-white/80 dark:bg-slate-800/80">
+        <Card className="p-6 transition-all hover:shadow-md bg-white/80">
           <div className="text-3xl font-bold text-foreground mb-1">
             {myProjects.reduce((sum, p: any) => sum + (p.dataset_count ?? p.datasets?.length ?? 0), 0)}
           </div>
           <div className="text-xs font-medium text-muted-foreground">{t("common:labels.datasets")}</div>
         </Card>
         
-        <Card className="p-6 transition-all hover:shadow-md bg-white/80 dark:bg-slate-800/80">
+        <Card className="p-6 transition-all hover:shadow-md bg-white/80">
           <div className="text-3xl font-bold text-foreground mb-1">
             {annotators.length}
           </div>
@@ -239,7 +239,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
         {/* My Projects */}
-        <Card className="p-6 bg-white/80 dark:bg-slate-800/80">
+        <Card className="p-6 bg-white/80">
           <h3 className="mb-6 text-lg font-semibold text-foreground flex items-center gap-2">
             {t("manager:dashboard.myProjects")}
           </h3>
@@ -338,7 +338,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
         </Card>
         
         {/* Annotator Progress */}
-        <Card className="p-6 bg-white/80 dark:bg-slate-800/80">
+        <Card className="p-6 bg-white/80">
           <h3 className="mb-6 text-lg font-semibold text-foreground flex items-center gap-2">
             {t("manager:dashboard.annotatorProgress")}
           </h3>
@@ -390,7 +390,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
                         <span className="text-xs text-muted-foreground">{t("manager:dashboard.averageProgress")}</span>
                         <span className="text-xs font-bold text-foreground">{progress.avgProgress}%</span>
                       </div>
-                      <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                      <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300"
                           style={{ width: `${progress.avgProgress}%` }}
@@ -400,27 +400,27 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
                     
                     {/* Stats */}
                     <div className="grid grid-cols-3 gap-2 mt-3">
-                      <div className="text-center p-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
-                        <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                      <div className="text-center p-2 rounded-lg bg-emerald-50">
+                        <div className="text-lg font-bold text-emerald-600">
                           {progress.completed}
                         </div>
-                        <div className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70">
+                        <div className="text-[10px] text-emerald-600/70">
                           {t("manager:dashboard.completed")}
                         </div>
                       </div>
-                      <div className="text-center p-2 rounded-lg bg-amber-50 dark:bg-amber-900/20">
-                        <div className="text-lg font-bold text-amber-600 dark:text-amber-400">
+                      <div className="text-center p-2 rounded-lg bg-amber-50">
+                        <div className="text-lg font-bold text-amber-600">
                           {progress.inProgress}
                         </div>
-                        <div className="text-[10px] text-amber-600/70 dark:text-amber-400/70">
+                        <div className="text-[10px] text-amber-600/70">
                           {t("manager:dashboard.inProgress")}
                         </div>
                       </div>
-                      <div className="text-center p-2 rounded-lg bg-slate-100 dark:bg-slate-700">
-                        <div className="text-lg font-bold text-slate-600 dark:text-slate-400">
+                      <div className="text-center p-2 rounded-lg bg-slate-100">
+                        <div className="text-lg font-bold text-slate-600">
                           {progress.pending}
                         </div>
-                        <div className="text-[10px] text-slate-600/70 dark:text-slate-400/70">
+                        <div className="text-[10px] text-slate-600/70">
                           {t("manager:dashboard.pending")}
                         </div>
                       </div>

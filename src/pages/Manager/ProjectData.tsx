@@ -25,11 +25,11 @@ import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 const BATCH_STATUS_MAP = {
   PENDING:
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+    "bg-yellow-100 text-yellow-800",
   IN_PROGRESS:
-    "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+    "bg-blue-100 text-blue-800",
   COMPLETED:
-    "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+    "bg-green-100 text-green-800",
 };
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -295,15 +295,15 @@ export default function ProjectData() {
       )}
 
       {isProjectCompleted && (
-        <div className="px-4 py-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-lg flex items-start gap-3">
-          <span className="material-symbols-outlined text-orange-600 dark:text-orange-400 text-base mt-0.5">
+        <div className="px-4 py-3 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-3">
+          <span className="material-symbols-outlined text-orange-600 text-base mt-0.5">
             lock
           </span>
           <div>
-            <p className="font-medium text-orange-900 dark:text-orange-200 text-sm">
+            <p className="font-medium text-orange-900 text-sm">
               {t("manager:assignments.completedLockedTitle")}
             </p>
-            <p className="text-xs text-orange-800 dark:text-orange-300 mt-1">
+            <p className="text-xs text-orange-800 mt-1">
               {t("manager:assignments.completedLockedDescription")}
             </p>
           </div>
@@ -608,7 +608,7 @@ export default function ProjectData() {
                             setDeleteConfirmOpen(true);
                           }}
                           title={t("manager:data.table.deleteDataset")}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30 transition-colors"
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
                         >
                           <span className="material-symbols-outlined text-base">
                             delete
@@ -645,7 +645,7 @@ export default function ProjectData() {
           <div className="bg-background rounded-lg shadow-lg max-w-md w-full mx-4">
             <div className="p-6 space-y-4">
               <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-2xl text-red-600 dark:text-red-400 mt-0.5">
+                  <span className="material-symbols-outlined text-2xl text-red-600 mt-0.5">
                   warning
                 </span>
                 <div>

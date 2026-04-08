@@ -185,15 +185,15 @@ export default function ProjectLabels() {
       </div>
 
       {isProjectCompleted && (
-        <div className="px-4 py-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-lg flex items-start gap-3">
-          <span className="material-symbols-outlined text-orange-600 dark:text-orange-400 text-base mt-0.5">
+        <div className="px-4 py-3 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-3">
+          <span className="material-symbols-outlined text-orange-600 text-base mt-0.5">
             lock
           </span>
           <div>
-            <p className="font-medium text-orange-900 dark:text-orange-200 text-sm">
+            <p className="font-medium text-orange-900 text-sm">
               {t("manager:assignments.completedLockedTitle")}
             </p>
-            <p className="text-xs text-orange-800 dark:text-orange-300 mt-1">
+            <p className="text-xs text-orange-800 mt-1">
               {t("manager:assignments.completedLockedDescription")}
             </p>
           </div>

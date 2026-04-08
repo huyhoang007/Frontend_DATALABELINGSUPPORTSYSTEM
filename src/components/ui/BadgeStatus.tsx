@@ -6,11 +6,11 @@ export interface BadgeStatusProps {
 }
 
 const statusConfig: Record<string, { color: string; dot?: string; icon?: string }> = {
-    TODO: { color: "text-slate-600 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700", dot: "bg-slate-400" },
-    IN_PROGRESS: { color: "text-amber-700 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-500 border-amber-200 dark:border-amber-900/50", dot: "bg-amber-500 animate-pulse" },
-    SUBMITTED: { color: "text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200 dark:border-blue-900/50", dot: "bg-blue-500" },
-    REJECTED: { color: "text-red-700 bg-red-50 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-900/50", icon: "error" },
-    APPROVED: { color: "text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50", dot: "bg-emerald-500" },
+    TODO: { color: "text-slate-600 bg-slate-100 border-slate-200", dot: "bg-slate-400" },
+    IN_PROGRESS: { color: "text-amber-700 bg-amber-50 border-amber-200", dot: "bg-amber-500 animate-pulse" },
+    SUBMITTED: { color: "text-blue-700 bg-blue-50 border-blue-200", dot: "bg-blue-500" },
+    REJECTED: { color: "text-red-700 bg-red-50 border-red-200", icon: "error" },
+    APPROVED: { color: "text-emerald-700 bg-emerald-50 border-emerald-200", dot: "bg-emerald-500" },
 };
 
 const statusLabels: Record<string, string> = {

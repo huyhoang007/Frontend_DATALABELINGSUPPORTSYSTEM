@@ -1,6 +1,10 @@
 import axios from 'axios';
 import { AuthResponse, LoginRequest, RegisterRequest } from '../types';
 
+// LEGACY SERVICE LAYER:
+// Newer screens mostly use src/api/* together with src/api/apiClient.js.
+// This file is still used by some manager error/policy screens, so do not remove yet.
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // Create axios instance
