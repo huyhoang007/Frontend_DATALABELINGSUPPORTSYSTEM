@@ -132,9 +132,6 @@ export function SourceInspector() {
         top: Math.min(inspectState.y + 18, window.innerHeight - 120),
       }}
     >
-      <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-sky-300">
-        Source File
-      </div>
       <div className="font-mono text-[11px] leading-5">{inspectState.file}</div>
       {inspectState.label && (
         <div className="mt-1 text-[11px] text-slate-300">{inspectState.label}</div>

@@ -42,7 +42,10 @@ export default function LabelSummaryPanel({
   liveAnnotations,
   allLabels,
 }: LabelSummaryPanelProps) {
-  const { t } = useTranslation(["annotator"]);
+  const { t, i18n } = useTranslation(["annotator"]);
+  const [altPressed, setAltPressed] = React.useState(false);
+  const [hoveredExplainKey, setHoveredExplainKey] = React.useState<string | null>(null);
+  const [tooltipPosition, setTooltipPosition] = React.useState({ x: 0, y: 0 });
 
   const { summary, totalAnnotations, annotatedImageCount, totalImages } =
     React.useMemo(() => {
@@ -154,6 +157,112 @@ export default function LabelSummaryPanel({
     totalImages > 0
       ? Math.round((annotatedImageCount / totalImages) * 100)
       : 0;
+  const isEnglish = i18n.language === "en";
+
+  const explainers = React.useMemo(
+    () => ({
+      totalRegions: {
+        title: isEnglish ? "Total annotated regions" : "Tổng số vùng gán",
+        api: [
+          "GET /api/assignments/:assignmentId/workspace",
+          "GET /api/assignments/:assignmentId/items/:itemId/annotations",
+        ],
+        fields: [
+          "workspace.items[].annotations",
+          "current item liveAnnotations",
+          "summary[].shapeCount",
+        ],
+        formula: isEnglish
+          ? `FE groups labels by labelId, then sums summary[].shapeCount. Displayed value = ${totalAnnotations}.`
+          : `FE gom theo labelId, rồi cộng toàn bộ summary[].shapeCount. Giá trị hiển thị = ${totalAnnotations}.`,
+      },
+      labelTypes: {
+        title: isEnglish ? "Distinct label types in task" : "Số loại nhãn xuất hiện",
+        api: [
+          "GET /api/assignments/:assignmentId/workspace",
+          "GET /api/assignments/:assignmentId/items/:itemId/annotations",
+        ],
+        fields: ["summary[]", "summary[].labelId"],
+        formula: isEnglish
+          ? `FE builds one summary row per labelId. Displayed value = summary.length = ${summary.length}.`
+          : `FE tạo 1 dòng summary cho mỗi labelId. Giá trị hiển thị = summary.length = ${summary.length}.`,
+      },
+      imageCoverage: {
+        title: isEnglish ? "Image coverage" : "Độ phủ ảnh",
+        api: [
+          "GET /api/assignments/:assignmentId/workspace",
+          "GET /api/assignments/:assignmentId/items/:itemId/annotations",
+        ],
+        fields: [
+          "workspace.items.length",
+          "item.annotations",
+          "current item liveAnnotations",
+        ],
+        formula: isEnglish
+          ? `Annotated images = images with at least 1 annotation = ${annotatedImageCount}. Total images = ${totalImages}. Coverage percent = round(annotatedImageCount / totalImages * 100) = ${coveragePct}%.`
+          : `Ảnh đã gán nhãn = số ảnh có ít nhất 1 annotation = ${annotatedImageCount}. Tổng ảnh = ${totalImages}. Phần trăm phủ = round(annotatedImageCount / totalImages * 100) = ${coveragePct}%.`,
+      },
+      labelTable: {
+        title: isEnglish ? "Per-label summary table" : "Bảng thống kê theo nhãn",
+        api: [
+          "GET /api/assignments/:assignmentId/workspace",
+          "GET /api/assignments/:assignmentId/items/:itemId/annotations",
+        ],
+        fields: [
+          "annotation.labelId",
+          "annotation.labelName",
+          "summary[].shapeCount",
+          "summary[].imageIds.size",
+        ],
+        formula: isEnglish
+          ? "For each labelId, FE counts shapeCount = number of annotation occurrences, and imageCount = number of distinct itemIds containing that label."
+          : "Với mỗi labelId, FE đếm shapeCount = số lần annotation xuất hiện, và imageCount = số itemId khác nhau có chứa nhãn đó.",
+      },
+    }),
+    [annotatedImageCount, coveragePct, isEnglish, summary.length, totalAnnotations, totalImages],
+  );
+
+  const currentExplainer =
+    hoveredExplainKey && explainers[hoveredExplainKey as keyof typeof explainers];
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Alt") return;
+      setAltPressed(true);
+      if (event.repeat || !currentExplainer) return;
+      navigator.clipboard?.writeText([
+        currentExplainer.title,
+        currentExplainer.api.join(", "),
+        currentExplainer.formula,
+      ].join("\n")).catch(() => {});
+    };
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === "Alt") setAltPressed(false);
+    };
+    const handleBlur = () => {
+      setAltPressed(false);
+      setHoveredExplainKey(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", handleBlur);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [currentExplainer]);
+  const attachExplainProps = (key: keyof typeof explainers) => ({
+    onMouseEnter: (event: React.MouseEvent) => {
+      setHoveredExplainKey(key);
+      setTooltipPosition({ x: event.clientX, y: event.clientY });
+    },
+    onMouseMove: (event: React.MouseEvent) => {
+      setHoveredExplainKey(key);
+      setTooltipPosition({ x: event.clientX, y: event.clientY });
+    },
+    onMouseLeave: () =>
+      setHoveredExplainKey((current) => (current === key ? null : current)),
+  });
 
   return (
     <div
@@ -161,8 +270,26 @@ export default function LabelSummaryPanel({
       data-source-file={SOURCE_FILES.labelSummaryPanel}
       data-source-label="Annotation summary panel"
     >
+      {altPressed && currentExplainer && (
+        <div
+          className="pointer-events-none fixed z-[120] max-w-md rounded-lg border border-sky-400/40 bg-slate-950/95 px-4 py-3 text-white shadow-2xl"
+          style={{
+            left: Math.min(tooltipPosition.x + 16, window.innerWidth - 380),
+            top: Math.min(tooltipPosition.y + 16, window.innerHeight - 260),
+          }}
+        >
+          <div className="space-y-1 text-xs leading-5 text-slate-200 whitespace-pre-line">
+            <div className="font-semibold">{currentExplainer.title}</div>
+            <div>{currentExplainer.api.join(", ")}</div>
+            <div>{currentExplainer.formula}</div>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-lg border border-slate-800 bg-slate-950 p-2.5 text-center">
+        <div
+          {...attachExplainProps("totalRegions")}
+          className="rounded-lg border border-slate-800 bg-slate-950 p-2.5 text-center"
+        >
           <div className="text-xl font-bold tabular-nums text-emerald-400">
             {totalAnnotations}
           </div>
@@ -170,7 +297,10 @@ export default function LabelSummaryPanel({
             {t("workspace.summary.totalRegions")}
           </div>
         </div>
-        <div className="rounded-lg border border-slate-800 bg-slate-950 p-2.5 text-center">
+        <div
+          {...attachExplainProps("labelTypes")}
+          className="rounded-lg border border-slate-800 bg-slate-950 p-2.5 text-center"
+        >
           <div className="text-xl font-bold tabular-nums text-sky-300">
             {summary.length}
           </div>
@@ -180,7 +310,10 @@ export default function LabelSummaryPanel({
         </div>
       </div>
 
-      <div className="rounded-lg border border-slate-800 bg-slate-950 p-2.5">
+      <div
+        {...attachExplainProps("imageCoverage")}
+        className="rounded-lg border border-slate-800 bg-slate-950 p-2.5"
+      >
         <div className="mb-1.5 flex items-center justify-between">
           <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
             {t("workspace.summary.imageCoverage")}
@@ -205,7 +338,7 @@ export default function LabelSummaryPanel({
         </div>
       </div>
 
-      <div>
+      <div {...attachExplainProps("labelTable")}>
         <div className="flex items-center rounded-t bg-slate-950 px-2 py-1.5 border-b border-slate-800">
           <span className="flex-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
             {t("workspace.summary.label")}

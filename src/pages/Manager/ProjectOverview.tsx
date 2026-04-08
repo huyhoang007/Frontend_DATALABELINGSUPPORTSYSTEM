@@ -30,7 +30,7 @@ export default function ProjectOverview() {
     const [savingGuideline, setSavingGuideline] = useState(false);
     const [guidelineMessage, setGuidelineMessage] = useState<string | null>(null);
     const [guidelineMessageType, setGuidelineMessageType] = useState<"success" | "error" | null>(null);
-    const [shiftPressed, setShiftPressed] = useState(false);
+    const [altPressed, setAltPressed] = useState(false);
     const [hoveredExplainKey, setHoveredExplainKey] = useState<string | null>(null);
     const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
@@ -49,21 +49,6 @@ export default function ProjectOverview() {
             return () => clearTimeout(timer);
         }
     }, [guidelineMessage]);
-
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === "Shift") setShiftPressed(true);
-        };
-        const handleKeyUp = (event: KeyboardEvent) => {
-            if (event.key === "Shift") setShiftPressed(false);
-        };
-        window.addEventListener("keydown", handleKeyDown);
-        window.addEventListener("keyup", handleKeyUp);
-        return () => {
-            window.removeEventListener("keydown", handleKeyDown);
-            window.removeEventListener("keyup", handleKeyUp);
-        };
-    }, []);
 
     const projectId = project?.projectId ?? project?.project_id;
     type OverviewData = {
@@ -90,26 +75,6 @@ export default function ProjectOverview() {
         ...hotspot,
     });
     const errorMessage = error ? (error as any)?.message || String(error) : null;
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                <span className="ml-3 text-muted-foreground">{t("common:states.loadingData")}</span>
-            </div>
-        );
-    }
-
-    if (errorMessage) {
-        return (
-            <Card className="p-8 bg-card/80 backdrop-blur border-border/60 text-center">
-                <div className="text-red-400 text-sm mb-2">! {errorMessage}</div>
-                <button onClick={() => window.location.reload()} className="text-xs text-primary underline">
-                    {t("common:actions.retry")}
-                </button>
-            </Card>
-        );
-    }
 
     const summary = overviewData?.summary;
     const contributors = overviewData?.contributors || [];
@@ -338,6 +303,27 @@ export default function ProjectOverview() {
     ]);
 
     const currentExplainer = hoveredExplainKey ? explainers[hoveredExplainKey as keyof typeof explainers] : null;
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key !== "Alt") return;
+            setAltPressed(true);
+            if (event.repeat || !currentExplainer) return;
+            navigator.clipboard?.writeText([
+                currentExplainer.title,
+                currentExplainer.api.join(", "),
+                currentExplainer.formula,
+            ].join("\n")).catch(() => {});
+        };
+        const handleKeyUp = (event: KeyboardEvent) => {
+            if (event.key === "Alt") setAltPressed(false);
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("keyup", handleKeyUp);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("keyup", handleKeyUp);
+        };
+    }, [currentExplainer]);
     const attachExplainProps = (key: string) => ({
         onMouseEnter: (event: any) => {
             setHoveredExplainKey(key);
@@ -350,9 +336,29 @@ export default function ProjectOverview() {
         onMouseLeave: () => setHoveredExplainKey((current) => (current === key ? null : current)),
     });
 
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-20">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <span className="ml-3 text-muted-foreground">{t("common:states.loadingData")}</span>
+            </div>
+        );
+    }
+
+    if (errorMessage) {
+        return (
+            <Card className="p-8 bg-card/80 backdrop-blur border-border/60 text-center">
+                <div className="text-red-400 text-sm mb-2">! {errorMessage}</div>
+                <button onClick={() => window.location.reload()} className="text-xs text-primary underline">
+                    {t("common:actions.retry")}
+                </button>
+            </Card>
+        );
+    }
+
     return (
         <>
-            {shiftPressed && currentExplainer && (
+            {altPressed && currentExplainer && (
                 <div
                     className="fixed z-[100] pointer-events-none max-w-md rounded-lg border border-sky-400/40 bg-slate-950/95 text-white shadow-2xl px-4 py-3"
                     style={{
@@ -360,26 +366,10 @@ export default function ProjectOverview() {
                         top: Math.min(tooltipPosition.y + 16, window.innerHeight - 260),
                     }}
                 >
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-sky-300 mb-2">
-                        {isEnglish ? "Metric explanation" : "Giải thích chỉ số"}
-                    </div>
-                    <div className="text-sm font-semibold mb-2">{currentExplainer.title}</div>
-                    <div className="space-y-2 text-xs leading-5 text-slate-200">
-                        <div>
-                            <span className="font-semibold text-sky-200">{isEnglish ? "APIs: " : "API: "}</span>
-                            <span>{currentExplainer.api.join(", ")}</span>
-                        </div>
-                        <div>
-                            <span className="font-semibold text-sky-200">{isEnglish ? "Fields used: " : "Field dùng: "}</span>
-                            <span>{currentExplainer.fields.join(", ")}</span>
-                        </div>
-                        <div>
-                            <span className="font-semibold text-sky-200">{isEnglish ? "FE calculation: " : "Cách FE tính: "}</span>
-                            <span>{currentExplainer.formula}</span>
-                        </div>
-                        <div className="text-[11px] text-slate-400 pt-1 border-t border-white/10">
-                            {isEnglish ? "Hold Shift and hover another metric to inspect it." : "Giữ Shift và rê qua vùng khác để xem chỉ số khác."}
-                        </div>
+                    <div className="space-y-1 text-xs leading-5 text-slate-200 whitespace-pre-line">
+                        <div className="font-semibold">{currentExplainer.title}</div>
+                        <div>{currentExplainer.api.join(", ")}</div>
+                        <div>{currentExplainer.formula}</div>
                     </div>
                 </div>
             )}

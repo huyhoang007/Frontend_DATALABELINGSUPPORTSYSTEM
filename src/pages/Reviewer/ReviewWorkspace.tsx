@@ -1331,7 +1331,10 @@ function ReviewSummaryPanel({
   currentItemIndex,
   setCurrentItemIndex,
 }: ReviewSummaryPanelProps) {
-  const { t } = useTranslation(["reviewer"]);
+  const { t, i18n } = useTranslation(["reviewer"]);
+  const [altPressed, setAltPressed] = React.useState(false);
+  const [hoveredExplainKey, setHoveredExplainKey] = React.useState<string | null>(null);
+  const [tooltipPosition, setTooltipPosition] = React.useState({ x: 0, y: 0 });
   /* Build per-label stats across all cached annotations */
   const labelStats = React.useMemo(() => {
     const map = new Map<number, { labelId: number; labelName: string; colorCode: string; total: number; approved: number; rejected: number; pending: number }>();
@@ -1359,6 +1362,104 @@ function ReviewSummaryPanel({
       });
     return Array.from(map.values()).sort((a, b) => b.total - a.total);
   }, [annoCache]);
+  const isEnglish = i18n.language === "en";
+
+  const explainers = React.useMemo(
+    () => ({
+      reviewOverview: {
+        title: isEnglish ? "Review overview stats" : "Tổng quan trạng thái review",
+        api: [
+          "GET /api/assignments/:assignmentId/workspace",
+          "GET /api/assignments/:assignmentId/items/:itemId/annotations",
+        ],
+        fields: [
+          "annoCache[itemId][]",
+          "annotation.status",
+          "annotation.isImproved",
+          "reviewStats.approved/rejected/pending",
+        ],
+        formula: isEnglish
+          ? `Approved = annotations with status APPROVED = ${reviewStats.approved}. Rejected = status REJECTED and not isImproved = ${reviewStats.rejected}. Pending = empty status, PENDING, or REJECTED with isImproved = ${reviewStats.pending}.`
+          : `Approved = số annotation có status APPROVED = ${reviewStats.approved}. Rejected = status REJECTED và không phải isImproved = ${reviewStats.rejected}. Pending = status rỗng, PENDING, hoặc REJECTED nhưng isImproved = ${reviewStats.pending}.`,
+      },
+      reviewProgress: {
+        title: isEnglish ? "Review completion progress" : "Tiến độ hoàn tất review",
+        api: [
+          "GET /api/assignments/:assignmentId/workspace",
+          "GET /api/assignments/:assignmentId/items/:itemId/annotations",
+        ],
+        fields: ["reviewStats.reviewed", "reviewStats.total"],
+        formula: isEnglish
+          ? `Progress bar width = reviewed / total * 100 = ${reviewStats.reviewed}/${reviewStats.total}.`
+          : `Độ rộng progress bar = reviewed / total * 100 = ${reviewStats.reviewed}/${reviewStats.total}.`,
+      },
+      byImage: {
+        title: isEnglish ? "Per-image review breakdown" : "Thống kê theo từng ảnh",
+        api: [
+          "GET /api/assignments/:assignmentId/workspace",
+          "GET /api/assignments/:assignmentId/items/:itemId/annotations",
+        ],
+        fields: ["items[]", "annoCache[itemId][]", "annotation.status", "annotation.isImproved"],
+        formula: isEnglish
+          ? "For each image, FE reads annoCache[itemId], then counts approved, rejected, and pending using the same status rules as the overall review stats."
+          : "Với mỗi ảnh, FE đọc annoCache[itemId], rồi đếm approved, rejected, pending theo đúng cùng rule trạng thái như phần tổng quan review.",
+      },
+      byLabel: {
+        title: isEnglish ? "Per-label review breakdown" : "Thống kê review theo nhãn",
+        api: [
+          "GET /api/assignments/:assignmentId/workspace",
+          "GET /api/assignments/:assignmentId/items/:itemId/annotations",
+        ],
+        fields: ["annotation.labelId", "annotation.labelName", "annotation.status", "annotation.isImproved"],
+        formula: isEnglish
+          ? "FE flattens all cached annotations, groups by labelId, then counts total, approved, rejected, and pending per label."
+          : "FE trải phẳng toàn bộ annotation đã cache, gom theo labelId, rồi đếm total, approved, rejected và pending cho từng nhãn.",
+      },
+    }),
+    [i18n.language, isEnglish, reviewStats.approved, reviewStats.pending, reviewStats.rejected, reviewStats.reviewed, reviewStats.total],
+  );
+
+  const currentExplainer =
+    hoveredExplainKey && explainers[hoveredExplainKey as keyof typeof explainers];
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Alt") return;
+      setAltPressed(true);
+      if (event.repeat || !currentExplainer) return;
+      navigator.clipboard?.writeText([
+        currentExplainer.title,
+        currentExplainer.api.join(", "),
+        currentExplainer.formula,
+      ].join("\n")).catch(() => {});
+    };
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === "Alt") setAltPressed(false);
+    };
+    const handleBlur = () => {
+      setAltPressed(false);
+      setHoveredExplainKey(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", handleBlur);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [currentExplainer]);
+  const attachExplainProps = (key: keyof typeof explainers) => ({
+    onMouseEnter: (event: React.MouseEvent) => {
+      setHoveredExplainKey(key);
+      setTooltipPosition({ x: event.clientX, y: event.clientY });
+    },
+    onMouseMove: (event: React.MouseEvent) => {
+      setHoveredExplainKey(key);
+      setTooltipPosition({ x: event.clientX, y: event.clientY });
+    },
+    onMouseLeave: () =>
+      setHoveredExplainKey((current) => (current === key ? null : current)),
+  });
 
   const statCard = (label: string, value: number, color: string) => (
     <div className="flex flex-col items-center justify-center rounded-lg border border-[#253347] bg-[#1e2f42] p-3">
@@ -1373,8 +1474,23 @@ function ReviewSummaryPanel({
 
   return (
     <div className="p-3 space-y-4">
+      {altPressed && currentExplainer && (
+        <div
+          className="pointer-events-none fixed z-[120] max-w-md rounded-lg border border-sky-400/40 bg-slate-950/95 px-4 py-3 text-white shadow-2xl"
+          style={{
+            left: Math.min(tooltipPosition.x + 16, window.innerWidth - 380),
+            top: Math.min(tooltipPosition.y + 16, window.innerHeight - 260),
+          }}
+        >
+          <div className="space-y-1 text-xs leading-5 text-slate-200 whitespace-pre-line">
+            <div className="font-semibold">{currentExplainer.title}</div>
+            <div>{currentExplainer.api.join(", ")}</div>
+            <div>{currentExplainer.formula}</div>
+          </div>
+        </div>
+      )}
       {/* Overall stats */}
-      <div>
+      <div {...attachExplainProps("reviewOverview")}>
         <p className="mb-2 text-[10px] font-bold uppercase text-[#4a6788]">
           {t("workspace.stats.overview")}
         </p>
@@ -1383,7 +1499,7 @@ function ReviewSummaryPanel({
           {statCard(t("workspace.stats.rejected"), reviewStats.rejected, "#f87171")}
           {statCard(t("workspace.stats.pending"), reviewStats.pending, "#facc15")}
         </div>
-        <div className="mt-2 flex items-center gap-2">
+        <div {...attachExplainProps("reviewProgress")} className="mt-2 flex items-center gap-2">
           <div className="flex-1 h-1.5 overflow-hidden rounded-full bg-[#253347]">
             <div
               className="h-full rounded-full bg-[#00bfa5] transition-all"
@@ -1402,7 +1518,7 @@ function ReviewSummaryPanel({
       </div>
 
       {/* Per-item breakdown */}
-      <div>
+      <div {...attachExplainProps("byImage")}>
         <p className="mb-2 text-[10px] font-bold uppercase text-[#4a6788]">
           {t("workspace.stats.byImage")} ({items.length})
         </p>
@@ -1462,7 +1578,7 @@ function ReviewSummaryPanel({
 
       {/* Per-label breakdown */}
       {labelStats.length > 0 && (
-        <div>
+        <div {...attachExplainProps("byLabel")}>
           <p className="mb-2 text-[10px] font-bold uppercase text-[#4a6788]">
             {t("workspace.stats.byLabel")} ({labelStats.length})
           </p>
