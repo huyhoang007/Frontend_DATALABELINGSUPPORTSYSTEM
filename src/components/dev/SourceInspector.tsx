@@ -8,6 +8,10 @@ type InspectState = {
   y: number;
 } | null;
 
+function formatSectionLabel(label?: string) {
+  return `section:${label || "root"}`;
+}
+
 function getSourceRegion(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return null;
   const region = target.closest<HTMLElement>("[data-source-file]");
@@ -61,8 +65,16 @@ export function SourceInspector() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Control") {
         const fileToCopy = currentFileRef.current;
+        const point = lastPointerRef.current;
+        const sourceRegion = point
+          ? getSourceRegion(document.elementFromPoint(point.x, point.y))
+          : null;
         if (!fileToCopy || event.repeat) return;
-        navigator.clipboard?.writeText(fileToCopy).catch(() => {});
+        navigator.clipboard
+          ?.writeText(
+            [fileToCopy, formatSectionLabel(sourceRegion?.label)].join("\n"),
+          )
+          .catch(() => {});
         setDidCopy(true);
         if (copyTimeoutRef.current) {
           window.clearTimeout(copyTimeoutRef.current);
@@ -133,9 +145,9 @@ export function SourceInspector() {
       }}
     >
       <div className="font-mono text-[11px] leading-5">{inspectState.file}</div>
-      {inspectState.label && (
-        <div className="mt-1 text-[11px] text-slate-300">{inspectState.label}</div>
-      )}
+      <div className="mt-1 text-[11px] text-slate-300">
+        {formatSectionLabel(inspectState.label)}
+      </div>
       {didCopy && (
         <div className="mt-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-300">
           Copied
