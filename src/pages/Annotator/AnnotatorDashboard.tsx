@@ -145,13 +145,13 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
     <div
       className="min-h-screen bg-slate-50 font-['IBM_Plex_Sans','Segoe_UI',system-ui,sans-serif] text-slate-900"
       data-source-file={SOURCE_FILES.annotatorDashboard}
-      data-source-label="Annotator dashboard page"
+      data-source-label="section:annotator-dashboard-page"
     >
       <div className="w-full px-6 py-8 md:px-10">
         <div
           className="mb-8"
           data-source-file={SOURCE_FILES.annotatorDashboard}
-          data-source-label="Annotator dashboard header"
+          data-source-label="section:annotator-dashboard-header"
         >
           <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">
             {t("annotator:dashboard.title")}
@@ -168,7 +168,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
         <div
           className="mb-8 grid grid-cols-2 gap-4 "
           data-source-file={SOURCE_FILES.annotatorDashboard}
-          data-source-label="Annotator dashboard KPI cards"
+          data-source-label="section:annotator-dashboard-kpi-cards"
         >
           {kpis.map((kpi, idx) => (
             <div
@@ -176,7 +176,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
               onMouseEnter={() => setHoveredKpi(idx)}
               onMouseLeave={() => setHoveredKpi(null)}
               data-source-file={SOURCE_FILES.annotatorDashboard}
-              data-source-label={`Annotator KPI card: ${kpi.label}`}
+              data-source-label="section:annotator-dashboard-kpi-card"
               className={`rounded-lg border border-slate-200 border-t-[3px] bg-white p-5 transition ${hoveredKpi === idx ? "shadow-lg shadow-slate-200/80" : "shadow-sm"
                 } ${kpi.border}`}
             >
@@ -198,7 +198,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
         <div
           className="mb-6 flex flex-wrap items-center justify-between gap-4"
           data-source-file={SOURCE_FILES.annotatorDashboard}
-          data-source-label="Annotator dashboard filters"
+          data-source-label="section:annotator-dashboard-filters"
         >
           <div className="inline-flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1">
             {TABS.map((tab) => {
@@ -260,7 +260,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
           <div
             className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
             data-source-file={SOURCE_FILES.annotatorDashboard}
-            data-source-label="Annotator dashboard assignment table"
+          data-source-label="section:annotator-dashboard-assignment-table"
           >
             <div className="flex h-[600px] w-full flex-col items-center justify-center px-4 text-center">
               <span className="material-symbols-outlined mb-4 text-6xl text-slate-300">

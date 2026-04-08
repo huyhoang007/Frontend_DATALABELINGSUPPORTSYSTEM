@@ -291,7 +291,7 @@ export default function ProjectAssignments() {
     <div
       className="space-y-6"
       data-source-file={SOURCE_FILES.managerProjectAssignments}
-      data-source-label="Manager project assignments tab"
+      data-source-label="section:manager-project-assignments-tab"
     >
       {/* Toast */}
       {toast && (

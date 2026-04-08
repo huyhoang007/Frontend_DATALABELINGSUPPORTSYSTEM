@@ -11,7 +11,7 @@ export default function Unauthorized() {
     <div
       className="min-h-screen flex items-center justify-center bg-background"
       data-source-file={SOURCE_FILES.unauthorizedPage}
-      data-source-label="Unauthorized page"
+      data-source-label="section:unauthorized-page"
     >
       <div className="w-full max-w-sm bg-card border border-border rounded-lg p-8 text-center shadow-sm">
         <div className="text-5xl mb-4">🚫</div>

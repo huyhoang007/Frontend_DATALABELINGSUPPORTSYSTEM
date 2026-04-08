@@ -163,7 +163,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
     <div
       className="p-8 min-h-full bg-transparent space-y-8"
       data-source-file={SOURCE_FILES.managerDashboard}
-      data-source-label="Manager dashboard page"
+      data-source-label="section:manager-dashboard-page"
     >
       {/* Welcome Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">

@@ -96,7 +96,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     <div
       className="p-8 min-h-full bg-background space-y-6"
       data-source-file={SOURCE_FILES.adminDashboard}
-      data-source-label="Admin dashboard page"
+      data-source-label="section:admin-dashboard-page"
     >
 
       {/* Header */}

@@ -157,7 +157,7 @@ export default function UploadData() {
     <div
       className="min-h-screen bg-slate-50 px-6 py-8 md:px-10"
       data-source-file={SOURCE_FILES.managerUploadData}
-      data-source-label="Manager upload data page"
+      data-source-label="section:manager-upload-data-page"
     >
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">

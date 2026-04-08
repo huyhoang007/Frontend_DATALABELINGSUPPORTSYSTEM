@@ -26,7 +26,7 @@ export default function ShortcutHelpModal({ onClose }) {
             onClick={onClose}
             className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center backdrop-blur-sm"
             data-source-file={SOURCE_FILES.annotatorShortcutModal}
-            data-source-label="Annotator shortcut help modal"
+      data-source-label="section:annotator-shortcut-help-modal"
         >
             <div
                 onClick={(e) => e.stopPropagation()}

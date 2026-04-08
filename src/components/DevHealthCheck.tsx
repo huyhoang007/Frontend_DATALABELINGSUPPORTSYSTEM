@@ -58,7 +58,7 @@ const DevHealthCheck = () => {
             <div
                 className="min-h-screen bg-gray-100 flex items-center justify-center p-4"
                 data-source-file={SOURCE_FILES.devHealthCheck}
-                data-source-label="Developer health check page"
+      data-source-label="section:developer-health-check-page"
             >
                 <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full">
                     <h2 className="text-2xl font-bold mb-4">Dev Health Check</h2>
@@ -72,7 +72,7 @@ const DevHealthCheck = () => {
         <div
             className="min-h-screen bg-gray-100 flex items-center justify-center p-4"
             data-source-file={SOURCE_FILES.devHealthCheck}
-            data-source-label="Developer health check page"
+      data-source-label="section:developer-health-check-page"
         >
             <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full">
                 <h2 className="text-2xl font-bold mb-6">Dev Health Check</h2>

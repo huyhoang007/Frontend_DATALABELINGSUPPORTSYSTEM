@@ -49,7 +49,7 @@ export default function Tasks() {
     <div
       className="min-h-screen bg-slate-50 px-10 py-8 font-['IBM_Plex_Sans','Segoe_UI',system-ui,sans-serif]"
       data-source-file={SOURCE_FILES.managerTasks}
-      data-source-label="Manager tasks page"
+      data-source-label="section:manager-tasks-page"
     >
       <h1 className="mb-8 text-[28px] font-extrabold tracking-[-0.02em] text-slate-900">
         {t("manager:tasks.title")}

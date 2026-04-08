@@ -33,7 +33,7 @@ export function Workspace3Column({
     <div
       className="flex h-screen w-full overflow-hidden bg-background text-foreground selection:bg-annotator-primary/30 font-sans"
       data-source-file={sourceFile}
-      data-source-label="3-column workspace shell"
+      data-source-label="section:workspace-layout-shell"
     >
       {/* Left Column */}
       <aside

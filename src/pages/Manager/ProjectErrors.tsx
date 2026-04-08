@@ -206,7 +206,7 @@ export default function ProjectErrors() {
     <div
       className="space-y-6"
       data-source-file={SOURCE_FILES.managerProjectErrors}
-      data-source-label="Manager project errors tab"
+      data-source-label="section:manager-project-errors-tab"
     >
       {/* Toast */}
       {toast && (

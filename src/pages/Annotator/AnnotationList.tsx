@@ -34,7 +34,7 @@ export default function AnnotationList({
     <div
       className="space-y-2"
       data-source-file={SOURCE_FILES.annotatorList}
-      data-source-label="Annotator annotation list"
+      data-source-label="section:annotator-annotation-list"
     >
       {visibleAnnotations.map((group, i) => {
         const isSelected = group.groupKey === selectedGroupKey;

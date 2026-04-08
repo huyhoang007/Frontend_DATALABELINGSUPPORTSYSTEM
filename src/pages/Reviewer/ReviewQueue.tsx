@@ -203,13 +203,13 @@ export default function ReviewQueue() {
     <div
       className="min-h-screen bg-slate-50 font-['IBM_Plex_Sans','Segoe_UI',system-ui,sans-serif] text-slate-900"
       data-source-file={SOURCE_FILES.reviewerQueue}
-      data-source-label="Reviewer queue page"
+      data-source-label="section:reviewer-queue-page"
     >
       <div className="w-full px-6 py-8 md:px-10">
         <div
           className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b-2 border-slate-200 pb-6"
           data-source-file={SOURCE_FILES.reviewerQueue}
-          data-source-label="Reviewer queue header"
+          data-source-label="section:reviewer-queue-header"
         >
           <div>
             <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">
@@ -229,7 +229,7 @@ export default function ReviewQueue() {
         <div
           className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4"
           data-source-file={SOURCE_FILES.reviewerQueue}
-          data-source-label="Reviewer queue KPI cards"
+          data-source-label="section:reviewer-queue-kpi-cards"
         >
           {kpis.map((kpi, idx) => {
             const state = KPI_STYLES[kpi.status];
@@ -313,7 +313,7 @@ export default function ReviewQueue() {
           <div
             className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
             data-source-file={SOURCE_FILES.reviewerQueue}
-            data-source-label="Reviewer assignment list"
+            data-source-label="section:reviewer-assignment-list"
           >
             {!isMobile && (
               <div className="grid grid-cols-[60px_2fr_1.2fr_1.5fr_1fr_0.8fr_100px] items-center gap-4 border-b border-slate-200 bg-slate-50 px-6 py-3">

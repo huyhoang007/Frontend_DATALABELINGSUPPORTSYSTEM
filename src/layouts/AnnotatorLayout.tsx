@@ -14,7 +14,7 @@ export function AnnotatorLayout() {
         <div
             className="flex min-h-screen bg-background text-foreground"
             data-source-file={SOURCE_FILES.annotatorLayout}
-            data-source-label="Annotator layout shell"
+      data-source-label="section:annotator-layout-shell"
         >
             {/* Fixed Left Sidebar */}
             <Sidebar />
@@ -23,7 +23,7 @@ export function AnnotatorLayout() {
             <main
                 className="flex-1 ml-64 bg-background"
                 data-source-file={SOURCE_FILES.annotatorLayout}
-                data-source-label="Annotator layout content area"
+        data-source-label="section:annotator-layout-content-area"
             >
                 <Outlet />
             </main>

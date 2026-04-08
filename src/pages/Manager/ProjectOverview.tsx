@@ -30,9 +30,7 @@ export default function ProjectOverview() {
     const [savingGuideline, setSavingGuideline] = useState(false);
     const [guidelineMessage, setGuidelineMessage] = useState<string | null>(null);
     const [guidelineMessageType, setGuidelineMessageType] = useState<"success" | "error" | null>(null);
-    const [altPressed, setAltPressed] = useState(false);
     const [hoveredExplainKey, setHoveredExplainKey] = useState<string | null>(null);
-    const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
     useEffect(() => {
         setGuidelineContent(project?.guidelineContent || "");
@@ -306,7 +304,6 @@ export default function ProjectOverview() {
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key !== "Alt") return;
-            setAltPressed(true);
             if (event.repeat || !currentExplainer) return;
             navigator.clipboard?.writeText([
                 currentExplainer.title,
@@ -314,24 +311,17 @@ export default function ProjectOverview() {
                 currentExplainer.formula,
             ].join("\n")).catch(() => {});
         };
-        const handleKeyUp = (event: KeyboardEvent) => {
-            if (event.key === "Alt") setAltPressed(false);
-        };
         window.addEventListener("keydown", handleKeyDown);
-        window.addEventListener("keyup", handleKeyUp);
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
-            window.removeEventListener("keyup", handleKeyUp);
         };
     }, [currentExplainer]);
     const attachExplainProps = (key: string) => ({
         onMouseEnter: (event: any) => {
             setHoveredExplainKey(key);
-            setTooltipPosition({ x: event.clientX, y: event.clientY });
         },
         onMouseMove: (event: any) => {
             setHoveredExplainKey(key);
-            setTooltipPosition({ x: event.clientX, y: event.clientY });
         },
         onMouseLeave: () => setHoveredExplainKey((current) => (current === key ? null : current)),
     });
@@ -358,21 +348,6 @@ export default function ProjectOverview() {
 
     return (
         <>
-            {altPressed && currentExplainer && (
-                <div
-                    className="fixed z-[100] pointer-events-none max-w-md rounded-lg border border-sky-400/40 bg-slate-950/95 text-white shadow-2xl px-4 py-3"
-                    style={{
-                        left: Math.min(tooltipPosition.x + 16, window.innerWidth - 380),
-                        top: Math.min(tooltipPosition.y + 16, window.innerHeight - 260),
-                    }}
-                >
-                    <div className="space-y-1 text-xs leading-5 text-slate-200 whitespace-pre-line">
-                        <div className="font-semibold">{currentExplainer.title}</div>
-                        <div>{currentExplainer.api.join(", ")}</div>
-                        <div>{currentExplainer.formula}</div>
-                    </div>
-                </div>
-            )}
             {/* Toast Notification */}
             {guidelineMessage && (
                 <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg animate-in fade-in slide-in-from-top-4 duration-300 ${

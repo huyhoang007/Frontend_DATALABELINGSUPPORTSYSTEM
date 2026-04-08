@@ -930,7 +930,7 @@ export default function Workspace() {
       <div
         className="flex h-screen flex-col overflow-hidden bg-[#131c2e] text-slate-200"
         data-source-file={SOURCE_FILES.annotatorWorkspace}
-        data-source-label="Annotator workspace page"
+      data-source-label="section:annotator-workspace-page"
       >
         {/* â•â•â•â•â•â•â•â•â•â• TOP BAR â•â•â•â•â•â•â•â•â•â• */}
         <div
@@ -938,7 +938,7 @@ export default function Workspace() {
             isMobile ? "flex-wrap py-2" : "flex-nowrap"
           }`}
           data-source-file={SOURCE_FILES.annotatorWorkspace}
-          data-source-label="Annotator workspace top bar"
+        data-source-label="section:annotator-workspace-top-bar"
         >
           {/* Dashboard Logo Link */}
           <button
@@ -1189,7 +1189,7 @@ export default function Workspace() {
         <div
           className={`flex flex-1 overflow-hidden ${isMobile ? "flex-col" : "flex-row"}`}
           data-source-file={SOURCE_FILES.workspaceLayout}
-          data-source-label="Annotator workspace 3-column layout"
+          data-source-label="section:annotator-workspace-3-column-layout"
         >
           {/* ── LEFT: Image thumbnails ── */}
           <div
@@ -1199,7 +1199,7 @@ export default function Workspace() {
                 : "w-[148px] border-r border-[#253347]"
             }`}
             data-source-file={SOURCE_FILES.annotatorWorkspace}
-            data-source-label="Annotator left panel"
+              data-source-label="section:annotator-left-panel"
           >
             {/* Project Info & Submit Action */}
             <div className="flex shrink-0 flex-col gap-2 border-b border-[#253347] p-3">
@@ -1340,7 +1340,7 @@ export default function Workspace() {
               isMobile ? "min-h-0" : ""
             }`}
             data-source-file={SOURCE_FILES.annotatorWorkspace}
-            data-source-label="Annotator center canvas area"
+              data-source-label="section:annotator-center-canvas-area"
           >
             {/* centering wrapper — expands to at least full viewport so canvas stays centered at small zoom */}
             <div
@@ -1457,7 +1457,7 @@ export default function Workspace() {
                 : "w-[260px] border-l border-[#253347]"
             }`}
             data-source-file={SOURCE_FILES.annotatorWorkspace}
-            data-source-label="Annotator right panel"
+              data-source-label="section:annotator-right-panel"
           >
             {/* Tool icons */}
             <div className="flex shrink-0 items-center justify-center gap-1.5 border-b border-[#253347] bg-[#111d2c] px-3 py-2.5">

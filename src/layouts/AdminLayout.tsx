@@ -14,7 +14,7 @@ export function AdminLayout() {
         <div
             className="flex min-h-screen bg-background text-foreground"
             data-source-file={SOURCE_FILES.adminLayout}
-            data-source-label="Admin layout shell"
+      data-source-label="section:admin-layout-shell"
         >
             {/* Fixed Left Sidebar - role-aware, shows admin navigation */}
             <Sidebar />
@@ -23,7 +23,7 @@ export function AdminLayout() {
             <main
                 className="flex-1 ml-64 bg-background"
                 data-source-file={SOURCE_FILES.adminLayout}
-                data-source-label="Admin layout content area"
+        data-source-label="section:admin-layout-content-area"
             >
                 <Outlet />
             </main>

@@ -117,7 +117,7 @@ export default function AdminActivityLogs() {
     <div
       className="flex h-screen bg-background"
       data-source-file={SOURCE_FILES.adminLogs}
-      data-source-label="Admin activity logs page"
+      data-source-label="section:admin-activity-logs-page"
     >
       <main className="flex-1 p-8 overflow-auto">
         <div className="max-w-7xl mx-auto">

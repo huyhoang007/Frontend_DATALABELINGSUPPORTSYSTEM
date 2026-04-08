@@ -251,7 +251,7 @@ const ModernPoliciesPage: React.FC = () => {
     <div
       className="p-8 min-h-screen bg-[#F7F8F9]"
       data-source-file={SOURCE_FILES.managerPolicies}
-      data-source-label="Manager policies page"
+      data-source-label="section:manager-policies-page"
     >
       {/* Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">

@@ -43,9 +43,7 @@ export default function LabelSummaryPanel({
   allLabels,
 }: LabelSummaryPanelProps) {
   const { t, i18n } = useTranslation(["annotator"]);
-  const [altPressed, setAltPressed] = React.useState(false);
   const [hoveredExplainKey, setHoveredExplainKey] = React.useState<string | null>(null);
-  const [tooltipPosition, setTooltipPosition] = React.useState({ x: 0, y: 0 });
 
   const { summary, totalAnnotations, annotatedImageCount, totalImages } =
     React.useMemo(() => {
@@ -227,7 +225,6 @@ export default function LabelSummaryPanel({
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Alt") return;
-      setAltPressed(true);
       if (event.repeat || !currentExplainer) return;
       navigator.clipboard?.writeText([
         currentExplainer.title,
@@ -235,30 +232,22 @@ export default function LabelSummaryPanel({
         currentExplainer.formula,
       ].join("\n")).catch(() => {});
     };
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.key === "Alt") setAltPressed(false);
-    };
     const handleBlur = () => {
-      setAltPressed(false);
       setHoveredExplainKey(null);
     };
     window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
     window.addEventListener("blur", handleBlur);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
   }, [currentExplainer]);
   const attachExplainProps = (key: keyof typeof explainers) => ({
     onMouseEnter: (event: React.MouseEvent) => {
       setHoveredExplainKey(key);
-      setTooltipPosition({ x: event.clientX, y: event.clientY });
     },
     onMouseMove: (event: React.MouseEvent) => {
       setHoveredExplainKey(key);
-      setTooltipPosition({ x: event.clientX, y: event.clientY });
     },
     onMouseLeave: () =>
       setHoveredExplainKey((current) => (current === key ? null : current)),
@@ -268,23 +257,8 @@ export default function LabelSummaryPanel({
     <div
       className="space-y-3 overflow-y-auto p-3"
       data-source-file={SOURCE_FILES.labelSummaryPanel}
-      data-source-label="Annotation summary panel"
+      data-source-label="section:annotation-summary-panel"
     >
-      {altPressed && currentExplainer && (
-        <div
-          className="pointer-events-none fixed z-[120] max-w-md rounded-lg border border-sky-400/40 bg-slate-950/95 px-4 py-3 text-white shadow-2xl"
-          style={{
-            left: Math.min(tooltipPosition.x + 16, window.innerWidth - 380),
-            top: Math.min(tooltipPosition.y + 16, window.innerHeight - 260),
-          }}
-        >
-          <div className="space-y-1 text-xs leading-5 text-slate-200 whitespace-pre-line">
-            <div className="font-semibold">{currentExplainer.title}</div>
-            <div>{currentExplainer.api.join(", ")}</div>
-            <div>{currentExplainer.formula}</div>
-          </div>
-        </div>
-      )}
       <div className="grid grid-cols-2 gap-2">
         <div
           {...attachExplainProps("totalRegions")}

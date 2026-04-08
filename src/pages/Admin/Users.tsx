@@ -238,7 +238,7 @@ export default function AdminUsers() {
     <div
       className="min-h-screen bg-background"
       data-source-file={SOURCE_FILES.adminUsers}
-      data-source-label="Admin users page"
+      data-source-label="section:admin-users-page"
     >
       <main className="p-8 w-full">
         <div className="max-w-7xl mx-auto space-y-6">

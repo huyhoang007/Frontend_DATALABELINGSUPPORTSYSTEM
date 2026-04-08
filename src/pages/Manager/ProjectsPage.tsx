@@ -445,7 +445,7 @@ const ModernProjectsPage: React.FC = () => {
     <div
       className="p-8 min-h-screen bg-[#F7F8F9]"
       data-source-file={SOURCE_FILES.managerProjects}
-      data-source-label="Manager projects page"
+      data-source-label="section:manager-projects-page"
     >
       {/* Header */}
       <Card className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">

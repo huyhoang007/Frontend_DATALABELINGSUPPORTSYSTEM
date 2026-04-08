@@ -160,7 +160,7 @@ export default function ProjectLabels() {
     <div
       className="space-y-4"
       data-source-file={SOURCE_FILES.managerProjectLabels}
-      data-source-label="Manager project labels tab"
+      data-source-label="section:manager-project-labels-tab"
     >
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-base font-bold text-foreground">

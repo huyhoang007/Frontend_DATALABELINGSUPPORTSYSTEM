@@ -9,7 +9,7 @@ type InspectState = {
 } | null;
 
 function formatSectionLabel(label?: string) {
-  return `section:${label || "root"}`;
+  return label || "section:root";
 }
 
 function getSourceRegion(target: EventTarget | null) {

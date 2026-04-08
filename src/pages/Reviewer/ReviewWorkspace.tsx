@@ -485,7 +485,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
     <div
       className="flex h-screen flex-col overflow-hidden bg-[#131c2e] text-slate-200"
       data-source-file={SOURCE_FILES.reviewerWorkspace}
-      data-source-label="Reviewer workspace page"
+      data-source-label="section:reviewer-workspace-page"
     >
       {/* ══ TOP BAR ══ */}
       <div
@@ -493,7 +493,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
           isMobile ? "flex-wrap py-2" : "flex-nowrap"
         }`}
         data-source-file={SOURCE_FILES.reviewerWorkspace}
-        data-source-label="Reviewer workspace top bar"
+        data-source-label="section:reviewer-workspace-top-bar"
       >
         {/* Logo / Back */}
         <button
@@ -705,7 +705,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
       <div
         className={`flex flex-1 overflow-hidden ${isMobile ? "flex-col" : "flex-row"}`}
         data-source-file={SOURCE_FILES.reviewerWorkspace}
-        data-source-label="Reviewer workspace main layout"
+          data-source-label="section:reviewer-workspace-main-layout"
       >
         {/* ── LEFT: Thumbnails + Project info ── */}
         <div
@@ -715,7 +715,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
               : "w-[148px] border-r border-[#253347]"
           }`}
           data-source-file={SOURCE_FILES.reviewerWorkspace}
-          data-source-label="Reviewer left panel"
+              data-source-label="section:reviewer-left-panel"
         >
           {/* Project & submit */}
           <div className="flex shrink-0 flex-col gap-2 border-b border-[#253347] p-3">
@@ -867,7 +867,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
             isMobile ? "min-h-0" : ""
           }`}
           data-source-file={SOURCE_FILES.reviewerWorkspace}
-          data-source-label="Reviewer center canvas area"
+              data-source-label="section:reviewer-center-canvas-area"
         >
           <div
             className={`box-border flex min-h-full min-w-full items-center justify-center ${
@@ -949,7 +949,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
               : "w-[280px] border-l border-[#253347]"
           }`}
           data-source-file={SOURCE_FILES.reviewerWorkspace}
-          data-source-label="Reviewer right review panel"
+              data-source-label="section:reviewer-right-review-panel"
         >
           {/* Header line */}
           <div className="flex shrink-0 items-center gap-2 border-b border-[#253347] px-3 py-2">
@@ -1332,9 +1332,7 @@ function ReviewSummaryPanel({
   setCurrentItemIndex,
 }: ReviewSummaryPanelProps) {
   const { t, i18n } = useTranslation(["reviewer"]);
-  const [altPressed, setAltPressed] = React.useState(false);
   const [hoveredExplainKey, setHoveredExplainKey] = React.useState<string | null>(null);
-  const [tooltipPosition, setTooltipPosition] = React.useState({ x: 0, y: 0 });
   /* Build per-label stats across all cached annotations */
   const labelStats = React.useMemo(() => {
     const map = new Map<number, { labelId: number; labelName: string; colorCode: string; total: number; approved: number; rejected: number; pending: number }>();
@@ -1424,7 +1422,6 @@ function ReviewSummaryPanel({
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Alt") return;
-      setAltPressed(true);
       if (event.repeat || !currentExplainer) return;
       navigator.clipboard?.writeText([
         currentExplainer.title,
@@ -1432,30 +1429,22 @@ function ReviewSummaryPanel({
         currentExplainer.formula,
       ].join("\n")).catch(() => {});
     };
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.key === "Alt") setAltPressed(false);
-    };
     const handleBlur = () => {
-      setAltPressed(false);
       setHoveredExplainKey(null);
     };
     window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
     window.addEventListener("blur", handleBlur);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
   }, [currentExplainer]);
   const attachExplainProps = (key: keyof typeof explainers) => ({
     onMouseEnter: (event: React.MouseEvent) => {
       setHoveredExplainKey(key);
-      setTooltipPosition({ x: event.clientX, y: event.clientY });
     },
     onMouseMove: (event: React.MouseEvent) => {
       setHoveredExplainKey(key);
-      setTooltipPosition({ x: event.clientX, y: event.clientY });
     },
     onMouseLeave: () =>
       setHoveredExplainKey((current) => (current === key ? null : current)),
@@ -1474,21 +1463,6 @@ function ReviewSummaryPanel({
 
   return (
     <div className="p-3 space-y-4">
-      {altPressed && currentExplainer && (
-        <div
-          className="pointer-events-none fixed z-[120] max-w-md rounded-lg border border-sky-400/40 bg-slate-950/95 px-4 py-3 text-white shadow-2xl"
-          style={{
-            left: Math.min(tooltipPosition.x + 16, window.innerWidth - 380),
-            top: Math.min(tooltipPosition.y + 16, window.innerHeight - 260),
-          }}
-        >
-          <div className="space-y-1 text-xs leading-5 text-slate-200 whitespace-pre-line">
-            <div className="font-semibold">{currentExplainer.title}</div>
-            <div>{currentExplainer.api.join(", ")}</div>
-            <div>{currentExplainer.formula}</div>
-          </div>
-        </div>
-      )}
       {/* Overall stats */}
       <div {...attachExplainProps("reviewOverview")}>
         <p className="mb-2 text-[10px] font-bold uppercase text-[#4a6788]">

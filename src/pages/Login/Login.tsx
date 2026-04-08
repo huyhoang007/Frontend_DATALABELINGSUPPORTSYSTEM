@@ -286,7 +286,7 @@ export default function Login() {
       <div
         className="relative min-h-screen w-full flex items-center font-[Inter,'Segoe_UI',system-ui,sans-serif] overflow-hidden"
         data-source-file={SOURCE_FILES.loginPage}
-        data-source-label="Login page"
+      data-source-label="section:login-page"
       >
 
         {/* Background image */}

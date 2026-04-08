@@ -79,7 +79,7 @@ const ProjectDetail: React.FC = () => {
             <div
                 className="p-8 min-h-full bg-transparent flex items-center justify-center"
                 data-source-file={SOURCE_FILES.managerProjectDetail}
-                data-source-label="Manager project detail page"
+      data-source-label="section:manager-project-detail-page"
             >
                 <div className="text-muted-foreground text-sm">{t("common:states.loadingData")}</div>
             </div>
@@ -91,7 +91,7 @@ const ProjectDetail: React.FC = () => {
             <div
                 className="p-8 min-h-full bg-transparent"
                 data-source-file={SOURCE_FILES.managerProjectDetail}
-                data-source-label="Manager project detail page"
+        data-source-label="section:manager-project-detail-page"
             >
                 <Card className="p-12 bg-card/80 backdrop-blur border-border/60 text-center max-w-lg mx-auto">
                     <div className="text-4xl mb-4">P</div>
@@ -111,7 +111,7 @@ const ProjectDetail: React.FC = () => {
         <div
             className="p-8 min-h-full bg-transparent space-y-6"
             data-source-file={SOURCE_FILES.managerProjectDetail}
-            data-source-label="Manager project detail page"
+        data-source-label="section:manager-project-detail-page"
         >
             {/* Header */}
             <Card className="p-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border-border/50">

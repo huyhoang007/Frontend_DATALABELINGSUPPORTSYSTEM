@@ -14,7 +14,7 @@ export function ManagerLayout() {
         <div
             className="flex min-h-screen bg-background text-foreground"
             data-source-file={SOURCE_FILES.managerLayout}
-            data-source-label="Manager layout shell"
+      data-source-label="section:manager-layout-shell"
         >
             {/* Fixed Left Sidebar - matches screenshot exactly */}
             <Sidebar />
@@ -23,7 +23,7 @@ export function ManagerLayout() {
             <main
                 className="flex-1 ml-64 bg-background"
                 data-source-file={SOURCE_FILES.managerLayout}
-                data-source-label="Manager layout content area"
+        data-source-label="section:manager-layout-content-area"
             >
                 <Outlet />
             </main>

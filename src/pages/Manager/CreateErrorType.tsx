@@ -61,7 +61,7 @@ export default function CreateErrorType() {
         <div
             className="p-8 space-y-6 max-w-2xl"
             data-source-file={SOURCE_FILES.managerCreateErrorType}
-            data-source-label="Manager create error type page"
+      data-source-label="section:manager-create-error-type-page"
         >
             <div className="flex items-center gap-3">
                 <button onClick={() => navigate("/manager/error-types")} className="text-muted-foreground hover:text-foreground transition-colors">

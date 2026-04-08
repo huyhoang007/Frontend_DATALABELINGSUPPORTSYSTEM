@@ -41,7 +41,7 @@ export default function Register() {
     return (
         <div
             data-source-file={SOURCE_FILES.registerPage}
-            data-source-label="Register page"
+      data-source-label="section:register-page"
         >
             <ModernRegisterForm
                 onRegister={handleRegister}

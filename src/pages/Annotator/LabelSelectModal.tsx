@@ -99,7 +99,7 @@ export default function LabelSelectModal({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/55"
       data-source-file={SOURCE_FILES.annotatorLabelModal}
-      data-source-label="Annotator label selection modal"
+      data-source-label="section:annotator-label-selection-modal"
       onClick={(e) => {
         if (e.target === e.currentTarget) onCancel?.();
       }}

@@ -81,7 +81,7 @@ export default function CreateLabel() {
     <div
       className="p-8 space-y-6 max-w-2xl"
       data-source-file={SOURCE_FILES.managerCreateLabel}
-      data-source-label="Manager create label page"
+      data-source-label="section:manager-create-label-page"
     >
       <div className="flex items-center gap-3">
         <button

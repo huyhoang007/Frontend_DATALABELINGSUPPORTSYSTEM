@@ -65,7 +65,7 @@ export default function ErrorTypes() {
         <div
             className="p-8 space-y-6 max-w-5xl"
             data-source-file={SOURCE_FILES.managerErrorTypes}
-            data-source-label="Manager error types page"
+      data-source-label="section:manager-error-types-page"
         >
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-foreground">{t("manager:errorTypes.title")}</h1>

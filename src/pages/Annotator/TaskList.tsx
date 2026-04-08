@@ -86,7 +86,7 @@ export default function TaskList() {
     <div
       className="min-h-screen bg-[#F7F8F9] text-[#172B4D] font-sans"
       data-source-file={SOURCE_FILES.annotatorTaskList}
-      data-source-label="Annotator task list page"
+      data-source-label="section:annotator-task-list-page"
     >
       <div className="px-10 py-8 w-full">
 
@@ -94,7 +94,7 @@ export default function TaskList() {
         <div
           className="flex flex-row items-end justify-between mb-8 pb-6 border-b-2 border-[#DCDFE4] gap-4 flex-wrap"
           data-source-file={SOURCE_FILES.annotatorTaskList}
-          data-source-label="Annotator task list header"
+          data-source-label="section:annotator-task-list-header"
         >
           <div>
             <p className="text-[11px] font-bold text-[#626F86] uppercase tracking-[0.1em] mb-1">
@@ -125,7 +125,7 @@ export default function TaskList() {
         <div
           className="flex flex-row items-center justify-between gap-4 mb-6 flex-wrap"
           data-source-file={SOURCE_FILES.annotatorTaskList}
-          data-source-label="Annotator task list filters"
+          data-source-label="section:annotator-task-list-filters"
         >
           {/* Status Tabs */}
           <div className="inline-flex p-1 bg-[#F1F2F4] rounded-md border border-[#DCDFE4] flex-wrap gap-1">
@@ -188,7 +188,7 @@ export default function TaskList() {
           <div
             className="rounded-md border border-[#DCDFE4] bg-white overflow-hidden shadow-sm"
             data-source-file={SOURCE_FILES.annotatorTaskList}
-            data-source-label="Annotator assignment table"
+          data-source-label="section:annotator-assignment-table"
           >
             <div className="flex flex-col items-center justify-center h-[600px] w-full">
               <span className="material-symbols-outlined text-[64px] text-[#626F86]/40 mb-4">assignment</span>

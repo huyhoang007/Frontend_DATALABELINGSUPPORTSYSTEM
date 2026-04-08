@@ -14,7 +14,7 @@ export function ReviewerLayout() {
         <div
             className="flex min-h-screen bg-background text-foreground"
             data-source-file={SOURCE_FILES.reviewerLayout}
-            data-source-label="Reviewer layout shell"
+      data-source-label="section:reviewer-layout-shell"
         >
             {/* Fixed Left Sidebar */}
             <Sidebar />
@@ -23,7 +23,7 @@ export function ReviewerLayout() {
             <main
                 className="flex-1 ml-64 bg-background"
                 data-source-file={SOURCE_FILES.reviewerLayout}
-                data-source-label="Reviewer layout content area"
+        data-source-label="section:reviewer-layout-content-area"
             >
                 <Outlet />
             </main>

@@ -286,7 +286,7 @@ export default function ProjectData() {
     <div
       className="space-y-6"
       data-source-file={SOURCE_FILES.managerProjectData}
-      data-source-label="Manager project data tab"
+      data-source-label="section:manager-project-data-tab"
     >
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm shadow-lg">

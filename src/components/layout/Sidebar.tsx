@@ -69,7 +69,7 @@ export function Sidebar() {
         <aside
             className="w-64 border-r border-border bg-card text-card-foreground flex flex-col h-screen fixed left-0 top-0 transition-colors duration-200"
             data-source-file={SOURCE_FILES.sidebar}
-            data-source-label="Shared sidebar navigation"
+      data-source-label="section:shared-sidebar-navigation"
         >
             <div className="h-16 flex items-center justify-center px-4 border-b border-border">
                 <div

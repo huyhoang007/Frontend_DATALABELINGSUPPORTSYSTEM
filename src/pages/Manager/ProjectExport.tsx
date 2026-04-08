@@ -243,7 +243,7 @@ export default function ProjectExport() {
     <div
       className="space-y-6"
       data-source-file={SOURCE_FILES.managerProjectExport}
-      data-source-label="Manager project export tab"
+      data-source-label="section:manager-project-export-tab"
     >
       <Card className="p-6 space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
