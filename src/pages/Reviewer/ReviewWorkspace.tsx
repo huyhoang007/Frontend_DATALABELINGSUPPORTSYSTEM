@@ -498,6 +498,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
         {/* Logo / Back */}
         <button
           onClick={() => navigate("/reviewer/queue")}
+          data-source-file={SOURCE_FILES.reviewerWorkspace}
+          data-source-label="section:reviewer-workspace-back-button"
           className="flex items-center gap-2 px-3 py-1.5 rounded transition-colors hover:bg-white/5"
         >
           <div className="flex items-center justify-center w-6 h-6 rounded bg-gradient-to-br from-teal-400 to-emerald-600 shadow-lg shadow-teal-500/20">
@@ -511,7 +513,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
         </button>
 
         {/* Review progress bar */}
-        <div className={`mx-3 flex items-center gap-2 ${isMobile ? "order-3" : ""}`}>
+        <div className={`mx-3 flex items-center gap-2 ${isMobile ? "order-3" : ""}`} data-source-file={SOURCE_FILES.reviewerWorkspace} data-source-label="section:reviewer-workspace-image-progress">
           <div className="h-1.5 w-28 overflow-hidden rounded-full bg-[#253347]">
             <div
               className="h-full rounded-full bg-[#00bfa5] transition-all duration-500"
@@ -544,6 +546,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
             <button
               key={dir}
               onClick={() => handleNavigate(dir)}
+              data-source-file={SOURCE_FILES.reviewerWorkspace}
+              data-source-label={`section:reviewer-workspace-nav-button-${dir}`}
               className="flex h-7 w-7 items-center justify-center text-slate-500 transition-colors hover:bg-white/10"
             >
               <span className="material-symbols-outlined text-[16px]">
@@ -561,6 +565,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
             <button
               key={dir}
               onClick={() => handleNavigate(dir)}
+              data-source-file={SOURCE_FILES.reviewerWorkspace}
+              data-source-label={`section:reviewer-workspace-nav-button-${dir}`}
               className="flex h-7 w-7 items-center justify-center text-slate-500 transition-colors hover:bg-white/10"
             >
               <span className="material-symbols-outlined text-[16px]">
@@ -588,6 +594,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
         <div className={`mr-2 flex items-center gap-1 ${isMobile ? "order-2" : ""}`}>
           <button
             onClick={() => setZoom((z) => Math.max(10, z - 10))}
+            data-source-file={SOURCE_FILES.reviewerWorkspace}
+            data-source-label="section:reviewer-workspace-zoom-out-button"
             className="flex h-6 w-6 items-center justify-center rounded text-slate-500 transition-colors hover:bg-white/10"
           >
             <span className="material-symbols-outlined text-[14px]">
@@ -599,6 +607,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
           </span>
           <button
             onClick={() => setZoom((z) => Math.min(400, z + 10))}
+            data-source-file={SOURCE_FILES.reviewerWorkspace}
+            data-source-label="section:reviewer-workspace-zoom-in-button"
             className="flex h-6 w-6 items-center justify-center rounded text-slate-500 transition-colors hover:bg-white/10"
           >
             <span className="material-symbols-outlined text-[14px]">
@@ -988,9 +998,11 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
 
           {/* Tab bar */}
           <div className="flex shrink-0 border-b border-[#253347]">
-            <button
-              onClick={() => setRightTab("review")}
-              className={`flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2 text-[11px] font-semibold transition-colors ${
+              <button
+                onClick={() => setRightTab("review")}
+                data-source-file={SOURCE_FILES.reviewerWorkspace}
+                data-source-label="section:reviewer-workspace-review-tab"
+                className={`flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2 text-[11px] font-semibold transition-colors ${
                 rightTab === "review"
                   ? "border-[#00bfa5] text-[#00bfa5]"
                   : "border-transparent text-[#4a6788]"
@@ -1001,9 +1013,11 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
               </span>
               {t("reviewer:workspace.tabs.review")} ({typedCurrentAnnotations.length})
             </button>
-            <button
-              onClick={() => setRightTab("summary")}
-              className={`flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2 text-[11px] font-semibold transition-colors ${
+              <button
+                onClick={() => setRightTab("summary")}
+                data-source-file={SOURCE_FILES.reviewerWorkspace}
+                data-source-label="section:reviewer-workspace-summary-tab"
+                className={`flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2 text-[11px] font-semibold transition-colors ${
                 rightTab === "summary"
                   ? "border-[#00bfa5] text-[#00bfa5]"
                   : "border-transparent text-[#4a6788]"
@@ -1022,7 +1036,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
               /* ─── Đánh giá tab ─── */
               <div className="p-3 space-y-2">
                 {itemAnnoLoading && (
-                  <div className="flex items-center justify-center py-8 gap-2 opacity-50">
+                  <div className="flex items-center justify-center py-8 gap-2 opacity-50" data-source-file={SOURCE_FILES.reviewerWorkspace} data-source-label="section:reviewer-workspace-loading-state">
                     <span className="material-symbols-outlined animate-spin text-[20px] text-[#3a5068]">
                       progress_activity
                     </span>
@@ -1033,7 +1047,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                 )}
 
                 {!itemAnnoLoading && currentAnnotations.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-12 gap-2 opacity-30">
+                  <div className="flex flex-col items-center justify-center py-12 gap-2 opacity-30" data-source-file={SOURCE_FILES.reviewerWorkspace} data-source-label="section:reviewer-workspace-empty-state">
                     <span className="material-symbols-outlined text-[32px] text-[#3a5068]">
                       label_off
                     </span>
@@ -1063,6 +1077,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                     return (
                       <div
                         key={anno.reviewingId}
+                        data-source-file={SOURCE_FILES.reviewerWorkspace}
+                        data-source-label="section:reviewer-workspace-annotation-review-card"
                         className={`cursor-pointer rounded-lg border px-3 py-2.5 transition-all ${
                           isHighlighted
                             ? "border-[#00bfa5] bg-[linear-gradient(135deg,rgba(0,191,165,0.15)_0%,rgba(59,130,246,0.1)_100%)]"
@@ -1130,6 +1146,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                   <div className="flex gap-1.5">
                                     <button
                                       onClick={() => { setConfirmingApproveId(null); handleApprove(anno.reviewingId); }}
+                                      data-source-file={SOURCE_FILES.reviewerWorkspace}
+                                      data-source-label="section:reviewer-workspace-confirm-approve-button"
                                       disabled={reviewSubmitting}
                                       className="flex flex-1 items-center justify-center gap-1 rounded border border-[rgba(0,191,165,0.4)] bg-[rgba(0,191,165,0.2)] py-1.5 text-xs font-bold text-[#00bfa5] transition"
                                     >
@@ -1138,6 +1156,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                     </button>
                                     <button
                                       onClick={() => setConfirmingApproveId(null)}
+                                      data-source-file={SOURCE_FILES.reviewerWorkspace}
+                                      data-source-label="section:reviewer-workspace-cancel-approve-button"
                                       className="flex flex-1 items-center justify-center gap-1 rounded border border-[rgba(148,163,184,0.2)] bg-white/5 py-1.5 text-xs font-bold text-slate-400 transition"
                                     >
                                       <span className="material-symbols-outlined text-sm">close</span>
@@ -1149,6 +1169,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                 <div className="flex gap-1.5">
                                   <button
                                     onClick={() => setConfirmingApproveId(anno.reviewingId)}
+                                    data-source-file={SOURCE_FILES.reviewerWorkspace}
+                                    data-source-label="section:reviewer-workspace-approve-button"
                                     disabled={
                                       reviewSubmitting ||
                                       !canReviewCurrentImage ||
@@ -1176,6 +1198,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                       setSelectedPolicyId(null);
                                       setRejectNote("");
                                     }}
+                                    data-source-file={SOURCE_FILES.reviewerWorkspace}
+                                    data-source-label="section:reviewer-workspace-open-reject-form-button"
                                     disabled={
                                       reviewSubmitting ||
                                       typedPolicies.length === 0 ||
@@ -1222,6 +1246,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                           <div
                             className="mt-2 space-y-2 rounded-lg border border-[rgba(248,113,113,0.2)] bg-[rgba(248,113,113,0.05)] p-2"
                             onClick={(e) => e.stopPropagation()}
+                            data-source-file={SOURCE_FILES.reviewerWorkspace}
+                            data-source-label="section:reviewer-workspace-reject-form"
                           >
                             <p className="text-[10px] font-bold uppercase text-red-400">
                               {t("reviewer:workspace.reject.selectViolation")}
@@ -1233,6 +1259,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                   onClick={() =>
                                     setSelectedPolicyId(p.policyId)
                                   }
+                                  data-source-file={SOURCE_FILES.reviewerWorkspace}
+                                  data-source-label="section:reviewer-workspace-policy-option-button"
                                   className={`w-full rounded border px-2 py-1.5 text-left text-xs transition ${
                                     selectedPolicyId === p.policyId
                                       ? "border-red-400 bg-[rgba(248,113,113,0.1)] text-red-400"
@@ -1259,6 +1287,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                 onChange={(e) => setRejectNote(e.target.value)}
                                 placeholder={t("reviewer:workspace.reject.optionalNote")}
                                 rows={2}
+                                data-source-file={SOURCE_FILES.reviewerWorkspace}
+                                data-source-label="section:reviewer-workspace-reject-note-textarea"
                                 className="w-full resize-none rounded border border-[#253347] bg-[#131c2e] px-2 py-1.5 text-xs text-slate-200 focus:outline-none"
                               />
                             </div>
@@ -1268,12 +1298,16 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                   setRejectingAnnoId(null);
                                   setRejectNote("");
                                 }}
+                                data-source-file={SOURCE_FILES.reviewerWorkspace}
+                                data-source-label="section:reviewer-workspace-cancel-reject-button"
                                 className="flex-1 rounded border border-[#253347] px-2 py-1 text-xs text-slate-500 transition hover:bg-white/5"
                               >
                                 {t("common:actions.cancel")}
                               </button>
                               <button
                                 onClick={() => handleReject(anno.reviewingId)}
+                                data-source-file={SOURCE_FILES.reviewerWorkspace}
+                                data-source-label="section:reviewer-workspace-confirm-reject-button"
                                 disabled={
                                   !selectedPolicyId ||
                                   reviewSubmitting ||
@@ -1487,9 +1521,9 @@ function ReviewSummaryPanel({
           <div className="mt-1 text-[11px] leading-5 text-slate-300">{currentExplainer.formula}</div>
         </div>
       )}
-      <div className="p-3 space-y-4">
+      <div className="p-3 space-y-4" data-source-file={SOURCE_FILES.reviewerWorkspace} data-source-label="section:reviewer-workspace-summary-panel">
       {/* Overall stats */}
-      <div {...attachExplainProps("reviewOverview")}>
+      <div {...attachExplainProps("reviewOverview")} data-source-file={SOURCE_FILES.reviewerWorkspace} data-source-label="section:reviewer-workspace-summary-overview">
         <p className="mb-2 text-[10px] font-bold uppercase text-[#4a6788]">
           {t("workspace.stats.overview")}
         </p>
@@ -1498,7 +1532,7 @@ function ReviewSummaryPanel({
           {statCard(t("workspace.stats.rejected"), reviewStats.rejected, "#f87171")}
           {statCard(t("workspace.stats.pending"), reviewStats.pending, "#facc15")}
         </div>
-        <div {...attachExplainProps("reviewProgress")} className="mt-2 flex items-center gap-2">
+        <div {...attachExplainProps("reviewProgress")} data-source-file={SOURCE_FILES.reviewerWorkspace} data-source-label="section:reviewer-workspace-summary-progress" className="mt-2 flex items-center gap-2">
           <div className="flex-1 h-1.5 overflow-hidden rounded-full bg-[#253347]">
             <div
               className="h-full rounded-full bg-[#00bfa5] transition-all"
@@ -1517,7 +1551,7 @@ function ReviewSummaryPanel({
       </div>
 
       {/* Per-item breakdown */}
-      <div {...attachExplainProps("byImage")}>
+      <div {...attachExplainProps("byImage")} data-source-file={SOURCE_FILES.reviewerWorkspace} data-source-label="section:reviewer-workspace-summary-by-image">
         <p className="mb-2 text-[10px] font-bold uppercase text-[#4a6788]">
           {t("workspace.stats.byImage")} ({items.length})
         </p>
@@ -1534,6 +1568,8 @@ function ReviewSummaryPanel({
               <button
                 key={item.itemId}
                 onClick={() => setCurrentItemIndex(idx)}
+                data-source-file={SOURCE_FILES.reviewerWorkspace}
+                data-source-label="section:reviewer-workspace-summary-image-row"
                 className={`w-full rounded px-2 py-1.5 text-left transition-colors ${
                   isActive
                     ? "border border-[#00bfa5] bg-[rgba(0,191,165,0.1)]"
@@ -1577,7 +1613,7 @@ function ReviewSummaryPanel({
 
       {/* Per-label breakdown */}
       {labelStats.length > 0 && (
-        <div {...attachExplainProps("byLabel")}>
+        <div {...attachExplainProps("byLabel")} data-source-file={SOURCE_FILES.reviewerWorkspace} data-source-label="section:reviewer-workspace-summary-by-label">
           <p className="mb-2 text-[10px] font-bold uppercase text-[#4a6788]">
             {t("workspace.stats.byLabel")} ({labelStats.length})
           </p>
@@ -1585,6 +1621,8 @@ function ReviewSummaryPanel({
             {labelStats.map((ls) => (
               <div
                 key={ls.labelId}
+                data-source-file={SOURCE_FILES.reviewerWorkspace}
+                data-source-label="section:reviewer-workspace-summary-label-row"
                 className="rounded border border-[#253347] bg-[#1e2f42] px-2 py-1.5"
               >
                 <div className="flex items-center gap-2 mb-1">

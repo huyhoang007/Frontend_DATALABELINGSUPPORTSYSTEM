@@ -287,6 +287,8 @@ export default function LabelSummaryPanel({
       <div className="grid grid-cols-2 gap-2">
         <div
           {...attachExplainProps("totalRegions")}
+          data-source-file={SOURCE_FILES.labelSummaryPanel}
+          data-source-label="section:annotation-summary-total-regions-card"
           className="rounded-lg border border-slate-800 bg-slate-950 p-2.5 text-center"
         >
           <div className="text-xl font-bold tabular-nums text-emerald-400">
@@ -298,6 +300,8 @@ export default function LabelSummaryPanel({
         </div>
         <div
           {...attachExplainProps("labelTypes")}
+          data-source-file={SOURCE_FILES.labelSummaryPanel}
+          data-source-label="section:annotation-summary-label-types-card"
           className="rounded-lg border border-slate-800 bg-slate-950 p-2.5 text-center"
         >
           <div className="text-xl font-bold tabular-nums text-sky-300">
@@ -311,6 +315,8 @@ export default function LabelSummaryPanel({
 
       <div
         {...attachExplainProps("imageCoverage")}
+        data-source-file={SOURCE_FILES.labelSummaryPanel}
+        data-source-label="section:annotation-summary-image-coverage-card"
         className="rounded-lg border border-slate-800 bg-slate-950 p-2.5"
       >
         <div className="mb-1.5 flex items-center justify-between">
@@ -337,7 +343,7 @@ export default function LabelSummaryPanel({
         </div>
       </div>
 
-      <div {...attachExplainProps("labelTable")}>
+      <div {...attachExplainProps("labelTable")} data-source-file={SOURCE_FILES.labelSummaryPanel} data-source-label="section:annotation-summary-label-table">
         <div className="flex items-center rounded-t bg-slate-950 px-2 py-1.5 border-b border-slate-800">
           <span className="flex-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
             {t("workspace.summary.label")}
@@ -355,6 +361,8 @@ export default function LabelSummaryPanel({
             summary.map((entry, idx) => (
               <div
                 key={entry.labelId}
+                data-source-file={SOURCE_FILES.labelSummaryPanel}
+                data-source-label="section:annotation-summary-label-table-row"
                 className={`flex items-center gap-2 px-2 py-2 transition-colors hover:bg-white/5 ${
                   idx % 2 === 0 ? "bg-transparent" : "bg-black/15"
                 } ${idx < summary.length - 1 ? "border-b border-slate-900" : ""}`}
@@ -385,7 +393,7 @@ export default function LabelSummaryPanel({
               </div>
             ))
           ) : (
-            <div className="flex items-center justify-center py-4">
+            <div className="flex items-center justify-center py-4" data-source-file={SOURCE_FILES.labelSummaryPanel} data-source-label="section:annotation-summary-label-table-empty">
               <p className="text-center text-[10px] text-slate-500">
                 {t("workspace.summary.empty")}
               </p>
@@ -394,7 +402,7 @@ export default function LabelSummaryPanel({
         </div>
       </div>
 
-      <p className="pt-1 text-center text-[9px] text-slate-700">
+      <p className="pt-1 text-center text-[9px] text-slate-700" data-source-file={SOURCE_FILES.labelSummaryPanel} data-source-label="section:annotation-summary-unsaved-hint">
         {t("workspace.summary.unsavedHint")}
       </p>
       </div>

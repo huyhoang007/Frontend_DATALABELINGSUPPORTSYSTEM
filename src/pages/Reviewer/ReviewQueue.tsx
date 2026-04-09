@@ -241,6 +241,8 @@ export default function ReviewQueue() {
                 onMouseEnter={() => setHoveredKpi(idx)}
                 onMouseLeave={() => setHoveredKpi(null)}
                 onClick={() => toggleStatusFilter(kpi.status)}
+                data-source-file={SOURCE_FILES.reviewerQueue}
+                data-source-label={`section:reviewer-queue-kpi-${kpi.status.toLowerCase()}`}
                 className={`rounded-lg border p-5 text-left transition ${
                   isActive ? state.active : state.idle
                 } ${
@@ -267,6 +269,8 @@ export default function ReviewQueue() {
             </span>
             <input
               type="text"
+              data-source-file={SOURCE_FILES.reviewerQueue}
+              data-source-label="section:reviewer-queue-search-input"
               className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               placeholder={t("reviewer:queue.searchPlaceholder")}
               value={searchQuery}
@@ -359,6 +363,8 @@ export default function ReviewQueue() {
                     <div
                       key={assignment.assignmentId}
                       onClick={() => handleReview(assignment)}
+                      data-source-file={SOURCE_FILES.reviewerQueue}
+                      data-source-label="section:reviewer-queue-mobile-assignment-card"
                       className={`cursor-pointer border-b border-slate-200 p-4 ${rowClass}`}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -414,6 +420,8 @@ export default function ReviewQueue() {
                           event.stopPropagation();
                           handleReview(assignment);
                         }}
+                        data-source-file={SOURCE_FILES.reviewerQueue}
+                        data-source-label="section:reviewer-queue-mobile-review-button"
                         className="mt-3 h-9 w-full rounded-md bg-blue-600 px-4 text-xs font-bold text-white transition hover:bg-blue-700"
                       >
                         {status === "APPROVED"
@@ -430,6 +438,8 @@ export default function ReviewQueue() {
                     onMouseEnter={() => setHoveredRow(idx)}
                     onMouseLeave={() => setHoveredRow(null)}
                     onClick={() => handleReview(assignment)}
+                    data-source-file={SOURCE_FILES.reviewerQueue}
+                    data-source-label="section:reviewer-queue-assignment-row"
                     className={`grid cursor-pointer grid-cols-[60px_2fr_1.2fr_1.5fr_1fr_0.8fr_100px] items-center gap-4 border-b border-slate-200 px-6 py-4 transition ${rowClass}`}
                   >
                     <span
@@ -479,6 +489,8 @@ export default function ReviewQueue() {
                           event.stopPropagation();
                           handleReview(assignment);
                         }}
+                        data-source-file={SOURCE_FILES.reviewerQueue}
+                        data-source-label="section:reviewer-queue-review-button"
                         className="h-8 rounded-md bg-blue-600 px-4 text-xs font-bold text-white transition hover:bg-blue-700"
                       >
                         {status === "APPROVED"

@@ -46,6 +46,8 @@ export default function AnnotationList({
           <div
             key={group.groupKey}
             onClick={() => onSelect?.(group.groupKey)}
+            data-source-file={SOURCE_FILES.annotatorList}
+            data-source-label="section:annotator-annotation-list-item"
             className={cn(
               "p-3 rounded-lg border flex items-center group transition-all cursor-pointer",
               isApproved
@@ -127,6 +129,8 @@ export default function AnnotationList({
                   e.stopPropagation();
                   onToggleHidden?.(group.groupKey);
                 }}
+                data-source-file={SOURCE_FILES.annotatorList}
+                data-source-label="section:annotator-annotation-list-visibility-button"
                 className="p-1 hover:bg-background rounded hover:text-foreground text-muted-foreground transition-colors"
                 title={group.isHidden ? "Show" : "Hide"}
               >
@@ -140,6 +144,8 @@ export default function AnnotationList({
                     e.stopPropagation();
                     onRelabel(group.groupKey);
                   }}
+                  data-source-file={SOURCE_FILES.annotatorList}
+                  data-source-label="section:annotator-annotation-list-relabel-button"
                   className="p-1 hover:bg-blue-500/10 rounded text-muted-foreground hover:text-blue-500 transition-colors"
                   title="Đổi label"
                 >
@@ -154,6 +160,8 @@ export default function AnnotationList({
                     e.stopPropagation();
                     onDelete?.(group.groupKey);
                   }}
+                  data-source-file={SOURCE_FILES.annotatorList}
+                  data-source-label="section:annotator-annotation-list-delete-button"
                   className="p-1 hover:bg-red-500/10 rounded text-muted-foreground hover:text-red-500 transition-colors"
                   title="Xóa"
                 >
@@ -167,7 +175,7 @@ export default function AnnotationList({
         );
       })}
       {visibleAnnotations.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground/60">
+        <div className="text-center py-8 text-muted-foreground/60" data-source-file={SOURCE_FILES.annotatorList} data-source-label="section:annotator-annotation-list-empty-state">
           <span className="material-symbols-outlined text-3xl mb-2">draw</span>
           <p className="text-xs">No annotations on this item</p>
           <p className="text-[10px] mt-1">

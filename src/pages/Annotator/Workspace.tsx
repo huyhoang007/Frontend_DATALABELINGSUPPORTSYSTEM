@@ -1220,6 +1220,8 @@ export default function Workspace() {
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitBlocked || isSubmitting}
+                data-source-file={SOURCE_FILES.annotatorWorkspace}
+                data-source-label="section:annotator-workspace-submit-button"
                 title={
                   imageError
                     ? t("annotator:workspace.messages.submitBlockedImage")
@@ -1275,6 +1277,8 @@ export default function Workspace() {
                       setSelectedGroupKey(null);
                       setActiveLabelFilterId(null);
                     }}
+                    data-source-file={SOURCE_FILES.annotatorWorkspace}
+                    data-source-label="section:annotator-workspace-thumbnail-card"
                     className={`relative cursor-pointer overflow-hidden rounded bg-[#1e2f42] transition-all ${
                       isActive ? "border-2 border-[#00bfa5]" : "border-2 border-transparent"
                     } ${isMobile ? "min-w-24" : ""}`}
@@ -1322,6 +1326,8 @@ export default function Workspace() {
               <button
                 onClick={handleSave}
                 disabled={isReadOnly}
+                data-source-file={SOURCE_FILES.annotatorWorkspace}
+                data-source-label="section:annotator-workspace-save-draft-button"
                 className={`flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#2a4060] bg-[#1a2a3a] py-2 text-xs font-semibold text-sky-300 transition-all ${
                   isReadOnly ? "cursor-not-allowed opacity-40" : "active:scale-95 hover:bg-[#1e3a5f]"
                 }`}
@@ -1358,25 +1364,27 @@ export default function Workspace() {
                 }}
               >
                 {imageLoading ? (
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center justify-center" data-source-file={SOURCE_FILES.annotatorWorkspace} data-source-label="section:annotator-workspace-image-loading-state">
                     <span className="material-symbols-outlined animate-spin text-[32px] text-[#3a5068]">
                       progress_activity
                     </span>
                   </div>
                 ) : imageBlobUrl ? (
                   <img
-                  src={imageBlobUrl}
-                  alt={
-                    currentItem?.fileName ||
-                    t("annotator:workspace.header.imageAlt", {
-                      index: currentImageIndex + 1,
-                    })
-                  }
+                    data-source-file={SOURCE_FILES.annotatorWorkspace}
+                    data-source-label="section:annotator-workspace-image-canvas"
+                    src={imageBlobUrl}
+                    alt={
+                      currentItem?.fileName ||
+                      t("annotator:workspace.header.imageAlt", {
+                        index: currentImageIndex + 1,
+                      })
+                    }
                     className="absolute inset-0 w-full h-full object-contain"
                     draggable={false}
                   />
                 ) : imageError ? (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/80" data-source-file={SOURCE_FILES.annotatorWorkspace} data-source-label="section:annotator-workspace-image-error-state">
                     <div className="text-center p-6 max-w-sm">
                       <span className="material-symbols-outlined mb-3 block text-[48px] text-red-400">
                         broken_image
@@ -1395,6 +1403,8 @@ export default function Workspace() {
                           setImageError(null);
                           setImageBlobUrl(null);
                         }}
+                        data-source-file={SOURCE_FILES.annotatorWorkspace}
+                        data-source-label="section:annotator-workspace-image-retry-button"
                         className="rounded bg-white/10 px-4 py-1.5 text-xs font-medium text-white"
                       >
                         {t("annotator:workspace.actions.retry")}
@@ -1402,7 +1412,7 @@ export default function Workspace() {
                     </div>
                   </div>
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center select-none opacity-20">
+                  <div className="absolute inset-0 flex items-center justify-center select-none opacity-20" data-source-file={SOURCE_FILES.annotatorWorkspace} data-source-label="section:annotator-workspace-image-empty-state">
                     <span className="material-symbols-outlined text-[64px] text-[#3a5068]">
                       image
                     </span>
@@ -1475,6 +1485,8 @@ export default function Workspace() {
                   }}
                   title={tool.label}
                   disabled={isReadOnly && tool.id !== "select"}
+                  data-source-file={SOURCE_FILES.annotatorWorkspace}
+                  data-source-label={`section:annotator-workspace-tool-button-${tool.id}`}
                   className={`flex h-11 w-11 flex-col items-center justify-center gap-0.5 rounded-lg px-[2px] py-1 transition-all ${
                     isReadOnly && tool.id !== "select"
                       ? "hidden cursor-not-allowed opacity-30"
@@ -1499,6 +1511,8 @@ export default function Workspace() {
             <div className="flex shrink-0 border-b border-[#253347]">
               <button
                 onClick={() => setRightTab("annotations")}
+                data-source-file={SOURCE_FILES.annotatorWorkspace}
+                data-source-label="section:annotator-workspace-annotations-tab"
                 className={`flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2 text-[11px] font-semibold transition-colors ${
                   rightTab === "annotations"
                     ? "border-[#00bfa5] text-[#00bfa5]"
@@ -1512,6 +1526,8 @@ export default function Workspace() {
               </button>
               <button
                 onClick={() => setRightTab("summary")}
+                data-source-file={SOURCE_FILES.annotatorWorkspace}
+                data-source-label="section:annotator-workspace-summary-tab"
                 className={`flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2 text-[11px] font-semibold transition-colors ${
                   rightTab === "summary"
                     ? "border-[#00bfa5] text-[#00bfa5]"
@@ -1529,7 +1545,7 @@ export default function Workspace() {
             <div className="flex-1 overflow-y-auto">
               {rightTab === "annotations" ? (
                 labelsLoading && allLabels.length === 0 ? (
-                  <div className="flex items-center justify-center h-24 gap-2 opacity-50">
+                  <div className="flex items-center justify-center h-24 gap-2 opacity-50" data-source-file={SOURCE_FILES.annotatorWorkspace} data-source-label="section:annotator-workspace-labels-loading-state">
                     <span className="material-symbols-outlined animate-spin text-[18px] text-[#3a5068]">
                       progress_activity
                     </span>
@@ -1538,7 +1554,7 @@ export default function Workspace() {
                     </p>
                   </div>
                 ) : anno.annotations.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-32 gap-2 opacity-30">
+                  <div className="flex flex-col items-center justify-center h-32 gap-2 opacity-30" data-source-file={SOURCE_FILES.annotatorWorkspace} data-source-label="section:annotator-workspace-annotations-empty-state">
                     <span className="material-symbols-outlined text-[32px] text-[#3a5068]">
                       layers
                     </span>

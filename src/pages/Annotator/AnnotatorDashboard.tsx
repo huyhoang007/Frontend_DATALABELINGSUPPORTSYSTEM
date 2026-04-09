@@ -176,7 +176,7 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
               onMouseEnter={() => setHoveredKpi(idx)}
               onMouseLeave={() => setHoveredKpi(null)}
               data-source-file={SOURCE_FILES.annotatorDashboard}
-              data-source-label="section:annotator-dashboard-kpi-card"
+              data-source-label={`section:annotator-dashboard-kpi-${String(kpi.label).toLowerCase().replace(/\s+/g, "-")}-card`}
               className={`rounded-lg border border-slate-200 border-t-[3px] bg-white p-5 transition ${hoveredKpi === idx ? "shadow-lg shadow-slate-200/80" : "shadow-sm"
                 } ${kpi.border}`}
             >
@@ -207,6 +207,8 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
+                  data-source-file={SOURCE_FILES.annotatorDashboard}
+                  data-source-label={`section:annotator-dashboard-filter-tab-${tab.toLowerCase()}`}
                   className={`rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] transition ${active
                       ? "border border-blue-100 bg-white text-blue-700 shadow-sm"
                       : "border border-transparent text-slate-500 hover:bg-white/70 hover:text-slate-900"
@@ -224,6 +226,8 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
             </span>
             <input
               type="text"
+              data-source-file={SOURCE_FILES.annotatorDashboard}
+              data-source-label="section:annotator-dashboard-search-input"
               className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               placeholder={t("annotator:tasks.searchPlaceholder")}
               value={search}
@@ -316,6 +320,8 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
                     onMouseEnter={() => setHoveredRow(idx)}
                     onMouseLeave={() => setHoveredRow(null)}
                     onClick={() => handleOpen(a)}
+                    data-source-file={SOURCE_FILES.annotatorDashboard}
+                    data-source-label="section:annotator-dashboard-assignment-row"
                     className={`grid cursor-pointer grid-cols-[60px_2fr_1.5fr_1.2fr_1.5fr_1fr_100px] items-center gap-4 border-b border-slate-200 px-6 py-4 transition ${hoveredRow === idx
                         ? "bg-blue-50"
                         : idx % 2 === 0
@@ -371,6 +377,8 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
                             e.stopPropagation();
                             handleOpen(a);
                           }}
+                          data-source-file={SOURCE_FILES.annotatorDashboard}
+                          data-source-label="section:annotator-dashboard-assignment-start-button"
                           className="h-8 rounded-md bg-blue-600 px-4 text-xs font-bold text-white transition hover:bg-blue-700"
                         >
                           {t("annotator:tasks.actions.start")}
@@ -382,6 +390,8 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
                             e.stopPropagation();
                             handleOpen(a);
                           }}
+                          data-source-file={SOURCE_FILES.annotatorDashboard}
+                          data-source-label="section:annotator-dashboard-assignment-continue-button"
                           className="h-8 rounded-md border border-amber-200 bg-amber-100 px-4 text-xs font-bold text-amber-700 transition hover:bg-amber-200"
                         >
                           {t("annotator:tasks.actions.continue")}
@@ -393,6 +403,8 @@ const AnnotatorDashboard: React.FC<AnnotatorDashboardProps> = () => {
                             e.stopPropagation();
                             handleOpen(a);
                           }}
+                          data-source-file={SOURCE_FILES.annotatorDashboard}
+                          data-source-label="section:annotator-dashboard-assignment-view-button"
                           className="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-100 px-4 text-xs font-bold text-slate-600 transition hover:bg-slate-200"
                         >
                           <span className="material-symbols-outlined text-base">
