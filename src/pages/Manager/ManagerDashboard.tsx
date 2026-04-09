@@ -30,7 +30,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const projectsPerPage = 5;
-  
+
   // Annotator data
   const [annotators, setAnnotators] = useState<any[]>([]);
   const [annotatorProgress, setAnnotatorProgress] = useState<Record<number, any>>({});
@@ -73,17 +73,19 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
       // 1. Get all users and filter annotators
       const usersData: any = await userApi.getAllUsers({ page: 0, size: 200 });
       const allUsers = Array.isArray(usersData) ? usersData : ((usersData as any)?.content || []);
-      
+
       // Filter annotators (roleId = 3 or roleName = 'ANNOTATOR')
-      const annotatorList = allUsers.filter((u: any) => 
-        u.roleId === 3 || u.roleName?.toUpperCase() === 'ANNOTATOR'
-      );
+      const annotatorList = allUsers.filter((u: any) => {
+        const roleOk = u.roleId === 3 || u.roleName?.toUpperCase() === "ANNOTATOR";
+        const statusOk = String(u.status || "").toUpperCase() === "ACTIVE";
+        return roleOk && statusOk;
+      });
       setAnnotators(annotatorList);
-      
+
       // 2. Get all assignments from my projects
       const projectsResponse = await projectApi.getMyProjects();
       const projects = Array.isArray(projectsResponse) ? projectsResponse : [];
-      
+
       const allAssignments: any[] = [];
       for (const project of projects) {
         const projectId = resolveProjectId(project);
@@ -96,15 +98,15 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
           console.error(`Failed to fetch assignments for project ${projectId}:`, err);
         }
       }
-      
+
       // 3. Calculate progress for each annotator
       const progressMap: Record<number, any> = {};
-      
+
       annotatorList.forEach((annotator: any) => {
         const annotatorAssignments = allAssignments.filter(
           (a: any) => a.annotatorId === annotator.userId || a.annotatorId === annotator.id
         );
-        
+
         const total = annotatorAssignments.length;
         const completed = annotatorAssignments.filter(
           (a: any) => ["COMPLETED", "APPROVED"].includes(normalizeAssignmentStatus(a.status))
@@ -115,15 +117,15 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
         const pending = annotatorAssignments.filter(
           (a: any) => ["PENDING", "DRAFT"].includes(normalizeAssignmentStatus(a.status))
         ).length;
-        
+
         // Calculate average progress percentage
         const avgProgress = annotatorAssignments.length > 0
           ? Math.round(
-              annotatorAssignments.reduce((sum: number, a: any) => sum + (a.progress || 0), 0) / 
-              annotatorAssignments.length
-            )
+            annotatorAssignments.reduce((sum: number, a: any) => sum + (a.progress || 0), 0) /
+            annotatorAssignments.length
+          )
           : 0;
-        
+
         progressMap[annotator.userId || annotator.id] = {
           total,
           completed,
@@ -133,9 +135,9 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
           assignments: annotatorAssignments
         };
       });
-      
+
       setAnnotatorProgress(progressMap);
-      
+
     } catch (error) {
       console.error('Failed to fetch annotators and progress:', error);
     } finally {
@@ -185,7 +187,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
         <div className="flex flex-wrap gap-4">
           <Button
             variant="primary"
-            className="h-12 px-6 text-sm shadow-md"
+            className="h-12 px-6 text-sm shadow-md "
             onClick={() => navigate('/manager/projects')}
             leftIcon="add"
             data-shift-content="FE"
@@ -234,7 +236,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
           <div className="text-xs font-medium text-muted-foreground">{t("common:labels.datasets")}</div>
           </div>
         </Card>
-        
+
         <Card className="p-6 transition-all hover:shadow-md bg-white/80">
           <div data-shift-content={"GET /api/users?page=0&size=200\nTong so annotator trong he thong\nFE filter user theo roleId hoac roleName = ANNOTATOR"}>
           <div className="text-3xl font-bold text-foreground mb-1">
@@ -312,7 +314,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
               {/* Pagination */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-6 pt-6 border-t border-border">
-                <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     {t("manager:dashboard.showingProjects", {
                       start: indexOfFirstProject + 1,
                       end: Math.min(indexOfLastProject, myProjects.length),
@@ -347,7 +349,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
             </>
           )}
         </Card>
-        
+
         {/* Annotator Progress */}
         <Card className="p-6 bg-white/80">
           <h3 className="mb-6 text-lg font-semibold text-foreground flex items-center gap-2">
@@ -373,7 +375,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
                   pending: 0,
                   avgProgress: 0
                 };
-                
+
                 return (
                   <div
                     key={annotator.userId || annotator.id}
@@ -395,7 +397,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Progress bar */}
                     <div className="mb-2">
                       <div className="flex justify-between items-center mb-1">
@@ -403,13 +405,13 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
                         <span className="text-xs font-bold text-foreground">{progress.avgProgress}%</span>
                       </div>
                       <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300"
                           style={{ width: `${progress.avgProgress}%` }}
                         />
                       </div>
                     </div>
-                    
+
                     {/* Stats */}
                     <div className="grid grid-cols-3 gap-2 mt-3">
                       <div className="text-center p-2 rounded-lg bg-emerald-50">

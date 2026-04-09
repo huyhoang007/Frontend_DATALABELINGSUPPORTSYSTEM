@@ -294,7 +294,7 @@ export default function AdminUsers() {
             ) : (
               <>
                 {/* Table Header */}
-                <div className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr_1.5fr] px-6 py-3 bg-muted/50 border-b border-border gap-3">
+                <div className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr_1.5fr] px-6 py-3 bg-muted border-b border-border gap-3 items-center">
                   {[t("admin:users.table.user"), t("admin:users.table.email"), t("admin:users.table.role"), t("admin:users.table.status"), t("admin:users.table.createdAt"), t("admin:users.table.actions")].map((h) => (
                     <p key={h} className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{h}</p>
                   ))}

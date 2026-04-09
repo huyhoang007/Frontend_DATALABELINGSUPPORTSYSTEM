@@ -146,11 +146,9 @@ export default function AdminActivityLogs() {
                   className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
                 >
                   <option value="">{t("admin:logs.allActions")}</option>
-                  <option value="LOGIN">{t("admin:logs.login")}</option>
                   <option value="CREATE">{t("admin:logs.create")}</option>
                   <option value="UPDATE">{t("admin:logs.update")}</option>
                   <option value="DELETE">{t("admin:logs.delete")}</option>
-                  <option value="VIEW">{t("admin:logs.view")}</option>
                 </select>
               </div>
               <div>

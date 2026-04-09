@@ -142,6 +142,7 @@ export default function ProjectAssignments() {
         id: String(u.userId ?? u.id),
         name: u.fullName ?? u.username ?? `User ${u.userId ?? u.id}`,
         role: String(u.roleName ?? u.role ?? ""),
+        status: String(u.status ?? "").toUpperCase(),
       }));
 
       cacheUsers(mapped);
@@ -220,12 +221,14 @@ export default function ProjectAssignments() {
 
   const mappedUsers = usersResult?.users || [];
   const usersError = usersResult?.usersError || null;
+  const isActiveUser = (status?: string) =>
+    String(status || "").toUpperCase() === "ACTIVE";
   const annotators = useMemo(
-    () => mappedUsers.filter((u: any) => isAnnotator(u.role)),
+    () => mappedUsers.filter((u: any) => isAnnotator(u.role) && isActiveUser(u.status)),
     [mappedUsers],
   );
   const reviewers = useMemo(
-    () => mappedUsers.filter((u: any) => isReviewer(u.role)),
+    () => mappedUsers.filter((u: any) => isReviewer(u.role) && isActiveUser(u.status)),
     [mappedUsers],
   );
 
@@ -336,7 +339,7 @@ export default function ProjectAssignments() {
       {/* ── Assignment Form ── */}
       <Card className="p-6 space-y-5">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-          <span className="material-symbols-outlined text-[18px]">
+          <span className="material-symbols-outlined text-[20px]">
             assignment
           </span>
           {t("manager:assignments.create")}
