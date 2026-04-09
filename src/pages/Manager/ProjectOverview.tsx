@@ -19,6 +19,29 @@ const toNumber = (value: any) => {
     return Number.isFinite(parsed) ? parsed : 0;
 };
 
+const ANNOTATOR_LABELED_STATUSES = new Set([
+    "SUBMITTED",
+    "RE_SUBMITTED",
+    "APPROVED",
+    "REJECTED",
+    "COMPLETED",
+]);
+
+const REVIEWER_REVIEWED_STATUSES = new Set([
+    "APPROVED",
+    "REJECTED",
+    "COMPLETED",
+]);
+
+const REVIEWER_ACCEPTED_STATUSES = new Set([
+    "APPROVED",
+    "COMPLETED",
+]);
+
+const REVIEWER_REJECTED_STATUSES = new Set([
+    "REJECTED",
+]);
+
 export default function ProjectOverview() {
     const { project } = useOutletContext<{ project: any }>();
     const { t, i18n } = useTranslation(["manager", "common"]);
@@ -117,26 +140,64 @@ export default function ProjectOverview() {
             if (!statuses.has(status)) return sum;
             return sum + toNumber(datasetItemsById.get(Number(assignment?.datasetId)));
         }, 0);
-    const derivedLabeledItems = sumItemsForStatuses(new Set(["SUBMITTED", "RE_SUBMITTED", "APPROVED", "REJECTED", "COMPLETED"]));
-    const derivedReviewedItems = sumItemsForStatuses(new Set(["APPROVED", "REJECTED", "COMPLETED"]));
-    const derivedApprovedItems = sumItemsForStatuses(new Set(["APPROVED", "COMPLETED"]));
-    const labeledItems = Math.min(totalItems, Math.max(progress?.labeledItems ?? 0, derivedLabeledItems));
-    const approvedItems = Math.min(totalItems, Math.max(progress?.approvedItems ?? 0, derivedApprovedItems));
-    const overallProgress = progress?.overallProgress ?? 0;
+    const derivedLabeledItems = sumItemsForStatuses(ANNOTATOR_LABELED_STATUSES);
+    const derivedReviewedItems = sumItemsForStatuses(REVIEWER_REVIEWED_STATUSES);
+    const derivedApprovedItems = sumItemsForStatuses(REVIEWER_ACCEPTED_STATUSES);
+    const derivedRejectedItems = sumItemsForStatuses(REVIEWER_REJECTED_STATUSES);
+    const hasAssignmentProgressSource = assignments.length > 0 && datasets.length > 0;
+    const backendLabeledItems = toNumber(progress?.labeledItems);
+    const backendReviewedItems = toNumber(progress?.reviewedItems);
+    const backendApprovedItems = toNumber(progress?.approvedItems);
+    const approvedItems = Math.min(
+        totalItems,
+        Math.max(
+            backendApprovedItems,
+            hasAssignmentProgressSource ? derivedApprovedItems : 0,
+        ),
+    );
 
     const overallQualityScore = quality?.overallQualityScore ?? 0;
     const qualityLevel = quality?.qualityLevel ?? "N/A";
     const totalAnnotations = quality?.totalAnnotations ?? 0;
-    const acceptedAnnotations = quality?.acceptedAnnotations ?? 0;
     const totalPolicyViolations = quality?.totalPolicyViolations ?? 0;
     void totalPolicyViolations; // kept for future use
-    const rawRejectedAnnotations = quality?.rejectedAnnotations ?? 0;
-    const rejectedAnnotations = rawRejectedAnnotations;
+    const acceptedAnnotations = toNumber(quality?.acceptedAnnotations);
+    const backendRejectedAnnotations = toNumber(quality?.rejectedAnnotations);
+    const reviewedItems = Math.min(
+        totalItems,
+        Math.max(
+            approvedItems,
+            hasAssignmentProgressSource ? derivedReviewedItems : 0,
+            acceptedAnnotations > 0 || backendRejectedAnnotations > 0 ? backendReviewedItems : 0,
+        ),
+    );
+    const labeledItems = Math.min(
+        totalItems,
+        Math.max(
+            reviewedItems,
+            approvedItems,
+            backendLabeledItems,
+            hasAssignmentProgressSource ? derivedLabeledItems : 0,
+        ),
+    );
+    // Rejected only means annotations explicitly rejected by reviewer.
+    // Items that reviewer has opened but not decided yet must remain pending.
+    const rejectedAnnotations = hasAssignmentProgressSource
+        ? Math.min(labeledItems, Math.max(derivedRejectedItems, backendRejectedAnnotations))
+        : backendRejectedAnnotations;
+    const annotationBaseTotal = Math.max(totalAnnotations, acceptedAnnotations + rejectedAnnotations);
     const reviewedAnnotations = acceptedAnnotations + rejectedAnnotations;
-    const pendingAnnotations = Math.max(totalAnnotations - reviewedAnnotations, 0);
-    const hasActualReviewActivity = acceptedAnnotations > 0 || rejectedAnnotations > 0;
-    const reviewedItems = hasActualReviewActivity
-        ? Math.min(labeledItems, Math.max(progress?.reviewedItems ?? 0, derivedReviewedItems))
+    const pendingAnnotations = Math.max(annotationBaseTotal - reviewedAnnotations, 0);
+    const approvalProgressValue = Math.min(
+        Math.max(totalAnnotations, toNumber(quality?.acceptedAnnotations)),
+        toNumber(quality?.acceptedAnnotations),
+    );
+    const approvalProgressTotal = Math.max(totalAnnotations, approvalProgressValue);
+    const approvalProgressPct = approvalProgressTotal > 0
+        ? (approvalProgressValue / approvalProgressTotal) * 100
+        : 0;
+    const overallProgress = totalItems > 0
+        ? (approvedItems / totalItems) * 100
         : 0;
     const annotationAccuracy = quality?.annotationAccuracy ?? 0;
     const policyComplianceRate = quality?.policyComplianceRate ?? 0;
@@ -184,8 +245,8 @@ export default function ProjectOverview() {
                 "quality.rejectedAnnotations",
             ],
             formula: isEnglish
-                ? `Accepted = ${acceptedAnnotations}; Rejected = ${rejectedAnnotations}; Pending = max(totalAnnotations - (accepted + rejected), 0) = max(${totalAnnotations} - (${acceptedAnnotations} + ${rejectedAnnotations}), 0) = ${pendingAnnotations}`
-                : `Đã duyệt = ${acceptedAnnotations}; Từ chối = ${rejectedAnnotations}; Chờ duyệt = max(totalAnnotations - (accepted + rejected), 0) = max(${totalAnnotations} - (${acceptedAnnotations} + ${rejectedAnnotations}), 0) = ${pendingAnnotations}`,
+                ? `Accepted = ${acceptedAnnotations}; Rejected = ${rejectedAnnotations}; Pending = max(baseTotal - (accepted + rejected), 0) = max(${annotationBaseTotal} - (${acceptedAnnotations} + ${rejectedAnnotations}), 0) = ${pendingAnnotations}`
+                : `Đã chấp nhận = ${acceptedAnnotations}; Từ chối = ${rejectedAnnotations}; Chờ duyệt = max(tổng cơ sở - (accepted + rejected), 0) = max(${annotationBaseTotal} - (${acceptedAnnotations} + ${rejectedAnnotations}), 0) = ${pendingAnnotations}`,
         },
         qualityScore: {
             title: isEnglish ? "Overall quality score" : "Điểm chất lượng tổng thể",
@@ -212,8 +273,8 @@ export default function ProjectOverview() {
             ],
             fields: ["progress.labeledItems", "assignments[].status", "datasets[].totalItems"],
             formula: isEnglish
-                ? `Derived labeled items = sum(dataset.totalItems for assignment statuses SUBMITTED, RE_SUBMITTED, APPROVED, REJECTED, COMPLETED) = ${derivedLabeledItems}. Final displayed value = max(progress.labeledItems, derivedValue), capped by totalItems = ${labeledItems}/${totalItems}`
-                : `Số item đã gán nhãn suy ra = tổng dataset.totalItems của assignment có trạng thái SUBMITTED, RE_SUBMITTED, APPROVED, REJECTED, COMPLETED = ${derivedLabeledItems}. Giá trị cuối = max(progress.labeledItems, giá trị suy ra) và không vượt totalItems = ${labeledItems}/${totalItems}`,
+                ? `Derived labeled items = sum(dataset.totalItems for annotator-completed statuses SUBMITTED, RE_SUBMITTED, APPROVED, REJECTED, COMPLETED) = ${derivedLabeledItems}. Displayed value uses the derived assignment-based result = ${labeledItems}/${totalItems}`
+                : `Số item đã gán nhãn suy ra = tổng dataset.totalItems của assignment đã qua bước annotator với trạng thái SUBMITTED, RE_SUBMITTED, APPROVED, REJECTED, COMPLETED = ${derivedLabeledItems}. Giá trị hiển thị dùng trực tiếp kết quả suy ra theo assignment = ${labeledItems}/${totalItems}`,
         },
         reviewingProgress: {
             title: isEnglish ? "Reviewer reviewed progress" : "Tiến độ reviewer đã đánh giá",
@@ -231,20 +292,27 @@ export default function ProjectOverview() {
                 "datasets[].totalItems",
             ],
             formula: isEnglish
-                ? `If accepted and rejected are both 0, displayed reviewed items = 0. Otherwise derived value = sum(dataset.totalItems for APPROVED, REJECTED, COMPLETED) = ${derivedReviewedItems}. Final value = max(progress.reviewedItems, derivedValue), capped by labeledItems = ${reviewedItems}/${totalItems}`
-                : `Nếu accepted và rejected đều bằng 0 thì hiển thị reviewedItems = 0. Ngược lại giá trị suy ra = tổng dataset.totalItems của assignment có trạng thái APPROVED, REJECTED, COMPLETED = ${derivedReviewedItems}. Giá trị cuối = max(progress.reviewedItems, giá trị suy ra) và không vượt labeledItems = ${reviewedItems}/${totalItems}`,
+                ? `Reviewer-reviewed items are counted only when reviewer has already made a decision. Derived value = sum(dataset.totalItems for APPROVED, REJECTED, COMPLETED) = ${derivedReviewedItems}. Displayed value uses the derived assignment-based result = ${reviewedItems}/${totalItems}`
+                : `Số item reviewer đã đánh giá chỉ được tính khi reviewer đã ra quyết định. Giá trị suy ra = tổng dataset.totalItems của assignment có trạng thái APPROVED, REJECTED, COMPLETED = ${derivedReviewedItems}. Giá trị hiển thị dùng trực tiếp kết quả suy ra theo assignment = ${reviewedItems}/${totalItems}`,
         },
         approvalProgress: {
             title: isEnglish ? "Approved progress" : "Tiến độ đã duyệt",
             api: [
                 "GET /api/analytics/projects/:projectId/progress",
+                "GET /api/analytics/projects/:projectId/quality",
                 "GET /api/assignments/project/:projectId",
                 "GET /api/datasets/project/:projectId",
             ],
-            fields: ["progress.approvedItems", "assignments[].status", "datasets[].totalItems"],
+            fields: [
+                "quality.acceptedAnnotations",
+                "quality.totalAnnotations",
+                "progress.approvedItems",
+                "assignments[].status",
+                "datasets[].totalItems",
+            ],
             formula: isEnglish
-                ? `Derived approved items = sum(dataset.totalItems for APPROVED, COMPLETED) = ${derivedApprovedItems}. Final displayed value = max(progress.approvedItems, derivedValue), capped by totalItems = ${approvedItems}/${totalItems}`
-                : `Số item đã duyệt suy ra = tổng dataset.totalItems của assignment có trạng thái APPROVED, COMPLETED = ${derivedApprovedItems}. Giá trị cuối = max(progress.approvedItems, giá trị suy ra) và không vượt totalItems = ${approvedItems}/${totalItems}`,
+                ? `Accepted progress now follows reviewed annotations directly. Displayed value = quality.acceptedAnnotations / quality.totalAnnotations = ${approvalProgressValue}/${approvalProgressTotal}`
+                : `Thanh đã chấp nhận giờ đi theo số annotation đã được reviewer chấp nhận trực tiếp. Giá trị hiển thị = quality.acceptedAnnotations / quality.totalAnnotations = ${approvalProgressValue}/${approvalProgressTotal}`,
         },
         annotationAccuracy: {
             title: isEnglish ? "Annotation accuracy" : "Độ chính xác gán nhãn",
@@ -286,6 +354,7 @@ export default function ProjectOverview() {
         rejectedAnnotations,
         pendingAnnotations,
         totalAnnotations,
+        annotationBaseTotal,
         overallQualityScore,
         qualityLevel,
         policyComplianceRate,
@@ -296,6 +365,9 @@ export default function ProjectOverview() {
         reviewedItems,
         derivedApprovedItems,
         approvedItems,
+        approvalProgressValue,
+        approvalProgressTotal,
+        derivedRejectedItems,
         annotationAccuracy,
         labelDistributionBalance,
     ]);
@@ -426,13 +498,13 @@ export default function ProjectOverview() {
                         {[
                             { key: "labelingProgress", label: t("manager:overview.labelingDone"), value: labeledItems, pct: totalItems > 0 ? (labeledItems / totalItems) * 100 : 0, color: "bg-blue-500" },
                             { key: "reviewingProgress", label: t("manager:overview.reviewingDone"), value: reviewedItems, pct: totalItems > 0 ? (reviewedItems / totalItems) * 100 : 0, color: "bg-emerald-500" },
-                            { key: "approvalProgress", label: t("manager:overview.approvalDone"), value: approvedItems, pct: totalItems > 0 ? (approvedItems / totalItems) * 100 : 0, color: "bg-amber-500" },
+                            { key: "approvalProgress", label: t("manager:overview.approvalDone"), value: approvalProgressValue, total: approvalProgressTotal, pct: approvalProgressPct, color: "bg-amber-500" },
                         ].map((bar) => (
                             <div key={bar.label} {...attachExplainProps(bar.key)}>
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-sm text-foreground font-medium">{bar.label}</span>
                                     <span className="text-sm font-bold text-foreground">
-                                        {bar.value.toLocaleString()} / {totalItems.toLocaleString()}
+                                        {bar.value.toLocaleString()} / {(bar.total ?? totalItems).toLocaleString()}
                                     </span>
                                 </div>
                                 <div className="w-full bg-muted/50 rounded-full h-2.5">

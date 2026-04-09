@@ -383,6 +383,7 @@ const manager = {
     syncedFailed: "Failed to sync label rules to the server",
     addSuccess: 'Added rule "{{name}}"',
     removeSuccess: 'Removed rule "{{name}}"',
+    minOneRequired: "A project must keep at least 1 label rule",
     table: {
       name: "Rule Name",
       content: "Content / Description",
@@ -587,6 +588,7 @@ const manager = {
     addFailed: "Failed to add error type to project",
     removeSuccess: "Removed from project",
     removeFailed: "Failed to remove error type from project",
+    minOneRequired: "A project must keep at least 1 error type",
     addLoading: "Adding...",
     addDone: "Added",
     addAction: "Add to project",

@@ -139,6 +139,10 @@ export default function ProjectLabels() {
   };
 
   const removeRule = async (r: any) => {
+    if (projectRuleIds.length <= 1) {
+      showToast(t("manager:labelRules.minOneRequired"));
+      return;
+    }
     const id = getRuleId(r);
     const next = projectRuleIds.filter((i) => i !== id);
     setProjectRuleIds(next);
@@ -286,7 +290,7 @@ export default function ProjectLabels() {
                       variant="ghost"
                       size="sm"
                       onClick={() => removeRule(rule)}
-                      disabled={isProjectCompleted}
+                      disabled={isProjectCompleted || projectRuleIds.length <= 1}
                       title={t("manager:labelRules.removeRuleTitle")}
                     >
                       <span className="material-symbols-outlined text-base text-destructive">

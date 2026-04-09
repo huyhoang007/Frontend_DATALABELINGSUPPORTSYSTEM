@@ -111,6 +111,10 @@ export default function ProjectErrors() {
   };
 
   const removeFromProject = async (policyId: number) => {
+    if (projectPolicies.length <= 1) {
+      showToast(t("manager:projectErrors.minOneRequired"));
+      return;
+    }
     setActionLoading(policyId);
     try {
       await policiesAPI.removeFromProject(pid, policyId);
@@ -180,7 +184,9 @@ export default function ProjectErrors() {
                   variant="ghost"
                   size="sm"
                   disabled={
-                    actionLoading === item.policyId || isProjectCompleted
+                    actionLoading === item.policyId ||
+                    isProjectCompleted ||
+                    projectPolicies.length <= 1
                   }
                   onClick={() => removeFromProject(item.policyId)}
                   title={t("manager:projectErrors.removeTitle")}
