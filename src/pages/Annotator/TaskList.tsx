@@ -95,6 +95,7 @@ export default function TaskList() {
           className="flex flex-row items-end justify-between mb-8 pb-6 border-b-2 border-[#DCDFE4] gap-4 flex-wrap"
           data-source-file={SOURCE_FILES.annotatorTaskList}
           data-source-label="section:annotator-task-list-header"
+          data-shift-content={"GET /api/my-assignments\nDanh sach task annotator hien tai\nFE dem activeCount va render welcome"}
         >
           <div>
             <p className="text-[11px] font-bold text-[#626F86] uppercase tracking-[0.1em] mb-1">
@@ -116,6 +117,7 @@ export default function TaskList() {
             onClick={() => { logout(); navigate("/login"); }}
             data-source-file={SOURCE_FILES.annotatorTaskList}
             data-source-label="section:annotator-task-list-logout-button"
+            data-shift-content="FE"
             className="flex items-center gap-2 h-10 px-5 text-sm font-semibold text-red-600 bg-transparent border border-[#DCDFE4] rounded cursor-pointer transition-all hover:bg-red-50 hover:border-red-300"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
@@ -137,6 +139,7 @@ export default function TaskList() {
                 onClick={() => setActiveTab(tab)}
                 data-source-file={SOURCE_FILES.annotatorTaskList}
                 data-source-label={`section:annotator-task-list-filter-tab-${tab.toLowerCase()}`}
+                data-shift-content="FE"
                 className={`px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-[0.06em] transition-all cursor-pointer font-sans
                   ${activeTab === tab
                     ? "bg-white text-blue-600 border border-blue-200/50 shadow-sm"
@@ -157,6 +160,7 @@ export default function TaskList() {
               type="text"
               data-source-file={SOURCE_FILES.annotatorTaskList}
               data-source-label="section:annotator-task-list-search-input"
+              data-shift-content="FE"
               className="w-full pl-10 pr-3 py-2 bg-white border border-[#DCDFE4] rounded-md text-[13px] text-[#172B4D] outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-sans"
               placeholder={t("annotator:tasks.searchPlaceholder")}
               value={search}
@@ -194,7 +198,8 @@ export default function TaskList() {
           <div
             className="rounded-md border border-[#DCDFE4] bg-white overflow-hidden shadow-sm"
             data-source-file={SOURCE_FILES.annotatorTaskList}
-          data-source-label="section:annotator-assignment-table"
+            data-source-label="section:annotator-assignment-table"
+            data-shift-content={"GET /api/my-assignments\nKet qua loc danh sach task cua annotator\nFE filter theo tab va search roi render empty state"}
           >
             <div className="flex flex-col items-center justify-center h-[600px] w-full">
               <span className="material-symbols-outlined text-[64px] text-[#626F86]/40 mb-4">assignment</span>
@@ -208,7 +213,10 @@ export default function TaskList() {
 
         {/* Task Table */}
         {!loading && filteredAssignments.length > 0 && (
-          <div className="rounded-md border border-[#DCDFE4] bg-white overflow-hidden shadow-sm">
+          <div
+            className="rounded-md border border-[#DCDFE4] bg-white overflow-hidden shadow-sm"
+            data-shift-content={"GET /api/my-assignments\nDanh sach task annotator duoc giao\nFE filter theo tab, search va render bang"}
+          >
 
             {/* Table Header - desktop only */}
             {!isMobile && (
@@ -236,6 +244,7 @@ export default function TaskList() {
                       onClick={() => handleOpen(a)}
                       data-source-file={SOURCE_FILES.annotatorTaskList}
                       data-source-label="section:annotator-task-list-mobile-assignment-card"
+                      data-shift-content={"GET /api/my-assignments\n1 assignment tu response my-assignments\nFE render projectName, datasetName, reviewerName, progress, status"}
                       className={`p-4 border-b border-[#DCDFE4] flex flex-col gap-3 cursor-pointer ${idx % 2 === 0 ? "bg-white" : "bg-[#FAFBFC]"}`}
                     >
                       <div className="flex justify-between gap-3 items-start">
@@ -286,6 +295,7 @@ export default function TaskList() {
                     onClick={() => handleOpen(a)}
                     data-source-file={SOURCE_FILES.annotatorTaskList}
                     data-source-label="section:annotator-task-list-assignment-row"
+                    data-shift-content={"GET /api/my-assignments\n1 assignment tu response my-assignments\nFE render projectName, datasetName, reviewerName, progress, status"}
                     className={`grid grid-cols-[60px_2fr_1.5fr_1.2fr_1.5fr_1fr_100px] gap-4 items-center px-6 py-4 border-b border-[#DCDFE4] cursor-pointer transition-all
                       ${hoveredRow === idx ? "bg-blue-50" : idx % 2 === 0 ? "bg-white" : "bg-[#FAFBFC]"}`}
                   >
@@ -349,6 +359,7 @@ function DesktopActionButton({ status, a, handleOpen, t }) {
         onClick={(e) => { e.stopPropagation(); handleOpen(a); }}
         data-source-file={SOURCE_FILES.annotatorTaskList}
         data-source-label="section:annotator-task-list-desktop-start-button"
+        data-shift-content="FE"
         className="h-8 px-4 text-[12px] font-bold text-white bg-blue-600 border-none rounded cursor-pointer transition-colors hover:bg-blue-700 font-sans"
       >
         {t("annotator:tasks.actions.start")}
@@ -361,6 +372,7 @@ function DesktopActionButton({ status, a, handleOpen, t }) {
         onClick={(e) => { e.stopPropagation(); handleOpen(a); }}
         data-source-file={SOURCE_FILES.annotatorTaskList}
         data-source-label="section:annotator-task-list-desktop-continue-button"
+        data-shift-content="FE"
         className="h-8 px-4 text-[12px] font-bold text-amber-700 bg-amber-50 border border-amber-300/40 rounded cursor-pointer transition-colors hover:bg-amber-100 font-sans"
       >
         {t("annotator:tasks.actions.continue")}
@@ -373,6 +385,7 @@ function DesktopActionButton({ status, a, handleOpen, t }) {
         onClick={(e) => { e.stopPropagation(); handleOpen(a); }}
         data-source-file={SOURCE_FILES.annotatorTaskList}
         data-source-label="section:annotator-task-list-desktop-view-button"
+        data-shift-content="FE"
         className="h-8 px-4 text-[12px] font-bold text-[#44546F] bg-[#F1F2F4] border border-[#DCDFE4] rounded cursor-pointer transition-colors hover:bg-[#DCDFE4] inline-flex items-center gap-1.5 font-sans"
       >
         <span className="material-symbols-outlined text-[16px]">visibility</span>
@@ -387,21 +400,21 @@ function MobileActionButton({ status, a, handleOpen, t }) {
   const base = "h-9 w-full px-4 text-[12px] font-bold rounded-md cursor-pointer flex items-center justify-center gap-1.5 font-sans transition-colors";
   if (["PENDING", "REJECTED"].includes(status)) {
     return (
-      <button onClick={(e) => { e.stopPropagation(); handleOpen(a); }} data-source-file={SOURCE_FILES.annotatorTaskList} data-source-label="section:annotator-task-list-mobile-start-button" className={`${base} text-white bg-blue-600 border-none hover:bg-blue-700`}>
+      <button onClick={(e) => { e.stopPropagation(); handleOpen(a); }} data-source-file={SOURCE_FILES.annotatorTaskList} data-source-label="section:annotator-task-list-mobile-start-button" data-shift-content="FE" className={`${base} text-white bg-blue-600 border-none hover:bg-blue-700`}>
         {t("annotator:tasks.actions.start")}
       </button>
     );
   }
   if (status === "IN_PROGRESS") {
     return (
-      <button onClick={(e) => { e.stopPropagation(); handleOpen(a); }} data-source-file={SOURCE_FILES.annotatorTaskList} data-source-label="section:annotator-task-list-mobile-continue-button" className={`${base} text-amber-700 bg-amber-50 border border-amber-300/40 hover:bg-amber-100`}>
+      <button onClick={(e) => { e.stopPropagation(); handleOpen(a); }} data-source-file={SOURCE_FILES.annotatorTaskList} data-source-label="section:annotator-task-list-mobile-continue-button" data-shift-content="FE" className={`${base} text-amber-700 bg-amber-50 border border-amber-300/40 hover:bg-amber-100`}>
         {t("annotator:tasks.actions.continue")}
       </button>
     );
   }
   if (["RE_SUBMITTED", "SUBMITTED", "APPROVED", "COMPLETED"].includes(status)) {
     return (
-      <button onClick={(e) => { e.stopPropagation(); handleOpen(a); }} data-source-file={SOURCE_FILES.annotatorTaskList} data-source-label="section:annotator-task-list-mobile-view-button" className={`${base} text-[#44546F] bg-[#F1F2F4] border border-[#DCDFE4] hover:bg-[#DCDFE4]`}>
+      <button onClick={(e) => { e.stopPropagation(); handleOpen(a); }} data-source-file={SOURCE_FILES.annotatorTaskList} data-source-label="section:annotator-task-list-mobile-view-button" data-shift-content="FE" className={`${base} text-[#44546F] bg-[#F1F2F4] border border-[#DCDFE4] hover:bg-[#DCDFE4]`}>
         <span className="material-symbols-outlined text-[16px]">visibility</span>
         {t("annotator:tasks.actions.view")}
       </button>

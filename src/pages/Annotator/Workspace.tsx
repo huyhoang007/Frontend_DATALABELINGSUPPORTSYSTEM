@@ -138,7 +138,7 @@ const TOOLS = [
 ];
 
 export default function Workspace() {
-  const { t } = useTranslation(["annotator", "common"]);
+  const { t, i18n } = useTranslation(["annotator", "common"]);
   const { taskId } = useParams();
   const navigate = useNavigate();
   const { addToast } = useToast();
@@ -194,6 +194,9 @@ export default function Workspace() {
   const [showGuidelinePopover, setShowGuidelinePopover] = React.useState(false);
   const hydratedDoneAssignmentRef = React.useRef(null);
   const [isMobile, setIsMobile] = React.useState(() => window.innerWidth < 768);
+  const [hoveredExplainKey, setHoveredExplainKey] = React.useState(null);
+  const [isShiftPressed, setIsShiftPressed] = React.useState(false);
+  const [pointerPosition, setPointerPosition] = React.useState({ x: 0, y: 0 });
   const tools = React.useMemo(
     () =>
       TOOLS.map((tool) => ({
@@ -526,6 +529,134 @@ export default function Workspace() {
   /* ── All labels: workspace groups first, fallback second ── */
   const allLabels =
     labelsFromGroups.length > 0 ? labelsFromGroups : fallbackLabels;
+
+  const isEnglish = i18n.language === "en";
+  const explainers = React.useMemo(
+    () => ({
+      workspaceShell: {
+        title: isEnglish ? "Annotator workspace shell" : "Khung workspace annotator",
+        api: ["GET /api/assignments/:assignmentId/workspace"],
+        formula: isEnglish
+          ? "BE returns assignment info, project info, items[], assignmentStatus, and labelGroups. FE uses this response to build the 3-column workspace layout."
+          : "BE trả về thông tin assignment, project, items[], assignmentStatus và labelGroups. FE dùng response này để dựng toàn bộ layout 3 cột của workspace.",
+      },
+      projectBadge: {
+        title: isEnglish ? "Project / assignment badge" : "Badge tên project / assignment",
+        api: ["GET /api/assignments/:assignmentId/workspace"],
+        formula: isEnglish
+          ? `Displayed text = workspace.projectName or fallback Assignment #${assignmentId}.`
+          : `Text hiển thị = workspace.projectName hoặc fallback Assignment #${assignmentId}.`,
+      },
+      thumbnailList: {
+        title: isEnglish ? "Image thumbnail list" : "Danh sách thumbnail ảnh",
+        api: ["GET /api/assignments/:assignmentId/workspace"],
+        formula: isEnglish
+          ? `FE reads workspace.items[] to render the left thumbnail list. Total thumbnails = workspace.items.length = ${totalImages}.`
+          : `FE đọc workspace.items[] để render danh sách thumbnail bên trái. Tổng thumbnail = workspace.items.length = ${totalImages}.`,
+      },
+      thumbnailCard: {
+        title: isEnglish ? "Thumbnail image card" : "Card thumbnail ảnh",
+        api: [
+          "GET /api/assignments/:assignmentId/workspace",
+          "GET /uploads/:filePath",
+        ],
+        formula: isEnglish
+          ? "Workspace API provides each item fileUrl/fileName/itemId. FE then resolves fileUrl and fetches the actual image blob through the uploads endpoint."
+          : "Workspace API cung cấp fileUrl/fileName/itemId cho từng item. FE sau đó resolve fileUrl và tải blob ảnh thật qua endpoint uploads.",
+      },
+      saveDraft: {
+        title: isEnglish ? "Save draft button" : "Nút lưu nháp",
+        api: ["POST/PUT annotation save endpoint via useAnnotations"],
+        formula: isEnglish
+          ? "Button triggers FE save flow for current annotation state. FE sends current item annotations from local state to backend without submitting review."
+          : "Nút gọi flow lưu FE cho trạng thái annotation hiện tại. FE gửi annotations của item đang mở từ local state lên backend mà chưa submit sang review.",
+      },
+      submitButton: {
+        title: isEnglish ? "Submit assignment button" : "Nút nộp assignment",
+        api: [
+          "GET /api/assignments/:assignmentId/workspace",
+          "POST/PUT annotation save endpoint via useAnnotations",
+          "Submit assignment endpoint via annotation workspace flow",
+        ],
+        formula: isEnglish
+          ? "FE checks assignmentStatus, current annotations, rejected feedback, and image load state. If valid, FE flushes pending annotation changes then submits the assignment to reviewer."
+          : "FE kiểm tra assignmentStatus, annotation hiện tại, feedback bị reject và trạng thái load ảnh. Nếu hợp lệ, FE flush phần annotation chưa đồng bộ rồi mới submit assignment sang reviewer.",
+      },
+      imageCanvas: {
+        title: isEnglish ? "Main image canvas" : "Vùng ảnh / canvas chính",
+        api: [
+          "GET /api/assignments/:assignmentId/workspace",
+          "GET /api/assignments/:assignmentId/items/:itemId/annotations",
+          "GET /uploads/:filePath",
+        ],
+        formula: isEnglish
+          ? "FE uses currentItem from workspace.items[currentImageIndex], loads current item annotations, then resolves currentItem.fileUrl to fetch the image blob and render the overlay canvas."
+          : "FE dùng currentItem từ workspace.items[currentImageIndex], tải annotations của item hiện tại, rồi resolve currentItem.fileUrl để tải blob ảnh và render canvas kèm overlay.",
+      },
+      toolsPanel: {
+        title: isEnglish ? "Drawing tools toolbar" : "Thanh công cụ vẽ",
+        api: ["GET /api/assignments/:assignmentId/workspace"],
+        formula: isEnglish
+          ? "Tool buttons are FE-only UI state. Available tool behavior depends on workspace.assignmentStatus; if read-only, FE locks tools and keeps only select mode."
+          : "Các nút tool là UI state phía FE. Hành vi tool phụ thuộc workspace.assignmentStatus; nếu read-only thì FE khóa tool và chỉ giữ select mode.",
+      },
+      annotationPanel: {
+        title: isEnglish ? "Annotation side panel" : "Panel annotation bên phải",
+        api: [
+          "GET /api/assignments/:assignmentId/items/:itemId/annotations",
+          "POST/PUT annotation save endpoint via useAnnotations",
+        ],
+        formula: isEnglish
+          ? "FE renders the right panel from current local annotation state. That state is hydrated from item annotations API and then updated live as the annotator draws, hides, relabels, deletes, saves, or submits."
+          : "FE render panel bên phải từ local annotation state hiện tại. State này được hydrate từ API annotations của item, rồi cập nhật realtime khi annotator vẽ, ẩn/hiện, đổi label, xóa, lưu hoặc submit.",
+      },
+    }),
+    [assignmentId, i18n.language, isEnglish, totalImages],
+  );
+
+  const currentExplainer =
+    hoveredExplainKey && explainers[hoveredExplainKey];
+  React.useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Shift") setIsShiftPressed(true);
+      if (event.key !== "Alt") return;
+      if (event.repeat || !currentExplainer) return;
+      navigator.clipboard?.writeText([
+        currentExplainer.title,
+        currentExplainer.api.join(", "),
+        currentExplainer.formula,
+      ].join("\n")).catch(() => {});
+    };
+    const handleKeyUp = (event) => {
+      if (event.key === "Shift") setIsShiftPressed(false);
+    };
+    const handleBlur = () => {
+      setHoveredExplainKey(null);
+      setIsShiftPressed(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", handleBlur);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [currentExplainer]);
+
+  const attachExplainProps = (key) => ({
+    "data-shift-explainer": "custom",
+    onMouseEnter: (event) => {
+      setHoveredExplainKey(key);
+      setPointerPosition({ x: event.clientX, y: event.clientY });
+    },
+    onMouseMove: (event) => {
+      setHoveredExplainKey(key);
+      setPointerPosition({ x: event.clientX, y: event.clientY });
+    },
+    onMouseLeave: () =>
+      setHoveredExplainKey((current) => (current === key ? null : current)),
+  });
 
   /* ── Label groups for modal (preserves rule/group structure) ── */
   const labelGroupsForModal = React.useMemo(() => {
@@ -927,10 +1058,24 @@ export default function Workspace() {
   // â”€â”€ FULL REDESIGN â”€â”€
   return (
     <>
+      {isShiftPressed && currentExplainer && (
+        <div
+          className="pointer-events-none fixed z-[10000] max-w-[420px] rounded-lg border border-emerald-400/30 bg-slate-950/95 px-3 py-2 text-xs text-slate-100 shadow-2xl backdrop-blur-sm"
+          style={{
+            left: Math.min(pointerPosition.x + 14, window.innerWidth - 440),
+            top: Math.min(pointerPosition.y + 18, window.innerHeight - 140),
+          }}
+        >
+          <div className="text-[11px] leading-5">{currentExplainer.title}</div>
+          <div className="mt-1 text-[11px] leading-5 text-slate-300">{currentExplainer.api.join(", ")}</div>
+          <div className="mt-1 text-[11px] leading-5 text-slate-300">{currentExplainer.formula}</div>
+        </div>
+      )}
       <div
         className="flex h-screen flex-col overflow-hidden bg-[#131c2e] text-slate-200"
         data-source-file={SOURCE_FILES.annotatorWorkspace}
-      data-source-label="section:annotator-workspace-page"
+        data-source-label="section:annotator-workspace-page"
+        {...attachExplainProps("workspaceShell")}
       >
         {/* â•â•â•â•â•â•â•â•â•â• TOP BAR â•â•â•â•â•â•â•â•â•â• */}
         <div
@@ -1199,12 +1344,13 @@ export default function Workspace() {
                 : "w-[148px] border-r border-[#253347]"
             }`}
             data-source-file={SOURCE_FILES.annotatorWorkspace}
-              data-source-label="section:annotator-left-panel"
+            data-source-label="section:annotator-left-panel"
+            {...attachExplainProps("thumbnailList")}
           >
             {/* Project Info & Submit Action */}
             <div className="flex shrink-0 flex-col gap-2 border-b border-[#253347] p-3">
               {/* Task name badge */}
-              <div className="flex items-center justify-between px-2 py-1.5 rounded text-xs font-medium bg-[#1e2f42] text-[#cbd5e1] border border-[#2a3f55]">
+              <div className="flex items-center justify-between px-2 py-1.5 rounded text-xs font-medium bg-[#1e2f42] text-[#cbd5e1] border border-[#2a3f55]" {...attachExplainProps("projectBadge")}>
                 <span
                   className="truncate flex-1"
                   title={workspace.projectName || `Assignment #${assignmentId}`}
@@ -1222,6 +1368,7 @@ export default function Workspace() {
                 disabled={isSubmitBlocked || isSubmitting}
                 data-source-file={SOURCE_FILES.annotatorWorkspace}
                 data-source-label="section:annotator-workspace-submit-button"
+                {...attachExplainProps("submitButton")}
                 title={
                   imageError
                     ? t("annotator:workspace.messages.submitBlockedImage")
@@ -1279,6 +1426,7 @@ export default function Workspace() {
                     }}
                     data-source-file={SOURCE_FILES.annotatorWorkspace}
                     data-source-label="section:annotator-workspace-thumbnail-card"
+                    {...attachExplainProps("thumbnailCard")}
                     className={`relative cursor-pointer overflow-hidden rounded bg-[#1e2f42] transition-all ${
                       isActive ? "border-2 border-[#00bfa5]" : "border-2 border-transparent"
                     } ${isMobile ? "min-w-24" : ""}`}
@@ -1328,6 +1476,7 @@ export default function Workspace() {
                 disabled={isReadOnly}
                 data-source-file={SOURCE_FILES.annotatorWorkspace}
                 data-source-label="section:annotator-workspace-save-draft-button"
+                {...attachExplainProps("saveDraft")}
                 className={`flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#2a4060] bg-[#1a2a3a] py-2 text-xs font-semibold text-sky-300 transition-all ${
                   isReadOnly ? "cursor-not-allowed opacity-40" : "active:scale-95 hover:bg-[#1e3a5f]"
                 }`}
@@ -1346,7 +1495,8 @@ export default function Workspace() {
               isMobile ? "min-h-0" : ""
             }`}
             data-source-file={SOURCE_FILES.annotatorWorkspace}
-              data-source-label="section:annotator-center-canvas-area"
+            data-source-label="section:annotator-center-canvas-area"
+            {...attachExplainProps("imageCanvas")}
           >
             {/* centering wrapper — expands to at least full viewport so canvas stays centered at small zoom */}
             <div
@@ -1467,7 +1617,8 @@ export default function Workspace() {
                 : "w-[260px] border-l border-[#253347]"
             }`}
             data-source-file={SOURCE_FILES.annotatorWorkspace}
-              data-source-label="section:annotator-right-panel"
+            data-source-label="section:annotator-right-panel"
+            {...attachExplainProps("annotationPanel")}
           >
             {/* Tool icons */}
             <div className="flex shrink-0 items-center justify-center gap-1.5 border-b border-[#253347] bg-[#111d2c] px-3 py-2.5">
@@ -1487,6 +1638,7 @@ export default function Workspace() {
                   disabled={isReadOnly && tool.id !== "select"}
                   data-source-file={SOURCE_FILES.annotatorWorkspace}
                   data-source-label={`section:annotator-workspace-tool-button-${tool.id}`}
+                  {...attachExplainProps("toolsPanel")}
                   className={`flex h-11 w-11 flex-col items-center justify-center gap-0.5 rounded-lg px-[2px] py-1 transition-all ${
                     isReadOnly && tool.id !== "select"
                       ? "hidden cursor-not-allowed opacity-30"

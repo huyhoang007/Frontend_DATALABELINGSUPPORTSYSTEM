@@ -118,6 +118,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
         <div className="flex flex-wrap gap-4">
           <button
             onClick={() => navigate('/admin/users')}
+            data-shift-content="FE"
             className="flex items-center gap-2 h-12 px-6 text-sm font-bold text-white bg-primary hover:bg-primary/90 rounded transition-colors shadow-sm"
           >
             <span className="material-symbols-outlined text-[20px]">group</span>
@@ -125,6 +126,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
           </button>
           <button
             onClick={() => navigate('/admin/logs')}
+            data-shift-content="FE"
             className="flex items-center gap-2 h-12 px-6 text-sm font-bold text-foreground bg-card hover:bg-accent border border-border rounded transition-colors"
           >
             <span className="material-symbols-outlined text-[20px]">bar_chart</span>
@@ -135,6 +137,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
 
       {/* KPI */}
       <div className="bg-card border border-t-4 border-t-primary border-border rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+        <div data-shift-content={"GET /api/users?page=0&size=1000\nTong so user trong he thong\nFE doc totalElements hoac users.length"}>
         <div className="flex items-start justify-between mb-3">
           <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
             {t("admin:dashboard.totalUsers")}
@@ -144,6 +147,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
         <div className="text-4xl font-extrabold text-foreground leading-none">
           {isLoading ? '...' : totalUsers.toLocaleString()}
         </div>
+        </div>
       </div>
 
       {/* Role Distribution + Recent Activity */}
@@ -152,7 +156,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
         {/* Role Distribution */}
         <div className="bg-card border border-border rounded-lg p-8 shadow-sm">
           <h3 className="text-base font-bold text-foreground mb-6">{t("admin:dashboard.roleDistribution")}</h3>
-          <div className="space-y-5">
+          <div
+            className="space-y-5"
+            data-shift-content={"GET /api/users?page=0&size=1000\nPhan bo role nguoi dung\nFE filter users theo roleName va tinh % tren tong totalUsers"}
+          >
             {ROLE_BARS.map(({ key, gradient }) => {
               const count = roleStats[key];
               const pct = totalUsers > 0 ? (count / totalUsers) * 100 : 0;
@@ -177,6 +184,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
         {/* Recent Activity */}
         <div className="bg-card border border-border rounded-lg p-8 shadow-sm">
           <h3 className="text-base font-bold text-foreground mb-6">{t("admin:dashboard.recentActivity")}</h3>
+          <div data-shift-content={"GET /api/activity-logs?page=0&size=5\n5 hoat dong gan day cua he thong\nFE format message va time ago tu activity logs"}>
           {recentActivities.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("admin:dashboard.noActivity")}</p>
           ) : (
@@ -189,6 +197,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
               ))}
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>

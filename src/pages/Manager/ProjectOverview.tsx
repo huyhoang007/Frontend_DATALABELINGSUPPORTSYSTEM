@@ -13,6 +13,7 @@ import {
     projectQueryKeys,
 } from "../../query/projectQueries";
 import { translateRole } from "../../i18n/helpers";
+import { SOURCE_FILES } from "../../utils/sourceMeta";
 
 const toNumber = (value: any) => {
     const parsed = Number(value);
@@ -452,6 +453,7 @@ export default function ProjectOverview() {
         };
     }, [currentExplainer]);
     const attachExplainProps = (key: string) => ({
+        "data-shift-explainer": "custom",
         onMouseEnter: (event: any) => {
             setHoveredExplainKey(key);
             setPointerPosition({ x: event.clientX, y: event.clientY });
@@ -516,18 +518,37 @@ export default function ProjectOverview() {
                 </div>
             )}
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <Card {...attachExplainProps("totalItems")} className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
+            <div
+                className="grid grid-cols-2 md:grid-cols-5 gap-4"
+                data-source-file={SOURCE_FILES.managerProjectOverview}
+                data-source-label="section:project-overview-kpi-grid"
+            >
+                <Card
+                    {...attachExplainProps("totalItems")}
+                    data-source-file={SOURCE_FILES.managerProjectOverview}
+                    data-source-label="section:project-overview-kpi-data-card"
+                    className="p-5 bg-card/80 backdrop-blur border-border/60 text-center"
+                >
                     <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("manager:overview.data")}</div>
                     <div className="text-3xl font-bold text-foreground">{totalItems.toLocaleString()}</div>
                     <div className="text-xs text-muted-foreground mt-1">{t("manager:overview.totalItemsUnit")}</div>
                 </Card>
-                <Card {...attachExplainProps("team")} className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
+                <Card
+                    {...attachExplainProps("team")}
+                    data-source-file={SOURCE_FILES.managerProjectOverview}
+                    data-source-label="section:project-overview-kpi-team-card"
+                    className="p-5 bg-card/80 backdrop-blur border-border/60 text-center"
+                >
                     <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("manager:overview.team")}</div>
                     <div className="text-3xl font-bold text-foreground">{totalTeamMembers}</div>
                     <div className="text-xs text-emerald-500 font-medium mt-1">{t("manager:overview.averageScore", { score: teamAvgScore.toFixed(1) })}</div>
                 </Card>
-                <Card {...attachExplainProps("annotations")} className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
+                <Card
+                    {...attachExplainProps("annotations")}
+                    data-source-file={SOURCE_FILES.managerProjectOverview}
+                    data-source-label="section:project-overview-kpi-annotations-card"
+                    className="p-5 bg-card/80 backdrop-blur border-border/60 text-center"
+                >
                     <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("manager:overview.annotations")}</div>
                     <div className="flex items-center justify-center gap-3 mt-1">
                         <div>
@@ -544,7 +565,12 @@ export default function ProjectOverview() {
                         </div>
                     </div>
                 </Card>
-                <Card {...attachExplainProps("qualityScore")} className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
+                <Card
+                    {...attachExplainProps("qualityScore")}
+                    data-source-file={SOURCE_FILES.managerProjectOverview}
+                    data-source-label="section:project-overview-kpi-quality-card"
+                    className="p-5 bg-card/80 backdrop-blur border-border/60 text-center"
+                >
                     <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("manager:overview.quality")}</div>
                     <div className="text-3xl font-bold text-foreground">{overallQualityScore.toFixed(0)}%</div>
                     <div className={cn(
@@ -554,7 +580,12 @@ export default function ProjectOverview() {
                         {qualityLevel}
                     </div>
                 </Card>
-                <Card {...attachExplainProps("policyCompliance")} className="p-5 bg-card/80 backdrop-blur border-border/60 text-center">
+                <Card
+                    {...attachExplainProps("policyCompliance")}
+                    data-source-file={SOURCE_FILES.managerProjectOverview}
+                    data-source-label="section:project-overview-kpi-policy-card"
+                    className="p-5 bg-card/80 backdrop-blur border-border/60 text-center"
+                >
                     <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
                         {t("manager:overview.violations", { count: totalPolicyViolations })}
                     </div>
@@ -565,7 +596,11 @@ export default function ProjectOverview() {
 
             {/* Progress + Quality Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="p-6 bg-card/80 backdrop-blur border-border/60">
+                <Card
+                    data-source-file={SOURCE_FILES.managerProjectOverview}
+                    data-source-label="section:project-overview-progress-card"
+                    className="p-6 bg-card/80 backdrop-blur border-border/60"
+                >
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-base font-bold text-foreground">{t("manager:overview.progressOverview")}</h3>
                         <span className="text-xs text-muted-foreground">
@@ -578,7 +613,12 @@ export default function ProjectOverview() {
                             { key: "reviewingProgress", label: t("manager:overview.reviewingDone"), value: reviewedItems, pct: totalItems > 0 ? (reviewedItems / totalItems) * 100 : 0, color: "bg-emerald-500" },
                             { key: "approvalProgress", label: t("manager:overview.approvalDone"), value: approvalProgressValue, total: approvalProgressTotal, pct: approvalProgressPct, color: "bg-amber-500" },
                         ].map((bar) => (
-                            <div key={bar.label} {...attachExplainProps(bar.key)}>
+                            <div
+                                key={bar.label}
+                                {...attachExplainProps(bar.key)}
+                                data-source-file={SOURCE_FILES.managerProjectOverview}
+                                data-source-label={`section:project-overview-progress-${bar.key}`}
+                            >
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-sm text-foreground font-medium">{bar.label}</span>
                                     <span className="text-sm font-bold text-foreground">
@@ -594,19 +634,38 @@ export default function ProjectOverview() {
                     </div>
                 </Card>
 
-                <Card className="p-6 bg-card/80 backdrop-blur border-border/60">
+                <Card
+                    data-source-file={SOURCE_FILES.managerProjectOverview}
+                    data-source-label="section:project-overview-quality-metrics-card"
+                    className="p-6 bg-card/80 backdrop-blur border-border/60"
+                >
                     <h3 className="text-base font-bold text-foreground mb-6">{t("manager:overview.qualityMetrics")}</h3>
                     <div className="space-y-4">
-                        <div {...attachExplainProps("annotationAccuracy")} className="flex items-center justify-between">
+                        <div
+                            {...attachExplainProps("annotationAccuracy")}
+                            data-source-file={SOURCE_FILES.managerProjectOverview}
+                            data-source-label="section:project-overview-quality-annotation-accuracy"
+                            className="flex items-center justify-between"
+                        >
                             <span className="text-sm text-foreground font-medium">{t("manager:overview.annotationAccuracy")}</span>
                             <span className="text-sm font-bold text-emerald-500">{annotationAccuracy.toFixed(1)}%</span>
                         </div>
-                        <div {...attachExplainProps("labelBalance")} className="flex items-center justify-between">
+                        <div
+                            {...attachExplainProps("labelBalance")}
+                            data-source-file={SOURCE_FILES.managerProjectOverview}
+                            data-source-label="section:project-overview-quality-label-balance"
+                            className="flex items-center justify-between"
+                        >
                             <span className="text-sm text-foreground font-medium">{t("manager:overview.labelBalance")}</span>
                             <span className="text-sm font-bold text-blue-500">{labelDistributionBalance.toFixed(1)}%</span>
                         </div>
                         {quality?.mostUsedLabel && (
-                            <div {...attachExplainProps("mostUsedLabel")} className="flex items-center justify-between">
+                            <div
+                                {...attachExplainProps("mostUsedLabel")}
+                                data-source-file={SOURCE_FILES.managerProjectOverview}
+                                data-source-label="section:project-overview-quality-most-used-label"
+                                className="flex items-center justify-between"
+                            >
                                 <span className="text-sm text-foreground font-medium">{t("manager:overview.mostUsedLabel")}</span>
                                 <span className="text-sm font-bold text-amber-500">
                                     {quality.mostUsedLabel} ({quality.mostUsedLabelCount})
@@ -614,14 +673,24 @@ export default function ProjectOverview() {
                             </div>
                         )}
                         {quality?.leastUsedLabel && (
-                            <div {...attachExplainProps("leastUsedLabel")} className="flex items-center justify-between">
+                            <div
+                                {...attachExplainProps("leastUsedLabel")}
+                                data-source-file={SOURCE_FILES.managerProjectOverview}
+                                data-source-label="section:project-overview-quality-least-used-label"
+                                className="flex items-center justify-between"
+                            >
                                 <span className="text-sm text-foreground font-medium">{t("manager:overview.leastUsedLabel")}</span>
                                 <span className="text-sm font-bold text-muted-foreground">
                                     {quality.leastUsedLabel} ({quality.leastUsedLabelCount})
                                 </span>
                             </div>
                         )}
-                        <div {...attachExplainProps("qualityScore")} className="pt-4 border-t border-border/50 flex items-center justify-between">
+                        <div
+                            {...attachExplainProps("qualityScore")}
+                            data-source-file={SOURCE_FILES.managerProjectOverview}
+                            data-source-label="section:project-overview-quality-overall-level"
+                            className="pt-4 border-t border-border/50 flex items-center justify-between"
+                        >
                             <span className="text-sm text-muted-foreground font-medium">{t("manager:overview.overallQuality")}</span>
                             <span className={cn(
                                 "text-xs font-bold px-2.5 py-1 rounded-md",
@@ -636,7 +705,12 @@ export default function ProjectOverview() {
 
             {/* Team Contributions */}
             {contributors.length > 0 && (
-                <Card {...attachExplainProps("contributors")} className="p-6 bg-card/80 backdrop-blur border-border/60">
+                <Card
+                    {...attachExplainProps("contributors")}
+                    data-source-file={SOURCE_FILES.managerProjectOverview}
+                    data-source-label="section:project-overview-contributors-card"
+                    className="p-6 bg-card/80 backdrop-blur border-border/60"
+                >
                     <h3 className="text-base font-bold text-foreground mb-4">{t("manager:overview.topContributors")}</h3>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
@@ -651,7 +725,12 @@ export default function ProjectOverview() {
                             </thead>
                             <tbody>
                                 {contributors.map((c: any) => (
-                                    <tr key={c.userId} className="border-b border-border/20 hover:bg-muted/20 transition-colors">
+                                    <tr
+                                        key={c.userId}
+                                        data-source-file={SOURCE_FILES.managerProjectOverview}
+                                        data-source-label="section:project-overview-contributors-row"
+                                        className="border-b border-border/20 hover:bg-muted/20 transition-colors"
+                                    >
                                         <td className="py-2.5 text-foreground font-medium">{c.fullName || c.username}</td>
                                         <td className="py-2.5">
                                             <span className={cn(
@@ -681,7 +760,12 @@ export default function ProjectOverview() {
 
             {/* Alerts */}
             {alerts.length > 0 && (
-                <Card {...attachExplainProps("alerts")} className="p-6 bg-card/80 backdrop-blur border-amber-500/30 border">
+                <Card
+                    {...attachExplainProps("alerts")}
+                    data-source-file={SOURCE_FILES.managerProjectOverview}
+                    data-source-label="section:project-overview-alerts-card"
+                    className="p-6 bg-card/80 backdrop-blur border-amber-500/30 border"
+                >
                     <h3 className="text-base font-bold text-amber-500 mb-3">{t("manager:overview.alerts")}</h3>
                     <ul className="space-y-2">
                         {alerts.map((alert: string, idx: number) => (
@@ -696,14 +780,24 @@ export default function ProjectOverview() {
 
             {/* Description */}
             {project.description && (
-                <Card {...attachExplainProps("description")} className="p-6 bg-card/80 backdrop-blur border-border/60">
+                <Card
+                    {...attachExplainProps("description")}
+                    data-source-file={SOURCE_FILES.managerProjectOverview}
+                    data-source-label="section:project-overview-description-card"
+                    className="p-6 bg-card/80 backdrop-blur border-border/60"
+                >
                     <h3 className="text-base font-bold text-foreground mb-3">{t("manager:overview.projectDescription")}</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">{project.description}</p>
                 </Card>
             )}
 
             {/* Annotation Guideline */}
-            <Card {...attachExplainProps("guideline")} className="p-6 bg-card/80 backdrop-blur border-border/60">
+            <Card
+                {...attachExplainProps("guideline")}
+                data-source-file={SOURCE_FILES.managerProjectOverview}
+                data-source-label="section:project-overview-guideline-card"
+                className="p-6 bg-card/80 backdrop-blur border-border/60"
+            >
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-base font-bold text-foreground">{t("manager:overview.annotationGuideline")}</h3>
                     <div className="flex items-center gap-2">
@@ -749,6 +843,8 @@ export default function ProjectOverview() {
                         {t("manager:overview.guidelineHint")}
                     </p>
                     <button
+                        data-source-file={SOURCE_FILES.managerProjectOverview}
+                        data-source-label="section:project-overview-guideline-save-button"
                         onClick={handleSaveGuideline}
                         disabled={savingGuideline || isProjectCompleted}
                         className={`px-4 py-2 rounded bg-primary text-primary-foreground text-xs font-semibold ${savingGuideline || isProjectCompleted ? "opacity-60 cursor-not-allowed" : ""}`}

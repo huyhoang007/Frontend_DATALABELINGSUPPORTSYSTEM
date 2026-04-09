@@ -210,6 +210,7 @@ export default function ReviewQueue() {
           className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b-2 border-slate-200 pb-6"
           data-source-file={SOURCE_FILES.reviewerQueue}
           data-source-label="section:reviewer-queue-header"
+          data-shift-content={"GET /api/my-review-assignments\nDanh sach assignment reviewer duoc giao\nFE dem queueTotalCount va render subtitle"}
         >
           <div>
             <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">
@@ -243,6 +244,7 @@ export default function ReviewQueue() {
                 onClick={() => toggleStatusFilter(kpi.status)}
                 data-source-file={SOURCE_FILES.reviewerQueue}
                 data-source-label={`section:reviewer-queue-kpi-${kpi.status.toLowerCase()}`}
+                data-shift-content={"GET /api/my-review-assignments\nFE loc assignment theo status reviewer\nFE dem submitted, resubmitted, approved, rejected"}
                 className={`rounded-lg border p-5 text-left transition ${
                   isActive ? state.active : state.idle
                 } ${
@@ -271,6 +273,7 @@ export default function ReviewQueue() {
               type="text"
               data-source-file={SOURCE_FILES.reviewerQueue}
               data-source-label="section:reviewer-queue-search-input"
+              data-shift-content="FE"
               className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               placeholder={t("reviewer:queue.searchPlaceholder")}
               value={searchQuery}
@@ -318,6 +321,7 @@ export default function ReviewQueue() {
             className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
             data-source-file={SOURCE_FILES.reviewerQueue}
             data-source-label="section:reviewer-assignment-list"
+            data-shift-content={"GET /api/my-review-assignments\nDanh sach assignment cua reviewer\nFE filter theo status va search roi render list"}
           >
             {!isMobile && (
               <div className="grid grid-cols-[60px_2fr_1.2fr_1.5fr_1fr_0.8fr_100px] items-center gap-4 border-b border-slate-200 bg-slate-50 px-6 py-3">
@@ -365,6 +369,7 @@ export default function ReviewQueue() {
                       onClick={() => handleReview(assignment)}
                       data-source-file={SOURCE_FILES.reviewerQueue}
                       data-source-label="section:reviewer-queue-mobile-assignment-card"
+                      data-shift-content={"GET /api/my-review-assignments\n1 assignment tu response my-review-assignments\nFE render project, annotator, dataset, status, progress"}
                       className={`cursor-pointer border-b border-slate-200 p-4 ${rowClass}`}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -422,6 +427,7 @@ export default function ReviewQueue() {
                         }}
                         data-source-file={SOURCE_FILES.reviewerQueue}
                         data-source-label="section:reviewer-queue-mobile-review-button"
+                        data-shift-content="FE"
                         className="mt-3 h-9 w-full rounded-md bg-blue-600 px-4 text-xs font-bold text-white transition hover:bg-blue-700"
                       >
                         {status === "APPROVED"
@@ -440,6 +446,7 @@ export default function ReviewQueue() {
                     onClick={() => handleReview(assignment)}
                     data-source-file={SOURCE_FILES.reviewerQueue}
                     data-source-label="section:reviewer-queue-assignment-row"
+                    data-shift-content={"GET /api/my-review-assignments\n1 assignment tu response my-review-assignments\nFE render project, annotator, dataset, status, progress"}
                     className={`grid cursor-pointer grid-cols-[60px_2fr_1.2fr_1.5fr_1fr_0.8fr_100px] items-center gap-4 border-b border-slate-200 px-6 py-4 transition ${rowClass}`}
                   >
                     <span
@@ -491,6 +498,7 @@ export default function ReviewQueue() {
                         }}
                         data-source-file={SOURCE_FILES.reviewerQueue}
                         data-source-label="section:reviewer-queue-review-button"
+                        data-shift-content="FE"
                         className="h-8 rounded-md bg-blue-600 px-4 text-xs font-bold text-white transition hover:bg-blue-700"
                       >
                         {status === "APPROVED"

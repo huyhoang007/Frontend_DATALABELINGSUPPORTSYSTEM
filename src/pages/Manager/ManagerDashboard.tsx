@@ -188,6 +188,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
             className="h-12 px-6 text-sm shadow-md"
             onClick={() => navigate('/manager/projects')}
             leftIcon="add"
+            data-shift-content="FE"
           >
             {t("manager:projects.createProject")}
           </Button>
@@ -197,6 +198,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
             className="h-12 px-6 text-sm"
             onClick={() => navigate('/manager/labels')}
             leftIcon="label"
+            data-shift-content="FE"
           >
             {t("common:nav.createLabel")}
           </Button>
@@ -206,6 +208,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
             className="h-12 px-6 text-sm"
             onClick={() => navigate('/manager/policies')}
             leftIcon="policy"
+            data-shift-content="FE"
           >
             {t("common:nav.createPolicy")}
           </Button>
@@ -215,24 +218,30 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
       {/* Quick Stats */}
       <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-6">
         <Card className="p-6 transition-all hover:shadow-md bg-white/80">
+          <div data-shift-content={"GET /api/projects/my-projects\nTong so project cua manager hien tai\nFE dem do dai mang myProjects"}>
           <div className="text-3xl font-bold text-foreground mb-1">
             {myProjects.length}
           </div>
           <div className="text-xs font-medium text-muted-foreground">{t("manager:dashboard.myProjects")}</div>
+          </div>
         </Card>
 
         <Card className="p-6 transition-all hover:shadow-md bg-white/80">
+          <div data-shift-content={"GET /api/projects/my-projects\nTong so dataset trong project cua manager\nFE cong dataset_count hoac datasets.length cua tung project"}>
           <div className="text-3xl font-bold text-foreground mb-1">
             {myProjects.reduce((sum, p: any) => sum + (p.dataset_count ?? p.datasets?.length ?? 0), 0)}
           </div>
           <div className="text-xs font-medium text-muted-foreground">{t("common:labels.datasets")}</div>
+          </div>
         </Card>
         
         <Card className="p-6 transition-all hover:shadow-md bg-white/80">
+          <div data-shift-content={"GET /api/users?page=0&size=200\nTong so annotator trong he thong\nFE filter user theo roleId hoac roleName = ANNOTATOR"}>
           <div className="text-3xl font-bold text-foreground mb-1">
             {annotators.length}
           </div>
           <div className="text-xs font-medium text-muted-foreground">{t("role:annotator")}</div>
+          </div>
         </Card>
       </div>
 
@@ -262,6 +271,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
                 {currentProjects.map((project) => (
                   <div
                     key={project.project_id}
+                    data-shift-content={"GET /api/projects/my-projects\n1 project tu response my-projects\nFE render ten, data type, dataset count va status"}
                     className="group p-4 rounded-xl border border-border bg-card/50 hover:bg-card hover:border-primary/30 hover:shadow-sm transition-all duration-200"
                   >
                     <div className="flex items-center gap-3 mb-3">
@@ -290,6 +300,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
                         variant="ghost"
                         className="h-8 text-xs hover:bg-primary/5 hover:text-primary"
                         onClick={() => navigate(`/manager/projects/${project.project_id}`)}
+                        data-shift-content="FE"
                       >
                         {t("common:actions.viewDetail")}
                       </Button>
@@ -366,6 +377,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
                 return (
                   <div
                     key={annotator.userId || annotator.id}
+                    data-shift-content={"GET /api/users?page=0&size=200\nGET /api/projects/my-projects\nGET /api/projects/:projectId/assignments\nFE ghep user annotator voi assignments de tinh total, completed, inProgress, pending, avgProgress"}
                     className="p-4 rounded-xl border border-border bg-card/50 hover:bg-card hover:border-primary/30 transition-all duration-200"
                   >
                     <div className="flex items-center gap-3 mb-3">

@@ -1483,6 +1483,7 @@ function ReviewSummaryPanel({
     };
   }, [currentExplainer]);
   const attachExplainProps = (key: keyof typeof explainers) => ({
+    "data-shift-explainer": "custom",
     onMouseEnter: (event: React.MouseEvent) => {
       setHoveredExplainKey(key);
       setPointerPosition({ x: event.clientX, y: event.clientY });

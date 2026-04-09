@@ -481,6 +481,7 @@ const ModernLabelsPage: React.FC = () => {
               variant="primary"
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
               onClick={() => setShowCreateLabelModal(true)}
+              data-shift-content="FE"
             >
               {t("manager:modernLabels.createLabel")}
             </Button>
@@ -492,6 +493,7 @@ const ModernLabelsPage: React.FC = () => {
                 setNewRule({ name: "", ruleContent: "" });
                 setShowCreateRuleModal(true);
               }}
+              data-shift-content="FE"
             >
               {t("manager:modernLabels.createRule")}
             </Button>
@@ -502,6 +504,7 @@ const ModernLabelsPage: React.FC = () => {
         <div className="flex p-1 bg-muted/50 rounded-xl border border-border/50">
           <button
             onClick={() => setActiveTab("labels")}
+            data-shift-content={"GET /api/labels\nTong so nhan hien co\nFE doc labels.length de hien tab count"}
             className={cn(
               "flex-1 py-3 px-5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2",
               activeTab === "labels"
@@ -513,6 +516,7 @@ const ModernLabelsPage: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab("rules")}
+            data-shift-content={"GET /api/label-rules\nTong so bo nhan hien co\nFE doc labelRules.length de hien tab count"}
             className={cn(
               "flex-1 py-3 px-5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2",
               activeTab === "rules"
@@ -530,7 +534,10 @@ const ModernLabelsPage: React.FC = () => {
         // Labels Grid
         <>
           <Card className="p-4 mb-6 bg-card dark:bg-slate-800/60 backdrop-blur-xl border-border/50">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div
+              className="flex flex-wrap items-center justify-between gap-3"
+              data-shift-content={"GET /api/labels\nThong ke tong nhan, dang hoat dong, ngung su dung\nFE dem tu mang labels"}
+            >
               <div className="text-sm text-muted-foreground">
                 {t("manager:modernLabels.stats.total")}{" "}
                 <span className="font-semibold text-foreground">
@@ -552,6 +559,7 @@ const ModernLabelsPage: React.FC = () => {
                   variant={labelView === "all" ? "primary" : "secondary"}
                   size="sm"
                   onClick={() => setLabelView("all")}
+                  data-shift-content="FE"
                 >
                   {t("manager:modernLabels.filters.all")}
                 </Button>
@@ -559,6 +567,7 @@ const ModernLabelsPage: React.FC = () => {
                   variant={labelView === "active" ? "primary" : "secondary"}
                   size="sm"
                   onClick={() => setLabelView("active")}
+                  data-shift-content="FE"
                 >
                   {t("manager:modernLabels.filters.active")}
                 </Button>
@@ -566,6 +575,7 @@ const ModernLabelsPage: React.FC = () => {
                   variant={labelView === "inactive" ? "primary" : "secondary"}
                   size="sm"
                   onClick={() => setLabelView("inactive")}
+                  data-shift-content="FE"
                 >
                   {t("manager:modernLabels.filters.inactive")}
                 </Button>
@@ -577,6 +587,7 @@ const ModernLabelsPage: React.FC = () => {
             {visibleLabels.map((label) => (
               <Card
                 key={getLabelId(label)}
+                data-shift-content={"GET /api/labels\n1 label tu response labels\nFE render ten nhan, mau, loai va trang thai"}
                 className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-card/80 backdrop-blur border-border/60 group cursor-pointer"
               >
                 <div className="mb-4">
@@ -624,6 +635,7 @@ const ModernLabelsPage: React.FC = () => {
                     <Button
                       variant="ghost"
                       size="sm"
+                      data-shift-content="FE"
                       className="h-8 px-2 text-xs text-blue-500 hover:bg-blue-500/10"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -637,6 +649,7 @@ const ModernLabelsPage: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="sm"
+                        data-shift-content="FE"
                         className="h-8 px-2 text-xs text-amber-600 hover:bg-amber-500/10"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -650,6 +663,7 @@ const ModernLabelsPage: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="sm"
+                        data-shift-content="FE"
                         className="h-8 px-2 text-xs text-emerald-600 hover:bg-emerald-500/10"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -679,6 +693,7 @@ const ModernLabelsPage: React.FC = () => {
           {labelRules.map((rule, index) => (
             <div
               key={rule.ruleId ?? rule.rule_id}
+              data-shift-content={"GET /api/label-rules\n1 bo nhan tu response label-rules\nFE render ten bo nhan, noi dung rule va labels da gan"}
               className={cn(
                 "p-6 transition-all duration-200 hover:bg-muted/40",
                 index < labelRules.length - 1 && "border-b border-border/50",
@@ -753,6 +768,7 @@ const ModernLabelsPage: React.FC = () => {
                     <Button
                       variant="secondary"
                       size="sm"
+                      data-shift-content="FE"
                       className="h-8 text-xs text-blue-600 bg-blue-500/10 hover:bg-blue-500/20 border-blue-200 dark:border-blue-800"
                       onClick={() => handleEditRuleClick(rule)}
                     >
@@ -762,6 +778,7 @@ const ModernLabelsPage: React.FC = () => {
                     <Button
                       variant="secondary"
                       size="sm"
+                      data-shift-content="FE"
                       className="h-8 text-xs text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-200 dark:border-emerald-800"
                       onClick={() => handleAttachLabelsClick(rule)}
                     >
@@ -771,6 +788,7 @@ const ModernLabelsPage: React.FC = () => {
                     <Button
                       variant="secondary"
                       size="sm"
+                      data-shift-content="FE"
                       className="h-8 text-xs text-red-600 bg-red-500/10 hover:bg-red-500/20 border-red-200 dark:border-red-800"
                       onClick={() =>
                         handleDeleteRule(

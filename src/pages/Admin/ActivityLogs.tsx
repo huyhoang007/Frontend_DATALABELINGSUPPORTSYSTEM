@@ -142,6 +142,7 @@ export default function AdminActivityLogs() {
                   onChange={(e) =>
                     setFilters({ ...filters, action: e.target.value })
                   }
+                  data-shift-content="FE"
                   className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
                 >
                   <option value="">{t("admin:logs.allActions")}</option>
@@ -162,6 +163,7 @@ export default function AdminActivityLogs() {
                   onChange={(e) =>
                     setFilters({ ...filters, dateFrom: e.target.value })
                   }
+                  data-shift-content="FE"
                   className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
                 />
               </div>
@@ -175,6 +177,7 @@ export default function AdminActivityLogs() {
                   onChange={(e) =>
                     setFilters({ ...filters, dateTo: e.target.value })
                   }
+                  data-shift-content="FE"
                   className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
                 />
               </div>
@@ -182,6 +185,7 @@ export default function AdminActivityLogs() {
                 <button
                   onClick={handleSearch}
                   disabled={isLoading}
+                  data-shift-content="FE"
                   className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white rounded-lg font-medium transition-colors"
                 >
                   {isLoading ? t("common:states.loading") : t("admin:logs.search")}
@@ -203,7 +207,10 @@ export default function AdminActivityLogs() {
                 <p className="text-sm">{t("admin:logs.emptyHint")}</p>
               </div>
             ) : (
-              <table className="w-full">
+              <table
+                className="w-full"
+                data-shift-content={"GET /api/activity-logs?page=0&size=50\nGET /api/activity-logs/action/:action?page=0&size=20\nGET /api/activity-logs/date-range?startDate=...&endDate=...\nFE render bang logs, translate action/target/details va paginate o local"}
+              >
                 <thead className="bg-background/50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -227,6 +234,7 @@ export default function AdminActivityLogs() {
                   {currentLogs.map((log, index) => (
                     <tr
                       key={log.logId || log.id || index}
+                      data-shift-content={"GET /api/activity-logs...\n1 dong activity log tu response backend\nFE format time, translate action, target va detail"}
                       className="hover:bg-accent/30 transition-colors"
                     >
                       <td className="px-6 py-4 text-sm text-foreground whitespace-nowrap">
@@ -279,6 +287,7 @@ export default function AdminActivityLogs() {
                       setCurrentPage((prev) => Math.max(prev - 1, 1))
                     }
                     disabled={currentPage === 1}
+                    data-shift-content="FE"
                     className="px-3 py-1.5 text-sm border border-border rounded-lg text-foreground hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {t("admin:logs.pagination.prev")}
@@ -294,6 +303,7 @@ export default function AdminActivityLogs() {
                       setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                     }
                     disabled={currentPage === totalPages}
+                    data-shift-content="FE"
                     className="px-3 py-1.5 text-sm border border-border rounded-lg text-foreground hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {t("admin:logs.pagination.next")}
