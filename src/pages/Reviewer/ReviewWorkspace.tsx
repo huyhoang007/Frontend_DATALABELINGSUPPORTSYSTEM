@@ -1333,6 +1333,8 @@ function ReviewSummaryPanel({
 }: ReviewSummaryPanelProps) {
   const { t, i18n } = useTranslation(["reviewer"]);
   const [hoveredExplainKey, setHoveredExplainKey] = React.useState<string | null>(null);
+  const [isShiftPressed, setIsShiftPressed] = React.useState(false);
+  const [pointerPosition, setPointerPosition] = React.useState({ x: 0, y: 0 });
   /* Build per-label stats across all cached annotations */
   const labelStats = React.useMemo(() => {
     const map = new Map<number, { labelId: number; labelName: string; colorCode: string; total: number; approved: number; rejected: number; pending: number }>();
@@ -1421,6 +1423,7 @@ function ReviewSummaryPanel({
     hoveredExplainKey && explainers[hoveredExplainKey as keyof typeof explainers];
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Shift") setIsShiftPressed(true);
       if (event.key !== "Alt") return;
       if (event.repeat || !currentExplainer) return;
       navigator.clipboard?.writeText([
@@ -1429,22 +1432,30 @@ function ReviewSummaryPanel({
         currentExplainer.formula,
       ].join("\n")).catch(() => {});
     };
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === "Shift") setIsShiftPressed(false);
+    };
     const handleBlur = () => {
       setHoveredExplainKey(null);
+      setIsShiftPressed(false);
     };
     window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
     window.addEventListener("blur", handleBlur);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
   }, [currentExplainer]);
   const attachExplainProps = (key: keyof typeof explainers) => ({
     onMouseEnter: (event: React.MouseEvent) => {
       setHoveredExplainKey(key);
+      setPointerPosition({ x: event.clientX, y: event.clientY });
     },
     onMouseMove: (event: React.MouseEvent) => {
       setHoveredExplainKey(key);
+      setPointerPosition({ x: event.clientX, y: event.clientY });
     },
     onMouseLeave: () =>
       setHoveredExplainKey((current) => (current === key ? null : current)),
@@ -1462,7 +1473,21 @@ function ReviewSummaryPanel({
   );
 
   return (
-    <div className="p-3 space-y-4">
+    <>
+      {isShiftPressed && currentExplainer && (
+        <div
+          className="pointer-events-none fixed z-[10000] max-w-[420px] rounded-lg border border-emerald-400/30 bg-slate-950/95 px-3 py-2 text-xs text-slate-100 shadow-2xl backdrop-blur-sm"
+          style={{
+            left: Math.min(pointerPosition.x + 14, window.innerWidth - 440),
+            top: Math.min(pointerPosition.y + 18, window.innerHeight - 140),
+          }}
+        >
+          <div className="text-[11px] leading-5">{currentExplainer.title}</div>
+          <div className="mt-1 text-[11px] leading-5 text-slate-300">{currentExplainer.api.join(", ")}</div>
+          <div className="mt-1 text-[11px] leading-5 text-slate-300">{currentExplainer.formula}</div>
+        </div>
+      )}
+      <div className="p-3 space-y-4">
       {/* Overall stats */}
       <div {...attachExplainProps("reviewOverview")}>
         <p className="mb-2 text-[10px] font-bold uppercase text-[#4a6788]">
@@ -1592,6 +1617,7 @@ function ReviewSummaryPanel({
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

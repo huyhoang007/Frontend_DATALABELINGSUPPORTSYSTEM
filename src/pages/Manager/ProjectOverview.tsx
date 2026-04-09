@@ -54,6 +54,8 @@ export default function ProjectOverview() {
     const [guidelineMessage, setGuidelineMessage] = useState<string | null>(null);
     const [guidelineMessageType, setGuidelineMessageType] = useState<"success" | "error" | null>(null);
     const [hoveredExplainKey, setHoveredExplainKey] = useState<string | null>(null);
+    const [isShiftPressed, setIsShiftPressed] = useState(false);
+    const [pointerPosition, setPointerPosition] = useState({ x: 0, y: 0 });
 
     useEffect(() => {
         setGuidelineContent(project?.guidelineContent || "");
@@ -330,6 +332,22 @@ export default function ProjectOverview() {
                 ? `Displayed value = quality.labelDistributionBalance = ${labelDistributionBalance.toFixed(1)}%`
                 : `Giá trị hiển thị = quality.labelDistributionBalance = ${labelDistributionBalance.toFixed(1)}%`,
         },
+        mostUsedLabel: {
+            title: isEnglish ? "Most used label" : "Nhãn dùng nhiều nhất",
+            api: ["GET /api/analytics/projects/:projectId/quality"],
+            fields: ["quality.mostUsedLabel", "quality.mostUsedLabelCount"],
+            formula: isEnglish
+                ? `Displayed directly from backend quality response: ${quality?.mostUsedLabel ?? "N/A"} (${quality?.mostUsedLabelCount ?? 0})`
+                : `Hiển thị trực tiếp từ response quality của backend: ${quality?.mostUsedLabel ?? "N/A"} (${quality?.mostUsedLabelCount ?? 0})`,
+        },
+        leastUsedLabel: {
+            title: isEnglish ? "Least used label" : "Nhãn dùng ít nhất",
+            api: ["GET /api/analytics/projects/:projectId/quality"],
+            fields: ["quality.leastUsedLabel", "quality.leastUsedLabelCount"],
+            formula: isEnglish
+                ? `Displayed directly from backend quality response: ${quality?.leastUsedLabel ?? "N/A"} (${quality?.leastUsedLabelCount ?? 0})`
+                : `Hiển thị trực tiếp từ response quality của backend: ${quality?.leastUsedLabel ?? "N/A"} (${quality?.leastUsedLabelCount ?? 0})`,
+        },
         contributors: {
             title: isEnglish ? "Top contributors table" : "Bảng đóng góp hàng đầu",
             api: [
@@ -344,6 +362,34 @@ export default function ProjectOverview() {
             formula: isEnglish
                 ? "FE merges contribution rows and member-score rows by userId. Tasks = totalAssignments, Completed = completedAssignments, Score = performanceScore. Then FE sorts by score desc, completed desc, task count desc."
                 : "FE gộp dữ liệu contribution và member-scores theo userId. Nhiệm vụ = totalAssignments, Hoàn thành = completedAssignments, Điểm = performanceScore. Sau đó FE sắp xếp theo điểm giảm dần, rồi completed giảm dần, rồi tổng nhiệm vụ giảm dần.",
+        },
+        alerts: {
+            title: isEnglish ? "Project alerts" : "Cảnh báo dự án",
+            api: ["GET /api/analytics/projects/:projectId/summary"],
+            fields: ["summary.alerts[]"],
+            formula: isEnglish
+                ? `Displayed directly from backend summary alerts array. Current alert count = ${alerts.length}`
+                : `Hiển thị trực tiếp từ mảng summary.alerts[] của backend. Số cảnh báo hiện tại = ${alerts.length}`,
+        },
+        description: {
+            title: isEnglish ? "Project description" : "Mô tả dự án",
+            api: ["GET /api/projects/:projectId"],
+            fields: ["project.description"],
+            formula: isEnglish
+                ? "Displayed directly from project.description returned by project detail API."
+                : "Hiển thị trực tiếp từ project.description của API chi tiết dự án.",
+        },
+        guideline: {
+            title: isEnglish ? "Annotation guideline" : "Hướng dẫn gán nhãn",
+            api: ["GET /api/projects/:projectId"],
+            fields: [
+                "project.guidelineContent",
+                "project.guidelineVersion",
+                "project.guidelineFileUrl",
+            ],
+            formula: isEnglish
+                ? "Displayed directly from project detail API fields guidelineContent, guidelineVersion, and guidelineFileUrl."
+                : "Hiển thị trực tiếp từ API chi tiết dự án qua các field guidelineContent, guidelineVersion và guidelineFileUrl.",
         },
     }), [
         isEnglish,
@@ -370,11 +416,17 @@ export default function ProjectOverview() {
         derivedRejectedItems,
         annotationAccuracy,
         labelDistributionBalance,
+        alerts.length,
+        quality?.leastUsedLabel,
+        quality?.leastUsedLabelCount,
+        quality?.mostUsedLabel,
+        quality?.mostUsedLabelCount,
     ]);
 
     const currentExplainer = hoveredExplainKey ? explainers[hoveredExplainKey as keyof typeof explainers] : null;
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Shift") setIsShiftPressed(true);
             if (event.key !== "Alt") return;
             if (event.repeat || !currentExplainer) return;
             navigator.clipboard?.writeText([
@@ -383,17 +435,30 @@ export default function ProjectOverview() {
                 currentExplainer.formula,
             ].join("\n")).catch(() => {});
         };
+        const handleKeyUp = (event: KeyboardEvent) => {
+            if (event.key === "Shift") setIsShiftPressed(false);
+        };
+        const handleBlur = () => {
+            setHoveredExplainKey(null);
+            setIsShiftPressed(false);
+        };
         window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("keyup", handleKeyUp);
+        window.addEventListener("blur", handleBlur);
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("keyup", handleKeyUp);
+            window.removeEventListener("blur", handleBlur);
         };
     }, [currentExplainer]);
     const attachExplainProps = (key: string) => ({
         onMouseEnter: (event: any) => {
             setHoveredExplainKey(key);
+            setPointerPosition({ x: event.clientX, y: event.clientY });
         },
         onMouseMove: (event: any) => {
             setHoveredExplainKey(key);
+            setPointerPosition({ x: event.clientX, y: event.clientY });
         },
         onMouseLeave: () => setHoveredExplainKey((current) => (current === key ? null : current)),
     });
@@ -420,6 +485,19 @@ export default function ProjectOverview() {
 
     return (
         <>
+            {isShiftPressed && currentExplainer && (
+                <div
+                    className="pointer-events-none fixed z-[10000] max-w-[420px] rounded-lg border border-emerald-400/30 bg-slate-950/95 px-3 py-2 text-xs text-slate-100 shadow-2xl backdrop-blur-sm"
+                    style={{
+                        left: Math.min(pointerPosition.x + 14, window.innerWidth - 440),
+                        top: Math.min(pointerPosition.y + 18, window.innerHeight - 140),
+                    }}
+                >
+                    <div className="text-[11px] leading-5">{currentExplainer.title}</div>
+                    <div className="mt-1 text-[11px] leading-5 text-slate-300">{currentExplainer.api.join(", ")}</div>
+                    <div className="mt-1 text-[11px] leading-5 text-slate-300">{currentExplainer.formula}</div>
+                </div>
+            )}
             {/* Toast Notification */}
             {guidelineMessage && (
                 <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg animate-in fade-in slide-in-from-top-4 duration-300 ${
@@ -528,7 +606,7 @@ export default function ProjectOverview() {
                             <span className="text-sm font-bold text-blue-500">{labelDistributionBalance.toFixed(1)}%</span>
                         </div>
                         {quality?.mostUsedLabel && (
-                            <div className="flex items-center justify-between">
+                            <div {...attachExplainProps("mostUsedLabel")} className="flex items-center justify-between">
                                 <span className="text-sm text-foreground font-medium">{t("manager:overview.mostUsedLabel")}</span>
                                 <span className="text-sm font-bold text-amber-500">
                                     {quality.mostUsedLabel} ({quality.mostUsedLabelCount})
@@ -536,7 +614,7 @@ export default function ProjectOverview() {
                             </div>
                         )}
                         {quality?.leastUsedLabel && (
-                            <div className="flex items-center justify-between">
+                            <div {...attachExplainProps("leastUsedLabel")} className="flex items-center justify-between">
                                 <span className="text-sm text-foreground font-medium">{t("manager:overview.leastUsedLabel")}</span>
                                 <span className="text-sm font-bold text-muted-foreground">
                                     {quality.leastUsedLabel} ({quality.leastUsedLabelCount})
@@ -603,7 +681,7 @@ export default function ProjectOverview() {
 
             {/* Alerts */}
             {alerts.length > 0 && (
-                <Card className="p-6 bg-card/80 backdrop-blur border-amber-500/30 border">
+                <Card {...attachExplainProps("alerts")} className="p-6 bg-card/80 backdrop-blur border-amber-500/30 border">
                     <h3 className="text-base font-bold text-amber-500 mb-3">{t("manager:overview.alerts")}</h3>
                     <ul className="space-y-2">
                         {alerts.map((alert: string, idx: number) => (
@@ -618,14 +696,14 @@ export default function ProjectOverview() {
 
             {/* Description */}
             {project.description && (
-                <Card className="p-6 bg-card/80 backdrop-blur border-border/60">
+                <Card {...attachExplainProps("description")} className="p-6 bg-card/80 backdrop-blur border-border/60">
                     <h3 className="text-base font-bold text-foreground mb-3">{t("manager:overview.projectDescription")}</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">{project.description}</p>
                 </Card>
             )}
 
             {/* Annotation Guideline */}
-            <Card className="p-6 bg-card/80 backdrop-blur border-border/60">
+            <Card {...attachExplainProps("guideline")} className="p-6 bg-card/80 backdrop-blur border-border/60">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-base font-bold text-foreground">{t("manager:overview.annotationGuideline")}</h3>
                     <div className="flex items-center gap-2">

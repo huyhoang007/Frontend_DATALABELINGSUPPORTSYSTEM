@@ -44,6 +44,8 @@ export default function LabelSummaryPanel({
 }: LabelSummaryPanelProps) {
   const { t, i18n } = useTranslation(["annotator"]);
   const [hoveredExplainKey, setHoveredExplainKey] = React.useState<string | null>(null);
+  const [isShiftPressed, setIsShiftPressed] = React.useState(false);
+  const [pointerPosition, setPointerPosition] = React.useState({ x: 0, y: 0 });
 
   const { summary, totalAnnotations, annotatedImageCount, totalImages } =
     React.useMemo(() => {
@@ -224,6 +226,7 @@ export default function LabelSummaryPanel({
     hoveredExplainKey && explainers[hoveredExplainKey as keyof typeof explainers];
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Shift") setIsShiftPressed(true);
       if (event.key !== "Alt") return;
       if (event.repeat || !currentExplainer) return;
       navigator.clipboard?.writeText([
@@ -232,33 +235,55 @@ export default function LabelSummaryPanel({
         currentExplainer.formula,
       ].join("\n")).catch(() => {});
     };
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === "Shift") setIsShiftPressed(false);
+    };
     const handleBlur = () => {
       setHoveredExplainKey(null);
+      setIsShiftPressed(false);
     };
     window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
     window.addEventListener("blur", handleBlur);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
   }, [currentExplainer]);
   const attachExplainProps = (key: keyof typeof explainers) => ({
     onMouseEnter: (event: React.MouseEvent) => {
       setHoveredExplainKey(key);
+      setPointerPosition({ x: event.clientX, y: event.clientY });
     },
     onMouseMove: (event: React.MouseEvent) => {
       setHoveredExplainKey(key);
+      setPointerPosition({ x: event.clientX, y: event.clientY });
     },
     onMouseLeave: () =>
       setHoveredExplainKey((current) => (current === key ? null : current)),
   });
 
   return (
-    <div
-      className="space-y-3 overflow-y-auto p-3"
-      data-source-file={SOURCE_FILES.labelSummaryPanel}
-      data-source-label="section:annotation-summary-panel"
-    >
+    <>
+      {isShiftPressed && currentExplainer && (
+        <div
+          className="pointer-events-none fixed z-[10000] max-w-[420px] rounded-lg border border-emerald-400/30 bg-slate-950/95 px-3 py-2 text-xs text-slate-100 shadow-2xl backdrop-blur-sm"
+          style={{
+            left: Math.min(pointerPosition.x + 14, window.innerWidth - 440),
+            top: Math.min(pointerPosition.y + 18, window.innerHeight - 140),
+          }}
+        >
+          <div className="text-[11px] leading-5">{currentExplainer.title}</div>
+          <div className="mt-1 text-[11px] leading-5 text-slate-300">{currentExplainer.api.join(", ")}</div>
+          <div className="mt-1 text-[11px] leading-5 text-slate-300">{currentExplainer.formula}</div>
+        </div>
+      )}
+      <div
+        className="space-y-3 overflow-y-auto p-3"
+        data-source-file={SOURCE_FILES.labelSummaryPanel}
+        data-source-label="section:annotation-summary-panel"
+      >
       <div className="grid grid-cols-2 gap-2">
         <div
           {...attachExplainProps("totalRegions")}
@@ -372,6 +397,7 @@ export default function LabelSummaryPanel({
       <p className="pt-1 text-center text-[9px] text-slate-700">
         {t("workspace.summary.unsavedHint")}
       </p>
-    </div>
+      </div>
+    </>
   );
 }
