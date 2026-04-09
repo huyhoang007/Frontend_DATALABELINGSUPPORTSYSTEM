@@ -1,23 +1,38 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 
 interface RegisterFormProps {
-  onRegister: (userData: {
-    username: string;
-    email: string;
-    password: string;
-    fullName: string;
-  }) => Promise<void> | void;
-  onSwitchToLogin?: () => void;
+  onSwitchToLogin?: () => void | Promise<void>;
 }
 
-const RegisterForm: React.FC<RegisterFormProps> = ({
-  onRegister,
-  onSwitchToLogin,
-}) => {
+const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   const { t } = useTranslation(["auth", "common"]);
+  const navigate = useNavigate();
+  const { register } = useAuth();
+  const { addToast } = useToast();
+
+  const handleRegister = async (userData: { username: string; email: string; password: string; fullName: string }) => {
+    try {
+      await register(userData);
+      addToast(t("auth:register.successPending"), "success");
+      navigate("/login");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const errorMessage = error.response?.data?.message || error.message || "";
+      const errorMessages: Record<string, string> = {
+        "Email already exists": t("auth:register.backendErrors.emailExists"),
+        "Username already exists": t("auth:register.backendErrors.usernameExists"),
+        "Role not found": t("auth:register.backendErrors.roleNotFound"),
+      };
+      const displayMessage = errorMessages[errorMessage] ?? errorMessage ?? t("auth:register.backendErrors.generic");
+      addToast(displayMessage, "error");
+    }
+  };
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -69,15 +84,13 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
     setIsLoading(true);
 
     try {
-      // Backend needs: username, email, password, fullName
-      await onRegister({
+      await handleRegister({
         username: formData.username,
         email: formData.email,
         password: formData.password,
         fullName: formData.fullName,
       });
     } catch (error) {
-      
       console.error("Registration error:", error);
     } finally {
       setIsLoading(false);
@@ -225,20 +238,18 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
           </form>
 
           {/* Login Link */}
-          {onSwitchToLogin && (
-            <div className="text-center mt-6 pt-6 border-t border-border/50">
-              <span className="text-muted-foreground text-sm">
-                {t("auth:register.hasAccount")}{" "}
-                <button
-                  type="button"
-                  onClick={onSwitchToLogin}
-                  className="bg-transparent border-none text-violet-500 hover:text-violet-600 text-sm cursor-pointer underline transition-colors font-medium"
-                >
-                  {t("auth:register.switchToLogin")}
-                </button>
-              </span>
-            </div>
-          )}
+          <div className="text-center mt-6 pt-6 border-t border-border/50">
+            <span className="text-muted-foreground text-sm">
+              {t("auth:register.hasAccount")}{" "}
+              <button
+                type="button"
+                onClick={() => onSwitchToLogin ? onSwitchToLogin() : navigate("/login")}
+                className="bg-transparent border-none text-violet-500 hover:text-violet-600 text-sm cursor-pointer underline transition-colors font-medium"
+              >
+                {t("auth:register.switchToLogin")}
+              </button>
+            </span>
+          </div>
         </Card>
       </div>
     </div>

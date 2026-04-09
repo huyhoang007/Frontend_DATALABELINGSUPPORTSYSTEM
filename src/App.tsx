@@ -1,7 +1,7 @@
 ﻿import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { getRoleBasedRedirect } from "./utils/roleUtils";
 
-import Register from "./pages/Register/Register";
+import RegisterForm from "./components/Auth/RegisterForm";
 import Login from "./pages/Login/Login";
 import TaskList from "./pages/Annotator/TaskList";
 import Workspace from "./pages/Annotator/Workspace";
@@ -54,7 +54,7 @@ function App() {
         <Routes>
             <Route path="/" element={<Navigate to={getRoleBasedRedirectWrapper()} replace />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/register" element={<RegisterForm />} />
 
             {/* Annotator */}
             <Route path="/annotator" element={<RoleGuard allowedRoles={["ANNOTATOR"]}><AnnotatorLayout /></RoleGuard>}>
