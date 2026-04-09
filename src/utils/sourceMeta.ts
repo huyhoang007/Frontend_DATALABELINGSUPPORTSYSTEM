@@ -32,7 +32,6 @@ export const SOURCE_FILES = {
   managerCreateLabel: "src/pages/Manager/CreateLabel.tsx",
   managerErrorTypes: "src/pages/Manager/ErrorTypes.tsx",
   managerCreateErrorType: "src/pages/Manager/CreateErrorType.tsx",
-  managerTasks: "src/pages/Manager/Tasks.tsx",
   managerPolicies: "src/pages/Manager/PoliciesPage.tsx",
   adminDashboard: "src/pages/Admin/AdminDashboard.tsx",
   adminUsers: "src/pages/Admin/Users.tsx",

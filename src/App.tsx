@@ -22,7 +22,6 @@ import ManagerLabels from "./pages/Manager/LabelsPage";
 import CreateLabel from "./pages/Manager/CreateLabel";
 import ManagerPolicies from "./pages/Manager/PoliciesPage";
 import UploadData from "./pages/Manager/UploadData";
-import ManagerTasks from "./pages/Manager/Tasks";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import AdminUsers from "./pages/Admin/Users";
 import AdminActivityLogs from "./pages/Admin/ActivityLogs";
@@ -90,7 +89,6 @@ function App() {
               <Route path="upload-data" element={<UploadData />} />
               <Route path="labels" element={<ManagerLabels />} />
               <Route path="labels/new" element={<CreateLabel />} />
-              <Route path="tasks" element={<ManagerTasks />} />
               <Route path="policies" element={<ManagerPolicies />} />
               <Route path="error-types" element={<Navigate to="/manager/policies" replace />} />
               <Route path="error-types/new" element={<Navigate to="/manager/policies" replace />} />
