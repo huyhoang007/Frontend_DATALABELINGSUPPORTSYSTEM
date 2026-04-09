@@ -246,6 +246,7 @@ export default function ProjectExport() {
       data-source-label="section:manager-project-export-tab"
     >
       <Card className="p-6 space-y-4">
+        <div data-shift-content={"GET /api/projects/:projectId/datasets\nGET /api/projects/:projectId/assignments\nPOST export dataset endpoints theo format\nFE chon dataset, format, kiem tra batchStatus roi moi cho export"}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
           {/* Dataset selector */}
           <div>
@@ -256,6 +257,7 @@ export default function ProjectExport() {
               className="w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               value={selectedDatasetId}
               onChange={(e) => setSelectedDatasetId(e.target.value)}
+              data-shift-content={"GET /api/projects/:projectId/datasets\nBE tra danh sach dataset cua project\nFE render dataset options cho export"}
               disabled={loadingDatasets}
             >
               {loadingDatasets && (
@@ -284,6 +286,7 @@ export default function ProjectExport() {
               className="w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               value={format}
               onChange={(e) => setFormat(e.target.value)}
+              data-shift-content="FE"
             >
               {FORMATS.map((f) => (
                 <option key={f} value={f}>
@@ -309,6 +312,7 @@ export default function ProjectExport() {
 
         {/* Batch status display */}
         <div className="bg-muted/50 rounded-lg p-3 border border-border">
+          <div data-shift-content={"GET /api/projects/:projectId/assignments\nFE filter assignments theo datasetId da chon va tinh batchStatus = PENDING/IN_PROGRESS/COMPLETED"}>
           <p className="text-xs font-medium text-muted-foreground">
             {t("manager:export.batchStatus")}:
             <span
@@ -332,6 +336,7 @@ export default function ProjectExport() {
               {t("manager:export.completedOnly")}
             </p>
           )}
+          </div>
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
@@ -339,6 +344,7 @@ export default function ProjectExport() {
         <Button
           variant="secondary"
           onClick={handleExport}
+          data-shift-content={"POST /api/datasets/:datasetId/export-coco | export-yolo | export-pascal-voc | export-csv\nBE xuat dataset da duyet theo format duoc chon\nFE tai blob va luu lich su export vao sessionStorage"}
           disabled={
             exporting ||
             !selectedDatasetId ||
@@ -352,10 +358,12 @@ export default function ProjectExport() {
           </span>
           {t("manager:export.export")}
         </Button>
+        </div>
       </Card>
 
       {/* Session export history */}
       <Card className="p-6">
+        <div data-shift-content={"FE\nLich su export duoc luu trong sessionStorage cua tab hien tai, khong lay tu backend"}>
         <h2 className="text-base font-bold text-foreground mb-4">
           {t("manager:export.history")}
         </h2>
@@ -364,7 +372,7 @@ export default function ProjectExport() {
             {t("manager:export.emptyHistory")}
           </p>
         ) : (
-          <Table>
+          <Table data-shift-content={"FE\nBang history export doc tu sessionStorage va render theo lich su local cua trinh duyet"}>
             <TableHeader>
               <TableRow>
                 <TableHead>{t("manager:export.table.dataset")}</TableHead>
@@ -376,7 +384,7 @@ export default function ProjectExport() {
             </TableHeader>
             <TableBody>
               {history.map((item) => (
-                <TableRow key={item.id}>
+                <TableRow key={item.id} data-shift-content={"FE\n1 dong history export duoc tao local sau khi export thanh cong/that bai"}>
                   <TableCell className="text-sm">{item.datasetName}</TableCell>
                   <TableCell>
                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground">
@@ -407,6 +415,7 @@ export default function ProjectExport() {
             </TableBody>
           </Table>
         )}
+        </div>
       </Card>
     </div>
   );

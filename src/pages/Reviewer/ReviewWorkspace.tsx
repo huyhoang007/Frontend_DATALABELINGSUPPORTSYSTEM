@@ -125,6 +125,41 @@ function getRejectedReviewCount(annotations: Annotation[] = []): number {
   ).length;
 }
 
+const REVIEW_WORKSPACE_SHIFT = {
+  topProgress:
+    "GET /api/assignments/:assignmentId/review-workspace\nBE tra workspace.items[]\nFE dung currentItemIndex va items.length de hien tien do anh hien tai",
+  guideline:
+    "GET /api/assignments/:assignmentId/review-workspace\nBE tra projectGuidelineContent va projectGuidelineFileUrl\nFE render noi dung huong dan va link tai xuong",
+  submitReview:
+    "POST /api/assignments/:assignmentId/submit-review\nBE chot ket qua review cho assignment\nFE chi cho nop khi pending = 0 va khong bi loi anh",
+  leftPanelProject:
+    "GET /api/assignments/:assignmentId/review-workspace\nBE tra projectName va assignmentStatus\nFE render ten du an va trang thai assignment",
+  thumbnailList:
+    "GET /api/assignments/:assignmentId/review-workspace\nBE tra workspace.items[] cho reviewer\nFE render danh sach anh va tinh icon trang thai theo annoCache",
+  thumbnailCard:
+    "GET /api/assignments/:assignmentId/review-workspace\nGET /uploads/:filePath\nBE tra item.fileUrl trong workspace.items[]\nFE tai blob anh thumbnail va render tung anh",
+  leftProgress:
+    "GET /api/assignments/:assignmentId/items/:itemId/review-annotations\nBE tra annotations cua item hien tai\nFE dem approved/rejected/pending de tinh thanh tien do",
+  centerCanvas:
+    "GET /api/assignments/:assignmentId/review-workspace\nGET /api/assignments/:assignmentId/items/:itemId/review-annotations\nGET /uploads/:filePath\nBE tra item + annotations\nFE tai blob anh va ve overlay review doc-only",
+  rightHeader:
+    "GET /api/assignments/:assignmentId/items/:itemId/review-annotations\nBE tra annotations cua anh hien tai\nFE dem A/R/P de hien thong ke nhanh o header panel",
+  reviewTab:
+    "GET /api/assignments/:assignmentId/items/:itemId/review-annotations\nBE tra danh sach annotation can review\nFE render tab review tu currentAnnotations[]",
+  annotationCard:
+    "GET /api/assignments/:assignmentId/items/:itemId/review-annotations\nBE tra tung annotation review cua item hien tai\nFE render label, status, policy, note va trang thai improved",
+  approveAction:
+    "POST /api/annotations/:reviewingId/review\nPayload { hasError: false }\nBE cap nhat ket qua approve\nFE goi lai review-annotations de refresh card",
+  rejectAction:
+    "POST /api/annotations/:reviewingId/review\nPayload { hasError: true, policyId, note }\nBE danh dau reject va luu policy/note\nFE goi lai review-annotations de refresh card",
+  rejectPolicies:
+    "GET /api/policies/project/:projectId\nBE tra cac policy duoc gan cho project\nFE render danh sach policy de reviewer chon ly do reject",
+  loadingAnnotations:
+    "GET /api/assignments/:assignmentId/items/:itemId/review-annotations\nBE tra annotations theo item khi cache miss hoac refresh\nFE hien loading trong luc cho du lieu",
+  emptyAnnotations:
+    "GET /api/assignments/:assignmentId/items/:itemId/review-annotations\nBE tra mang rong khi item chua co annotation\nFE hien empty state tu currentAnnotations[]",
+} as const;
+
 /* ── Authenticated thumbnail component ── */
 function ThumbnailImg({ fileUrl, alt }: { fileUrl?: string; alt: string }) {
   const [src, setSrc] = React.useState<string | null>(null);
@@ -513,7 +548,12 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
         </button>
 
         {/* Review progress bar */}
-        <div className={`mx-3 flex items-center gap-2 ${isMobile ? "order-3" : ""}`} data-source-file={SOURCE_FILES.reviewerWorkspace} data-source-label="section:reviewer-workspace-image-progress">
+        <div
+          className={`mx-3 flex items-center gap-2 ${isMobile ? "order-3" : ""}`}
+          data-source-file={SOURCE_FILES.reviewerWorkspace}
+          data-source-label="section:reviewer-workspace-image-progress"
+          data-shift-content={REVIEW_WORKSPACE_SHIFT.topProgress}
+        >
           <div className="h-1.5 w-28 overflow-hidden rounded-full bg-[#253347]">
             <div
               className="h-full rounded-full bg-[#00bfa5] transition-all duration-500"
@@ -622,6 +662,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
           <button
             onClick={() => setShowGuidelinePopover((v) => !v)}
             title={t("reviewer:workspace.guideline")}
+            data-source-file={SOURCE_FILES.reviewerWorkspace}
+            data-source-label="section:reviewer-workspace-guideline-button"
+            data-shift-content={REVIEW_WORKSPACE_SHIFT.guideline}
             className="flex h-7 w-7 items-center justify-center rounded text-sky-300 transition-colors hover:bg-white/10"
           >
             <span className="material-symbols-outlined text-[16px]">
@@ -631,6 +674,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
           {showGuidelinePopover && (
             <div
               className="absolute right-0 top-9 z-50 w-80 rounded-lg border border-[#253347] bg-[#111d2c] p-3 shadow-2xl"
+              data-source-file={SOURCE_FILES.reviewerWorkspace}
+              data-source-label="section:reviewer-workspace-guideline-popover"
+              data-shift-content={REVIEW_WORKSPACE_SHIFT.guideline}
             >
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs font-bold text-slate-300">
@@ -674,6 +720,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
         <button
           onClick={handleSubmit}
           disabled={!canSubmit || reviewSubmitting}
+          data-source-file={SOURCE_FILES.reviewerWorkspace}
+          data-source-label="section:reviewer-workspace-submit-review-button"
+          data-shift-content={REVIEW_WORKSPACE_SHIFT.submitReview}
           className={`flex items-center justify-center gap-1.5 rounded px-3 py-1.5 text-xs font-bold transition-opacity shadow-md ${
             canSubmit
               ? "bg-[#00bfa5] text-white"
@@ -725,12 +774,23 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
               : "w-[148px] border-r border-[#253347]"
           }`}
           data-source-file={SOURCE_FILES.reviewerWorkspace}
-              data-source-label="section:reviewer-left-panel"
+          data-source-label="section:reviewer-left-panel"
+          data-shift-content={REVIEW_WORKSPACE_SHIFT.thumbnailList}
         >
           {/* Project & submit */}
-          <div className="flex shrink-0 flex-col gap-2 border-b border-[#253347] p-3">
+          <div
+            className="flex shrink-0 flex-col gap-2 border-b border-[#253347] p-3"
+            data-source-file={SOURCE_FILES.reviewerWorkspace}
+            data-source-label="section:reviewer-workspace-project-meta"
+            data-shift-content={REVIEW_WORKSPACE_SHIFT.leftPanelProject}
+          >
             {/* Project name */}
-            <div className="rounded border border-[#2a3f55] bg-[#1e2f42] px-2 py-1.5 text-xs font-medium text-slate-300">
+            <div
+              className="rounded border border-[#2a3f55] bg-[#1e2f42] px-2 py-1.5 text-xs font-medium text-slate-300"
+              data-source-file={SOURCE_FILES.reviewerWorkspace}
+              data-source-label="section:reviewer-workspace-project-name"
+              data-shift-content={REVIEW_WORKSPACE_SHIFT.leftPanelProject}
+            >
               <span
                 className="block truncate"
                 title={ws?.projectName || `#${assignmentIdNum}`}
@@ -748,6 +808,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                     ? "bg-[rgba(248,113,113,0.1)] text-[#f87171]"
                     : "bg-[rgba(250,204,21,0.1)] text-[#facc15]"
               }`}
+              data-source-file={SOURCE_FILES.reviewerWorkspace}
+              data-source-label="section:reviewer-workspace-assignment-status"
+              data-shift-content={REVIEW_WORKSPACE_SHIFT.leftPanelProject}
             >
               {translateAssignmentStatus(ws?.assignmentStatus || "SUBMITTED")}
             </div>
@@ -756,6 +819,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
             <button
               onClick={handleSubmit}
               disabled={!canSubmit || reviewSubmitting}
+              data-source-file={SOURCE_FILES.reviewerWorkspace}
+              data-source-label="section:reviewer-workspace-left-submit-button"
+              data-shift-content={REVIEW_WORKSPACE_SHIFT.submitReview}
               className={`flex w-full items-center justify-center gap-1.5 rounded py-2 text-xs font-bold transition-opacity ${
                 canSubmit ? "bg-[#00bfa5] text-white" : "cursor-not-allowed bg-[#253347] text-[#4a6788]"
               } ${reviewSubmitting ? "opacity-60" : ""}`}
@@ -777,6 +843,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
             className={`flex-1 gap-2 overflow-y-auto p-2 ${
               isMobile ? "flex overflow-x-auto" : "flex flex-col overflow-x-hidden"
             }`}
+            data-source-file={SOURCE_FILES.reviewerWorkspace}
+            data-source-label="section:reviewer-workspace-thumbnail-list"
+            data-shift-content={REVIEW_WORKSPACE_SHIFT.thumbnailList}
           >
             {typedItems.map((item: WorkspaceItem, idx: number) => {
               const stats = typedGetItemStats(item.itemId);
@@ -790,6 +859,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                     setCurrentItemIndex(idx);
                     setSelectedGroupKey(null);
                   }}
+                  data-source-file={SOURCE_FILES.reviewerWorkspace}
+                  data-source-label="section:reviewer-workspace-thumbnail-card"
+                  data-shift-content={REVIEW_WORKSPACE_SHIFT.thumbnailCard}
                   className={`relative cursor-pointer overflow-hidden rounded bg-[#1e2f42] transition-all ${
                     isActive ? "border-2 border-[#00bfa5]" : "border-2 border-transparent"
                   } ${isMobile ? "min-w-24" : ""}`}
@@ -837,7 +909,12 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
           </div>
 
           {/* Progress summary */}
-          <div className={`shrink-0 border-t border-[#253347] p-3 ${isMobile ? "hidden" : "block"}`}>
+          <div
+            className={`shrink-0 border-t border-[#253347] p-3 ${isMobile ? "hidden" : "block"}`}
+            data-source-file={SOURCE_FILES.reviewerWorkspace}
+            data-source-label="section:reviewer-workspace-left-progress-summary"
+            data-shift-content={REVIEW_WORKSPACE_SHIFT.leftProgress}
+          >
             <div className="mb-1.5 flex items-center justify-between text-[10px] text-[#4a6788]">
               <span>{t("reviewer:workspace.stats.progress")}</span>
               <span className="font-mono">
@@ -877,7 +954,8 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
             isMobile ? "min-h-0" : ""
           }`}
           data-source-file={SOURCE_FILES.reviewerWorkspace}
-              data-source-label="section:reviewer-center-canvas-area"
+          data-source-label="section:reviewer-center-canvas-area"
+          data-shift-content={REVIEW_WORKSPACE_SHIFT.centerCanvas}
         >
           <div
             className={`box-border flex min-h-full min-w-full items-center justify-center ${
@@ -890,6 +968,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                 width: imgWidth * (zoom / 100),
                 height: imgHeight * (zoom / 100),
               }}
+              data-source-file={SOURCE_FILES.reviewerWorkspace}
+              data-source-label="section:reviewer-workspace-image-stage"
+              data-shift-content={REVIEW_WORKSPACE_SHIFT.centerCanvas}
             >
               {imageLoading ? (
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -906,6 +987,9 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                       index: currentItemIndex + 1,
                     })
                   }
+                  data-source-file={SOURCE_FILES.reviewerWorkspace}
+                  data-source-label="section:reviewer-workspace-current-image"
+                  data-shift-content={REVIEW_WORKSPACE_SHIFT.centerCanvas}
                   className="absolute inset-0 w-full h-full object-contain"
                   draggable={false}
                 />
@@ -959,10 +1043,16 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
               : "w-[280px] border-l border-[#253347]"
           }`}
           data-source-file={SOURCE_FILES.reviewerWorkspace}
-              data-source-label="section:reviewer-right-review-panel"
+          data-source-label="section:reviewer-right-review-panel"
+          data-shift-content={REVIEW_WORKSPACE_SHIFT.reviewTab}
         >
           {/* Header line */}
-          <div className="flex shrink-0 items-center gap-2 border-b border-[#253347] px-3 py-2">
+          <div
+            className="flex shrink-0 items-center gap-2 border-b border-[#253347] px-3 py-2"
+            data-source-file={SOURCE_FILES.reviewerWorkspace}
+            data-source-label="section:reviewer-workspace-right-header"
+            data-shift-content={REVIEW_WORKSPACE_SHIFT.rightHeader}
+          >
             <span className="material-symbols-outlined text-[16px] text-[#00bfa5]">
               rate_review
             </span>
@@ -1002,6 +1092,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                 onClick={() => setRightTab("review")}
                 data-source-file={SOURCE_FILES.reviewerWorkspace}
                 data-source-label="section:reviewer-workspace-review-tab"
+                data-shift-content={REVIEW_WORKSPACE_SHIFT.reviewTab}
                 className={`flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2 text-[11px] font-semibold transition-colors ${
                 rightTab === "review"
                   ? "border-[#00bfa5] text-[#00bfa5]"
@@ -1017,6 +1108,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                 onClick={() => setRightTab("summary")}
                 data-source-file={SOURCE_FILES.reviewerWorkspace}
                 data-source-label="section:reviewer-workspace-summary-tab"
+                data-shift-content={REVIEW_WORKSPACE_SHIFT.reviewTab}
                 className={`flex flex-1 items-center justify-center gap-1.5 border-b-2 py-2 text-[11px] font-semibold transition-colors ${
                 rightTab === "summary"
                   ? "border-[#00bfa5] text-[#00bfa5]"
@@ -1036,7 +1128,12 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
               /* ─── Đánh giá tab ─── */
               <div className="p-3 space-y-2">
                 {itemAnnoLoading && (
-                  <div className="flex items-center justify-center py-8 gap-2 opacity-50" data-source-file={SOURCE_FILES.reviewerWorkspace} data-source-label="section:reviewer-workspace-loading-state">
+                  <div
+                    className="flex items-center justify-center py-8 gap-2 opacity-50"
+                    data-source-file={SOURCE_FILES.reviewerWorkspace}
+                    data-source-label="section:reviewer-workspace-loading-state"
+                    data-shift-content={REVIEW_WORKSPACE_SHIFT.loadingAnnotations}
+                  >
                     <span className="material-symbols-outlined animate-spin text-[20px] text-[#3a5068]">
                       progress_activity
                     </span>
@@ -1047,7 +1144,12 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                 )}
 
                 {!itemAnnoLoading && currentAnnotations.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-12 gap-2 opacity-30" data-source-file={SOURCE_FILES.reviewerWorkspace} data-source-label="section:reviewer-workspace-empty-state">
+                  <div
+                    className="flex flex-col items-center justify-center py-12 gap-2 opacity-30"
+                    data-source-file={SOURCE_FILES.reviewerWorkspace}
+                    data-source-label="section:reviewer-workspace-empty-state"
+                    data-shift-content={REVIEW_WORKSPACE_SHIFT.emptyAnnotations}
+                  >
                     <span className="material-symbols-outlined text-[32px] text-[#3a5068]">
                       label_off
                     </span>
@@ -1079,6 +1181,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                         key={anno.reviewingId}
                         data-source-file={SOURCE_FILES.reviewerWorkspace}
                         data-source-label="section:reviewer-workspace-annotation-review-card"
+                        data-shift-content={REVIEW_WORKSPACE_SHIFT.annotationCard}
                         className={`cursor-pointer rounded-lg border px-3 py-2.5 transition-all ${
                           isHighlighted
                             ? "border-[#00bfa5] bg-[linear-gradient(135deg,rgba(0,191,165,0.15)_0%,rgba(59,130,246,0.1)_100%)]"
@@ -1148,6 +1251,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                       onClick={() => { setConfirmingApproveId(null); handleApprove(anno.reviewingId); }}
                                       data-source-file={SOURCE_FILES.reviewerWorkspace}
                                       data-source-label="section:reviewer-workspace-confirm-approve-button"
+                                      data-shift-content={REVIEW_WORKSPACE_SHIFT.approveAction}
                                       disabled={reviewSubmitting}
                                       className="flex flex-1 items-center justify-center gap-1 rounded border border-[rgba(0,191,165,0.4)] bg-[rgba(0,191,165,0.2)] py-1.5 text-xs font-bold text-[#00bfa5] transition"
                                     >
@@ -1158,6 +1262,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                       onClick={() => setConfirmingApproveId(null)}
                                       data-source-file={SOURCE_FILES.reviewerWorkspace}
                                       data-source-label="section:reviewer-workspace-cancel-approve-button"
+                                      data-shift-content="FE"
                                       className="flex flex-1 items-center justify-center gap-1 rounded border border-[rgba(148,163,184,0.2)] bg-white/5 py-1.5 text-xs font-bold text-slate-400 transition"
                                     >
                                       <span className="material-symbols-outlined text-sm">close</span>
@@ -1171,6 +1276,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                     onClick={() => setConfirmingApproveId(anno.reviewingId)}
                                     data-source-file={SOURCE_FILES.reviewerWorkspace}
                                     data-source-label="section:reviewer-workspace-approve-button"
+                                    data-shift-content={REVIEW_WORKSPACE_SHIFT.approveAction}
                                     disabled={
                                       reviewSubmitting ||
                                       !canReviewCurrentImage ||
@@ -1200,6 +1306,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                     }}
                                     data-source-file={SOURCE_FILES.reviewerWorkspace}
                                     data-source-label="section:reviewer-workspace-open-reject-form-button"
+                                    data-shift-content={REVIEW_WORKSPACE_SHIFT.rejectPolicies}
                                     disabled={
                                       reviewSubmitting ||
                                       typedPolicies.length === 0 ||
@@ -1248,6 +1355,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                             onClick={(e) => e.stopPropagation()}
                             data-source-file={SOURCE_FILES.reviewerWorkspace}
                             data-source-label="section:reviewer-workspace-reject-form"
+                            data-shift-content={REVIEW_WORKSPACE_SHIFT.rejectPolicies}
                           >
                             <p className="text-[10px] font-bold uppercase text-red-400">
                               {t("reviewer:workspace.reject.selectViolation")}
@@ -1261,6 +1369,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                   }
                                   data-source-file={SOURCE_FILES.reviewerWorkspace}
                                   data-source-label="section:reviewer-workspace-policy-option-button"
+                                  data-shift-content={REVIEW_WORKSPACE_SHIFT.rejectPolicies}
                                   className={`w-full rounded border px-2 py-1.5 text-left text-xs transition ${
                                     selectedPolicyId === p.policyId
                                       ? "border-red-400 bg-[rgba(248,113,113,0.1)] text-red-400"
@@ -1289,6 +1398,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                 rows={2}
                                 data-source-file={SOURCE_FILES.reviewerWorkspace}
                                 data-source-label="section:reviewer-workspace-reject-note-textarea"
+                                data-shift-content={REVIEW_WORKSPACE_SHIFT.rejectAction}
                                 className="w-full resize-none rounded border border-[#253347] bg-[#131c2e] px-2 py-1.5 text-xs text-slate-200 focus:outline-none"
                               />
                             </div>
@@ -1300,6 +1410,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                 }}
                                 data-source-file={SOURCE_FILES.reviewerWorkspace}
                                 data-source-label="section:reviewer-workspace-cancel-reject-button"
+                                data-shift-content="FE"
                                 className="flex-1 rounded border border-[#253347] px-2 py-1 text-xs text-slate-500 transition hover:bg-white/5"
                               >
                                 {t("common:actions.cancel")}
@@ -1308,6 +1419,7 @@ function ReviewWorkspaceInner({ assignmentIdNum }: { assignmentIdNum: number }) 
                                 onClick={() => handleReject(anno.reviewingId)}
                                 data-source-file={SOURCE_FILES.reviewerWorkspace}
                                 data-source-label="section:reviewer-workspace-confirm-reject-button"
+                                data-shift-content={REVIEW_WORKSPACE_SHIFT.rejectAction}
                                 disabled={
                                   !selectedPolicyId ||
                                   reviewSubmitting ||

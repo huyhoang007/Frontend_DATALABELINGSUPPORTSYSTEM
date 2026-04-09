@@ -178,6 +178,7 @@ export default function ProjectLabels() {
               setRuleModalOpen(true);
               setRuleSearch("");
             }}
+            data-shift-content="FE"
             disabled={isProjectCompleted}
           >
             <span className="material-symbols-outlined text-base mr-1">
@@ -223,6 +224,7 @@ export default function ProjectLabels() {
               setRuleModalOpen(true);
               setRuleSearch("");
             }}
+            data-shift-content="FE"
             disabled={isProjectCompleted}
           >
             <span className="material-symbols-outlined text-base mr-1">
@@ -242,7 +244,7 @@ export default function ProjectLabels() {
             </p>
           </div>
         ) : projectRules.length === 0 ? (
-          <div className="text-center py-8">
+          <div className="text-center py-8" data-shift-content={"GET /api/label-rules\nPUT /api/projects/:projectId/label-rules\nBE tra label rules va hien project chua co rule nao\nFE render empty state cho project rules"}>
             <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2 block">
               rule
             </span>
@@ -257,6 +259,7 @@ export default function ProjectLabels() {
                 setRuleModalOpen(true);
                 setRuleSearch("");
               }}
+              data-shift-content="FE"
               disabled={isProjectCompleted}
             >
               <span className="material-symbols-outlined text-base mr-1">
@@ -266,7 +269,7 @@ export default function ProjectLabels() {
             </Button>
           </div>
         ) : (
-          <Table>
+          <Table data-shift-content={"GET /api/label-rules\nPUT /api/projects/:projectId/label-rules\nDanh sach rule dang gan cho project\nFE loc projectRuleIds va render bang rule"}>
             <TableHeader>
               <TableRow>
                 <TableHead>{t("manager:labelRules.table.name")}</TableHead>
@@ -278,7 +281,7 @@ export default function ProjectLabels() {
             </TableHeader>
             <TableBody>
               {projectRules.map((rule: any) => (
-                <TableRow key={getRuleId(rule)}>
+                <TableRow key={getRuleId(rule)} data-shift-content={"GET /api/label-rules\nPUT /api/projects/:projectId/label-rules\n1 rule dang gan cho project\nFE render ten, noi dung va hanh dong remove"}>
                   <TableCell className="font-medium">
                     {rule.name ?? rule.ruleName}
                   </TableCell>
@@ -290,6 +293,7 @@ export default function ProjectLabels() {
                       variant="ghost"
                       size="sm"
                       onClick={() => removeRule(rule)}
+                      data-shift-content={"PUT /api/projects/:projectId/label-rules\nBE dong bo danh sach ruleIds moi cua project\nFE loai rule khoi projectRuleIds roi sync backend"}
                       disabled={isProjectCompleted || projectRuleIds.length <= 1}
                       title={t("manager:labelRules.removeRuleTitle")}
                     >
@@ -323,6 +327,7 @@ export default function ProjectLabels() {
             placeholder={t("manager:labelRules.searchPlaceholder")}
             value={ruleSearch}
             onChange={(e: any) => setRuleSearch(e.target.value)}
+            data-shift-content="FE"
             className="w-full"
           />
           {filteredModalRules.length === 0 ? (

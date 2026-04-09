@@ -463,6 +463,7 @@ const ModernProjectsPage: React.FC = () => {
             <div className="flex bg-muted/50 rounded-lg p-1 border border-border/50">
               <button
                 onClick={() => setShowDeletedProjects(false)}
+                data-shift-content="FE"
                 className={cn(
                   "px-4 py-2 rounded-md text-sm font-medium transition-all",
                   !showDeletedProjects
@@ -474,6 +475,7 @@ const ModernProjectsPage: React.FC = () => {
               </button>
               <button
                 onClick={() => setShowDeletedProjects(true)}
+                data-shift-content="FE"
                 className={cn(
                   "px-4 py-2 rounded-md text-sm font-medium transition-all",
                   showDeletedProjects
@@ -489,6 +491,7 @@ const ModernProjectsPage: React.FC = () => {
             <div className="flex bg-muted/50 rounded-lg p-1 border border-border/50">
               <button
                 onClick={() => setViewMode("grid")}
+                data-shift-content="FE"
                 className={cn(
                   "px-3 py-2 rounded-md text-xs font-medium transition-all",
                   viewMode === "grid"
@@ -500,6 +503,7 @@ const ModernProjectsPage: React.FC = () => {
               </button>
               <button
                 onClick={() => setViewMode("list")}
+                data-shift-content="FE"
                 className={cn(
                   "px-3 py-2 rounded-md text-xs font-medium transition-all",
                   viewMode === "list"
@@ -515,6 +519,7 @@ const ModernProjectsPage: React.FC = () => {
                 variant="primary"
                 onClick={() => setShowCreateModal(true)}
                 leftIcon="add"
+                data-shift-content="FE"
                 className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
               >
                 {t("manager:projects.createProject")}
@@ -534,6 +539,7 @@ const ModernProjectsPage: React.FC = () => {
             ].map((stat) => (
               <div
                 key={stat.status}
+                data-shift-content={"GET /api/projects/my-projects\nGET /api/projects/:projectId/assignments khi legacy mode bat\nFE filter project theo status de tinh card thong ke"}
                 className={cn("p-4 rounded-xl border flex flex-col items-center justify-center text-center", stat.color)}
               >
                 <div className="text-2xl font-bold mb-1">
@@ -551,6 +557,7 @@ const ModernProjectsPage: React.FC = () => {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
+              data-shift-content="FE"
               className="px-4 py-2 bg-background border border-input rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer min-w-[180px]"
             >
               <option value="all">{t("manager:projects.filters.allStatus")}</option>
@@ -565,7 +572,10 @@ const ModernProjectsPage: React.FC = () => {
 
       {/* Projects Display */}
       {filteredProjects.length === 0 ? (
-        <Card className="p-16 text-center bg-card/80 backdrop-blur border-border/60">
+        <Card
+          className="p-16 text-center bg-card/80 backdrop-blur border-border/60"
+          data-shift-content={"GET /api/projects/my-projects\nGET /api/projects/:projectId/assignments khi legacy mode bat\nBE tra project list va hien dang rong sau khi FE loc theo deleted/status"}
+        >
           <div className="text-4xl mb-4">
             {showDeletedProjects ? "📦" : "❌"}
           </div>
@@ -577,7 +587,10 @@ const ModernProjectsPage: React.FC = () => {
           </p>
         </Card>
       ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(350px,1fr))] gap-6">
+        <div
+          className="grid grid-cols-[repeat(auto-fill,minmax(350px,1fr))] gap-6"
+          data-shift-content={"GET /api/projects/my-projects\nDanh sach project cua manager\nFE loc theo deleted/status va render grid"}
+        >
           {filteredProjects.map((project) => (
             <Card
               key={project.project_id}

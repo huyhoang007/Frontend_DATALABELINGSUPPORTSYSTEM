@@ -338,6 +338,7 @@ export default function ProjectAssignments() {
 
       {/* ── Assignment Form ── */}
       <Card className="p-6 space-y-5">
+        <div data-shift-content={"GET /api/projects/:projectId/datasets\nGET /api/users?page=0&size=200\nPOST /api/projects/:projectId/assignments\nFE render form tao assignment va validate dataset/annotator/reviewer"}>
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
           <span className="material-symbols-outlined text-[20px]">
             assignment
@@ -355,6 +356,7 @@ export default function ProjectAssignments() {
                 className={selectCls}
                 value={selDataset}
                 onChange={(e) => setSelDataset(e.target.value)}
+                data-shift-content={"GET /api/projects/:projectId/datasets\nBE tra dataset cua project\nFE render danh sach dataset de manager chon"}
                 disabled={isProjectCompleted || loadingDatasets}
               >
                 <option value="">
@@ -386,6 +388,7 @@ export default function ProjectAssignments() {
                 className={selectCls}
                 value={selAnnotator}
                 onChange={(e) => setSelAnnotator(e.target.value)}
+                data-shift-content={"GET /api/users?page=0&size=200\nBE tra user list\nFE filter role = ANNOTATOR de render annotator options"}
                 disabled={isProjectCompleted || loadingUsers}
               >
                 <option value="">
@@ -423,6 +426,7 @@ export default function ProjectAssignments() {
                 className={selectCls}
                 value={selReviewer}
                 onChange={(e) => setSelReviewer(e.target.value)}
+                data-shift-content={"GET /api/users?page=0&size=200\nBE tra user list\nFE filter role = REVIEWER de render reviewer options"}
                 disabled={isProjectCompleted || loadingUsers}
               >
                 <option value="">
@@ -487,6 +491,7 @@ export default function ProjectAssignments() {
             variant="primary"
             onClick={handleCreate}
             disabled={creating || isProjectCompleted}
+            data-shift-content={"POST /api/projects/:projectId/assignments\nBE tao assignment moi cho dataset + annotator + reviewer\nFE validate form, goi create va refetch assignments"}
           >
             {creating ? (
               <span className="material-symbols-outlined text-base mr-1 animate-spin">
@@ -509,6 +514,7 @@ export default function ProjectAssignments() {
               {t("manager:assignments.completedCreateBlocked")}
             </p>
           )}
+        </div>
         </div>
       </Card>
 
@@ -543,6 +549,7 @@ export default function ProjectAssignments() {
               size="sm"
               onClick={() => refetchAssignments()}
               disabled={loadingAssignments}
+              data-shift-content="FE"
             >
               <span
                 className={cn(
@@ -591,7 +598,7 @@ export default function ProjectAssignments() {
         {!loadingAssignments &&
         assignments.length === 0 &&
         !assignmentsErrorMessage ? (
-          <div className="text-center py-16">
+          <div className="text-center py-16" data-shift-content={"GET /api/projects/:projectId/assignments\nBE tra danh sach assignment cua project va hien dang rong\nFE render empty state khi assignments.length = 0"}>
             <span className="material-symbols-outlined text-5xl text-muted-foreground/40 mb-3 block">
               assignment
             </span>
@@ -605,7 +612,7 @@ export default function ProjectAssignments() {
         ) : (
           assignments.length > 0 && (
             <>
-              <Table>
+              <Table data-shift-content={"GET /api/projects/:projectId/assignments\nBang assignment cua project\nFE render dataset, annotator, reviewer, progress, status va actions"}>
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t("common:labels.id")}</TableHead>
@@ -644,7 +651,7 @@ export default function ProjectAssignments() {
                       displayStatusText,
                     );
                     return (
-                      <TableRow key={task.assignmentId}>
+                      <TableRow key={task.assignmentId} data-shift-content={"GET /api/projects/:projectId/assignments\n1 dong assignment tu response backend\nFE render thong tin assignment va displayStatus"}>
                         <TableCell className="font-mono font-medium text-sm">
                           #{task.assignmentId}
                         </TableCell>
@@ -681,6 +688,7 @@ export default function ProjectAssignments() {
                               variant="ghost"
                               size="sm"
                               onClick={() => setViewTask(task)}
+                              data-shift-content="FE"
                             >
                               <span className="material-symbols-outlined text-base">
                                 visibility
@@ -691,6 +699,7 @@ export default function ProjectAssignments() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleDelete(task.assignmentId)}
+                                data-shift-content={"DELETE /api/assignments/:assignmentId\nBE xoa assignment khi status = PENDING\nFE mo confirm va refetch list sau khi xoa"}
                                 className="text-destructive hover:text-destructive"
                               >
                                 <span className="material-symbols-outlined text-base">

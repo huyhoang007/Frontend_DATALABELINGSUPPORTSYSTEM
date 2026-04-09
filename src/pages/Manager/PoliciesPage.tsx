@@ -268,6 +268,7 @@ const ModernPoliciesPage: React.FC = () => {
             variant="primary"
             onClick={() => setShowCreateModal(true)}
             leftIcon="add"
+            data-shift-content="FE"
             className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
           >
             {t("manager:policies.create")}
@@ -276,27 +277,45 @@ const ModernPoliciesPage: React.FC = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
-          <div className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#E9F2FF] text-[#0C66E4]">
+          <div
+            className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#E9F2FF] text-[#0C66E4]"
+            data-shift-content={"GET /api/policies?page=0&size=20\nTong so policy manager dang xem\nFE dem policies.length"}
+          >
             <div className="text-2xl font-bold mb-1">{policies.length}</div>
             <div className="text-xs font-medium opacity-80">{t("manager:policies.stats.total")}</div>
           </div>
-          <div className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#DCFFF1] text-[#1F845A]">
+          <div
+            className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#DCFFF1] text-[#1F845A]"
+            data-shift-content={"GET /api/policies?page=0&size=20\nGET /api/projects/my-projects\nGET /api/policies/project/:projectId\nFE map policyId -> projects[] roi cong tong so project duoc ap dung"}
+          >
             <div className="text-2xl font-bold mb-1">{policies.reduce((sum, policy) => sum + (policy.projects?.length || 0), 0)}</div>
             <div className="text-xs font-medium opacity-80">{t("manager:policies.stats.appliedProjects")}</div>
           </div>
-          <div className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#FFEBE6] text-[#DE350B]">
+          <div
+            className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#FFEBE6] text-[#DE350B]"
+            data-shift-content={"GET /api/policies?page=0&size=20\nFE filter policies theo errorLevel = CRITICAL"}
+          >
             <div className="text-2xl font-bold mb-1">{policies.filter((p) => p.errorLevel === "CRITICAL").length}</div>
             <div className="text-xs font-medium opacity-80">{t("manager:policies.stats.critical")}</div>
           </div>
-          <div className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#FFEBE6] text-[#BF2600]">
+          <div
+            className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#FFEBE6] text-[#BF2600]"
+            data-shift-content={"GET /api/policies?page=0&size=20\nFE filter policies theo errorLevel = HIGH"}
+          >
             <div className="text-2xl font-bold mb-1">{policies.filter((p) => p.errorLevel === "HIGH").length}</div>
             <div className="text-xs font-medium opacity-80">{t("manager:policies.stats.high")}</div>
           </div>
-          <div className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#FFF7D6] text-[#A54800]">
+          <div
+            className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#FFF7D6] text-[#A54800]"
+            data-shift-content={"GET /api/policies?page=0&size=20\nFE filter policies theo errorLevel = MEDIUM"}
+          >
             <div className="text-2xl font-bold mb-1">{policies.filter((p) => p.errorLevel === "MEDIUM").length}</div>
             <div className="text-xs font-medium opacity-80">{t("manager:policies.stats.medium")}</div>
           </div>
-          <div className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#DCFFF1] text-[#1F845A]">
+          <div
+            className="p-4 rounded-[10px] border border-[#DCDFE4] flex flex-col items-center justify-center text-center bg-[#DCFFF1] text-[#1F845A]"
+            data-shift-content={"GET /api/policies?page=0&size=20\nFE filter policies theo errorLevel = LOW"}
+          >
             <div className="text-2xl font-bold mb-1">{policies.filter((p) => p.errorLevel === "LOW").length}</div>
             <div className="text-xs font-medium opacity-80">{t("manager:policies.stats.low")}</div>
           </div>
@@ -304,10 +323,14 @@ const ModernPoliciesPage: React.FC = () => {
       </Card>
 
       {/* Policies Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-1 xl:grid-cols-3 gap-6 mt-8">
+      <div
+        className="grid grid-cols-1 md:grid-cols-1 xl:grid-cols-3 gap-6 mt-8"
+        data-shift-content={"GET /api/policies?page=0&size=20\nGrid danh sach policy\nFE render card policy tu response da enrich projects[]"}
+      >
         {policies.map((policy) => (
           <Card
             key={policy.policyId ?? policy.policy_id ?? getPolicyName(policy)}
+            data-shift-content={"GET /api/policies?page=0&size=20\nGET /api/projects/my-projects\nGET /api/policies/project/:projectId\n1 card policy tu du lieu backend va danh sach project ap dung"}
             className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-card/80 backdrop-blur border-border/60 hover:border-primary/30 group cursor-pointer"
             onClick={() => {
               setSelectedPolicy(policy);

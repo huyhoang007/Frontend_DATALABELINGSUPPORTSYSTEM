@@ -259,7 +259,10 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = () => {
               {t("common:states.loading")}
             </div>
           ) : myProjects.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
+            <div
+              className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground"
+              data-shift-content={"GET /api/projects/my-projects\nBE tra danh sach project cua manager va hien dang rong\nFE render empty state khi myProjects.length = 0"}
+            >
               <div className="text-lg font-medium text-foreground mb-2">
                 {t("manager:dashboard.noProjects")}
               </div>

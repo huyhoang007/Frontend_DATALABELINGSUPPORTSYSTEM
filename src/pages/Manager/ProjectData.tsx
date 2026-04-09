@@ -316,6 +316,7 @@ export default function ProjectData() {
             {t("manager:data.batchName")}
           </label>
           <Input
+            data-shift-content="FE"
             placeholder={t("manager:data.batchPlaceholder")}
             value={batchName}
             onChange={(e: any) => setBatchName(e.target.value)}
@@ -329,6 +330,7 @@ export default function ProjectData() {
               key={mode}
               type="button"
               disabled={isProjectCompleted}
+              data-shift-content="FE"
               onClick={() => {
                 setUploadMode(mode);
                 setFiles([]);
@@ -347,6 +349,7 @@ export default function ProjectData() {
 
         <div
           className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${isProjectCompleted ? "cursor-not-allowed opacity-50" : "cursor-pointer"} ${dragActive && !isProjectCompleted ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}
+          data-shift-content="FE"
           onDragOver={(e) => {
             if (!isProjectCompleted) {
               e.preventDefault();
@@ -487,6 +490,7 @@ export default function ProjectData() {
               variant="primary"
               onClick={handleUpload}
               disabled={!canUpload}
+              data-shift-content={"POST /api/projects/:projectId/datasets\nBE tao dataset moi tu batchName va files[]\nFE validate file, hien progress, refetch datasets va cap nhat danh sach batch"}
             >
               {status === "uploading" ? (
                 <>
@@ -536,6 +540,7 @@ export default function ProjectData() {
       </Card>
 
       <Card className="p-6">
+        <div data-shift-content={"GET /api/projects/:projectId/datasets\nDanh sach dataset cua project\nFE poll 10s, render bang batch va cap nhat computedStatus"}>
         <h2 className="text-base font-bold text-foreground mb-4">
           {t("manager:data.batchList")}
         </h2>
@@ -549,7 +554,7 @@ export default function ProjectData() {
             </p>
           </div>
         ) : datasets.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground" data-shift-content={"GET /api/projects/:projectId/datasets\nBE tra danh sach dataset va hien dang rong\nFE render empty state khi datasets.length = 0"}>
             {t("manager:data.noBatch")}
           </p>
         ) : (
@@ -569,7 +574,7 @@ export default function ProjectData() {
                 const badgeClass =
                   BATCH_STATUS_MAP[s as keyof typeof BATCH_STATUS_MAP] ?? BATCH_STATUS_MAP["PENDING"];
                 return (
-                  <TableRow key={ds.datasetId}>
+                  <TableRow key={ds.datasetId} data-shift-content={"GET /api/projects/:projectId/datasets\n1 dong dataset tu response backend\nFE render ten batch, tong file, computedStatus, ngay tao va action"}>
                     <TableCell>{ds.name}</TableCell>
                     <TableCell>{ds.totalItems}</TableCell>
                     <TableCell>
@@ -594,6 +599,7 @@ export default function ProjectData() {
                             setSelectedDatasetName(ds.name);
                             setPreviewModalOpen(true);
                           }}
+                          data-shift-content={"GET /api/datasets/:datasetId/items\nFE mo ImagePreviewModal va lay item/anh cua dataset de preview"}
                           title={t("manager:data.table.viewImages")}
                           className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
                         >
@@ -607,6 +613,7 @@ export default function ProjectData() {
                             setDatasetToDelete(ds);
                             setDeleteConfirmOpen(true);
                           }}
+                          data-shift-content={"DELETE /api/datasets/:datasetId\nBE xoa dataset da chon\nFE mo confirm modal truoc khi goi xoa"}
                           title={t("manager:data.table.deleteDataset")}
                         className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
                         >
@@ -623,6 +630,7 @@ export default function ProjectData() {
             </TableBody>
           </Table>
         )}
+        </div>
       </Card>
 
       {/* Image Preview Modal */}

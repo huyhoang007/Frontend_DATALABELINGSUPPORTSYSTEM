@@ -564,23 +564,41 @@ export default function Workspace() {
           ? "Workspace API provides each item fileUrl/fileName/itemId. FE then resolves fileUrl and fetches the actual image blob through the uploads endpoint."
           : "Workspace API cung cấp fileUrl/fileName/itemId cho từng item. FE sau đó resolve fileUrl và tải blob ảnh thật qua endpoint uploads.",
       },
+      topProgress: {
+        title: isEnglish ? "Top image progress" : "Thanh tiến độ ảnh trên cùng",
+        api: ["GET /api/assignments/:assignmentId/workspace"],
+        formula: isEnglish
+          ? `FE uses workspace.items.length and currentImageIndex to show current image progress. Current = ${currentImageIndex + 1}/${totalImages}.`
+          : `FE dùng workspace.items.length và currentImageIndex để hiển thị tiến độ ảnh hiện tại. Current = ${currentImageIndex + 1}/${totalImages}.`,
+      },
+      guideline: {
+        title: isEnglish ? "Project guideline popover" : "Popover hướng dẫn dự án",
+        api: ["GET /api/assignments/:assignmentId/workspace"],
+        formula: isEnglish
+          ? "BE returns projectGuidelineContent and projectGuidelineFileUrl in workspace. FE renders the quick guideline viewer and optional download link."
+          : "BE trả về projectGuidelineContent và projectGuidelineFileUrl trong workspace. FE render khung xem nhanh hướng dẫn và link tải nếu có.",
+      },
       saveDraft: {
         title: isEnglish ? "Save draft button" : "Nút lưu nháp",
-        api: ["POST/PUT annotation save endpoint via useAnnotations"],
+        api: [
+          "POST /api/assignments/:assignmentId/annotations",
+          "PUT /api/assignments/:assignmentId/annotations/fix",
+        ],
         formula: isEnglish
-          ? "Button triggers FE save flow for current annotation state. FE sends current item annotations from local state to backend without submitting review."
-          : "Nút gọi flow lưu FE cho trạng thái annotation hiện tại. FE gửi annotations của item đang mở từ local state lên backend mà chưa submit sang review.",
+          ? "Button triggers saveNow() in useAnnotations. FE serializes current local annotation groups and sends them to saveAnnotations or fixRejectedAnnotations based on assignmentStatus."
+          : "Nút gọi saveNow() trong useAnnotations. FE serialize local annotation groups hiện tại và gửi tới saveAnnotations hoặc fixRejectedAnnotations tùy assignmentStatus.",
       },
       submitButton: {
         title: isEnglish ? "Submit assignment button" : "Nút nộp assignment",
         api: [
           "GET /api/assignments/:assignmentId/workspace",
-          "POST/PUT annotation save endpoint via useAnnotations",
-          "Submit assignment endpoint via annotation workspace flow",
+          "POST /api/assignments/:assignmentId/annotations",
+          "PUT /api/assignments/:assignmentId/annotations/fix",
+          "POST /api/assignments/:assignmentId/submit",
         ],
         formula: isEnglish
-          ? "FE checks assignmentStatus, current annotations, rejected feedback, and image load state. If valid, FE flushes pending annotation changes then submits the assignment to reviewer."
-          : "FE kiểm tra assignmentStatus, annotation hiện tại, feedback bị reject và trạng thái load ảnh. Nếu hợp lệ, FE flush phần annotation chưa đồng bộ rồi mới submit assignment sang reviewer.",
+          ? "FE checks assignmentStatus, current annotations, rejected feedback, and image load state. If valid, FE flushes pending annotation changes via useAnnotations, then calls submitAssignment."
+          : "FE kiểm tra assignmentStatus, annotation hiện tại, feedback bị reject và trạng thái load ảnh. Nếu hợp lệ, FE flush phần annotation chưa đồng bộ qua useAnnotations rồi gọi submitAssignment.",
       },
       imageCanvas: {
         title: isEnglish ? "Main image canvas" : "Vùng ảnh / canvas chính",
@@ -1075,7 +1093,6 @@ export default function Workspace() {
         className="flex h-screen flex-col overflow-hidden bg-[#131c2e] text-slate-200"
         data-source-file={SOURCE_FILES.annotatorWorkspace}
         data-source-label="section:annotator-workspace-page"
-        {...attachExplainProps("workspaceShell")}
       >
         {/* â•â•â•â•â•â•â•â•â•â• TOP BAR â•â•â•â•â•â•â•â•â•â• */}
         <div
@@ -1103,6 +1120,7 @@ export default function Workspace() {
           {/* Progress bar + count */}
           <div
             className={`mx-3 flex items-center gap-2 ${isMobile ? "order-3" : ""}`}
+            {...attachExplainProps("topProgress")}
           >
             <div className="h-1.5 w-28 overflow-hidden rounded-full bg-[#253347]">
               <div
@@ -1200,6 +1218,7 @@ export default function Workspace() {
             <button
               onClick={() => setShowGuidelinePopover((v) => !v)}
               title={t("annotator:workspace.header.guideline")}
+              {...attachExplainProps("guideline")}
               className="flex h-7 w-7 items-center justify-center rounded text-sky-300 transition-colors hover:bg-white/10"
             >
               <span className="material-symbols-outlined text-[16px]">
@@ -1209,6 +1228,7 @@ export default function Workspace() {
             {showGuidelinePopover && (
               <div
                 className="absolute right-0 top-9 z-50 w-80 rounded-lg border border-[#253347] bg-[#111d2c] p-3 shadow-2xl"
+                {...attachExplainProps("guideline")}
               >
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs font-bold text-slate-300">

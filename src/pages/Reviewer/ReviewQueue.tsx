@@ -301,8 +301,18 @@ export default function ReviewQueue() {
         )}
 
         {!isLoading && !error && reviewableAssignments.length === 0 && (
-          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-            <div className="flex h-[400px] w-full flex-col items-center justify-center">
+          <div
+            className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+            data-source-file={SOURCE_FILES.reviewerQueue}
+            data-source-label="section:reviewer-queue-empty-state"
+            data-shift-content={"GET /api/my-review-assignments\nBE tra danh sach assignment reviewer va hien dang rong\nFE filter theo status/search roi render empty state"}
+          >
+            <div
+              className="flex h-[400px] w-full flex-col items-center justify-center"
+              data-source-file={SOURCE_FILES.reviewerQueue}
+              data-source-label="section:reviewer-queue-empty-state-content"
+              data-shift-content={"GET /api/my-review-assignments\nBE tra danh sach assignment reviewer va hien dang rong\nFE filter theo status/search roi render empty state"}
+            >
               <span className="material-symbols-outlined mb-4 text-6xl text-emerald-300/60">
                 check_circle
               </span>

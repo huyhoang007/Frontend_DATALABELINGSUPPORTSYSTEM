@@ -256,6 +256,7 @@ export default function AdminUsers() {
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
+              data-shift-content="FE"
               className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded transition-colors"
             >
               {t("admin:users.create")}
@@ -268,6 +269,7 @@ export default function AdminUsers() {
               <button
                 key={tab.value}
                 onClick={() => { setStatusFilter(tab.value); setCurrentPage(1); }}
+                data-shift-content={"GET /api/users?page=0&size=50\nBE tra danh sach user he thong\nFE loc theo statusFilter va dem so luong tung tab"}
                 className={`px-5 py-2.5 rounded text-sm font-bold border transition-colors ${
                   statusFilter === tab.value
                     ? "bg-primary text-white border-primary"
@@ -287,14 +289,20 @@ export default function AdminUsers() {
                 <p className="text-sm">{t("admin:users.loading")}</p>
               </div>
             ) : users.length === 0 ? (
-              <div className="text-center py-16 text-muted-foreground">
+              <div
+                className="text-center py-16 text-muted-foreground"
+                data-shift-content={"GET /api/users?page=0&size=50\nBE tra danh sach user va hien dang rong\nFE render empty state khi users.length = 0"}
+              >
                 <p className="text-base font-semibold text-foreground mb-1">{t("admin:users.emptyTitle")}</p>
                 <p className="text-sm">{t("admin:users.emptyHint")}</p>
               </div>
             ) : (
               <>
                 {/* Table Header */}
-                <div className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr_1.5fr] px-6 py-3 bg-muted border-b border-border gap-3 items-center">
+                <div
+                  className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr_1.5fr] px-6 py-3 bg-muted/50 border-b border-border gap-3 items-center"
+                  data-shift-content={"GET /api/users?page=0&size=50\nBang user admin\nFE render cot user, email, role, status, createdAt va actions tu response backend"}
+                >
                   {[t("admin:users.table.user"), t("admin:users.table.email"), t("admin:users.table.role"), t("admin:users.table.status"), t("admin:users.table.createdAt"), t("admin:users.table.actions")].map((h) => (
                     <p key={h} className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{h}</p>
                   ))}
@@ -308,6 +316,7 @@ export default function AdminUsers() {
                   return (
                     <div
                       key={u.userId || u.id}
+                      data-shift-content={"GET /api/users?page=0&size=50\n1 dong user tu response backend\nFE render fullName, username, email, role, status va createdAt"}
                       className={`grid grid-cols-[2fr_2fr_1fr_1fr_1fr_1.5fr] px-6 py-4 border-b border-border gap-3 items-center transition-colors hover:bg-primary/5 ${idx % 2 !== 0 ? "bg-muted/20" : ""}`}
                     >
                       {/* User */}
