@@ -58,6 +58,23 @@ const STATUS_STYLES: Record<string, string> = {
     "bg-green-100 text-green-800",
 };
 
+const getDisplayStatusStyle = (status: string, displayStatus?: string) => {
+  const normalizedDisplay = String(displayStatus || "").toLowerCase();
+  if (normalizedDisplay.includes("cho duyet") || normalizedDisplay.includes("chờ duyệt")) {
+    return "bg-yellow-100 text-yellow-800";
+  }
+  if (normalizedDisplay.includes("can sua") || normalizedDisplay.includes("cần sửa")) {
+    return "bg-red-100 text-red-800";
+  }
+  if (normalizedDisplay.includes("hoan thanh") || normalizedDisplay.includes("hoàn thành")) {
+    return "bg-green-100 text-green-800";
+  }
+  if (normalizedDisplay.includes("dang xu ly") || normalizedDisplay.includes("đang xử lý")) {
+    return "bg-blue-100 text-blue-800";
+  }
+  return STATUS_STYLES[status] || "bg-muted text-muted-foreground";
+};
+
 /* ═══════════ Component ═══════════ */
 export default function ProjectAssignments() {
   const { t, i18n } = useTranslation(["manager", "common"]);
@@ -618,9 +635,11 @@ export default function ProjectAssignments() {
                       translateAssignmentStatus(
                         String(task.status || "PENDING").toUpperCase(),
                       );
-                    const status = String(
-                      task.status || "PENDING",
-                    ).toUpperCase();
+                    const status = String(task.status || "PENDING").toUpperCase();
+                    const badgeClass = getDisplayStatusStyle(
+                      status,
+                      displayStatusText,
+                    );
                     return (
                       <TableRow key={task.assignmentId}>
                         <TableCell className="font-mono font-medium text-sm">
@@ -646,8 +665,7 @@ export default function ProjectAssignments() {
                           <span
                             className={cn(
                               "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
-                              STATUS_STYLES[status] ||
-                                "bg-muted text-muted-foreground",
+                              badgeClass,
                             )}
                           >
                             {displayStatusText}{" "}
