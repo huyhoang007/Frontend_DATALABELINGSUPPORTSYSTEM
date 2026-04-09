@@ -29,6 +29,7 @@ import AdminActivityLogs from "./pages/Admin/ActivityLogs";
 import DevHealthCheck from "./components/DevHealthCheck";
 import Unauthorized from "./pages/Unauthorized";
 import { RoleGuard } from "./components/Common/RoleGuard";
+import { SourceInspector } from "./components/dev/SourceInspector";
 import { ManagerLayout } from "./layouts/ManagerLayout";
 import { AdminLayout } from "./layouts/AdminLayout";
 import { AnnotatorLayout } from "./layouts/AnnotatorLayout";
@@ -51,6 +52,7 @@ function App() {
     <div className="min-h-screen bg-background text-foreground">
       <BrowserRouter>
         <LanguageSwitcher />
+        <SourceInspector />
         <Routes>
             <Route path="/" element={<Navigate to={getRoleBasedRedirectWrapper()} replace />} />
             <Route path="/login" element={<Login />} />
